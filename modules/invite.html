@@ -1,0 +1,110 @@
+<div id="invite-module">
+  <div class="breadcrumb">当前位置：<span onclick="switchModule('invite')">项目中心邀请码</span></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+    <button class="btn btn-default">📥 导出</button>
+    <button class="btn btn-primary">＋ 生成邀请码</button>
+  </div>
+  <div class="filter-bar">
+    <input class="filter-input" placeholder="🔍 搜索邀请码/项目" style="width:220px" />
+    <select class="filter-select">
+      <option>全部状态</option>
+      <option>有效</option>
+      <option>已满</option>
+      <option>已过期</option>
+    </select>
+    <button class="btn btn-primary btn-sm">搜索</button>
+    <button class="btn btn-default btn-sm">重置</button>
+  </div>
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><input type="checkbox"/></th>
+          <th>邀请码</th>
+          <th>所属项目</th>
+          <th>创建人</th>
+          <th>有效截止</th>
+          <th>使用情况</th>
+          <th>使用进度</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="inviteTableBody">
+        <!-- 数据将通过JavaScript动态加载 -->
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span style="font-size:12.5px;color:#888;margin-right:12px">共 0 条</span>
+      <button class="page-btn active">1</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 邀请码模块初始化
+function initInviteModule(subModule) {
+  console.log('初始化邀请码模块:', subModule);
+  loadInviteData();
+}
+
+// 加载邀请码数据
+function loadInviteData() {
+  // 模拟数据
+  const inviteData = [
+    {
+      code: 'INV-2024-001',
+      project: '肿瘤免疫疗法研究',
+      createdBy: '张三',
+      validDate: '2024-12-31',
+      used: 5,
+      total: 10,
+      status: '有效'
+    },
+    {
+      code: 'INV-2024-002',
+      project: '糖尿病新药三期',
+      createdBy: '李四',
+      validDate: '2024-06-30',
+      used: 10,
+      total: 10,
+      status: '已满'
+    }
+  ];
+  
+  const tbody = document.getElementById('inviteTableBody');
+  if (tbody) {
+    tbody.innerHTML = inviteData.map((r, index) => `
+      <tr>
+        <td><input type="checkbox"/></td>
+        <td>
+          <code style="background:#f5f5f5;padding:3px 8px;border-radius:5px;font-size:12.5px;color:#1677ff;font-family:monospace">${r.code}</code>
+        </td>
+        <td><span class="tag">${r.project}</span></td>
+        <td style="color:#555">${r.createdBy}</td>
+        <td style="color:#888;font-size:12.5px">${r.validDate}</td>
+        <td style="font-size:13px">${r.used} / ${r.total} 人</td>
+        <td>
+          <div class="score-bar" style="width:120px"><div class="score-fill" style="width:${Math.round(r.used/r.total*100)}%;background:${r.used===r.total?'linear-gradient(90deg,#ff7875,#ff4d4f)':'linear-gradient(90deg,#52c41a,#1677ff)'}"></div></div>
+          <span style="font-size:11.5px;color:#888;margin-left:6px">${Math.round(r.used/r.total*100)}%</span>
+        </td>
+        <td>${r.status === '有效' ? '<span class="badge badge-green">有效</span>' : r.status === '已满' ? '<span class="badge badge-yellow">已满</span>' : '<span class="badge badge-gray">已过期</span>'}</td>
+        <td>
+          <span class="action-link">复制</span>
+          <span class="action-sep">|</span>
+          <span class="action-link">详情</span>
+          <span class="action-sep">|</span>
+          <span class="action-link" style="color:#ff4d4f">作废</span>
+        </td>
+      </tr>
+    `).join('');
+    
+    // 更新计数
+    document.querySelector('.pagination span').textContent = `共 ${inviteData.length} 条`;
+  }
+}
+</script>
+
+<style>
+/* 邀请码模块特定样式 */
+</style>

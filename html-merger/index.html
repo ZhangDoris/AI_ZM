@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML文件合并工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 30px;
+    }
+    
+    .file-section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .section-title i {
+      color: #667eea;
+    }
+    
+    .file-input-group {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      align-items: center;
+    }
+    
+    .file-label {
+      min-width: 120px;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    input[type="file"] {
+      flex: 1;
+      padding: 10px;
+      border: 2px dashed #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    input[type="file"]:hover {
+      border-color: #667eea;
+      background: #f5f3ff;
+    }
+    
+    .options-section {
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
+    .option-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    .option-label {
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    
+    .btn-secondary:hover {
+      background: #e8e8e8;
+    }
+    
+    .log-section {
+      margin-top: 30px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 20px;
+      display: none;
+    }
+    
+    .log-title {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .log-content {
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    
+    .log-success {
+      color: #4ec9b0;
+    }
+    
+    .log-error {
+      color: #f48771;
+    }
+    
+    .log-info {
+      color: #569cd6;
+    }
+    
+    .preview-section {
+      margin-top: 30px;
+      display: none;
+    }
+    
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .preview-frame {
+      width: 100%;
+      height: 500px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔧 HTML文件合并工具</h1>
+      <p>将多个HTML文件智能合并为一个文件</p>
+    </div>
+    
+    <div class="content">
+      <!-- 文件选择区域 -->
+      <div class="file-section">
+        <div class="section-title">
+          <span>📄</span>
+          <span>选择要合并的HTML文件</span>
+        </div>
+        
+        <div class="file-input-group">
+          <span class="file-label">主文件（列表页）：</span>
+          <input type="file" id="file1" accept=".html" onchange="handleFileSelect(1)">
+        </div>
+        
+        <div class="file-input-group">
+          <span class="file-label">详情文件（详情页）：</span>
+          <input type="file" id="file2" accept=".html" onchange="handleFileSelect(2)">
+        </div>
+      </div>
+      
+      <!-- 合并选项 -->
+      <div class="options-section">
+        <div class="section-title">
+          <span>⚙️</span>
+          <span>合并选项</span>
+        </div>
+        
+        <div class="option-item">
+          <input type="checkbox" id="mergeCSS" checked>
+          <label for="mergeCSS" class="option-label">合并所有CSS样式到头部</label>
+        </div>
+        
+        <div class="option-item">
+          <input type="checkbox" id="mergeJS" checked>
+          <label for="mergeJS" class="option-label">合并所有JavaScript代码到底部</label>
+        </div>
+        
+        <div class="option-item">
+          <input type="checkbox" id="addNavigation" checked>
+          <label for="addNavigation" class="option-label">添加页面导航切换按钮</label>
+        </div>
+        
+        <div class="option-item">
+          <input type="checkbox" id="optimizeCode" checked>
+          <label for="optimizeCode" class="option-label">优化代码结构（去除重复标签）</label>
+        </div>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="action-buttons">
+        <button class="btn btn-primary" onclick="mergeFiles()">
+          <span>🔗</span>
+          <span>开始合并</span>
+        </button>
+        <button class="btn btn-secondary" onclick="resetForm()">
+          <span>🔄</span>
+          <span>重置</span>
+        </button>
+      </div>
+      
+      <!-- 统计信息 -->
+      <div class="stats" id="statsSection" style="display:none;">
+        <div class="stat-card">
+          <div class="stat-value" id="totalLines">0</div>
+          <div class="stat-label">总行数</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="totalSize">0 KB</div>
+          <div class="stat-label">文件大小</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="mergeTime">0ms</div>
+          <div class="stat-label">合并耗时</div>
+        </div>
+      </div>
+      
+      <!-- 日志区域 -->
+      <div class="log-section" id="logSection">
+        <div class="log-title">
+          <span>📋</span>
+          <span>合并日志</span>
+        </div>
+        <div class="log-content" id="logContent"></div>
+      </div>
+      
+      <!-- 预览区域 -->
+      <div class="preview-section" id="previewSection">
+        <div class="preview-header">
+          <div class="section-title">
+            <span>👁️</span>
+            <span>合并结果预览</span>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-secondary" onclick="toggleViewCode()">
+              <span>📄</span>
+              <span>查看源码</span>
+            </button>
+            <button class="btn btn-primary" onclick="downloadMergedFile()">
+              <span>💾</span>
+              <span>下载合并后的文件</span>
+            </button>
+          </div>
+        </div>
+        <iframe class="preview-frame" id="previewFrame"></iframe>
+        
+        <!-- 源码查看区域 -->
+        <div id="codeView" style="display:none;margin-top:20px">
+          <div style="background:#1e1e1e;border-radius:8px;padding:20px;max-height:500px;overflow:auto">
+            <pre style="color:#d4d4d4;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap" id="codeContent"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let file1Content = null;
+    let file2Content = null;
+    let mergedContent = null;
+    
+    // 处理文件选择
+    function handleFileSelect(fileNum) {
+      const input = document.getElementById('file' + fileNum);
+      const file = input.files[0];
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (fileNum === 1) {
+            file1Content = e.target.result;
+            log(`✅ 主文件加载成功: ${file.name} (${formatFileSize(file.size)})`, 'success');
+          } else {
+            file2Content = e.target.result;
+            log(`✅ 详情文件加载成功: ${file.name} (${formatFileSize(file.size)})`, 'success');
+          }
+        };
+        reader.readAsText(file, 'UTF-8');
+      }
+    }
+    
+    // 合并文件
+    function mergeFiles() {
+      if (!file1Content || !file2Content) {
+        alert('请先选择两个HTML文件！');
+        return;
+      }
+      
+      const startTime = Date.now();
+      log('🚀 开始合并文件...', 'info');
+      log(`📄 文件1大小: ${formatFileSize(new Blob([file1Content]).size)}`, 'info');
+      log(` 文件2大小: ${formatFileSize(new Blob([file2Content]).size)}`, 'info');
+      
+      try {
+        // 解析HTML结构
+        const doc1 = parseHTML(file1Content);
+        const doc2 = parseHTML(file2Content);
+        
+        log(' 已解析两个HTML文档结构', 'info');
+        log(`   - 文档1标题: ${doc1.title || '无标题'}`, 'info');
+        log(`   - 文档2标题: ${doc2.title || '无标题'}`, 'info');
+        
+        // 创建合并后的文档
+        mergedContent = createMergedDocument(doc1, doc2);
+        
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
+        log(`✨ 合并完成！耗时: ${duration}ms`, 'success');
+        log(`📊 合并后文件大小: ${formatFileSize(new Blob([mergedContent]).size)}`, 'success');
+        
+        // 显示统计信息
+        showStats(duration);
+        
+        // 显示预览
+        showPreview();
+        
+      } catch (error) {
+        log(`❌ 合并失败: ${error.message}`, 'error');
+        log(`   详细信息: ${error.stack}`, 'error');
+        console.error(error);
+        alert('合并失败！请查看日志了解详细错误信息。');
+      }
+    }
+    
+    // 解析HTML
+    function parseHTML(html) {
+      const parser = new DOMParser();
+      return parser.parseFromString(html, 'text/html');
+    }
+    
+    // 创建合并文档
+    function createMergedDocument(doc1, doc2) {
+      const shouldMergeCSS = document.getElementById('mergeCSS').checked;
+      const shouldMergeJS = document.getElementById('mergeJS').checked;
+      const shouldAddNav = document.getElementById('addNavigation').checked;
+      const shouldOptimize = document.getElementById('optimizeCode').checked;
+      
+      try {
+        log('🔨 开始创建合并文档...', 'info');
+        
+        // 使用第一个文档作为基础
+        const newDoc = document.implementation.createHTMLDocument('merged');
+        newDoc.documentElement.innerHTML = doc1.documentElement.innerHTML;
+        
+        log('📄 已创建基础文档结构', 'info');
+        
+        // 合并CSS
+        if (shouldMergeCSS) {
+          log('🎨 开始合并CSS样式...', 'info');
+          mergeStyles(newDoc, doc1, doc2);
+          log('✅ CSS样式合并完成', 'success');
+        }
+        
+        // 合并JavaScript
+        if (shouldMergeJS) {
+          log('📜 开始合并JavaScript脚本...', 'info');
+          mergeScripts(newDoc, doc1, doc2);
+          log('✅ JavaScript脚本合并完成', 'success');
+        }
+        
+        // 添加导航
+        if (shouldAddNav) {
+          log('🧭 开始添加页面导航...', 'info');
+          addNavigation(newDoc);
+          log('✅ 页面导航添加完成', 'success');
+        }
+        
+        // 优化代码
+        if (shouldOptimize) {
+          log(' 开始优化代码结构...', 'info');
+          optimizeDocument(newDoc);
+          log('✅ 代码优化完成', 'success');
+        }
+        
+        // 返回完整的HTML字符串
+        const htmlString = '<!DOCTYPE html>\n' + newDoc.documentElement.outerHTML;
+        log(`📝 已生成最终HTML字符串 (${formatFileSize(new Blob([htmlString]).size)})`, 'success');
+        
+        return htmlString;
+      } catch (error) {
+        log(`❌ 创建合并文档失败: ${error.message}`, 'error');
+        log(`   错误堆栈: ${error.stack}`, 'error');
+        throw error;
+      }
+    }
+    
+    // 合并样式
+    function mergeStyles(targetDoc, doc1, doc2) {
+      const styles1 = Array.from(doc1.querySelectorAll('style'));
+      const styles2 = Array.from(doc2.querySelectorAll('style'));
+      
+      // 移除第二个文档的重复样式
+      styles2.forEach(style => {
+        if (!containsStyle(targetDoc, style.textContent)) {
+          targetDoc.head.appendChild(style.cloneNode(true));
+          log('📝 已合并唯一样式块', 'info');
+        }
+      });
+      
+      // 合并link样式表
+      const links1 = Array.from(doc1.querySelectorAll('link[rel="stylesheet"]'));
+      const links2 = Array.from(doc2.querySelectorAll('link[rel="stylesheet"]'));
+      
+      links2.forEach(link => {
+        if (!containsLink(targetDoc, link.href)) {
+          targetDoc.head.appendChild(link.cloneNode(true));
+          log('🔗 已合并唯一样式表链接', 'info');
+        }
+      });
+    }
+    
+    // 合并脚本
+    function mergeScripts(targetDoc, doc1, doc2) {
+      const scripts1 = Array.from(doc1.querySelectorAll('script'));
+      const scripts2 = Array.from(doc2.querySelectorAll('script'));
+      
+      // 合并内联脚本
+      scripts2.forEach(script => {
+        if (script.src) {
+          // 外部脚本
+          if (!containsScript(targetDoc, script.src)) {
+            targetDoc.body.appendChild(script.cloneNode(true));
+            log('📜 已合并外部脚本', 'info');
+          }
+        } else if (script.textContent) {
+          // 内联脚本
+          if (!containsInlineScript(targetDoc, script.textContent)) {
+            targetDoc.body.appendChild(script.cloneNode(true));
+            log('📜 已合并内联脚本', 'info');
+          }
+        }
+      });
+    }
+    
+    // 添加导航按钮
+    function addNavigation(targetDoc) {
+      const navHTML = `
+<div id="page-navigation" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;gap:10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+  <button onclick="showPage('list')" style="padding:8px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📋 列表页</button>
+  <button onclick="showPage('detail')" style="padding:8px 16px;background:#52c41a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📄 详情页</button>
+</div>
+<script>
+(function() {
+  window.showPage = function(page) {
+    console.log('切换到页面:', page);
+    const listPage = document.getElementById('list-page-container');
+    const detailPage = document.getElementById('detail-page-container');
+    if (page === 'list') {
+      if (listPage) listPage.style.display = 'block';
+      if (detailPage) detailPage.style.display = 'none';
+    } else {
+      if (listPage) listPage.style.display = 'none';
+      if (detailPage) detailPage.style.display = 'block';
+    }
+  };
+  
+  // 默认显示列表页
+  document.addEventListener('DOMContentLoaded', function() {
+    showPage('list');
+  });
+})();
+<\/script>
+`;
+      
+      targetDoc.body.insertAdjacentHTML('afterbegin', navHTML);
+      log('🧭 已添加页面导航按钮', 'success');
+    }
+    
+    // 优化文档
+    function optimizeDocument(doc) {
+      // 移除重复的meta标签
+      const metas = Array.from(doc.querySelectorAll('meta'));
+      const seenMetas = new Set();
+      metas.forEach(meta => {
+        const key = meta.outerHTML;
+        if (seenMetas.has(key)) {
+          meta.remove();
+        } else {
+          seenMetas.add(key);
+        }
+      });
+      
+      log('🧹 已优化文档结构', 'info');
+    }
+    
+    // 辅助函数：检查是否包含某个样式
+    function containsStyle(doc, styleText) {
+      const styles = Array.from(doc.querySelectorAll('style'));
+      return styles.some(s => s.textContent.trim() === styleText.trim());
+    }
+    
+    // 辅助函数：检查是否包含某个链接
+    function containsLink(doc, href) {
+      const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+      return links.some(l => l.href === href);
+    }
+    
+    // 辅助函数：检查是否包含某个脚本
+    function containsScript(doc, src) {
+      const scripts = Array.from(doc.querySelectorAll('script[src]'));
+      return scripts.some(s => s.src === src);
+    }
+    
+    // 辅助函数：检查是否包含某个内联脚本
+    function containsInlineScript(doc, scriptText) {
+      const scripts = Array.from(doc.querySelectorAll('script:not([src])'));
+      return scripts.some(s => s.textContent.trim() === scriptText.trim());
+    }
+    
+    // 显示统计信息
+    function showStats(duration) {
+      const lines = mergedContent.split('\n').length;
+      const size = new Blob([mergedContent]).size;
+      
+      document.getElementById('totalLines').textContent = lines.toLocaleString();
+      document.getElementById('totalSize').textContent = formatFileSize(size);
+      document.getElementById('mergeTime').textContent = duration + 'ms';
+      document.getElementById('statsSection').style.display = 'grid';
+    }
+    
+    // 显示预览
+    function showPreview() {
+      if (!mergedContent) {
+        log('❌ 没有可预览的内容', 'error');
+        return;
+      }
+      
+      try {
+        const previewFrame = document.getElementById('previewFrame');
+        const previewSection = document.getElementById('previewSection');
+        
+        // 使用srcdoc设置iframe内容
+        previewFrame.srcdoc = mergedContent;
+        previewSection.style.display = 'block';
+        
+        log('️ 预览已生成', 'success');
+        
+        // 监听iframe加载状态
+        previewFrame.onload = function() {
+          log('✅ 预览页面加载完成', 'success');
+        };
+        
+        previewFrame.onerror = function() {
+          log('⚠️ 预览页面加载失败', 'error');
+        };
+      } catch (error) {
+        log(`❌ 预览失败: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+    
+    // 下载合并后的文件
+    function downloadMergedFile() {
+      if (!mergedContent) {
+        alert('没有可下载的内容！');
+        return;
+      }
+      
+      const blob = new Blob([mergedContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ai-improve-report-merged.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      log('💾 文件已下载', 'success');
+    }
+    
+    // 日志记录
+    function log(message, type = 'info') {
+      const logSection = document.getElementById('logSection');
+      const logContent = document.getElementById('logContent');
+      
+      logSection.style.display = 'block';
+      
+      const timestamp = new Date().toLocaleTimeString('zh-CN');
+      const logLine = `[${timestamp}] ${message}\n`;
+      
+      const span = document.createElement('span');
+      span.className = `log-${type}`;
+      span.textContent = logLine;
+      logContent.appendChild(span);
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+    
+    // 格式化文件大小
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+    
+    // 重置表单
+    function resetForm() {
+      document.getElementById('file1').value = '';
+      document.getElementById('file2').value = '';
+      file1Content = null;
+      file2Content = null;
+      mergedContent = null;
+      
+      document.getElementById('logSection').style.display = 'none';
+      document.getElementById('logContent').innerHTML = '';
+      document.getElementById('previewSection').style.display = 'none';
+      document.getElementById('statsSection').style.display = 'none';
+      
+      log('🔄 已重置表单', 'info');
+    }
+    
+    // 页面加载时的提示
+    window.addEventListener('load', () => {
+      log('🎯 HTML合并工具已就绪，请选择要合并的文件', 'info');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI改进分析 - 设置</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    /* 顶部导航 */
+    .nav-header {
+      background: #fff;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .back-btn:active {
+      background: #e0e0e0;
+      transform: scale(0.95);
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+      flex: 1;
+    }
+
+    /* 容器 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* 左右布局 */
+    .main-layout {
+      display: flex;
+      gap: 0;
+      max-width: 1400px;
+      margin: 0 auto;
+      min-height: calc(100vh - 64px);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px 40px 20px 20px;
+      overflow-y: auto;
+    }
+
+    .prd-sidebar {
+      width: 320px;
+      background: #fafbfc;
+      border-left: 1px solid #e8e8e8;
+      padding: 24px;
+      overflow-y: auto;
+      max-height: calc(100vh - 64px);
+      position: sticky;
+      top: 64px;
+    }
+
+    /* 功能模块卡片 */
+    .module-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 0;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .module-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .module-header::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: #165dff;
+      border-radius: 2px;
+    }
+
+    .module-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .module-body {
+      padding: 20px 24px;
+    }
+
+    /* 开关组 */
+    .switch-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .switch-group:last-child {
+      border-bottom: none;
+    }
+
+    .switch-label {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .switch-desc {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+
+    /* 开关按钮 */
+    .switch-toggle {
+      position: relative;
+      width: 48px;
+      height: 26px;
+      background: #d9d9d9;
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .switch-toggle.active {
+      background: #165dff;
+    }
+
+    .switch-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .switch-toggle.active::after {
+      left: 25px;
+    }
+
+    /* 配置行 */
+    .config-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 12px;
+    }
+
+    .config-row:last-child {
+      border-bottom: none;
+    }
+
+    .config-label {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .switch-toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: #e0e0e0;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .switch-toggle.active {
+      background: #165dff;
+    }
+
+    .switch-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .switch-toggle.active::after {
+      left: 27px;
+    }
+
+    .switch-status {
+      font-size: 14px;
+      color: #165dff;
+      font-weight: 500;
+    }
+
+    /* 周期选择器 */
+    .period-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .period-text {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .weekday-selector,
+    .time-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .weekday-selector:hover,
+    .time-selector:hover {
+      border-color: #165dff;
+      background: #f0f5ff;
+    }
+
+    .weekday-display {
+      color: #165dff;
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .time-display {
+      color: #165dff;
+      font-weight: 600;
+      min-width: 45px;
+    }
+
+    .dropdown-arrow {
+      font-size: 10px;
+      color: #999;
+    }
+
+    .clock-icon {
+      font-size: 14px;
+    }
+
+    .auto-text {
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* 星期选择器 */
+    .weekday-picker {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 12px;
+      z-index: 1000;
+      display: none;
+    }
+
+    .weekday-picker.show {
+      display: block;
+    }
+
+    .weekday-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .weekday-item {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      transition: all 0.2s;
+    }
+
+    .weekday-item:hover {
+      border-color: #165dff;
+      background: #f0f5ff;
+    }
+
+    .weekday-item.selected {
+      background: #165dff;
+      border-color: #165dff;
+      color: #fff;
+    }
+
+    /* 时间选择器 */
+    .time-picker {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 12px;
+      z-index: 1000;
+      display: none;
+    }
+
+    .time-picker.show {
+      display: block;
+    }
+
+    .time-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .time-input {
+      width: 60px;
+      padding: 6px 8px;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      font-size: 16px;
+      text-align: center;
+      color: #165dff;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .time-input:focus {
+      border-color: #165dff;
+    }
+
+    .time-separator {
+      font-size: 18px;
+      color: #999;
+      font-weight: bold;
+    }
+
+    /* 执行策略描述 */
+    .strategy-desc {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    /* 时间信息 */
+    .time-info {
+      margin-top: 16px;
+      padding: 16px;
+      background: #fafbfc;
+      border-radius: 8px;
+    }
+
+    .time-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .time-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .time-label {
+      color: #666;
+      min-width: 80px;
+    }
+
+    .time-value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .time-value.highlighted {
+      color: #165dff;
+      font-weight: 600;
+    }
+
+    /* 下拉框 */
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-box {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .select-box:focus {
+      border-color: #165dff;
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+    }
+
+    .select-arrow {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #999;
+      font-size: 12px;
+    }
+
+    /* 按钮 */
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #165dff 0%, #0e42d0 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(22, 93, 255, 0.25);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+    }
+
+    .btn-primary:disabled {
+      background: #d9d9d9;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    /* 时间显示 */
+    .time-info {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .time-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .time-label {
+      color: #999;
+    }
+
+    .time-value {
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* 周期选项 */
+    .period-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .period-item {
+      padding: 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .period-item:hover {
+      border-color: #165dff;
+      background: #f0f5ff;
+    }
+
+    .period-item.selected {
+      border-color: #165dff;
+      background: #f0f5ff;
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+    }
+
+    .period-icon {
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+
+    .period-text {
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* 多选项目下拉框 */
+    .multi-select-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .select-display {
+      min-height: 44px;
+      padding: 8px 40px 8px 16px;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      transition: all 0.3s;
+    }
+
+    .select-display:hover {
+      border-color: #165dff;
+    }
+
+    .select-display.active {
+      border-color: #165dff;
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+    }
+
+    .placeholder {
+      color: #999;
+      font-size: 14px;
+    }
+
+    .checkmark-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      font-size: 12px;
+      transition: transform 0.3s;
+    }
+
+    .select-display.active .checkmark-icon {
+      transform: translateY(-50%) rotate(180deg);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-height: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dropdown-search {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .search-input:focus {
+      border-color: #165dff;
+      box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+    }
+
+    .dropdown-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+
+    .action-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 13px;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      border-color: #165dff;
+      color: #165dff;
+      background: #f0f5ff;
+    }
+
+    .check-square {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d9d9d9;
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+
+    .check-square.checked {
+      background: #165dff;
+      border-color: #165dff;
+    }
+
+    .check-square.checked::after {
+      content: '✓';
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .dropdown-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .project-option {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .project-option:hover {
+      background: #f0f5ff;
+    }
+
+    .project-option.selected {
+      background: #f0f5ff;
+      color: #165dff;
+    }
+
+    .project-option .option-check {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #d9d9d9;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .project-option.selected .option-check {
+      background: #165dff;
+      border-color: #165dff;
+    }
+
+    .project-option.selected .option-check::after {
+      content: '✓';
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .project-option .option-text {
+      flex: 1;
+    }
+
+    .project-option .option-id {
+      font-size: 12px;
+      color: #999;
+      margin-left: 8px;
+    }
+
+    .no-results {
+      padding: 20px;
+      text-align: center;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .selected-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      min-height: 0;
+    }
+
+    .selected-tags:empty {
+      display: none;
+    }
+
+    .tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #f0f5ff;
+      border: 1px solid #d6e4ff;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #165dff;
+    }
+
+    .tag-remove {
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .tag-remove:hover {
+      opacity: 1;
+    }
+
+    .tag-remove:hover {
+      opacity: 1;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 480px) {
+      .container {
+        padding: 12px;
+      }
+
+      .module-card {
+        padding: 20px;
+      }
+
+      .period-options {
+        grid-template-columns: 1fr;
+      }
+
+      .checkbox-item {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+    }
+
+    /* PRD说明面板 */
+    .prd-section {
+      margin-bottom: 24px;
+    }
+
+    .prd-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #165dff;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #165dff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .prd-section-title::before {
+      content: '📋';
+    }
+
+    .prd-warning {
+      background: #fff3e0;
+      border: 1px solid #ffd591;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .prd-warning-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d48806;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .prd-warning-title::before {
+      content: '⚠️';
+    }
+
+    .prd-warning-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .prd-warning-list li {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 4px;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .prd-warning-list li::before {
+      content: '•';
+      position: absolute;
+      left: 4px;
+      color: #d48806;
+    }
+
+    .prd-field-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e8e8e8;
+    }
+
+    .prd-field-table th {
+      background: #f0f5ff;
+      color: #165dff;
+      font-weight: 600;
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #d6e4ff;
+    }
+
+    .prd-field-table td {
+      padding: 8px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+    }
+
+    .prd-field-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .prd-field-table tr:hover {
+      background: #fafbfc;
+    }
+
+    .prd-required {
+      display: inline-block;
+      background: #ff4d4f;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .prd-optional {
+      display: inline-block;
+      background: #d9d9d9;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .prd-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #165dff;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
+    .prd-execution-type {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .prd-execution-tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .prd-execution-tab.active {
+      background: #165dff;
+      color: #fff;
+      border-color: #165dff;
+    }
+
+    .prd-execution-content {
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .prd-execution-content p {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .prd-execution-content p:last-child {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="nav-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <div class="nav-title">分析设置</div>
+  </div>
+
+  <!-- 容器 -->
+  <div class="main-layout">
+    
+    <!-- 左侧主内容 -->
+    <div class="main-content">
+    
+    <!-- 定时执行配置 -->
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-title">定时执行配置</div>
+      </div>
+      <div class="module-body">
+      
+      <div class="config-row">
+        <div class="config-label">定时开关：</div>
+        <div class="switch-toggle" id="scheduledSwitch" onclick="toggleScheduled()"></div>
+        <span class="switch-status" id="switchStatus">已启用</span>
+      </div>
+
+      <div class="config-row" id="periodConfig" style="opacity: 0.5;">
+        <div class="config-label">执行周期：</div>
+        <div class="period-selector">
+          <span class="period-text">每周</span>
+          <div class="weekday-selector" onclick="toggleWeekdayPicker(event)">
+            <span class="weekday-display" id="weekdayDisplay">五</span>
+            <span class="dropdown-arrow">▼</span>
+          </div>
+          <div class="time-selector" onclick="toggleTimePicker(event)">
+            <span class="time-display" id="timeDisplay">22:00</span>
+            <span class="clock-icon">🕐</span>
+          </div>
+          <span class="auto-text">自动执行</span>
+        </div>
+      </div>
+
+      <div class="config-row" id="strategyConfig">
+        <div class="config-label">执行策略：</div>
+        <div class="strategy-desc">
+          遍历所有项目，分析有「拒绝」、「已排除」或「已有批注」的患者数据
+        </div>
+      </div>
+      
+      </div>
+    </div>
+
+    <!-- 手动执行 -->
+    <div class="module-card">
+      <div class="module-header">
+        <div class="module-title">手动执行</div>
+      </div>
+      <div class="module-body">
+      
+      <div class="config-row">
+        <div class="config-label">选择项目：</div>
+        <div class="multi-select-wrapper" style="flex: 1;">
+          <div class="select-display" id="manualSelectDisplay" onclick="toggleManualDropdown()">
+            <span class="placeholder" id="manualSelectPlaceholder">请选择项目...</span>
+            <span class="checkmark-icon">▼</span>
+          </div>
+          
+          <div class="dropdown-menu" id="manualDropdownMenu" style="display: none;">
+            <div class="dropdown-search">
+              <input type="text" class="search-input" id="manualSearchInput" placeholder="搜索项目..." oninput="filterManualProjects()">
+            </div>
+            
+            <div class="dropdown-actions">
+              <button class="action-btn" onclick="toggleManualSelectAll(event)">
+                <span id="manualSelectAllCheckbox" class="check-square"></span>
+                <span>全选</span>
+              </button>
+              <button class="action-btn" onclick="clearManualSelection(event)">清空</button>
+            </div>
+            
+            <div class="dropdown-list" id="manualProjectList">
+              <!-- 动态生成项目列表 -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="selected-tags" id="manualSelectedTags"></div>
+      <div class="selected-info" id="manualSelectedInfo">
+        已选择 0 个项目
+      </div>
+
+      <button class="btn-primary" id="executeBtn" onclick="executeAnalysis()" style="margin-top: 20px;">
+        执行分析
+      </button>
+      
+      </div>
+    </div>
+    
+    </div>
+
+    <!-- 右侧PRD说明 -->
+    <div class="prd-sidebar">
+      <div class="prd-section">
+        <div class="prd-section-title">前置条件</div>
+        <div class="prd-warning">
+          <div class="prd-warning-title">重要提示</div>
+          <p style="font-size: 12px; color: #666; margin-bottom: 8px;">只有满足以下条件的项目，才能进行分析设置和运行：</p>
+          <ul class="prd-warning-list">
+            <li><strong>项目已上架</strong>：项目状态为"已上架/运行中"</li>
+            <li><strong>已有患者入组</strong>：项目中至少有患者数据进入筛选流程</li>
+            <li><strong>有人工审核数据</strong>：至少有一条患者记录完成了人工审核（CRC 提交、CRA 审核）</li>
+            <li><strong>有批注数据</strong>：人工审核过程中留下了批注（审核意见、修正记录等）</li>
+          </ul>
+        </div>
+        <p style="font-size: 12px; color: #999; margin-top: 8px;">⚠ 不满足上述条件的项目，系统不会进行分析对比；模型的输入字段</p>
+      </div>
+
+      <div class="prd-section">
+        <div class="prd-section-title">模型输入数据字段</div>
+        <p style="font-size: 12px; color: #666; margin-bottom: 12px;">以下字段将作为AI模型的输入参数，用于改进分析</p>
+        <div style="font-size: 12px; color: #165dff; margin-bottom: 12px; font-weight: 600;">共 14 个字段</div>
+        
+        <table class="prd-field-table">
+          <thead>
+            <tr>
+              <th style="width: 30px;">#</th>
+              <th>字段名称</th>
+              <th style="width: 60px;">要求</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="prd-number">01</span></td>
+              <td>公司名称 <span style="color: #999; font-size: 11px;">company</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">02</span></td>
+              <td>阶段 <span style="color: #999; font-size: 11px;">stage</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">03</span></td>
+              <td>审核编号 <span style="color: #999; font-size: 11px;">auditNo</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">04</span></td>
+              <td>患者缩写 <span style="color: #999; font-size: 11px;">patientAbbr</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">05</span></td>
+              <td>项目编号 <span style="color: #999; font-size: 11px;">projectCode</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">06</span></td>
+              <td>方案编号 <span style="color: #999; font-size: 11px;">schemeNo</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">07</span></td>
+              <td>匹配率 <span style="color: #999; font-size: 11px;">matchRate</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">08</span></td>
+              <td>AI建议 <span style="color: #999; font-size: 11px;">aiSuggestion</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">09</span></td>
+              <td>操作人 <span style="color: #999; font-size: 11px;">operator</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">10</span></td>
+              <td>roleName</td>
+              <td><span class="prd-optional">可选</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">11</span></td>
+              <td>状态 <span style="color: #999; font-size: 11px;">status</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">12</span></td>
+              <td>批注 <span style="color: #999; font-size: 11px;">annotation</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">13</span></td>
+              <td>操作时间 <span style="color: #999; font-size: 11px;">operateTime</span></td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+            <tr>
+              <td><span class="prd-number">14</span></td>
+              <td>耗时</td>
+              <td><span class="prd-required">必填</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prd-section">
+        <div class="prd-section-title">执行时间设置</div>
+        <div class="prd-execution-type">
+          <div class="prd-execution-tab active">系统自动</div>
+          <div class="prd-execution-tab">手动设置</div>
+        </div>
+        <div class="prd-execution-content">
+          <p><strong>系统自动执行</strong>：默认的系统自动执行任务时间，在"定时执行配置"中设置</p>
+          <p><strong>手动设置</strong>：可以手动选择执行某个项目或所有项目，在"手动执行"中操作</p>
+        </div>
+      </div>
+    </div>
+    
+    </div>
+
+  </div>
+
+  <script>
+    // 返回上一页
+    function goBack() {
+      window.history.back();
+    }
+
+    // 定时执行开关
+    let scheduledEnabled = false;
+    let selectedWeekday = 5; // 1-7表示周一到周日
+    let selectedTime = '22:00';
+    let selectedProjects = [];
+    let dropdownOpen = false;
+
+    // 模拟100+项目数据
+    const allProjects = [];
+    const projectNames = ['糖尿病药物疗效评估', '心血管风险预测研究', '癌症早期筛查验证', '高血压药物治疗观察', '呼吸系统疾病研究', '神经系统疾病药物试验', '消化系统疾病研究', '内分泌疾病研究', '免疫系统疾病研究', '血液系统疾病研究'];
+    for (let i = 1; i <= 120; i++) {
+      allProjects.push({
+        id: `project${i}`,
+        name: `项目${i} - ${projectNames[(i-1) % projectNames.length]}${i > 10 ? Math.ceil(i/10) : ''}`
+      });
+    }
+
+    // 切换定时开关
+    function toggleScheduled() {
+      const switchEl = document.getElementById('scheduledSwitch');
+      const statusText = document.getElementById('switchStatus');
+      const periodConfig = document.getElementById('periodConfig');
+      const timeInfo = document.getElementById('timeInfo');
+      
+      scheduledEnabled = !scheduledEnabled;
+      
+      if (scheduledEnabled) {
+        switchEl.classList.add('active');
+        statusText.textContent = '已启用';
+        periodConfig.style.opacity = '1';
+        timeInfo.style.display = 'block';
+        updateTimeInfo();
+      } else {
+        switchEl.classList.remove('active');
+        statusText.textContent = '已停用';
+        periodConfig.style.opacity = '0.5';
+        timeInfo.style.display = 'none';
+      }
+    }
+
+    // 切换星期选择器
+    function toggleWeekdayPicker(event) {
+      event.stopPropagation();
+      
+      // 移除其他选择器
+      closeAllPickers();
+      
+      let picker = document.getElementById('weekdayPicker');
+      if (!picker) {
+        picker = createWeekdayPicker();
+      }
+      
+      if (picker.style.display === 'none') {
+        picker.style.display = 'block';
+      } else {
+        picker.style.display = 'none';
+      }
+    }
+
+    // 创建星期选择器
+    function createWeekdayPicker() {
+      const picker = document.createElement('div');
+      picker.id = 'weekdayPicker';
+      picker.className = 'weekday-picker';
+      
+      const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+      picker.innerHTML = `
+        <div class="weekday-grid">
+          ${weekdays.map((day, index) => `
+            <div class="weekday-item ${index + 1 === selectedWeekday ? 'selected' : ''}" onclick="selectWeekday(${index + 1}, '${day}', event)">
+              ${day}
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      document.querySelector('.period-selector').appendChild(picker);
+      return picker;
+    }
+
+    // 选择星期
+    function selectWeekday(dayNum, dayText, event) {
+      event.stopPropagation();
+      selectedWeekday = dayNum;
+      document.getElementById('weekdayDisplay').textContent = dayText;
+      
+      // 更新选中状态
+      document.querySelectorAll('.weekday-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+      
+      setTimeout(() => {
+        document.getElementById('weekdayPicker').style.display = 'none';
+      }, 200);
+      
+      updateTimeInfo();
+    }
+
+    // 切换时间选择器
+    function toggleTimePicker(event) {
+      event.stopPropagation();
+      
+      // 移除其他选择器
+      closeAllPickers();
+      
+      let picker = document.getElementById('timePicker');
+      if (!picker) {
+        picker = createTimePicker();
+      }
+      
+      if (picker.style.display === 'none') {
+        picker.style.display = 'block';
+      } else {
+        picker.style.display = 'none';
+      }
+    }
+
+    // 创建时间选择器
+    function createTimePicker() {
+      const picker = document.createElement('div');
+      picker.id = 'timePicker';
+      picker.className = 'time-picker';
+      
+      const [hours, minutes] = selectedTime.split(':');
+      picker.innerHTML = `
+        <div class="time-input-wrapper">
+          <input type="text" class="time-input" id="hourInput" value="${hours}" maxlength="2">
+          <span class="time-separator">:</span>
+          <input type="text" class="time-input" id="minuteInput" value="${minutes}" maxlength="2">
+        </div>
+      `;
+      
+      document.querySelector('.period-selector').appendChild(picker);
+      
+      // 绑定事件
+      setTimeout(() => {
+        document.getElementById('hourInput').addEventListener('change', updateTime);
+        document.getElementById('minuteInput').addEventListener('change', updateTime);
+      }, 100);
+      
+      return picker;
+    }
+
+    // 更新时间
+    function updateTime() {
+      let hours = document.getElementById('hourInput').value.padStart(2, '0');
+      let minutes = document.getElementById('minuteInput').value.padStart(2, '0');
+      
+      // 限制范围
+      hours = Math.min(23, Math.max(0, parseInt(hours) || 0));
+      minutes = Math.min(59, Math.max(0, parseInt(minutes) || 0));
+      
+      selectedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      document.getElementById('timeDisplay').textContent = selectedTime;
+      
+      setTimeout(() => {
+        const picker = document.getElementById('timePicker');
+        if (picker) picker.style.display = 'none';
+      }, 200);
+      
+      updateTimeInfo();
+    }
+
+    // 关闭所有选择器
+    function closeAllPickers() {
+      const weekdayPicker = document.getElementById('weekdayPicker');
+      const timePicker = document.getElementById('timePicker');
+      if (weekdayPicker) weekdayPicker.style.display = 'none';
+      if (timePicker) timePicker.style.display = 'none';
+    }
+
+    // 更新时间信息
+    function updateTimeInfo() {
+      const now = new Date();
+      const [hours, minutes] = selectedTime.split(':');
+      
+      // 计算上次执行时间（上次的星期几）
+      const lastRun = new Date(now);
+      const daysSinceLastRun = 7; // 假设每周执行
+      lastRun.setDate(lastRun.getDate() - daysSinceLastRun);
+      lastRun.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      // 计算下次执行时间
+      const nextRun = new Date(now);
+      nextRun.setDate(nextRun.getDate() + (7 - daysSinceLastRun));
+      nextRun.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      document.getElementById('lastRun').textContent = formatDate(lastRun);
+      document.getElementById('nextRun').textContent = formatDate(nextRun);
+    }
+
+    // 格式化日期
+    function formatDate(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    // 更新时间信息
+    function updateTimeInfo() {
+      const now = new Date();
+      const lastRun = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      let nextRun;
+      
+      switch (selectedPeriod) {
+        case 'daily':
+          nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          break;
+        case 'weekly':
+          nextRun = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'biweekly':
+          nextRun = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+          break;
+        case 'monthly':
+          nextRun = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          break;
+      }
+      
+      document.getElementById('lastRun').textContent = formatDateTime(lastRun);
+      document.getElementById('nextRun').textContent = formatDateTime(nextRun);
+    }
+
+    // 格式化日期时间
+    function formatDateTime(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    // 手动执行项目选择
+    let manualSelectedProjects = [];
+    let manualDropdownOpen = false;
+
+    // 切换手动执行下拉菜单
+    function toggleManualDropdown() {
+      const dropdown = document.getElementById('manualDropdownMenu');
+      const selectDisplay = document.getElementById('manualSelectDisplay');
+      
+      if (manualDropdownOpen) {
+        dropdown.style.display = 'none';
+        selectDisplay.classList.remove('active');
+      } else {
+        dropdown.style.display = 'block';
+        selectDisplay.classList.add('active');
+        renderManualProjectList();
+      }
+      
+      manualDropdownOpen = !manualDropdownOpen;
+    }
+
+    // 渲染手动执行项目列表
+    function renderManualProjectList(filter = '') {
+      const listContainer = document.getElementById('manualProjectList');
+      const filteredProjects = allProjects.filter(p => 
+        p.name.toLowerCase().includes(filter.toLowerCase())
+      );
+      
+      if (filteredProjects.length === 0) {
+        listContainer.innerHTML = '<div class="no-results">未找到匹配的项目</div>';
+        return;
+      }
+      
+      // 只显示前50条以避免性能问题
+      const displayProjects = filteredProjects.slice(0, 50);
+      
+      listContainer.innerHTML = displayProjects.map(project => {
+        const isSelected = manualSelectedProjects.includes(project.id);
+        return `
+          <div class="project-option ${isSelected ? 'selected' : ''}" onclick="toggleManualSingleProject(event, '${project.id}', '${project.name}')">
+            <div class="option-check"></div>
+            <span class="option-text">${project.name}</span>
+            <span class="option-id">#${project.id}</span>
+          </div>
+        `;
+      }).join('');
+      
+      // 如果超过50条，显示提示
+      if (filteredProjects.length > 50) {
+        listContainer.innerHTML += `<div class="no-results">... 还有 ${filteredProjects.length - 50} 个项目，请继续使用搜索筛选</div>`;
+      }
+    }
+
+    // 过滤手动执行项目
+    function filterManualProjects() {
+      const searchTerm = document.getElementById('manualSearchInput').value;
+      renderManualProjectList(searchTerm);
+    }
+
+    // 切换单个手动执行项目
+    function toggleManualSingleProject(event, projectId, projectName) {
+      event.stopPropagation();
+      
+      const index = manualSelectedProjects.indexOf(projectId);
+      const optionElement = event.currentTarget;
+      
+      if (index > -1) {
+        // 取消选择
+        manualSelectedProjects.splice(index, 1);
+        optionElement.classList.remove('selected');
+      } else {
+        // 选择
+        manualSelectedProjects.push(projectId);
+        optionElement.classList.add('selected');
+      }
+      
+      updateManualSelectionUI();
+      updateManualSelectAllCheckbox();
+    }
+
+    // 全选/取消全选手动执行项目
+    function toggleManualSelectAll(event) {
+      event.stopPropagation();
+      
+      const allSelected = manualSelectedProjects.length === allProjects.length;
+      
+      if (allSelected) {
+        // 取消全选
+        manualSelectedProjects = [];
+        const checkboxes = document.querySelectorAll('#manualProjectList .project-option');
+        checkboxes.forEach(opt => opt.classList.remove('selected'));
+      } else {
+        // 全选
+        manualSelectedProjects = allProjects.map(p => p.id);
+        const checkboxes = document.querySelectorAll('#manualProjectList .project-option');
+        checkboxes.forEach(opt => opt.classList.add('selected'));
+      }
+      
+      updateManualSelectionUI();
+      updateManualSelectAllCheckbox();
+    }
+
+    // 更新手动执行全选复选框状态
+    function updateManualSelectAllCheckbox() {
+      const checkbox = document.getElementById('manualSelectAllCheckbox');
+      const allSelected = manualSelectedProjects.length === allProjects.length;
+      
+      if (allSelected) {
+        checkbox.classList.add('checked');
+      } else {
+        checkbox.classList.remove('checked');
+      }
+    }
+
+    // 清空手动执行选择
+    function clearManualSelection(event) {
+      event.stopPropagation();
+      manualSelectedProjects = [];
+      const checkboxes = document.querySelectorAll('#manualProjectList .project-option');
+      checkboxes.forEach(opt => opt.classList.remove('selected'));
+      updateManualSelectionUI();
+      updateManualSelectAllCheckbox();
+    }
+
+    // 更新手动执行选择UI
+    function updateManualSelectionUI() {
+      const selectDisplay = document.getElementById('manualSelectDisplay');
+      const placeholder = document.getElementById('manualSelectPlaceholder');
+      const tagsContainer = document.getElementById('manualSelectedTags');
+      const info = document.getElementById('manualSelectedInfo');
+      const executeBtn = document.getElementById('executeBtn');
+      
+      if (manualSelectedProjects.length === 0) {
+        placeholder.style.display = 'block';
+        placeholder.textContent = '请选择项目...';
+        tagsContainer.innerHTML = '';
+        info.textContent = '已选择 0 个项目';
+        info.style.color = '#999';
+        executeBtn.disabled = true;
+      } else {
+        placeholder.style.display = 'none';
+        
+        // 显示前5个标签
+        const displayProjects = allProjects.filter(p => manualSelectedProjects.includes(p.id)).slice(0, 5);
+        tagsContainer.innerHTML = displayProjects.map(project => `
+          <span class="tag-item">
+            ${project.name}
+            <span class="tag-remove" onclick="removeManualTag('${project.id}')">×</span>
+          </span>
+        `).join('');
+        
+        // 如果超过5个，显示省略号
+        if (manualSelectedProjects.length > 5) {
+          tagsContainer.innerHTML += `<span class="tag-item">+${manualSelectedProjects.length - 5}</span>`;
+        }
+        
+        info.textContent = `已选择 ${manualSelectedProjects.length} 个项目`;
+        info.style.color = '#165dff';
+        executeBtn.disabled = false;
+      }
+    }
+
+    // 移除手动执行标签
+    function removeManualTag(projectId) {
+      const index = manualSelectedProjects.indexOf(projectId);
+      if (index > -1) {
+        manualSelectedProjects.splice(index, 1);
+        
+        // 更新列表中的选中状态
+        const options = document.querySelectorAll('#manualProjectList .project-option');
+        options.forEach(opt => {
+          if (opt.getAttribute('onclick').includes(projectId)) {
+            opt.classList.remove('selected');
+          }
+        });
+        
+        updateManualSelectionUI();
+        updateManualSelectAllCheckbox();
+      }
+    }
+
+    // 初始化
+    function init() {
+      // 从 URL 获取参数
+      const urlParams = new URLSearchParams(window.location.search);
+      const pageTitle = urlParams.get('title');
+      if (pageTitle) {
+        document.querySelector('.nav-title').textContent = decodeURIComponent(pageTitle);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

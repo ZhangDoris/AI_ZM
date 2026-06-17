@@ -1,0 +1,82 @@
+<div id="test-module">
+  <div class="breadcrumb">当前位置：<span onclick="switchModule('test')">测试后台</span></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
+    <button class="btn btn-default">📋 测试报告</button>
+    <button class="btn btn-primary">▶ 全部执行</button>
+  </div>
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+    <div class="stat-card"><div class="stat-icon" style="background:#f0fdf4"><span>✅</span></div><div class="stat-info"><div class="stat-value">3</div><div class="stat-label">通过</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fff1f0"><span>❌</span></div><div class="stat-info"><div class="stat-value">1</div><div class="stat-label">失败</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#fffbeb"><span>⏭️</span></div><div class="stat-info"><div class="stat-value">1</div><div class="stat-label">跳过</div></div></div>
+    <div class="stat-card"><div class="stat-icon" style="background:#f5f5f5"><span>📊</span></div><div class="stat-info"><div class="stat-value">75%</div><div class="stat-label">通过率</div></div></div>
+  </div>
+  <div class="filter-bar">
+    <input class="filter-input" placeholder="🔍 搜索用例" style="width:200px" />
+    <select class="filter-select"><option>全部模块</option><option>审核列表</option><option>智能筛选</option><option>脱敏管理</option></select>
+    <select class="filter-select"><option>全部状态</option><option>通过</option><option>失败</option><option>跳过</option></select>
+    <button class="btn btn-primary btn-sm">搜索</button>
+  </div>
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr><th><input type="checkbox"/></th><th>用例编号</th><th>用例名称</th><th>所属模块</th><th>执行者</th><th>最近执行时间</th><th>耗时</th><th>状态</th><th>操作</th></tr>
+      </thead>
+      <tbody id="testTableBody">
+        <!-- 数据将通过JavaScript动态加载 -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// 测试后台模块初始化
+function initTestModule(subModule) {
+  console.log('初始化测试后台模块:', subModule);
+  loadTestData();
+}
+
+// 加载测试用例数据
+function loadTestData() {
+  const cases = [
+    { id:'TC-001', name:'审核流程全链路测试', module:'审核列表', status:'通过', lastRun:'2024-06-01 10:00', duration:'1.2s', author:'测试A' },
+    { id:'TC-002', name:'AI筛选算法准确率验证', module:'智能筛选', status:'失败', lastRun:'2024-06-01 10:05', duration:'3.5s', author:'测试B' },
+    { id:'TC-003', name:'邀请码生成与验证', module:'邀请码', status:'通过', lastRun:'2024-06-01 10:08', duration:'0.8s', author:'测试A' },
+    { id:'TC-004', name:'脱敏规则正确性测试', module:'脱敏管理', status:'通过', lastRun:'2024-06-01 10:10', duration:'0.4s', author:'测试C' },
+    { id:'TC-005', name:'数据导出格式验证', module:'数据统计', status:'跳过', lastRun:'2024-06-01 10:12', duration:'-', author:'测试B' }
+  ];
+  
+  const tbody = document.getElementById('testTableBody');
+  if (tbody) {
+    tbody.innerHTML = cases.map(c => `
+      <tr>
+        <td><input type="checkbox"/></td>
+        <td style="color:#1677ff;font-weight:500">${c.id}</td>
+        <td><strong>${c.name}</strong></td>
+        <td><span class="tag">${c.module}</span></td>
+        <td style="font-size:13px;color:#666">${c.author}</td>
+        <td style="font-size:12.5px;color:#888">${c.lastRun}</td>
+        <td style="font-size:13px;color:#555">${c.duration}</td>
+        <td>${testStatusBadge(c.status)}</td>
+        <td>
+          <span class="action-link">▶ 执行</span>
+          <span class="action-sep">|</span>
+          <span class="action-link">日志</span>
+          <span class="action-sep">|</span>
+          <span class="action-link">编辑</span>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+// 状态徽章辅助函数（从index.html复制）
+function testStatusBadge(s) {
+  if(s==='通过') return '<span class="badge badge-success">✓ 通过</span>';
+  if(s==='失败') return '<span class="badge badge-error">✗ 失败</span>';
+  return '<span class="badge badge-gray">— 跳过</span>';
+}
+</script>
+
+<style>
+/* 测试后台模块特定样式 */
+</style>

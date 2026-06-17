@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>筛选表日志（最新）- AI智能筛选系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a1a;
+    }
+
+    /* 顶部导航栏 */
+    .nav-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-btn:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .nav-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* 页面容器 */
+    .page-container {
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* 面包屑 */
+    .breadcrumb {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .breadcrumb span {
+      color: #667eea;
+      cursor: pointer;
+    }
+
+    .breadcrumb span:hover {
+      text-decoration: underline;
+    }
+
+    /* 页面标题 */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .page-desc {
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* 搜索区域 */
+    .filter-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      color: #555;
+      font-weight: 500;
+    }
+
+    .filter-input {
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .filter-date-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-date-range input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-default {
+      background: #fff;
+      color: #555;
+      border: 1px solid #d9d9d9;
+    }
+
+    .btn-default:hover {
+      color: #667eea;
+      border-color: #667eea;
+    }
+
+    /* 表格区域 */
+    .table-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .table-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table thead {
+      background: #fafafa;
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #555;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .data-table tbody tr:hover {
+      background: #fafafa;
+    }
+
+    /* 状态标签 */
+    .status-tag {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background: #f5f5f5;
+      color: #888;
+    }
+
+    .status-success {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+
+    .status-failed {
+      background: #fff2f0;
+      color: #ff4d4f;
+      border: 1px solid #ffccc7;
+    }
+
+    /* 操作按钮 */
+    .action-link {
+      color: #667eea;
+      cursor: pointer;
+      margin-right: 12px;
+      font-size: 13px;
+    }
+
+    .action-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .page-size-select {
+      padding: 4px 8px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #fff;
+      font-size: 13px;
+    }
+
+    .page-btn.active {
+      border-color: #667eea;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    /* PRD 说明面板 */
+    .prd-panel {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      z-index: 999;
+      background: #1a1a2e;
+      color: #eee;
+      border-radius: 8px;
+      padding: 12px 16px;
+      max-width: 320px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      display: none;
+    }
+
+    .prd-panel.show {
+      display: block;
+    }
+
+    .prd-panel h3 {
+      color: #667eea;
+      font-size: 15px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #333;
+    }
+
+    .prd-panel h4 {
+      color: #764ba2;
+      font-size: 13px;
+      margin: 12px 0 6px 0;
+    }
+
+    .prd-panel ul {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+
+    .prd-panel li {
+      margin-bottom: 4px;
+    }
+
+    .prd-panel code {
+      background: #2a2a4a;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .prd-toggle-btn {
+      position: fixed;
+      top: 70px;
+      right: 10px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s;
+    }
+
+    .prd-toggle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+    }
+
+    .prd-toggle-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .page-container {
+        padding: 16px;
+      }
+
+      .data-table {
+        font-size: 12px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="nav-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <div class="nav-title">匹配管理 - 筛选表日志</div>
+  </div>
+
+  <!-- PRD 说明切换按钮 -->
+  <button class="prd-toggle-btn" onclick="togglePRDPanels()">📋 PRD 说明</button>
+
+  <!-- PRD 说明面板 -->
+  <div class="prd-panel" id="prdPanel">
+    <h3>📋 PRD 需求说明</h3>
+    
+    <h4>页面定位</h4>
+    <ul>
+      <li><strong>模块</strong>：AI 智能预筛系统 - 匹配管理</li>
+      <li><strong>功能</strong>：从项目角度出发，查询每个项目下患者的最新筛选表数据</li>
+      <li><strong>用户</strong>：管理员、医学经理（查看筛选表数据、导出PDF）</li>
+    </ul>
+
+    <h4>页面组成</h4>
+    <ul>
+      <li><strong>搜索区</strong>：多维度筛选查询</li>
+      <li><strong>列表区</strong>：按项目维度聚合的最新筛选表记录</li>
+      <li><strong>查看数据页</strong>：完整筛选运行信息和逐条标准匹配详情</li>
+    </ul>
+
+    <h4>搜索区筛选项</h4>
+    <ul>
+      <li><strong>患者缩写</strong>：文本输入，精确匹配</li>
+      <li><strong>匹配状态</strong>：下拉选择（全部/识别中/匹配成功/匹配失败）</li>
+      <li><strong>匹配人</strong>：文本输入，模糊匹配</li>
+      <li><strong>项目编码</strong>：文本输入，精确匹配</li>
+      <li><strong>方案编号</strong>：文本输入，模糊匹配</li>
+      <li><strong>是否删除</strong>：下拉选择（全部/是/否）</li>
+      <li><strong>时间范围</strong>：日期区间选择</li>
+    </ul>
+
+    <h4>列表展示字段</h4>
+    <ul>
+      <li>序号、方案编号、项目编码、项目名称、患者姓名</li>
+      <li>匹配状态（灰色/绿色/红色标签）</li>
+      <li>操作：查看数据</li>
+    </ul>
+
+    <h4>业务规则</h4>
+    <ul>
+      <li>每个患者只显示最新的筛选表记录（同一患者多条记录时只显示最新一条）</li>
+      <li>筛选表日志不可编辑和删除，仅支持查看和导出</li>
+    </ul>
+
+    <h4>查看数据页面</h4>
+    <ul>
+      <li><strong>匹配运行信息</strong>：AI模型、开始/结束时间、RAG用时、LLM用时、总用时</li>
+      <li><strong>方案信息</strong>：方案编号、项目名称、入排标准版本（含上次更新时间）、导出PDF按钮</li>
+      <li><strong>匹配度</strong>：入选标准匹配数和待定义数、排除标准匹配数和待定义数</li>
+      <li><strong>AI建议</strong>：AI给出的匹配建议（通过/筛败），附带建议说明</li>
+      <li><strong>匹配详情列表</strong>：逐条展示每条入排标准的匹配结果，包含病历溯源</li>
+    </ul>
+
+    <h4>数据输出</h4>
+    <ul>
+      <li>筛选表日志列表（分页，支持每页10条/20条/50条切换）</li>
+      <li>查看数据页面（完整匹配运行信息和逐条标准判定）</li>
+      <li>日志导出、PDF导出</li>
+    </ul>
+  </div>
+
+  <!-- 页面容器 -->
+  <div class="page-container">
+    <!-- 面包屑 -->
+    <div class="breadcrumb">
+      当前位置：<span onclick="goBack()">匹配管理</span> / 筛选表日志（最新）
+    </div>
+
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-title">筛选表日志（最新）</div>
+      <div class="page-desc">从项目角度出发，查询每个项目下患者的最新筛选表数据，支持查看全部数据和新数据对比。</div>
+    </div>
+
+    <!-- 搜索区域 -->
+    <div class="filter-section">
+      <div class="filter-grid">
+        <div class="filter-item">
+          <label class="filter-label">患者缩写</label>
+          <input type="text" class="filter-input" placeholder="请输入患者缩写">
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">匹配状态</label>
+          <select class="filter-select">
+            <option value="">全部</option>
+            <option value="pending">识别中</option>
+            <option value="success">匹配成功</option>
+            <option value="failed">匹配失败</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">匹配人</label>
+          <input type="text" class="filter-input" placeholder="请输入匹配人">
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">项目编码</label>
+          <input type="text" class="filter-input" placeholder="请输入项目编码">
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">方案编号</label>
+          <input type="text" class="filter-input" placeholder="请输入方案编号">
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">是否删除</label>
+          <select class="filter-select">
+            <option value="">全部</option>
+            <option value="yes">是</option>
+            <option value="no">否</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label class="filter-label">时间范围</label>
+          <div class="filter-date-range">
+            <input type="date" placeholder="开始日期">
+            <span>~</span>
+            <input type="date" placeholder="结束日期">
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-default">重置</button>
+        <button class="btn btn-default">导出</button>
+        <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
+      </div>
+    </div>
+
+    <!-- 表格区域 -->
+    <div class="table-section">
+      <div class="table-header">
+        <div class="table-title">筛选表日志列表</div>
+        <div class="table-actions">
+          <button class="btn btn-default"><i class="fas fa-download"></i> 导出日志</button>
+        </div>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:60px">序号</th>
+            <th style="width:120px">方案编号</th>
+            <th style="width:120px">项目编码</th>
+            <th style="min-width:200px">项目名称</th>
+            <th style="width:100px">患者姓名</th>
+            <th style="width:100px">匹配状态</th>
+            <th style="width:120px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>SC-2024-001</td>
+            <td>PROJ-9521</td>
+            <td>肺癌-9521-201 研究项目</td>
+            <td>张**</td>
+            <td><span class="status-tag status-success">匹配成功</span></td>
+            <td><span class="action-link" onclick="viewData()">查看数据</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>SC-2024-002</td>
+            <td>PROJ-8734</td>
+            <td>乳腺癌-8734-102 研究项目</td>
+            <td>王**</td>
+            <td><span class="status-tag status-failed">匹配失败</span></td>
+            <td><span class="action-link" onclick="viewData()">查看数据</span></td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>SC-2024-003</td>
+            <td>PROJ-5623</td>
+            <td>糖尿病-5623-301 研究项目</td>
+            <td>刘**</td>
+            <td><span class="status-tag status-pending">识别中</span></td>
+            <td><span class="action-link" onclick="viewData()">查看数据</span></td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>SC-2024-004</td>
+            <td>PROJ-9521</td>
+            <td>肺癌-9521-201 研究项目</td>
+            <td>李**</td>
+            <td><span class="status-tag status-success">匹配成功</span></td>
+            <td><span class="action-link" onclick="viewData()">查看数据</span></td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>SC-2024-005</td>
+            <td>PROJ-3412</td>
+            <td>高血压-3412-205 研究项目</td>
+            <td>陈**</td>
+            <td><span class="status-tag status-success">匹配成功</span></td>
+            <td><span class="action-link" onclick="viewData()">查看数据</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <div class="pagination-info">共 96 条记录，第 1/10 页</div>
+        <div class="pagination-controls">
+          <select class="page-size-select">
+            <option>10条/页</option>
+            <option>20条/页</option>
+            <option>50条/页</option>
+          </select>
+          <button class="page-btn">‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">4</button>
+          <button class="page-btn">5</button>
+          <button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 切换 PRD 面板显示/隐藏
+    function togglePRDPanels() {
+      const panel = document.getElementById('prdPanel');
+      panel.classList.toggle('show');
+    }
+
+    // 返回上一页
+    function goBack() {
+      window.history.back();
+    }
+
+    // 查看数据
+    function viewData() {
+      alert('跳转到查看数据页面');
+      // window.location.href = 'screen-table-detail.html';
+    }
+  </script>
+</body>
+</html>
