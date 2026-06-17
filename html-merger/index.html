@@ -348,25 +348,12 @@
             <span>👁️</span>
             <span>合并结果预览</span>
           </div>
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-secondary" onclick="toggleViewCode()">
-              <span>📄</span>
-              <span>查看源码</span>
-            </button>
-            <button class="btn btn-primary" onclick="downloadMergedFile()">
-              <span>💾</span>
-              <span>下载合并后的文件</span>
-            </button>
-          </div>
+          <button class="btn btn-primary" onclick="downloadMergedFile()">
+            <span>💾</span>
+            <span>下载合并后的文件</span>
+          </button>
         </div>
         <iframe class="preview-frame" id="previewFrame"></iframe>
-        
-        <!-- 源码查看区域 -->
-        <div id="codeView" style="display:none;margin-top:20px">
-          <div style="background:#1e1e1e;border-radius:8px;padding:20px;max-height:500px;overflow:auto">
-            <pre style="color:#d4d4d4;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap" id="codeContent"></pre>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -405,17 +392,13 @@
       
       const startTime = Date.now();
       log('🚀 开始合并文件...', 'info');
-      log(`📄 文件1大小: ${formatFileSize(new Blob([file1Content]).size)}`, 'info');
-      log(` 文件2大小: ${formatFileSize(new Blob([file2Content]).size)}`, 'info');
       
       try {
         // 解析HTML结构
         const doc1 = parseHTML(file1Content);
         const doc2 = parseHTML(file2Content);
         
-        log(' 已解析两个HTML文档结构', 'info');
-        log(`   - 文档1标题: ${doc1.title || '无标题'}`, 'info');
-        log(`   - 文档2标题: ${doc2.title || '无标题'}`, 'info');
+        log('📖 已解析两个HTML文档结构', 'info');
         
         // 创建合并后的文档
         mergedContent = createMergedDocument(doc1, doc2);
@@ -424,7 +407,6 @@
         const duration = endTime - startTime;
         
         log(`✨ 合并完成！耗时: ${duration}ms`, 'success');
-        log(`📊 合并后文件大小: ${formatFileSize(new Blob([mergedContent]).size)}`, 'success');
         
         // 显示统计信息
         showStats(duration);
@@ -434,9 +416,7 @@
         
       } catch (error) {
         log(`❌ 合并失败: ${error.message}`, 'error');
-        log(`   详细信息: ${error.stack}`, 'error');
         console.error(error);
-        alert('合并失败！请查看日志了解详细错误信息。');
       }
     }
     
@@ -453,53 +433,33 @@
       const shouldAddNav = document.getElementById('addNavigation').checked;
       const shouldOptimize = document.getElementById('optimizeCode').checked;
       
-      try {
-        log('🔨 开始创建合并文档...', 'info');
-        
-        // 使用第一个文档作为基础
-        const newDoc = document.implementation.createHTMLDocument('merged');
-        newDoc.documentElement.innerHTML = doc1.documentElement.innerHTML;
-        
-        log('📄 已创建基础文档结构', 'info');
-        
-        // 合并CSS
-        if (shouldMergeCSS) {
-          log('🎨 开始合并CSS样式...', 'info');
-          mergeStyles(newDoc, doc1, doc2);
-          log('✅ CSS样式合并完成', 'success');
-        }
-        
-        // 合并JavaScript
-        if (shouldMergeJS) {
-          log('📜 开始合并JavaScript脚本...', 'info');
-          mergeScripts(newDoc, doc1, doc2);
-          log('✅ JavaScript脚本合并完成', 'success');
-        }
-        
-        // 添加导航
-        if (shouldAddNav) {
-          log('🧭 开始添加页面导航...', 'info');
-          addNavigation(newDoc);
-          log('✅ 页面导航添加完成', 'success');
-        }
-        
-        // 优化代码
-        if (shouldOptimize) {
-          log(' 开始优化代码结构...', 'info');
-          optimizeDocument(newDoc);
-          log('✅ 代码优化完成', 'success');
-        }
-        
-        // 返回完整的HTML字符串
-        const htmlString = '<!DOCTYPE html>\n' + newDoc.documentElement.outerHTML;
-        log(`📝 已生成最终HTML字符串 (${formatFileSize(new Blob([htmlString]).size)})`, 'success');
-        
-        return htmlString;
-      } catch (error) {
-        log(`❌ 创建合并文档失败: ${error.message}`, 'error');
-        log(`   错误堆栈: ${error.stack}`, 'error');
-        throw error;
+      // 创建新文档
+      const newDoc = document.implementation.createHTMLDocument('merged');
+      
+      // 复制第一个文档的基本结构
+      newDoc.documentElement.innerHTML = doc1.documentElement.innerHTML;
+      
+      // 合并CSS
+      if (shouldMergeCSS) {
+        mergeStyles(newDoc, doc1, doc2);
       }
+      
+      // 合并JavaScript
+      if (shouldMergeJS) {
+        mergeScripts(newDoc, doc1, doc2);
+      }
+      
+      // 添加导航
+      if (shouldAddNav) {
+        addNavigation(newDoc);
+      }
+      
+      // 优化代码
+      if (shouldOptimize) {
+        optimizeDocument(newDoc);
+      }
+      
+      return '<!DOCTYPE html>\n' + newDoc.documentElement.outerHTML;
     }
     
     // 合并样式
@@ -553,32 +513,28 @@
     // 添加导航按钮
     function addNavigation(targetDoc) {
       const navHTML = `
-<div id="page-navigation" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;gap:10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
-  <button onclick="showPage('list')" style="padding:8px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📋 列表页</button>
-  <button onclick="showPage('detail')" style="padding:8px 16px;background:#52c41a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📄 详情页</button>
-</div>
-<script>
-(function() {
-  window.showPage = function(page) {
-    console.log('切换到页面:', page);
-    const listPage = document.getElementById('list-page-container');
-    const detailPage = document.getElementById('detail-page-container');
-    if (page === 'list') {
-      if (listPage) listPage.style.display = 'block';
-      if (detailPage) detailPage.style.display = 'none';
-    } else {
-      if (listPage) listPage.style.display = 'none';
-      if (detailPage) detailPage.style.display = 'block';
-    }
-  };
-  
-  // 默认显示列表页
-  document.addEventListener('DOMContentLoaded', function() {
-    showPage('list');
-  });
-})();
-<\/script>
-`;
+        <div id="page-navigation" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;gap:10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+          <button onclick="showPage('list')" style="padding:8px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📋 列表页</button>
+          <button onclick="showPage('detail')" style="padding:8px 16px;background:#52c41a;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">📄 详情页</button>
+        </div>
+        <script>
+          function showPage(page) {
+            const listPage = document.getElementById('list-page-container');
+            const detailPage = document.getElementById('detail-page-container');
+            if (page === 'list') {
+              if (listPage) listPage.style.display = 'block';
+              if (detailPage) detailPage.style.display = 'none';
+            } else {
+              if (listPage) listPage.style.display = 'none';
+              if (detailPage) detailPage.style.display = 'block';
+            }
+          }
+          // 默认显示列表页
+          document.addEventListener('DOMContentLoaded', function() {
+            showPage('list');
+          });
+        <\/script>
+      `;
       
       targetDoc.body.insertAdjacentHTML('afterbegin', navHTML);
       log('🧭 已添加页面导航按钮', 'success');
@@ -638,33 +594,13 @@
     
     // 显示预览
     function showPreview() {
-      if (!mergedContent) {
-        log('❌ 没有可预览的内容', 'error');
-        return;
-      }
+      const previewFrame = document.getElementById('previewFrame');
+      const previewSection = document.getElementById('previewSection');
       
-      try {
-        const previewFrame = document.getElementById('previewFrame');
-        const previewSection = document.getElementById('previewSection');
-        
-        // 使用srcdoc设置iframe内容
-        previewFrame.srcdoc = mergedContent;
-        previewSection.style.display = 'block';
-        
-        log('️ 预览已生成', 'success');
-        
-        // 监听iframe加载状态
-        previewFrame.onload = function() {
-          log('✅ 预览页面加载完成', 'success');
-        };
-        
-        previewFrame.onerror = function() {
-          log('⚠️ 预览页面加载失败', 'error');
-        };
-      } catch (error) {
-        log(`❌ 预览失败: ${error.message}`, 'error');
-        console.error(error);
-      }
+      previewFrame.srcdoc = mergedContent;
+      previewSection.style.display = 'block';
+      
+      log('👁️ 预览已生成', 'success');
     }
     
     // 下载合并后的文件
