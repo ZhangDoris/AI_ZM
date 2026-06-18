@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>加入项目</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+    
+    /* 顶部导航栏 */
+    .header {
+      background: #fff;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 24px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .more-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 20px;
+      color: #333;
+    }
+    
+    /* 表单区域 */
+    .form-container {
+      padding: 20px 16px;
+    }
+    
+    .form-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+    
+    .form-label {
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    
+    .required {
+      color: #ff4d4f;
+      margin-right: 4px;
+    }
+    
+    .form-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #333;
+      padding: 8px 0;
+      background: transparent;
+    }
+    
+    .form-input::placeholder {
+      color: #999;
+    }
+    
+    .form-select {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #333;
+      padding: 8px 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0 center;
+    }
+    
+    .error-text {
+      color: #ff4d4f;
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+    
+    .form-item.error .error-text {
+      display: block;
+    }
+    
+    .form-item.error .form-input,
+    .form-item.error .form-select {
+      color: #ff4d4f;
+    }
+    
+    /* 只读字段 */
+    .readonly-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    
+    .readonly-value {
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    /* 底部按钮 */
+    .submit-btn {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+      color: #fff;
+      border: none;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 -2px 8px rgba(22, 119, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .submit-btn:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+    
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* 提示信息弹窗 */
+    .notice-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .notice-modal.show {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    .notice-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 320px;
+      width: 90%;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .notice-icon {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    
+    .notice-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    
+    .notice-text {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.8;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .notice-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .notice-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .notice-btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+    
+    .notice-btn-confirm {
+      background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+      color: #fff;
+    }
+    
+    .notice-btn:active {
+      transform: scale(0.95);
+      opacity: 0.9;
+    }
+    
+    /* 成功提示 */
+    .success-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      display: none;
+      z-index: 2000;
+      animation: toastIn 0.3s ease;
+    }
+    
+    .success-toast.show {
+      display: block;
+    }
+    
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="header">
+    <button class="close-btn" onclick="goBack()">×</button>
+    <div class="page-title">加入项目</div>
+    <button class="more-btn"></button>
+  </div>
+  
+  <!-- 表单内容 -->
+  <div class="form-container">
+    <!-- 姓名 -->
+    <div class="form-item" id="nameItem">
+      <div class="form-label">
+        <span class="required">*</span>
+        <span>姓名</span>
+      </div>
+      <input type="text" class="form-input" id="nameInput" placeholder="请输入真实姓名" />
+      <div class="error-text">请输入真实姓名</div>
+    </div>
+    
+    <!-- 公司名称 -->
+    <div class="form-item" id="companyItem">
+      <div class="form-label">
+        <span class="required">*</span>
+        <span>公司名称</span>
+      </div>
+      <select class="form-select" id="companySelect">
+        <option value="" disabled selected>请选择公司名称</option>
+        <option value="公司A">公司A</option>
+        <option value="公司B">公司B</option>
+        <option value="公司C">公司C</option>
+      </select>
+      <div class="error-text">请输入公司名称</div>
+    </div>
+    
+    <!-- 手机号 -->
+    <div class="form-item" id="phoneItem">
+      <div class="form-label">
+        <span class="required">*</span>
+        <span>手机号</span>
+      </div>
+      <input type="tel" class="form-input" id="phoneInput" placeholder="请输入手机号" maxlength="11" />
+      <div class="error-text">请输入手机号</div>
+    </div>
+    
+    <!-- 邮箱 -->
+    <div class="form-item" id="emailItem">
+      <div class="form-label">
+        <span class="required">*</span>
+        <span>邮箱</span>
+      </div>
+      <input type="email" class="form-input" id="emailInput" placeholder="请输入邮箱" />
+      <div class="error-text">请输入邮箱</div>
+    </div>
+    
+    <!-- 项目编码 -->
+    <div class="form-item">
+      <div class="readonly-field">
+        <span class="form-label" style="margin-bottom: 0;">项目编码</span>
+        <span class="readonly-value">HRS9531-310</span>
+      </div>
+    </div>
+    
+    <!-- 中心 -->
+    <div class="form-item">
+      <div class="readonly-field">
+        <span class="form-label" style="margin-bottom: 0;">中心</span>
+        <span class="readonly-value">粤北人民医院</span>
+      </div>
+    </div>
+    
+    <!-- 邀请人 -->
+    <div class="form-item">
+      <div class="readonly-field">
+        <span class="form-label" style="margin-bottom: 0;">邀请人</span>
+        <span class="readonly-value">曾晓思</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 提交按钮 -->
+  <button class="submit-btn" onclick="handleSubmit()">保存</button>
+  
+  <!-- 企业微信提示弹窗 -->
+  <div class="notice-modal" id="noticeModal">
+    <div class="notice-content">
+      <div class="notice-icon">📱</div>
+      <div class="notice-title">温馨提示</div>
+      <div class="notice-text">
+        扫码之后，会默认加入"苏州普蒂德"企业微信，加入企业微信是为了方便接收消息，不会改变您的所属公司，请放心扫码
+      </div>
+      <div class="notice-buttons">
+        <button class="notice-btn notice-btn-cancel" onclick="cancelSubmit()">取消</button>
+        <button class="notice-btn notice-btn-confirm" onclick="confirmSubmit()">确认</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 成功提示 -->
+  <div class="success-toast" id="successToast">
+    ✅ 提交成功！
+  </div>
+  
+  <script>
+    // 表单验证
+    function validateForm() {
+      let isValid = true;
+      
+      // 验证姓名
+      const name = document.getElementById('nameInput').value.trim();
+      if (!name) {
+        document.getElementById('nameItem').classList.add('error');
+        isValid = false;
+      } else {
+        document.getElementById('nameItem').classList.remove('error');
+      }
+      
+      // 验证公司名称
+      const company = document.getElementById('companySelect').value;
+      if (!company) {
+        document.getElementById('companyItem').classList.add('error');
+        isValid = false;
+      } else {
+        document.getElementById('companyItem').classList.remove('error');
+      }
+      
+      // 验证手机号
+      const phone = document.getElementById('phoneInput').value.trim();
+      const phoneRegex = /^1[3-9]\d{9}$/;
+      if (!phone || !phoneRegex.test(phone)) {
+        document.getElementById('phoneItem').classList.add('error');
+        isValid = false;
+      } else {
+        document.getElementById('phoneItem').classList.remove('error');
+      }
+      
+      // 验证邮箱
+      const email = document.getElementById('emailInput').value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        document.getElementById('emailItem').classList.add('error');
+        isValid = false;
+      } else {
+        document.getElementById('emailItem').classList.remove('error');
+      }
+      
+      return isValid;
+    }
+    
+    // 处理提交
+    function handleSubmit() {
+      // 先验证表单
+      if (!validateForm()) {
+        return;
+      }
+      
+      // 显示企业微信提示弹窗
+      document.getElementById('noticeModal').classList.add('show');
+    }
+    
+    // 取消提交
+    function cancelSubmit() {
+      document.getElementById('noticeModal').classList.remove('show');
+    }
+    
+    // 确认提交
+    function confirmSubmit() {
+      // 关闭弹窗
+      document.getElementById('noticeModal').classList.remove('show');
+      
+      // 模拟提交成功
+      const toast = document.getElementById('successToast');
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        // 这里可以添加实际的提交逻辑，比如调用API
+        console.log('提交数据：', {
+          name: document.getElementById('nameInput').value,
+          company: document.getElementById('companySelect').value,
+          phone: document.getElementById('phoneInput').value,
+          email: document.getElementById('emailInput').value,
+          projectCode: 'HRS9531-310',
+          center: '粤北人民医院',
+          inviter: '曾晓思'
+        });
+      }, 1500);
+    }
+    
+    // 返回上一页
+    function goBack() {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        console.log('返回首页');
+      }
+    }
+    
+    // 实时验证：输入时移除错误状态
+    document.getElementById('nameInput').addEventListener('input', function() {
+      if (this.value.trim()) {
+        document.getElementById('nameItem').classList.remove('error');
+      }
+    });
+    
+    document.getElementById('companySelect').addEventListener('change', function() {
+      if (this.value) {
+        document.getElementById('companyItem').classList.remove('error');
+      }
+    });
+    
+    document.getElementById('phoneInput').addEventListener('input', function() {
+      const phoneRegex = /^1[3-9]\d{9}$/;
+      if (phoneRegex.test(this.value.trim())) {
+        document.getElementById('phoneItem').classList.remove('error');
+      }
+    });
+    
+    document.getElementById('emailInput').addEventListener('input', function() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(this.value.trim())) {
+        document.getElementById('emailItem').classList.remove('error');
+      }
+    });
+  </script>
+</body>
+</html>
