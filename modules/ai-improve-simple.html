@@ -1050,7 +1050,29 @@
       <div class="config-row" id="strategyConfig">
         <div class="config-label">执行策略：</div>
         <div class="strategy-desc">
-          遍历所有项目，分析有「拒绝」、「已排除」或「已有批注」的患者数据
+          遍历所有项目，分析有了审核记录的患者数据
+        </div>
+      </div>
+
+      <div class="config-row" id="modelConfig">
+        <div class="config-label">选择模型：</div>
+        <div style="flex: 1; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="deepseek-r1" checked onchange="toggleAutoModel('deepseek-r1')">
+            <span>DeepSeek-R1</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="deepseek-v4pro" checked onchange="toggleAutoModel('deepseek-v4pro')">
+            <span>DeepSeek-V4 Pro</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="glm-5.1" checked onchange="toggleAutoModel('glm-5.1')">
+            <span>GLM-5.1</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="mimax-m2.7" checked onchange="toggleAutoModel('mimax-m2.7')">
+            <span>MiniMax-M2.7</span>
+          </label>
         </div>
       </div>
       
@@ -1095,6 +1117,28 @@
       <div class="selected-tags" id="manualSelectedTags"></div>
       <div class="selected-info" id="manualSelectedInfo">
         已选择 0 个项目
+      </div>
+
+      <div class="config-row">
+        <div class="config-label">选择模型：</div>
+        <div style="flex: 1; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="deepseek-r1" checked onchange="toggleManualModel('deepseek-r1')">
+            <span>DeepSeek-R1</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="deepseek-v4pro" checked onchange="toggleManualModel('deepseek-v4pro')">
+            <span>DeepSeek-V4 Pro</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="glm-5.1" checked onchange="toggleManualModel('glm-5.1')">
+            <span>GLM-5.1</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px;">
+            <input type="checkbox" value="mimax-m2.7" checked onchange="toggleManualModel('mimax-m2.7')">
+            <span>MiniMax-M2.7</span>
+          </label>
+        </div>
       </div>
 
       <button class="btn-primary" id="executeBtn" onclick="executeAnalysis()" style="margin-top: 20px;">
@@ -1240,6 +1284,12 @@
     let selectedTime = '22:00';
     let selectedProjects = [];
     let dropdownOpen = false;
+
+    // 自动执行模型选择（默认全选）
+    let autoSelectedModels = ['deepseek-r1', 'deepseek-v4pro', 'glm-5.1', 'mimax-m2.7'];
+
+    // 手动执行模型选择（默认全选）
+    let manualSelectedModels = ['deepseek-r1', 'deepseek-v4pro', 'glm-5.1', 'mimax-m2.7'];
 
     // 模拟100+项目数据
     const allProjects = [];
@@ -1652,6 +1702,36 @@
       }
     }
 
+    // ========== 自动执行模型选择功能 ==========
+
+    // 切换自动执行模型
+    function toggleAutoModel(modelId) {
+      const index = autoSelectedModels.indexOf(modelId);
+      
+      if (index > -1) {
+        // 取消选择
+        autoSelectedModels.splice(index, 1);
+      } else {
+        // 选择
+        autoSelectedModels.push(modelId);
+      }
+    }
+
+    // ========== 手动执行模型选择功能 ==========
+
+    // 切换手动执行模型
+    function toggleManualModel(modelId) {
+      const index = manualSelectedModels.indexOf(modelId);
+      
+      if (index > -1) {
+        // 取消选择
+        manualSelectedModels.splice(index, 1);
+      } else {
+        // 选择
+        manualSelectedModels.push(modelId);
+      }
+    }
+
     // 初始化
     function init() {
       // 从 URL 获取参数
@@ -1661,6 +1741,23 @@
         document.querySelector('.nav-title').textContent = decodeURIComponent(pageTitle);
       }
     }
+
+    // 点击页面其他地方关闭下拉菜单
+    document.addEventListener('click', function(event) {
+      // 关闭手动执行项目下拉菜单
+      if (!event.target.closest('#manualSelectDisplay') && !event.target.closest('#manualDropdownMenu')) {
+        const dropdown = document.getElementById('manualDropdownMenu');
+        const selectDisplay = document.getElementById('manualSelectDisplay');
+        if (dropdown && selectDisplay) {
+          dropdown.style.display = 'none';
+          selectDisplay.classList.remove('active');
+          manualDropdownOpen = false;
+        }
+      }
+      
+      // 关闭星期和时间选择器
+      closeAllPickers();
+    });
 
     init();
   </script>

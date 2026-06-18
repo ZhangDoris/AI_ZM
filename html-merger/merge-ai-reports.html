@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI改进报告合并工具</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 30px;
+      text-align: center;
+    }
+    .header h1 { font-size: 24px; margin-bottom: 10px; }
+    .header p { font-size: 14px; opacity: 0.9; }
+    .content { padding: 30px; }
+    .info-box {
+      background: #f0f5ff;
+      border-left: 4px solid #1677ff;
+      padding: 16px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+    }
+    .info-box h3 {
+      color: #1677ff;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .info-box ul {
+      margin-left: 20px;
+      color: #555;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    .btn {
+      padding: 12px 32px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+    .btn-secondary:hover { background: #e8e8e8; }
+    .log-section {
+      margin-top: 24px;
+      background: #1e1e1e;
+      border-radius: 8px;
+      padding: 16px;
+      display: none;
+    }
+    .log-title {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .log-content {
+      color: #d4d4d4;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .log-success { color: #4ec9b0; }
+    .log-error { color: #f48771; }
+    .log-info { color: #569cd6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔗 AI改进报告合并工具</h1>
+      <p>智能合并列表页和详情页为一个HTML文件</p>
+    </div>
+    
+    <div class="content">
+      <div class="info-box">
+        <h3>📋 使用说明</h3>
+        <ul>
+          <li><strong>步骤1：</strong>点击"选择列表页文件"，选择 <code>modules/ai-improve-report.html</code></li>
+          <li><strong>步骤2：</strong>点击"选择详情页文件"，选择 <code>modules/ai-improve-report-detail.html</code></li>
+          <li><strong>步骤3：</strong>点击"开始合并"按钮</li>
+          <li><strong>自动处理：</strong>去重CSS样式、合并JavaScript、添加页面切换按钮</li>
+        </ul>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <div>
+          <label style="display:block;font-weight:600;color:#333;margin-bottom:8px">📄 列表页文件：</label>
+          <input type="file" id="fileList" accept=".html" style="width:100%;padding:10px;border:2px dashed #ddd;border-radius:6px;cursor:pointer" onchange="handleFileSelect('list')">
+        </div>
+        <div>
+          <label style="display:block;font-weight:600;color:#333;margin-bottom:8px">📄 详情页文件：</label>
+          <input type="file" id="fileDetail" accept=".html" style="width:100%;padding:10px;border:2px dashed #ddd;border-radius:6px;cursor:pointer" onchange="handleFileSelect('detail')">
+        </div>
+      </div>
+      
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="startMerge()">
+          🚀 开始合并
+        </button>
+        <button class="btn btn-secondary" onclick="resetTool()">
+          🔄 重置
+        </button>
+      </div>
+      
+      <div class="log-section" id="logSection">
+        <div class="log-title">📋 合并日志</div>
+        <div class="log-content" id="logContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let listHtml = null;
+    let detailHtml = null;
+    let mergedContent = null;
+    
+    function handleFileSelect(type) {
+      const input = document.getElementById(type === 'list' ? 'fileList' : 'fileDetail');
+      const file = input.files[0];
+      
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (type === 'list') {
+          listHtml = e.target.result;
+          log(`✅ 列表页加载成功: ${file.name} (${formatSize(file.size)})`, 'success');
+        } else {
+          detailHtml = e.target.result;
+          log(`✅ 详情页加载成功: ${file.name} (${formatSize(file.size)})`, 'success');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+    
+    function log(message, type = 'info') {
+      const logSection = document.getElementById('logSection');
+      const logContent = document.getElementById('logContent');
+      logSection.style.display = 'block';
+      
+      const timestamp = new Date().toLocaleTimeString('zh-CN');
+      const span = document.createElement('span');
+      span.className = `log-${type}`;
+      span.textContent = `[${timestamp}] ${message}\n`;
+      logContent.appendChild(span);
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+    
+    async function startMerge() {
+      if (!listHtml || !detailHtml) {
+        alert('请先选择两个HTML文件！');
+        return;
+      }
+      
+      log('🚀 开始合并流程...', 'info');
+      
+      try {
+        // 解析HTML
+        log('🔍 正在解析HTML结构...', 'info');
+        const listDoc = parseHTML(listHtml);
+        const detailDoc = parseHTML(detailHtml);
+        
+        // 提取详情页的body内容
+        log('📦 提取详情页主体内容...', 'info');
+        const detailBody = extractDetailContent(detailDoc);
+        
+        // 创建容器包装详情页
+        const detailContainer = createDetailContainer(detailBody);
+        
+        // 合并到列表页
+        log('🔗 正在合并文档...', 'info');
+        const merged = mergeDocuments(listDoc, detailContainer);
+        
+        // 添加页面切换功能
+        log('🧭 添加页面切换功能...', 'info');
+        addPageSwitcher(merged);
+        
+        mergedContent = '<!DOCTYPE html>\n' + merged.documentElement.outerHTML;
+        
+        log('✨ 合并完成！', 'success');
+        
+        // 下载文件
+        downloadFile(mergedContent, 'ai-improve-report-merged.html');
+        log('💾 文件已自动下载', 'success');
+        
+      } catch (error) {
+        log(`❌ 合并失败: ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+    
+    function parseHTML(html) {
+      const parser = new DOMParser();
+      return parser.parseFromString(html, 'text/html');
+    }
+    
+    function extractDetailContent(doc) {
+      // 提取详情页的主要内容区域
+      const mainLayout = doc.querySelector('.main-layout');
+      if (mainLayout) {
+        return mainLayout.outerHTML;
+      }
+      return doc.body.innerHTML;
+    }
+    
+    function createDetailContainer(content) {
+      const container = document.createElement('div');
+      container.id = 'detail-page-container';
+      container.style.display = 'none';
+      container.innerHTML = content;
+      return container;
+    }
+    
+    function mergeDocuments(listDoc, detailContainer) {
+      // 给列表页添加ID
+      const listBody = listDoc.querySelector('body');
+      if (listBody) {
+        listBody.id = 'list-page-container';
+        
+        // 在body末尾添加详情页容器
+        listBody.appendChild(detailContainer);
+      }
+      
+      // 修改列表页中的跳转逻辑
+      log('🔧 正在修改跳转逻辑...', 'info');
+      fixNavigationLinks(listDoc);
+      
+      // 合并详情页的样式
+      mergeStyles(listDoc, detailContainer.ownerDocument || document);
+      
+      // 合并详情页的脚本
+      mergeScripts(listDoc, detailContainer.ownerDocument || document);
+      
+      return listDoc;
+    }
+    
+    function mergeStyles(targetDoc, sourceDoc) {
+      const styles = sourceDoc.querySelectorAll('style');
+      styles.forEach(style => {
+        if (!containsStyle(targetDoc, style.textContent)) {
+          targetDoc.head.appendChild(style.cloneNode(true));
+        }
+      });
+      
+      const links = sourceDoc.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(link => {
+        if (!containsLink(targetDoc, link.href)) {
+          targetDoc.head.appendChild(link.cloneNode(true));
+        }
+      });
+    }
+    
+    function mergeScripts(targetDoc, sourceDoc) {
+      const scripts = sourceDoc.querySelectorAll('script');
+      scripts.forEach(script => {
+        const clone = script.cloneNode(true);
+        if (script.src) {
+          if (!containsScript(targetDoc, script.src)) {
+            targetDoc.body.appendChild(clone);
+          }
+        } else {
+          targetDoc.body.appendChild(clone);
+        }
+      });
+    }
+    
+    function fixNavigationLinks(doc) {
+      // 查找所有包含 ai-improve-report-detail.html 的链接和点击事件
+      const allElements = doc.querySelectorAll('*');
+      let fixedCount = 0;
+      
+      allElements.forEach(el => {
+        // 修复 onclick 属性中的跳转
+        if (el.hasAttribute('onclick')) {
+          const onclick = el.getAttribute('onclick');
+          if (onclick.includes('ai-improve-report-detail.html')) {
+            // 提取 projId 参数
+            const match = onclick.match(/projId=([^'"&]+)/);
+            if (match) {
+              const projId = match[1];
+              // 改为调用 switchToDetail 函数
+              el.setAttribute('onclick', `switchToPage('detail', '${projId}')`);
+              fixedCount++;
+            }
+          }
+        }
+        
+        // 修复 href 属性
+        if (el.tagName === 'A' && el.href && el.href.includes('ai-improve-report-detail.html')) {
+          const url = new URL(el.href, window.location.origin);
+          const projId = url.searchParams.get('projId');
+          if (projId) {
+            el.href = '#';
+            el.onclick = function(e) {
+              e.preventDefault();
+              switchToPage('detail', projId);
+            };
+            fixedCount++;
+          }
+        }
+      });
+      
+      if (fixedCount > 0) {
+        log(`✅ 已修复 ${fixedCount} 个跳转链接`, 'success');
+      }
+    }
+    
+    function addPageSwitcher(doc) {
+      const switcherHTML = `
+        <div id="page-switcher" style="position:fixed;top:70px;right:20px;z-index:9999;display:flex;gap:10px;background:#fff;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);border:1px solid #e8e8e8;">
+          <button id="btn-list" onclick="switchToPage('list')" style="padding:8px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;">
+            <i class="fas fa-list"></i> 列表页
+          </button>
+          <button id="btn-detail" onclick="switchToPage('detail')" style="padding:8px 16px;background:#f5f5f5;color:#333;border:1px solid #d9d9d9;border-radius:4px;cursor:pointer;font-size:14px;font-weight:500;">
+            <i class="fas fa-file-alt"></i> 详情页
+          </button>
+        </div>
+        <script>
+          let currentProjId = null;
+          
+          function switchToPage(page, projId) {
+            const listPage = document.getElementById('list-page-container');
+            const detailPage = document.getElementById('detail-page-container');
+            const btnList = document.getElementById('btn-list');
+            const btnDetail = document.getElementById('btn-detail');
+            
+            if (page === 'list') {
+              if (listPage) listPage.style.display = 'block';
+              if (detailPage) detailPage.style.display = 'none';
+              if (btnList) {
+                btnList.style.background = '#1677ff';
+                btnList.style.color = '#fff';
+              }
+              if (btnDetail) {
+                btnDetail.style.background = '#f5f5f5';
+                btnDetail.style.color = '#333';
+              }
+            } else {
+              if (listPage) listPage.style.display = 'none';
+              if (detailPage) detailPage.style.display = 'block';
+              if (btnList) {
+                btnList.style.background = '#f5f5f5';
+                btnList.style.color = '#333';
+              }
+              if (btnDetail) {
+                btnDetail.style.background = '#1677ff';
+                btnDetail.style.color = '#fff';
+              }
+              
+              // 如果有传入 projId，初始化详情页数据
+              if (projId) {
+                currentProjId = projId;
+                console.log('切换到详情页，项目ID:', projId);
+                // 触发详情页的初始化函数（如果存在）
+                if (typeof initPage === 'function') {
+                  setTimeout(() => {
+                    // 模拟URL参数
+                    const originalSearch = window.location.search;
+                    window.history.replaceState({}, '', '?projId=' + projId);
+                    initPage();
+                    window.history.replaceState({}, '', originalSearch);
+                  }, 100);
+                }
+              }
+            }
+          }
+          
+          // 默认显示列表页
+          document.addEventListener('DOMContentLoaded', function() {
+            switchToPage('list');
+          });
+        <\/script>
+      `;
+      
+      doc.body.insertAdjacentHTML('afterbegin', switcherHTML);
+    }
+    
+    function containsStyle(doc, styleText) {
+      const styles = Array.from(doc.querySelectorAll('style'));
+      return styles.some(s => s.textContent.trim() === styleText.trim());
+    }
+    
+    function containsLink(doc, href) {
+      const links = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+      return links.some(l => l.href === href);
+    }
+    
+    function containsScript(doc, src) {
+      const scripts = Array.from(doc.querySelectorAll('script[src]'));
+      return scripts.some(s => s.src === src);
+    }
+    
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+    
+    function downloadFile(content, filename) {
+      const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
+    function resetTool() {
+      document.getElementById('logSection').style.display = 'none';
+      document.getElementById('logContent').innerHTML = '';
+      mergedContent = null;
+      log('🔄 已重置', 'info');
+    }
+    
+    window.addEventListener('load', () => {
+      log('🎯 工具已就绪，点击"开始合并"按钮', 'info');
+    });
+  </script>
+</body>
+</html>
