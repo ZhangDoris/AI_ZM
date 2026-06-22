@@ -1623,7 +1623,10 @@
         '排除标准27',
         '排除标准33',
         '入选标准5',
-        '排除标准12'
+        '排除标准12',
+        '入选标准8',
+        '排除标准15',
+        '入选标准3'
       ];
       // 匹配状态列表
       const statuses = ['未匹配', '匹配成功', '匹配失败', '匹配中'];
@@ -1631,11 +1634,18 @@
       const cases = [];
       for (let i = 0; i < count; i++) {
         const idx = i % projCodes.length;
+        // 每个病例随机分配3-5个入排标准
+        const numStandards = 3 + Math.floor(Math.random() * 3); // 3, 4, or 5
+        const caseStandards = [];
+        for (let j = 0; j < numStandards; j++) {
+          caseStandards.push(standards[(i + j) % standards.length]);
+        }
+        
         cases.push({
           projCode: projCodes[idx],
           projName: projNames[idx],
           patientName: patientNames[i % patientNames.length] + String.fromCharCode(65 + (i % 26)),
-          standard: standards[i % standards.length],
+          standards: caseStandards, // 改为数组，包含多个标准
           isModified: Math.random() > 0.3 ? '是' : '否', // 70%概率为"是"
           status: statuses[i % statuses.length],
           matcher: matchers[i % matchers.length]
@@ -1680,8 +1690,8 @@
         if (filterPatientName && !c.patientName.toLowerCase().includes(filterPatientName)) {
           return false;
         }
-        // 涉及入排标准筛选
-        if (filterStandard && c.standard !== filterStandard) {
+        // 涉及入排标准筛选（检查是否包含选中的标准）
+        if (filterStandard && !c.standards.includes(filterStandard)) {
           return false;
         }
         // 是否修改提示词筛选
@@ -1712,27 +1722,46 @@
       if (pageData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:#999"><i class="fas fa-inbox" style="font-size:24px;margin-bottom:8px;display:block"></i>暂无数据</td></tr>';
       } else {
-        tbody.innerHTML = pageData.map((c, idx) => {
+        let rowsHtml = '';
+        pageData.forEach((c, idx) => {
           // 匹配状态样式
           let statusClass = 'status-success';
           if (c.status === '未匹配') statusClass = '';
           else if (c.status === '匹配失败') statusClass = 'badge-red';
           else if (c.status === '匹配中') statusClass = 'badge-yellow';
           
-          return '<tr>' +
-            '<td>' + (startIdx + idx + 1) + '</td>' +
-            '<td>' + c.patientName + '</td>' +
-            '<td><span style="background:#e6f7ff;color:#1677ff;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500">' + c.standard + '</span></td>' +
-            '<td><span class="status-badge ' + statusClass + '">' + c.status + '</span></td>' +
-            '<td>' + c.matcher + '</td>' +
-            '<td>' +
-              '<div class="action-links">' +
-                '<span class="action-link" onclick="viewMatchDetail(\'' + c.patientName + '\', \'' + c.projCode + '\')">匹配详情</span>' +
-                '<span class="action-link" onclick="runPersonalTest(\'' + c.patientName + '\', \'' + c.projCode + '\')">个性测试</span>' +
-              '</div>' +
-            '</td>' +
-          '</tr>';
-        }).join('');
+          const numStandards = c.standards.length;
+          
+          // 为每个入排标准生成一行
+          c.standards.forEach((standard, stdIdx) => {
+            rowsHtml += '<tr>';
+            
+            // 第一行显示序号、患者姓名、匹配状态、匹配人、操作（使用rowspan）
+            if (stdIdx === 0) {
+              rowsHtml += '<td rowspan="' + numStandards + '" style="vertical-align:middle">' + (startIdx + idx + 1) + '</td>';
+              rowsHtml += '<td rowspan="' + numStandards + '" style="vertical-align:middle">' + c.patientName + '</td>';
+            }
+            
+            // 每行都显示一个入排标准
+            rowsHtml += '<td><span style="background:#e6f7ff;color:#1677ff;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:500">' + standard + '</span></td>';
+            
+            // 第一行显示匹配状态、匹配人、操作（使用rowspan）
+            if (stdIdx === 0) {
+              rowsHtml += '<td rowspan="' + numStandards + '" style="vertical-align:middle"><span class="status-badge ' + statusClass + '">' + c.status + '</span></td>';
+              rowsHtml += '<td rowspan="' + numStandards + '" style="vertical-align:middle">' + c.matcher + '</td>';
+              rowsHtml += '<td rowspan="' + numStandards + '" style="vertical-align:middle">' +
+                '<div class="action-links">' +
+                  '<span class="action-link" onclick="viewMatchDetail(\'' + c.patientName + '\', \'' + c.projCode + '\')">匹配详情</span>' +
+                  '<span class="action-link" onclick="runPersonalTest(\'' + c.patientName + '\', \'' + c.projCode + '\')">个性测试</span>' +
+                '</div>' +
+              '</td>';
+            }
+            
+            rowsHtml += '</tr>';
+          });
+        });
+        
+        tbody.innerHTML = rowsHtml;
       }
       
       // 重新渲染分页（使用筛选后的总数）

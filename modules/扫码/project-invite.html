@@ -3,315 +3,376 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>临研AI招募助手 - 项目邀请</title>
+  <title>招募邀请 - 临研AI招募助手</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.5);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
       padding: 20px;
     }
-    
-    .modal-container {
-      background: #fff;
-      border-radius: 8px;
-      width: 100%;
-      max-width: 680px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      overflow: hidden;
-    }
-    
-    .modal-header {
+
+    /* 遮罩层 */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      padding: 20px 24px;
-      border-bottom: 1px solid #f0f0f0;
+      z-index: 1000;
     }
-    
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
+
+    /* 主容器 */
+    .invite-card {
+      background: #fff;
+      border-radius: 16px;
+      width: 600px;
+      max-width: 90vw;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      animation: slideUp 0.3s ease-out;
+      position: relative;
     }
-    
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* 关闭按钮 */
     .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
       width: 32px;
       height: 32px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.1);
       border: none;
-      background: transparent;
-      cursor: pointer;
+      color: #666;
       font-size: 20px;
-      color: #999;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
+      z-index: 10;
     }
-    
+
     .close-btn:hover {
+      background: rgba(0, 0, 0, 0.2);
       color: #333;
-      background: #f5f5f5;
-      border-radius: 4px;
     }
-    
-    .modal-body {
-      padding: 32px 24px;
+
+    /* 头部 - 增加层次感 */
+    .card-header {
+      padding: 40px 40px 32px;
+      text-align: center;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+      position: relative;
+      border-bottom: 1px solid #e8e8e8;
     }
-    
-    .project-code {
-      font-size: 32px;
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #165DFF 0%, #4080ff 100%);
+    }
+
+    .invite-title {
+      font-size: 36px;
       font-weight: 700;
-      color: #333;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .invite-title::before,
+    .invite-title::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, #165DFF, transparent);
+    }
+
+    .invite-title::before {
+      right: 100%;
+      margin-right: 16px;
+    }
+
+    .invite-title::after {
+      left: 100%;
+      margin-left: 16px;
+      background: linear-gradient(270deg, #165DFF, transparent);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #999;
+      margin-top: 8px;
+    }
+
+    /* 项目信息区 - 白色背景 */
+    .project-section {
+      background: #fff;
+      padding: 32px 40px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .project-info {
+      margin-bottom: 0;
+    }
+
+    .info-item {
       margin-bottom: 16px;
-    }
-    
-    .info-section {
-      margin-bottom: 24px;
-    }
-    
-    .info-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
-      color: #fff;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-    
-    .info-label i {
-      font-size: 14px;
-    }
-    
-    .info-content {
-      font-size: 16px;
       line-height: 1.6;
+      font-size: 15px;
       color: #333;
+    }
+
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-label {
+      color: #666;
+      margin-right: 8px;
+    }
+
+    .info-value {
+      color: #1a1a1a;
       font-weight: 500;
     }
-    
+
+    /* 二维码区域 - 白色背景，独立展示 */
     .qr-section {
-      background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
-      border-radius: 12px;
-      padding: 32px;
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      margin-top: 32px;
-      box-shadow: 0 8px 24px rgba(22, 119, 255, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .qr-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 300px;
-      height: 300px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-    
-    .qr-section::after {
-      content: '';
-      position: absolute;
-      bottom: -30%;
-      left: -10%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 50%;
-    }
-    
-    .qr-code {
-      width: 180px;
-      height: 180px;
       background: #fff;
-      border-radius: 12px;
-      padding: 12px;
-      flex-shrink: 0;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      padding: 40px;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .qr-wrapper {
       position: relative;
-      z-index: 1;
+      display: inline-block;
+      margin-bottom: 16px;
     }
-    
-    .qr-code:hover {
-      transform: scale(1.05) rotate(2deg);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+
+    .qr-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 16px;
     }
-    
-    .qr-code img {
+
+    .qr-frame {
+      width: 280px;
+      height: 280px;
+      background: #f8f9fa;
+      padding: 24px;
+      border-radius: 12px;
+      position: relative;
+      display: inline-block;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* 四角标记 */
+    .qr-corner {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #165DFF;
+    }
+
+    .qr-corner-tl {
+      top: 0;
+      left: 0;
+      border-right: none;
+      border-bottom: none;
+      border-top-left-radius: 8px;
+    }
+
+    .qr-corner-tr {
+      top: 0;
+      right: 0;
+      border-left: none;
+      border-bottom: none;
+      border-top-right-radius: 8px;
+    }
+
+    .qr-corner-bl {
+      bottom: 0;
+      left: 0;
+      border-right: none;
+      border-top: none;
+      border-bottom-left-radius: 8px;
+    }
+
+    .qr-corner-br {
+      bottom: 0;
+      right: 0;
+      border-left: none;
+      border-top: none;
+      border-bottom-right-radius: 8px;
+    }
+
+    .qr-frame img {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
-    
-    .qr-info {
-      flex: 1;
-      color: #fff;
-    }
-    
-    .inviter-name {
-      font-size: 26px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .inviter-badge {
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .scan-hint {
-      font-size: 16px;
-      font-weight: 500;
-      margin-top: 8px;
-      opacity: 0.95;
-      letter-spacing: 0.5px;
-    }
-    
-    /* 重要提示 */
-    .important-notice {
-      background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
-      color: #856404;
-      padding: 16px 24px;
+
+    /* 底部提示 - 蓝色背景 */
+    .footer-section {
+      background: linear-gradient(180deg, #165DFF 0%, #0e42d0 100%);
+      padding: 32px 40px;
       text-align: center;
+    }
+
+    .footer-title {
+      font-size: 18px;
       font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .footer-content {
       font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
       line-height: 1.8;
-      border-left: 4px solid #ffc107;
-      margin-top: 0;
+      max-width: 500px;
+      margin: 0 auto;
     }
-    
-    .important-notice::before {
-      content: '️ ';
-      font-size: 16px;
-      margin-right: 8px;
-    }
-    
-    /* 响应式 */
-    @media (max-width: 768px) {
-      .modal-container {
+
+    /* 移动端适配 */
+    @media (max-width: 480px) {
+      body {
+        padding: 0;
+        align-items: flex-start;
+      }
+
+      .invite-card {
+        width: 100%;
         max-width: 100%;
+        min-height: 100vh;
+        border-radius: 0;
       }
-      
-      .modal-body {
-        padding: 24px 16px;
+
+      .card-header {
+        padding: 32px 20px 20px;
       }
-      
-      .project-code {
-        font-size: 24px;
+
+      .invite-title {
+        font-size: 28px;
       }
-      
-      .qr-section {
-        flex-direction: column;
-        text-align: center;
+
+      .project-section,
+      .qr-section,
+      .footer-section {
+        padding: 24px 20px;
       }
-      
-      .inviter-name {
-        justify-content: center;
+
+      .qr-frame {
+        width: 220px;
+        height: 220px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="modal-container">
-    <!-- 头部 -->
-    <div class="modal-header">
-      <div class="modal-title">临研AI招募助手</div>
-      <button class="close-btn" onclick="window.close()" title="关闭">×</button>
-    </div>
-    
-    <!-- 内容区域 -->
-    <div class="modal-body">
-      <!-- 项目编码 -->
-      <div class="project-code">乳腺癌-8080-305</div>
+  <div class="overlay" onclick="closeModal()">
+    <div class="invite-card">
+      <!-- 关闭按钮 -->
+      <button class="close-btn" onclick="closeModal()" title="关闭">×</button>
       
-      <!-- 项目名称 -->
-      <div class="info-section">
-        <div class="info-label">
-          <span>📋</span>
-          <span>项目名称</span>
-        </div>
-        <div class="info-content">
-          HRS-8080（口服SERD）对比标准内分泌治疗在完成至少2年辅助内分泌治疗的ER阳性，HER2阴性高复发风险早期乳腺癌患者中的多中心、随机、开放标签III期研究
+      <!-- 头部 -->
+      <div class="card-header">
+        <div class="invite-title">招募邀请</div>
+        <div class="subtitle">AI智能预筛助手</div>
+      </div>
+
+      <!-- 项目信息区 -->
+      <div class="project-section">
+        <div class="project-info">
+          <div class="info-item">
+            <span class="info-label">项目名称：</span>
+            <span class="info-value">评价HRS9531注射液在动脉粥样硬化性心血管疾病患者中有效性和安全性的多中心、随机、双盲、安必剂平行对照III期临床研究</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">中心名称：</span>
+            <span class="info-value">CN083-桂林市人民医院-黄萍</span>
+          </div>
+
+          <div class="info-item">
+            <span class="info-label">邀请人：</span>
+            <span class="info-value"><strong>刘雪红</strong></span>
+          </div>
         </div>
       </div>
-      
-      <!-- 研究中心 -->
-      <div class="info-section">
-        <div class="info-label">
-          <span>🏥</span>
-          <span>研究中心</span>
-        </div>
-        <div class="info-content">
-          CN111-中国医学科学院肿瘤医院深圳医院-高纪东
-        </div>
-      </div>
-      
+
       <!-- 二维码区域 -->
       <div class="qr-section">
-        <div class="qr-code">
-          <!-- 这里放置实际的二维码图片 -->
-          <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0IiBoZWlnaHQ9IjE0NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTQ0IiBoZWlnaHQ9IjE0NCIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjEyIiB5PSIxMiIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDAwIi8+PHJlY3QgeD0iOTIiIHk9IjEyIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiMwMDAiLz48cmVjdCB4PSIxMiIgeT0iOTIiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgZmlsbD0iIzAwMCIvPjxyZWN0IHg9IjUyIiB5PSI1MiIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjMDAwIi8+PC9zdmc+" alt="项目邀请二维码"/>
-        </div>
-        <div class="qr-info">
-          <div class="inviter-name">
-            黄思思
-            <span class="inviter-badge">邀请人</span>
+        <div class="qr-wrapper">
+          <div class="qr-frame">
+            <div class="qr-corner qr-corner-tl"></div>
+            <div class="qr-corner qr-corner-tr"></div>
+            <div class="qr-corner qr-corner-bl"></div>
+            <div class="qr-corner qr-corner-br"></div>
+            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjQwIiBoZWlnaHQ9IjI0MCIgZmlsbD0iI2ZmZiIvPjxyZWN0IHg9IjI0IiB5PSIyNCIgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiBmaWxsPSIjMzMzIi8+PHJlY3QgeD0iMTQ0IiB5PSIyNCIgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiBmaWxsPSIjMzMzIi8+PHJlY3QgeD0iMjQiIHk9IjE0NCIgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiBmaWxsPSIjMzMzIi8+PHJlY3QgeD0iODQiIHk9Ijg0IiB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIGZpbGw9IiMzMzMiLz48cmVjdCB4PSIxMDgiIHk9IjEwOCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjMTY1ZGZmIi8+PC9zdmc+" alt="二维码"/>
           </div>
-          <div class="scan-hint">扫描二维码加入项目</div>
+        </div>
+      </div>
+
+      <!-- 底部提示 - 蓝色背景 -->
+      <div class="footer-section">
+        <div class="footer-title">扫描二维码加入项目</div>
+        <div class="footer-content">
+          扫码之后，会默认加入"苏州普蒂德"企业微信，可以通过企业微信实时接收到审核批注等消息，不会改变您的所属公司，请放心加入。
         </div>
       </div>
     </div>
-    
-    <!-- 重要提示 -->
-    <div class="important-notice">
-      扫码之后，会默认加入“苏州普蒂德”企业微信，加入企业微信是为了方便接收消息，不会改变您的所属公司，请放心扫码
-    </div>
   </div>
-  
+
   <script>
-    // 关闭按钮事件
-    document.querySelector('.close-btn').addEventListener('click', function() {
+    function closeModal() {
       if (window.opener) {
         window.close();
       } else {
-        // 如果不是从窗口打开的，可以隐藏或重定向
-        console.log('关闭弹窗');
+        const overlay = document.querySelector('.overlay');
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s';
+        setTimeout(() => window.history.back(), 300);
       }
-    });
-    
-    // 点击背景关闭（可选）
+    }
+
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        document.querySelector('.close-btn').click();
-      }
+      if (e.key === 'Escape') closeModal();
     });
   </script>
 </body>
