@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>邀请码 - 加入项目</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .phone-container {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航 */
+    .header {
+      background: #fff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      left: 12px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .close-btn svg {
+      width: 24px;
+      height: 24px;
+      color: #333;
+    }
+    .page-title { font-size: 18px; font-weight: 600; color: #1d2129; }
+
+    /* 内容 */
+    .content {
+      padding: 0 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* 副标题 */
+    .sub-title {
+      text-align: center;
+      font-size: 15px;
+      color: #86909c;
+      margin-bottom: 4px;
+    }
+
+    /* 项目信息卡片 */
+    .info-card {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .info-item {
+      margin-bottom: 14px;
+    }
+    .info-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #4e5969;
+      margin-bottom: 6px;
+    }
+    .info-label::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #165DFF;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .info-value {
+      font-size: 14px;
+      color: #1d2129;
+      line-height: 1.6;
+      padding-left: 14px;
+    }
+
+    /* 邀请人区域 */
+    .inviter-card {
+      background: linear-gradient(145deg, #165DFF 0%, #2b6de8 100%);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mini-app-icon {
+      width: 70px;
+      height: 70px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mini-app-icon svg {
+      width: 50px;
+      height: 50px;
+    }
+
+    .inviter-info {
+      flex: 1;
+      color: #fff;
+    }
+    .inviter-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .inviter-name {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .inviter-tag {
+      font-size: 11px;
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .inviter-desc {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 6px;
+    }
+    .inviter-org {
+      font-size: 12px;
+      opacity: 0.7;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .inviter-org svg {
+      width: 12px;
+      height: 12px;
+      opacity: 0.8;
+    }
+
+    /* 提示框 */
+    .notice-box {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .notice-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #f59e0b;
+      color: #fff;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      margin-top: 1px;
+    }
+    .notice-text {
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    /* 底部按钮 */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .btn-primary {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #165DFF 0%, #2b6de8 100%);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:active {
+      opacity: 0.9;
+      transform: scale(0.98);
+    }
+    .btn-share {
+      width: 52px;
+      height: 52px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-share svg {
+      width: 20px;
+      height: 20px;
+      color: #666;
+    }
+    .btn-share:active {
+      background: #f9fafb;
+    }
+
+    /* 桌面端 */
+    @media (min-width: 421px) {
+      body {
+        background: #e5e7eb;
+        padding: 20px;
+      }
+      .phone-container {
+        border-radius: 0px;
+        max-height: 96vh;
+        overflow-y: auto;
+        scrollbar-width: none;
+      }
+      .phone-container::-webkit-scrollbar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-container">
+    <!-- 顶部导航 -->
+    <div class="header">
+      <button class="close-btn" onclick="history.back()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <div class="page-title">邀请码</div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+      <!-- 副标题 -->
+      <div class="sub-title">项目邀请码</div>
+
+      <!-- 项目信息 -->
+      <div class="info-card">
+        <div class="info-item">
+          <div class="info-label">项目名称</div>
+          <div class="info-value">评价HRS9531注射液对比XXX在XXX受试者中的有效性和安全性的多中心、随机、双盲、平行对照III期临床研究</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">研究中心</div>
+          <div class="info-value">CN083-桂林市人民医院-黄萍</div>
+        </div>
+      </div>
+
+      <!-- 邀请人卡片 -->
+      <div class="inviter-card">
+        <div class="mini-app-icon">
+          <!-- 小程序码/二维码图标 -->
+          <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+            <rect width="50" height="50" fill="#fff" rx="4"/>
+            <!-- 左上角 -->
+            <rect x="6" y="6" width="16" height="16" fill="#165DFF" rx="2"/>
+            <rect x="9" y="9" width="10" height="2" fill="#fff"/>
+            <rect x="9" y="13" width="10" height="2" fill="#fff"/>
+            <rect x="9" y="17" width="6" height="2" fill="#fff"/>
+            <!-- 右上角 -->
+            <rect x="28" y="6" width="16" height="16" fill="#165DFF" rx="2"/>
+            <rect x="31" y="9" width="10" height="2" fill="#fff"/>
+            <rect x="31" y="13" width="10" height="2" fill="#fff"/>
+            <rect x="31" y="17" width="6" height="2" fill="#fff"/>
+            <!-- 左下角 -->
+            <rect x="6" y="28" width="16" height="16" fill="#165DFF" rx="2"/>
+            <rect x="9" y="31" width="10" height="2" fill="#fff"/>
+            <rect x="9" y="35" width="10" height="2" fill="#fff"/>
+            <rect x="9" y="39" width="6" height="2" fill="#fff"/>
+            <!-- 右下角 -->
+            <rect x="30" y="32" width="14" height="6" fill="#165DFF" rx="1"/>
+            <rect x="30" y="42" width="14" height="6" fill="#165DFF" rx="1"/>
+            <!-- 中心点 -->
+            <rect x="24" y="24" width="4" height="4" fill="#165DFF"/>
+            <rect x="24" y="32" width="4" height="4" fill="#165DFF"/>
+          </svg>
+        </div>
+        <div class="inviter-info">
+          <div class="inviter-name-row">
+            <span class="inviter-name">骆敏</span>
+            <span class="inviter-tag">邀请人</span>
+          </div>
+          <div class="inviter-desc">邀请你加入项目</div>
+          
+        </div>
+      </div>
+
+      <!-- 提示 -->
+      <div class="notice-box">
+        <div class="notice-icon">!</div>
+        <div class="notice-text">扫码关注公众号完成注册后，系统会自动加入「苏州普蒂德」企微，以便实时推送预筛审核消息。该企微仅用于本系统通知和提醒，请放心使用。如需退出，可在微信「设置 - 企微联系人」中操作。</div>
+      </div>
+
+      <!-- 底部操作 -->
+      <div class="action-row">
+        <button class="btn-primary">下载邀请码</button>
+       
+      </div>
+    </div>
+  </div>
+</body>
+</html>
