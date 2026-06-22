@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>艾康逸 · 邀请码管理 — 产品原型（统一版）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      background: #f0f2f5;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    .sidebar-menu-item { transition: all 0.2s; cursor: pointer; padding: 10px 20px; color: #ffffffb3; font-size: 14px; display: flex; align-items: center; gap: 10px; border-left: 3px solid transparent; }
+    .sidebar-menu-item:hover { background-color: rgba(255,255,255,0.06); color: #fff; }
+    .sidebar-menu-item.active { background-color: rgba(22,93,255,0.2); color: #fff; border-left-color: #165DFF; font-weight: 600; }
+    .sidebar-menu-item i { width: 16px; text-align: center; }
+    .sidebar-menu-item.badge-item { position: relative; }
+    .sidebar-menu-item .badge { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: #F53F3F; color: #fff; font-size: 11px; padding: 1px 7px; border-radius: 10px; font-weight: 600; }
+
+    .data-table th { background-color: #FAFAFA; font-weight: 600; color: #333; padding: 12px 16px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .data-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; color: #333; white-space: nowrap; }
+    .data-table tbody tr { transition: background-color 0.15s; cursor: pointer; }
+    .data-table tbody tr:hover { background-color: rgba(22,93,255,0.03); }
+
+    .btn-primary { background: #165DFF; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-primary:hover { background: #0e42d2; }
+    .btn-primary.green { background: #00B42A; }
+    .btn-primary.green:hover { background: #009a22; }
+    .btn-default { background: #fff; color: #333; border: 1px solid #d9d9d9; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-default:hover { color: #165DFF; border-color: #165DFF; }
+    .btn-text { background: none; border: none; color: #165DFF; cursor: pointer; padding: 4px 8px; font-size: 13px; transition: all 0.2s; }
+    .btn-text:hover { color: #0e42d2; }
+    .btn-text.danger { color: #F53F3F; }
+    .btn-text.danger:hover { color: #cb2e2e; }
+    .btn-text.restore { color: #00B42A; }
+    .btn-text.restore:hover { color: #009a22; }
+
+    .search-bar { background: #fff; border-radius: 4px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .table-container { background: #fff; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    #preview-overlay { z-index: 1100; }
+    .modal-content { background: #fff; border-radius: 8px; padding: 24px; min-width: 480px; max-width: 90vw; box-shadow: 0 4px 24px rgba(0,0,0,0.12); }
+
+    .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%); z-index: 2000; padding: 10px 24px; border-radius: 4px; font-size: 14px; color: #fff; transition: opacity 0.3s; opacity: 0; pointer-events: none; }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #00B42A; }
+    .toast.error { background: #F53F3F; }
+    .toast.info { background: #165DFF; }
+    .toast.warn { background: #F7A100; }
+
+    .sidebar-logo { height: 60px; display: flex; align-items: center; padding: 0 20px; font-size: 18px; font-weight: 700; color: #fff; gap: 8px; }
+
+    .stat-card { background: #fff; border-radius: 8px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 16px; }
+    .stat-card .icon-circle { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; }
+    .stat-card .stat-value { font-size: 28px; font-weight: 700; color: #333; }
+    .stat-card .stat-label { font-size: 13px; color: #86909c; }
+
+    .chart-container { background: #fff; border-radius: 8px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .chart-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 16px; }
+    .bar-chart { display: flex; align-items: flex-end; gap: 12px; height: 180px; padding: 0 4px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .bar-col .bar { width: 100%; max-width: 44px; border-radius: 4px 4px 0 0; transition: all 0.3s; cursor: pointer; position: relative; }
+    .bar-col .bar .tooltip { display: none; position: absolute; top: -32px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap; }
+    .bar-col .bar:hover .tooltip { display: block; }
+    .bar-label { font-size: 11px; color: #86909c; }
+
+    .h-bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .h-bar-label { width: 100px; font-size: 13px; color: #666; text-align: right; }
+    .h-bar-track { flex: 1; height: 28px; background: #f0f2f5; border-radius: 4px; overflow: hidden; cursor: pointer; position: relative; }
+    .h-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; display: flex; align-items: center; padding-left: 10px; }
+    .h-bar-fill .h-tip { display: none; font-size: 12px; color: #fff; font-weight: 600; }
+    .h-bar-track:hover .h-bar-fill .h-tip { display: block; }
+    .h-bar-value { font-size: 13px; color: #333; font-weight: 600; width: 40px; }
+
+    .tag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .tag-green { background: rgba(0,180,42,0.1); color: #00B42A; }
+    .tag-gray { background: #f5f7fa; color: #86909c; }
+    .tag-red { background: rgba(245,63,63,0.1); color: #F53F3F; }
+    .tag-orange { background: rgba(247,161,0,0.1); color: #d46b08; }
+
+    .preview-modal-content { background: #fff; border-radius: 12px; overflow: hidden; max-width: 680px; width: 92vw; box-shadow: 0 8px 40px rgba(0,0,0,0.14); }
+    .preview-body { display: flex; gap: 0; }
+    .preview-left { flex: 0 0 340px; padding: 24px; border-right: 1px solid #f0f0f0; }
+    .preview-project-code { font-size: 24px; font-weight: 700; color: #1d2129; margin-bottom: 16px; letter-spacing: 0.5px; }
+    .preview-info-row { margin-bottom: 14px; }
+    .preview-label-tag { display: inline-block; background: linear-gradient(135deg, #165DFF, #4080ff); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-bottom: 4px; font-weight: 500; }
+    .preview-info-value { font-size: 13px; color: #4e5969; line-height: 1.5; }
+    .preview-qr-section { margin-top: 14px; background: linear-gradient(135deg, #165DFF 0%, #2b6de8 40%, #4080ff 100%); border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 16px; }
+    .preview-qr-box { width: 90px; height: 90px; background: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .preview-qr-box svg { width: 72px; height: 72px; }
+    .preview-qr-info { color: #fff; }
+    .preview-qr-info .inviter-name { font-size: 15px; font-weight: 600; }
+    .preview-qr-info .inviter-tip { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+    .preview-right { flex: 1; padding: 24px 20px; background: #fafbfc; display: flex; flex-direction: column; }
+    .preview-right-title { font-size: 15px; font-weight: 700; color: #1d2129; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+    .preview-right-title i { color: #165DFF; }
+    .preview-flow-steps { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .preview-flow-step { display: flex; gap: 10px; align-items: flex-start; }
+    .preview-flow-step .step-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: #e8f0fe; color: #165DFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+    .preview-flow-step .step-content { flex: 1; }
+    .preview-flow-step .step-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 2px; }
+    .preview-flow-step .step-desc { font-size: 12px; color: #86909c; line-height: 1.5; }
+    .preview-flow-notice { margin-top: auto; padding: 10px 12px; background: #fff7e6; border: 1px solid #ffe58f; border-radius: 6px; font-size: 12px; color: #d46b08; line-height: 1.6; }
+    .preview-flow-notice i { margin-right: 4px; color: #fa8c16; }
+    .preview-close-btn { position: absolute; top: 12px; right: 16px; background: none; border: none; color: #999; font-size: 20px; cursor: pointer; line-height: 1; }
+    .preview-close-btn:hover { color: #333; }
+
+    .content-row { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+    .edit-modal-content { background: #fff; border-radius: 12px; overflow: hidden; max-width: 620px; width: 90vw; box-shadow: 0 8px 40px rgba(0,0,0,0.14); }
+    .edit-modal-header { padding: 16px 24px; background: #f8f9fb; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    .edit-modal-header h2 { font-size: 16px; font-weight: 600; color: #1d2129; }
+    .edit-modal-body { padding: 20px 24px; display: flex; gap: 24px; }
+    .edit-form-area { flex: 1; }
+    .edit-form-area .form-group { margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .edit-form-area .form-group label { font-size: 13px; color: #4e5969; white-space: nowrap; min-width: 56px; text-align: right; }
+    .edit-form-area .form-group select, .edit-form-area .form-group input { flex: 1; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #1d2129; outline: none; }
+    .edit-form-area .form-group select:focus, .edit-form-area .form-group input:focus { border-color: #165DFF; }
+    .edit-qr-area { width: 140px; flex-shrink: 0; text-align: center; }
+    .edit-qr-placeholder { width: 120px; height: 120px; background: #f5f7fa; border: 2px dashed #d9d9d9; border-radius: 8px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .edit-qr-placeholder.generated { border-style: solid; border-color: #165DFF; background: #fff; }
+    .edit-qr-tip { font-size: 11px; color: #86909c; }
+    .edit-qr-tip.refreshed { color: #165DFF; font-weight: 500; }
+    .edit-hint { margin-top: 10px; padding: 10px 14px; background: #fff7e6; border: 1px solid #ffe1a0; border-radius: 6px; font-size: 12px; color: #d46b08; line-height: 1.5; }
+    .edit-hint i { margin-right: 4px; }
+
+    /* 环境切换 */
+    .env-switch-bar { display: flex; align-items: center; gap: 8px; padding: 8px 24px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+    .env-switch-btn { padding: 6px 16px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #666; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+    .env-switch-btn.active { background: #165DFF; color: #fff; border-color: #165DFF; }
+    .env-switch-btn:hover:not(.active) { border-color: #165DFF; color: #165DFF; }
+    .env-switch-btn .env-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .env-switch-btn .env-dot.blue { background: #165DFF; }
+    .env-switch-btn .env-dot.green { background: #00B42A; }
+    .env-switch-btn.active .env-dot { background: #fff; }
+
+    /* 最近删除页 */
+    .days-left-good { color: #00B42A; font-weight: 600; }
+    .days-left-warn { color: #F7A100; font-weight: 600; }
+    .days-left-urgent { color: #F53F3F; font-weight: 600; }
+    .recycle-empty { text-align: center; padding: 60px 20px; color: #86909c; }
+    .recycle-empty i { font-size: 48px; color: #d9d9d9; margin-bottom: 16px; display: block; }
+
+    /* 右侧产品说明 */
+    .dev-section-title { font-size: 12px; font-weight: 700; color: #4e5969; letter-spacing: 0.5px; margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e6eb; }
+    .dev-section-title:first-child { margin-top: 0; }
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #e0e7ff; background-color: #f5f7ff; }
+    .proto-desc:hover { background-color: #e8edff; border-color: #165DFF; box-shadow: 0 2px 8px rgba(22,93,255,0.12); }
+    .proto-desc.env-note { border-color: #d4edda; background-color: #f0fff4; }
+    .proto-desc.env-note:hover { border-color: #52c41a; background-color: #e6ffed; }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .right-doc { display: none; }
+    }
+  </style>
+</head>
+<body class="flex h-screen">
+
+  <div id="toast" class="toast"></div>
+
+  <!-- ====== 侧边栏 ====== -->
+  <aside class="sidebar flex-shrink-0" style="width: 220px; background: #001529;">
+    <div class="sidebar-logo" style="background: #002140;">
+      <i class="fa-solid fa-building-columns" style="color: #165DFF;"></i>
+      <span>艾康逸</span>
+    </div>
+    <nav class="py-2">
+      <div class="sidebar-menu-item active" data-page="invite">
+        <i class="fa-solid fa-ticket"></i>
+        <span>邀请码管理</span>
+      </div>
+      <div class="sidebar-menu-item" data-page="customer">
+        <i class="fa-solid fa-users"></i>
+        <span>客户管理</span>
+      </div>
+      <div class="sidebar-menu-item" data-page="stats">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>数据统计</span>
+      </div>
+      <div class="sidebar-menu-item badge-item" data-page="recycle" id="sidebar-recycle">
+        <i class="fa-solid fa-trash-can-arrow-up"></i>
+        <span>最近删除</span>
+        <span class="badge" id="recycle-badge" style="display:none;">0</span>
+      </div>
+    </nav>
+    <div style="position:absolute;bottom:16px;left:16px;right:16px;padding:8px 12px;background:rgba(22,93,255,0.12);border-radius:6px;font-size:11px;color:rgba(255,255,255,0.6);" id="sidebar-env-info">
+      <span style="font-weight:600;color:#6690FF;">当前环境</span><br><span id="sidebar-env-name">完整体系 · 苏州普蒂德</span>
+    </div>
+  </aside>
+
+  <!-- ====== 主内容区 ====== -->
+  <div class="flex flex-col flex-1 overflow-hidden">
+    <!-- 环境切换条 -->
+    <div class="env-switch-bar" id="env-switch-bar">
+      <span class="text-xs text-gray-400 mr-2">当前环境：</span>
+      <button class="env-switch-btn active" data-env="full" id="env-btn-full">
+        <span class="env-dot blue"></span> 完整体系
+        <span class="text-xs opacity-70">苏州普蒂德</span>
+      </button>
+      <button class="env-switch-btn" data-env="prescreen" id="env-btn-prescreen">
+        <span class="env-dot green"></span> 艾康逸预筛系统
+        <span class="text-xs opacity-70">艾康逸</span>
+      </button>
+      <span class="text-xs ml-auto flex items-center gap-2"><span style="background:#fef7e0;color:#d46b08;padding:2px 8px;border-radius:3px;border:1px solid #ffe58f;"><i class="fa-solid fa-triangle-exclamation mr-1"></i>原型专用：开发部署时无此切换按钮，环境由部署配置决定</span></span>
+    </div>
+
+    <div class="content-row" id="main-wrapper">
+
+      <!-- 左侧原型区 -->
+      <div class="flex-1 overflow-auto p-6" id="proto-area">
+
+<!-- ========== 页面：邀请码管理 ========== -->
+<div class="page-view active" id="page-invite">
+  <div class="text-sm text-gray-400 mb-4"><span>首页</span><span class="mx-1">/</span><span class="text-gray-800 font-medium">邀请码列表</span></div>
+  <h1 class="text-xl font-bold text-gray-800 mb-5">邀请码列表</h1>
+
+  <div class="search-bar">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-gray-600 whitespace-nowrap">方案编号</label>
+        <input type="text" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 focus:border-blue-500 focus:outline-none" placeholder="请输入方案编号">
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-gray-600 whitespace-nowrap">中心名称</label>
+        <input type="text" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 focus:border-blue-500 focus:outline-none" placeholder="请输入中心名称">
+      </div>
+      <button class="btn-primary" onclick="inviteSearch()"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询</button>
+      <button class="btn-default" onclick="inviteReset()"><i class="fa-solid fa-rotate-right mr-1"></i>重置</button>
+      <button class="btn-primary green" style="margin-left:auto;" onclick="openAddModal()"><i class="fa-solid fa-plus mr-1"></i>新增</button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <div class="overflow-x-auto">
+      <table class="data-table w-full">
+        <thead><tr><th>项目编码</th><th>中心名称</th><th>创建人</th><th style="width:200px;">操作</th></tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+      <span class="text-sm text-gray-500" id="invite-count-text">共 <b class="text-gray-700">0</b> 条</span>
+      <div class="flex items-center gap-2">
+        <select class="border border-gray-300 rounded px-2 py-1 text-sm"><option>10条/页</option></select>
+        <button class="btn-default px-3 py-1 text-sm" disabled><i class="fa-solid fa-chevron-left text-xs"></i></button>
+        <button class="px-3 py-1 text-sm rounded" style="background:#165DFF;color:#fff;border:none;">1</button>
+        <button class="btn-default px-3 py-1 text-sm" disabled><i class="fa-solid fa-chevron-right text-xs"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 页面：客户管理 ========== -->
+<div class="page-view" id="page-customer">
+  <div class="text-sm text-gray-400 mb-4"><span>首页</span><span class="mx-1">/</span><span class="text-gray-800 font-medium">客户管理</span></div>
+  <h1 class="text-xl font-bold text-gray-800 mb-5">客户列表</h1>
+
+  <div class="search-bar">
+    <div class="flex items-center gap-4 flex-wrap">
+      <div class="flex items-center gap-2"><label class="text-sm text-gray-600 whitespace-nowrap">客户姓名</label><input type="text" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40 focus:border-blue-500 focus:outline-none" placeholder="请输入姓名"></div>
+      <div class="flex items-center gap-2"><label class="text-sm text-gray-600 whitespace-nowrap">手机号</label><input type="text" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40 focus:border-blue-500 focus:outline-none" placeholder="请输入手机号"></div>
+      <div class="flex items-center gap-2"><label class="text-sm text-gray-600 whitespace-nowrap">项目编码</label><input type="text" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-36 focus:border-blue-500 focus:outline-none" placeholder="请输入项目编码"></div>
+      <button class="btn-primary" onclick="custSearch()"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询</button>
+      <button class="btn-default" onclick="custReset()"><i class="fa-solid fa-rotate-right mr-1"></i>重置</button>
+    </div>
+  </div>
+
+  <div class="text-xs text-gray-400 mb-3 flex items-center gap-1" id="cust-notice"><i class="fa-solid fa-circle-info"></i><span></span></div>
+
+  <div class="table-container">
+    <div class="overflow-x-auto">
+      <table class="data-table w-full">
+        <thead><tr><th>客户姓名</th><th>手机号</th><th>项目编码</th><th>邀请中心</th><th id="cust-status-header">企业微信认证状态</th><th>邀请时间</th><th style="width:140px;">操作</th></tr></thead>
+        <tbody id="cust-body"></tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+      <span class="text-sm text-gray-500" id="cust-count-text">共 <b class="text-gray-700">0</b> 条</span>
+      <div class="flex items-center gap-2"><select class="border border-gray-300 rounded px-2 py-1 text-sm"><option>10条/页</option></select><button class="btn-default px-3 py-1 text-sm" disabled><i class="fa-solid fa-chevron-left text-xs"></i></button><button class="px-3 py-1 text-sm rounded" style="background:#165DFF;color:#fff;border:none;">1</button><button class="btn-default px-3 py-1 text-sm" disabled><i class="fa-solid fa-chevron-right text-xs"></i></button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 页面：数据统计 ========== -->
+<div class="page-view" id="page-stats">
+  <div class="text-sm text-gray-400 mb-4"><span>首页</span><span class="mx-1">/</span><span class="text-gray-800 font-medium">数据统计</span></div>
+  <h1 class="text-xl font-bold text-gray-800 mb-5">项目数据看板</h1>
+
+  <div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="stat-card"><div class="icon-circle" style="background:linear-gradient(135deg,#165DFF,#6690FF)"><i class="fa-solid fa-ticket"></i></div><div><div class="stat-value">156</div><div class="stat-label" id="stat-label-total">总邀请码发放数</div></div></div>
+    <div class="stat-card"><div class="icon-circle" style="background:linear-gradient(135deg,#00B42A,#44D87A)"><i class="fa-solid fa-circle-check"></i></div><div><div class="stat-value">87</div><div class="stat-label" id="stat-label-active">企业微信已认证</div></div></div>
+    <div class="stat-card"><div class="icon-circle" style="background:linear-gradient(135deg,#F7A100,#FFCF54)"><i class="fa-solid fa-percent"></i></div><div><div class="stat-value">55.8<span style="font-size:16px">%</span></div><div class="stat-label" id="stat-label-rate">企业微信认证率</div></div></div>
+    <div class="stat-card"><div class="icon-circle" style="background:linear-gradient(135deg,#F53F3F,#FF7D7D)"><i class="fa-solid fa-arrow-trend-up"></i></div><div><div class="stat-value">12</div><div class="stat-label" id="stat-label-today">今日新增认证</div></div></div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-5">
+    <div class="chart-container">
+      <div class="chart-title" id="chart-title-trend">近7天企业微信认证趋势</div>
+      <div class="bar-chart" id="bar-chart">
+        <div class="bar-col"><div class="bar" style="height:90px;background:#165DFF;"><span class="tooltip">12</span></div><span class="bar-label">03/20</span></div>
+        <div class="bar-col"><div class="bar" style="height:55px;background:#165DFF;"><span class="tooltip">8</span></div><span class="bar-label">03/21</span></div>
+        <div class="bar-col"><div class="bar" style="height:105px;background:#165DFF;"><span class="tooltip">15</span></div><span class="bar-label">03/22</span></div>
+        <div class="bar-col"><div class="bar" style="height:70px;background:#165DFF;"><span class="tooltip">10</span></div><span class="bar-label">03/23</span></div>
+        <div class="bar-col"><div class="bar" style="height:130px;background:#165DFF;"><span class="tooltip">18</span></div><span class="bar-label">03/24</span></div>
+        <div class="bar-col"><div class="bar" style="height:95px;background:#165DFF;"><span class="tooltip">14</span></div><span class="bar-label">03/25</span></div>
+        <div class="bar-col"><div class="bar" style="height:88px;background:#165DFF;"><span class="tooltip">12</span></div><span class="bar-label">03/26</span></div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">各项目邀请码发放量</div>
+      <div class="h-bar-row"><span class="h-bar-label">HRS9531-310</span><div class="h-bar-track"><div class="h-bar-fill" style="width:70%;background:linear-gradient(90deg,#165DFF,#6690FF);"><span class="h-tip">28</span></div></div><span class="h-bar-value">28</span></div>
+      <div class="h-bar-row"><span class="h-bar-label">HS-20093-301</span><div class="h-bar-track"><div class="h-bar-fill" style="width:55%;background:linear-gradient(90deg,#00B42A,#44D87A);"><span class="h-tip">22</span></div></div><span class="h-bar-value">22</span></div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-title" id="chart-title-flow">企业微信认证流程说明</div>
+    <div class="flex flex-col gap-3 py-2" id="flow-steps-container">
+      <div class="flex items-center gap-3"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">1</div><div class="flex-1 bg-blue-50 rounded-lg p-3"><div class="text-sm font-semibold text-blue-800">管理员生成邀请码</div><div class="text-xs text-blue-600 mt-0.5">选择项目 + 中心，生成带二维码的邀请链接</div></div></div>
+      <div class="flex items-center gap-3"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold text-sm">2</div><div class="flex-1 bg-green-50 rounded-lg p-3"><div class="text-sm font-semibold text-green-800">受邀人扫码注册</div><div class="text-xs text-green-600 mt-0.5">扫码后在公众号完成注册，注册后方可识别用户身份</div></div></div>
+      <div class="flex items-center gap-3"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-sm">3</div><div class="flex-1 bg-purple-50 rounded-lg p-3"><div class="text-sm font-semibold text-purple-800">企业微信认证完成</div><div class="text-xs text-purple-600 mt-0.5">用户通过企微认证后，系统记录认证状态，纳入已认证统计</div></div></div>
+    </div>
+  </div>
+
+  <div class="text-xs text-gray-400 mt-3 flex items-center gap-1" id="stats-notice"><i class="fa-solid fa-circle-info"></i><span></span></div>
+</div>
+
+<!-- ========== 页面：最近删除 ========== -->
+<div class="page-view" id="page-recycle">
+  <div class="text-sm text-gray-400 mb-4"><span>首页</span><span class="mx-1">/</span><span class="text-gray-800 font-medium">最近删除</span></div>
+  <h1 class="text-xl font-bold text-gray-800 mb-5">最近删除</h1>
+
+  <div class="bg-white rounded-lg shadow-sm p-4 mb-4 flex items-center gap-3" style="background: #fef7e0; border: 1px solid #ffe58f;">
+    <i class="fa-solid fa-circle-info text-lg" style="color:#F7A100;"></i>
+    <div class="text-sm text-gray-700">
+      <b>删除后的邀请码将在此保留 30 天</b>，30 天内可随时恢复。超过 30 天未恢复的数据将被<span class="text-red-500 font-semibold">永久清除</span>，无法找回。
+    </div>
+  </div>
+
+  <div class="table-container" id="recycle-table-container">
+    <div class="overflow-x-auto">
+      <table class="data-table w-full">
+        <thead><tr><th>项目编码</th><th>中心名称</th><th>创建人</th><th>删除时间</th><th>剩余恢复天数</th><th style="width:120px;">操作</th></tr></thead>
+        <tbody id="recycle-body"></tbody>
+      </table>
+    </div>
+    <div id="recycle-empty" class="recycle-empty" style="display:none;">
+      <i class="fa-solid fa-inbox"></i>
+      <p class="text-sm">暂无已删除的邀请码</p>
+      <p class="text-xs mt-1">删除的邀请码会在这里保留 30 天</p>
+    </div>
+    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-100" id="recycle-pagination">
+      <span class="text-sm text-gray-500" id="recycle-count-text">共 <b class="text-gray-700">0</b> 条</span>
+    </div>
+  </div>
+</div>
+
+      </div><!-- /proto-area -->
+
+      <!-- ====== 右侧：产品说明区 ====== -->
+      <div class="flex-shrink-0 overflow-auto p-4 right-doc" id="doc-area" style="width:20%;background:#f5f7ff;border-left:1px solid #e0e7ff;">
+        <h3 class="text-base font-bold text-indigo-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-clipboard-list"></i><span>产品说明</span></h3>
+        <div class="text-xs text-gray-400 mb-4" id="doc-env-tag">完整体系 · 苏州普蒂德</div>
+
+        <!-- ====== 系统差异总览（常驻） ====== -->
+        <div class="proto-desc p-3 mb-3" style="background:#f0f5ff;border:1px solid #adc6ff;">
+          <div class="text-xs font-bold text-indigo-800 mb-2 flex items-center gap-1"><i class="fa-solid fa-code-branch"></i> 两套系统差异总览</div>
+          <div style="font-size:10px;color:#4e5969;line-height:1.8;">
+            <table style="width:100%;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid #d6e4ff;"><td style="padding:3px 4px;font-weight:600;color:#1d2129;width:42%;">对比维度</td><td style="padding:3px 4px;font-weight:600;color:#165DFF;">完整体系</td><td style="padding:3px 4px;font-weight:600;color:#00B42A;">艾康逸预筛</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">企微主体</td><td style="padding:3px 4px;">苏州普蒂德</td><td style="padding:3px 4px;">艾康逸</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">用户入口</td><td style="padding:3px 4px;">公众号 + 企微</td><td style="padding:3px 4px;">仅企业微信</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">加入流程</td><td style="padding:3px 4px;">扫码→公众号注册→企微认证（4步）</td><td style="padding:3px 4px;">扫码→直接加入（2步）</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">核心指标</td><td style="padding:3px 4px;">企业微信认证率</td><td style="padding:3px 4px;">企业微信加入率</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">用户身份</td><td style="padding:3px 4px;">注册后识别</td><td style="padding:3px 4px;">企微即身份</td></tr>
+              <tr style="border-bottom:1px solid #e8edff;"><td style="padding:3px 4px;">部署方式</td><td style="padding:3px 4px;">独立部署</td><td style="padding:3px 4px;">独立部署</td></tr>
+              <tr><td style="padding:3px 4px;">数据互通</td><td colspan="2" style="padding:3px 4px;color:#F53F3F;">两套系统数据完全隔离，互不联通</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div id="doc-list">
+
+          <!-- 邀请码管理 -->
+          <div class="right-doc-list" id="doc-invite">
+            <div class="dev-section-title">📋 业务规则</div>
+            <div class="proto-desc p-3 mb-2">
+              <div class="text-xs text-gray-700 leading-relaxed" id="doc-invite-rules"></div>
+            </div>
+            <div class="dev-section-title">🔄 状态定义</div>
+            <div class="proto-desc p-3 mb-2">
+              <div class="text-xs text-gray-700 leading-relaxed" id="doc-invite-status"></div>
+            </div>
+            <div class="dev-section-title">👤 用户操作流程</div>
+            <div class="proto-desc p-3 mb-2">
+              <div class="text-xs text-gray-700 leading-relaxed" id="doc-invite-flow"></div>
+            </div>
+            <div class="dev-section-title">✅ 验收标准</div>
+            <div class="proto-desc p-3 mb-2">
+              <div class="text-xs text-gray-700 leading-relaxed" id="doc-invite-acceptance"></div>
+            </div>
+            <div class="dev-section-title">🔧 环境信息</div>
+            <div class="proto-desc p-3 mb-2 env-note" id="doc-invite-env"></div>
+          </div>
+
+          <!-- 客户管理 -->
+          <div class="right-doc-list" id="doc-customer" style="display:none;">
+            <div class="dev-section-title">📋 业务规则</div>
+            <div class="proto-desc p-3 mb-2"><div class="text-xs text-gray-700 leading-relaxed" id="doc-cust-rules"></div></div>
+            <div class="dev-section-title">✅ 验收标准</div>
+            <div class="proto-desc p-3 mb-2"><div class="text-xs text-gray-700 leading-relaxed" id="doc-cust-acceptance"></div></div>
+          </div>
+
+          <!-- 数据统计 -->
+          <div class="right-doc-list" id="doc-stats" style="display:none;">
+            <div class="dev-section-title">📊 指标定义</div>
+            <div class="proto-desc p-3 mb-2"><div class="text-xs text-gray-700 leading-relaxed" id="doc-stats-metrics"></div></div>
+            <div class="dev-section-title">📋 统计维度</div>
+            <div class="proto-desc p-3 mb-2"><div class="text-xs text-gray-700 leading-relaxed" id="doc-stats-dimensions"></div></div>
+            <div class="dev-section-title">✅ 验收标准</div>
+            <div class="proto-desc p-3 mb-2"><div class="text-xs text-gray-700 leading-relaxed" id="doc-stats-acceptance"></div></div>
+          </div>
+
+          <!-- 最近删除 -->
+          <div class="right-doc-list" id="doc-recycle" style="display:none;">
+            <div class="dev-section-title">📋 业务规则</div>
+            <div class="proto-desc p-3 mb-2">
+              <div class="text-xs text-gray-700 leading-relaxed">
+                <p class="mb-1"><span class="font-semibold text-indigo-700">1. 保留期限：</span>删除的邀请码在此页面保留 30 天，超期自动永久清除。</p>
+                <p class="mb-1"><span class="font-semibold text-indigo-700">2. 恢复操作：</span>30 天内的记录可随时恢复到邀请码列表，恢复后重新生成新的邀请码 ID。</p>
+                <p class="mb-1"><span class="font-semibold text-indigo-700">3. 显示规则：</span>按删除时间倒序排列，最近删除的排在前面。</p>
+                <p><span class="font-semibold text-indigo-700">4. 天数提醒：</span>剩余 > 15 天正常显示；7-15 天橙色提醒；< 7 天红色警告。</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========== 编辑邀请码弹窗 ========== -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="edit-modal-content" onclick="event.stopPropagation()">
+      <div class="edit-modal-header">
+        <h2 id="modal-title">编辑邀请码</h2>
+        <button class="text-gray-400 hover:text-gray-600 text-xl leading-none" onclick="document.getElementById('modal-overlay').classList.remove('show')">&times;</button>
+      </div>
+      <div class="edit-modal-body">
+        <div class="edit-form-area">
+          <div class="form-group"><label>选择项目</label><select id="edit-select-project" onchange="onEditProjectChange()"><option value="HRS9531-310">HRS9531-310</option><option value="HS-20093-301">HS-20093-301</option></select></div>
+          <div class="form-group"><label>选择中心</label><select id="edit-select-center" onchange="onEditCenterChange()"><option value="CN083-桂林市人民医院-黄萍">CN083 - 桂林市人民医院-黄萍</option><option value="CN041-北京协和医院-李芳">CN041 - 北京协和医院-李芳</option><option value="CN062-上海市第一人民医院-王磊">CN062 - 上海市第一人民医院-王磊</option><option value="CN102-广州市第一人民医院-陈静">CN102 - 广州市第一人民医院-陈静</option></select></div>
+          <div class="form-group" style="display:none;"><label>创建人</label><input type="text" id="edit-creator" value="骆敏" readonly></div>
+          <div class="edit-hint"><i class="fa-solid fa-circle-info"></i>变更中心后，二维码将自动刷新。保存时将生成一条<strong>新的邀请记录</strong>，原记录保持不变。</div>
+        </div>
+        <div class="edit-qr-area">
+          <div class="edit-qr-placeholder" id="edit-qr-box">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" fill="#f5f7fa"/><rect x="20" y="25" width="40" height="30" fill="none" stroke="#d9d9d9" stroke-width="1.5" rx="2"/><text x="40" y="44" text-anchor="middle" fill="#bfbfbf" font-size="11">二维码</text><text x="40" y="57" text-anchor="middle" fill="#bfbfbf" font-size="9">预览区</text></svg>
+          </div>
+          <div class="edit-qr-tip" id="edit-qr-tip-text">选择中心后自动生成</div>
+        </div>
+      </div>
+      <div class="flex justify-between items-center px-6 py-4 border-t border-gray-100 bg-gray-50">
+        <span class="text-xs text-gray-400" id="edit-status-text">原记录将保留，编辑后生成新记录</span>
+        <div class="flex gap-3">
+          <button class="btn-primary" onclick="editPreview()" id="btn-edit-preview" style="background:#165DFF;"><i class="fa-solid fa-eye mr-1"></i>预览</button>
+          <button class="btn-primary" onclick="handleSave()"><i class="fa-solid fa-check mr-1"></i>保存</button>
+          <button class="btn-default" onclick="document.getElementById('modal-overlay').classList.remove('show')">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 预览弹窗 ========== -->
+  <div class="modal-overlay" id="preview-overlay" onclick="closePreview(event)">
+    <div class="preview-modal-content" onclick="event.stopPropagation()" style="position:relative;">
+      <div class="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+        <span class="text-sm font-semibold text-gray-700"><i class="fa-solid fa-eye mr-2" style="color:#165DFF;"></i>邀请码预览</span>
+        <div class="flex items-center gap-2">
+          <button class="btn-primary" onclick="downloadPreviewQR()" style="padding:6px 14px;font-size:12px;"><i class="fa-solid fa-download mr-1"></i>下载邀请码</button>
+          <button class="preview-close-btn" onclick="document.getElementById('preview-overlay').classList.remove('show')" style="position:static;font-size:18px;">&times;</button>
+        </div>
+      </div>
+      <div class="preview-body">
+        <div class="preview-left">
+          <div class="preview-project-code" id="preview-proj-code">HRS9531-310</div>
+          <div class="preview-info-row"><div class="preview-label-tag">项目名称</div><div class="preview-info-value" id="preview-proj-name">--</div></div>
+          <div class="preview-info-row"><div class="preview-label-tag">研究中心</div><div class="preview-info-value" id="preview-center-info">--</div></div>
+          <div class="preview-qr-section" id="preview-qr-section">
+            <div class="preview-qr-box">
+              <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" id="preview-qr-svg"><rect width="80" height="80" fill="#fff"/><rect x="4" y="4" width="72" height="72" fill="none" stroke="#165DFF" stroke-width="2" rx="2"/><rect x="8" y="8" width="28" height="28" fill="#165DFF" rx="1"/><rect x="14" y="14" width="16" height="3" fill="#fff"/><rect x="14" y="20" width="16" height="3" fill="#fff"/><rect x="14" y="26" width="8" height="3" fill="#fff"/><rect x="44" y="8" width="28" height="28" fill="#165DFF" rx="1"/><rect x="50" y="14" width="16" height="3" fill="#fff"/><rect x="50" y="20" width="16" height="3" fill="#fff"/><rect x="50" y="26" width="8" height="3" fill="#fff"/><rect x="8" y="44" width="28" height="28" fill="#165DFF" rx="1"/><rect x="14" y="50" width="16" height="3" fill="#fff"/><rect x="14" y="56" width="16" height="3" fill="#fff"/><rect x="14" y="62" width="8" height="3" fill="#fff"/><rect x="48" y="50" width="24" height="8" fill="#165DFF" rx="1"/><rect x="48" y="62" width="24" height="8" fill="#165DFF" rx="1"/><rect x="40" y="40" width="4" height="4" fill="#165DFF"/><rect x="40" y="48" width="4" height="4" fill="#165DFF"/></svg>
+            </div>
+            <div class="preview-qr-info"><div class="inviter-name" id="preview-inviter">骆敏 邀请人</div><div class="inviter-tip">扫描二维码加入项目</div></div>
+          </div>
+        </div>
+        <div class="preview-right">
+          <div class="preview-right-title" id="preview-right-title"><i class="fa-solid fa-circle-info"></i> 扫码后</div>
+          <div class="preview-flow-steps" id="preview-flow-steps"></div>
+          <div class="preview-flow-notice" id="preview-flow-notice"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 删除确认弹窗 ========== -->
+  <div class="modal-overlay" id="delete-overlay" onclick="closeDelete(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="min-width:380px;">
+      <div class="text-center mb-4">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-3"><i class="fa-solid fa-triangle-exclamation text-xl" style="color:#F53F3F;"></i></div>
+        <h3 class="text-base font-bold text-gray-800">确认删除</h3>
+        <p class="text-sm text-gray-500 mt-1">删除后可在<b class="text-orange-500">最近删除</b>中保留 30 天，确定要删除 <b id="delete-target" class="text-red-500">--</b> 吗？</p>
+      </div>
+      <div class="flex justify-center gap-3">
+        <button class="btn-default" onclick="document.getElementById('delete-overlay').classList.remove('show')">取消</button>
+        <button class="px-5 py-2 rounded text-sm text-white cursor-pointer" style="background:#F53F3F;" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 恢复确认弹窗 ========== -->
+  <div class="modal-overlay" id="restore-overlay" onclick="closeRestore(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="min-width:380px;">
+      <div class="text-center mb-4">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3"><i class="fa-solid fa-rotate-left text-xl" style="color:#00B42A;"></i></div>
+        <h3 class="text-base font-bold text-gray-800">确认恢复</h3>
+        <p class="text-sm text-gray-500 mt-1">将 <b id="restore-target" class="text-green-600">--</b> 恢复到邀请码列表？</p>
+      </div>
+      <div class="flex justify-center gap-3">
+        <button class="btn-default" onclick="document.getElementById('restore-overlay').classList.remove('show')">取消</button>
+        <button class="px-5 py-2 rounded text-sm text-white cursor-pointer" style="background:#00B42A;" onclick="confirmRestore()">确认恢复</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 客户注册信息查看弹窗 ========== -->
+  <div class="modal-overlay" id="reg-view-overlay" onclick="document.getElementById('reg-view-overlay').classList.remove('show')">
+    <div class="modal-content" onclick="event.stopPropagation()" style="min-width:420px;max-width:480px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 16px 0;border-bottom:1px solid #eee;">
+        <h3 class="text-base font-bold text-gray-800">注册信息</h3>
+        <button onclick="document.getElementById('reg-view-overlay').classList.remove('show')" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+      </div>
+      <div class="mt-4 space-y-4">
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">姓名 <span class="text-red-500">*</span></label>
+          <input type="text" class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm bg-white" value="张三" readonly>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">公司名称 <span class="text-red-500">*</span></label>
+          <select class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm bg-white" disabled>
+            <option>请选择</option><option selected>XX公司</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">手机号 <span class="text-red-500">*</span></label>
+          <input type="text" class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm bg-white" value="13800138000" readonly>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">邮箱 <span class="text-red-500">*</span></label>
+          <input type="text" class="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm bg-white" value="zhangsan@example.com" readonly>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">项目编码</label>
+          <input type="text" class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-500" id="reg-view-code" value="HRS9531-310" readonly>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">中心</label>
+          <input type="text" class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-500" id="reg-view-center" value="桂林市人民医院" readonly>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="w-20 text-sm text-gray-600 flex-shrink-0">邀请人</label>
+          <input type="text" class="flex-1 border border-gray-200 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-500" id="reg-view-inviter" value="骆敏" readonly>
+        </div>
+        <div class="text-center pt-2 border-t border-gray-100">
+          <button class="px-8 py-1.5 rounded text-sm text-white cursor-default" style="background:#165DFF;opacity:0.6;">保存</button>
+          <p class="text-xs text-gray-400 mt-2">此为注册页面预览，仅供查看不可操作</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== 环境配置 ======
+  const envConfig = {
+    full: {
+      name: '完整体系',
+      org: '苏州普蒂德',
+      color: '#165DFF',
+      colorLight: '#e8f0fe',
+      sidebarColor: '#001529',
+      qrColor: '#165DFF',
+      qrGradient: 'linear-gradient(135deg, #165DFF 0%, #2b6de8 40%, #4080ff 100%)',
+      previewSteps: [
+        { title: '注册与加入流程', desc: '<b>公众号注册：</b>扫码后需先关注「临研AI招募助手」公众号，并在其中完成账号注册。<br><b>自动加入企微：</b>注册完成后，系统会<span style="color:#F7A100;font-weight:700;">自动将您加入「苏州普蒂德」的企业微信中</span>。该企微专用于预筛系统，无其他功能，无需手动操作。', isSection: true },
+        { title: '消息通知', desc: '加入企业微信后，您可以实时接收预筛系统发送的相关消息通知和提醒。<span style="color:#F7A100;font-weight:700;">此企业微信仅用于方便使用本预筛系统，无其他功能，请放心加入。</span>' },
+        { title: '两种方式并存', desc: '公众号与企业微信两种方式同时可用。如需退出企微，可在微信「设置 - 企业微信联系人」中操作退出。' }
+      ],
+      previewNotice: '',
+      previewTitle: '扫码后 · 完整体系（苏州普蒂德）',
+      statusLabel: '企业微信认证状态',
+      statusActive: '已认证',
+      statusInactive: '未认证',
+      statLabelActive: '企业微信已认证',
+      statLabelRate: '企业微信认证率',
+      statLabelToday: '今日新增认证',
+      chartTrendTitle: '近7天企业微信认证趋势',
+      chartFlowTitle: '企业微信认证流程说明',
+      noticeText: '说明：一个中心可无限次邀请，同一用户可被不同项目/不同中心多次邀请，统计以项目维度为主，企微认证后才进入已认证统计。',
+      flowSteps: [
+        { color: 'blue', title: '管理员生成邀请码', desc: '选择项目 + 中心，生成带二维码的邀请链接' },
+        { color: 'green', title: '受邀人扫码注册', desc: '扫码后在公众号完成注册，注册后方可识别用户身份' },
+        { color: 'purple', title: '企业微信认证完成', desc: '用户通过企微认证后，系统记录认证状态，纳入已认证统计' }
+      ],
+      custNotice: '说明：用户扫码注册后才会出现在此列表（注册完成前身份未知）。同一用户可被不同项目/中心多次邀请，每条邀请记录独立追踪企微认证状态。',
+      docInviteRules: '<p class="mb-1"><span class="font-semibold text-indigo-700">1. 邀请对象：</span>一个中心可被无限次邀请，无数量上限。</p><p class="mb-1"><span class="font-semibold text-indigo-700">2. 重复邀请：</span>同一用户可被不同项目、不同中心多次邀请，每条邀请独立追踪。</p><p class="mb-1"><span class="font-semibold text-indigo-700">3. 编辑即新增：</span>修改邀请码的项目/中心后，不覆盖原记录，而是生成一条新记录。</p><p class="mb-1"><span class="font-semibold text-indigo-700">4. 二维码联动：</span>编辑弹窗中切换中心，右侧二维码预览实时刷新。</p><p><span class="font-semibold text-indigo-700">5. 删除规则：</span>软删除，30天内可在「最近删除」中恢复。</p>',
+      docInviteStatus: '<p class="mb-1"><span class="tag" style="background:#e8f5e9;color:#2e7d32;">已认证</span> 受邀人已通过企业微信认证（需先完成公众号注册）</p><p class="mb-1"><span class="tag" style="background:#fce4ec;color:#c62828;">未认证</span> 邀请码已发放但受邀人尚未完成企微认证</p><p class="text-xs text-gray-500 mt-2">⚠️ 认证前提：用户必须先通过公众号完成注册，注册后才能进行企微认证。</p>',
+      docInviteFlow: '<p class="mb-1"><span class="font-semibold text-indigo-700">受邀人视角：</span></p><div class="flex flex-col gap-1.5 ml-2 mt-1"><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" style="font-size:10px;">1</span><span class="text-xs">扫码关注公众号「临研AI招募助手」</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" style="font-size:10px;">2</span><span class="text-xs">在公众号内完成用户注册</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" style="font-size:10px;">3</span><span class="text-xs">默认加入「苏州普蒂德」企业微信</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" style="font-size:10px;">4</span><span class="text-xs">通过企微接收项目通知</span></div></div><p class="mt-2 mb-1"><span class="font-semibold text-indigo-700">管理员视角：</span></p><div class="flex flex-col gap-1.5 ml-2 mt-1"><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">1</span><span class="text-xs">选择项目 + 中心 → 生成邀请码</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">2</span><span class="text-xs">分享二维码给目标用户</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">3</span><span class="text-xs">在列表中追踪用户认证状态</span></div></div>',
+      docInviteAcceptance: '<p class="mb-1">□ 列表支持按项目编码、中心名称搜索</p><p class="mb-1">□ 编辑弹窗内可预览二维码，预览不关闭编辑弹窗</p><p class="mb-1">□ 编辑保存后原记录不变，新记录出现在表首（高亮3秒）</p><p class="mb-1">□ 切换中心时二维码实时刷新</p><p class="mb-1">□ 预览弹窗展示4步流程（公众号→注册→企微→通知）</p><p class="mb-1">□ 删除后30天内可恢复</p>',
+      docInviteEnv: '<div class="text-xs text-gray-700 leading-relaxed"><p class="mb-0.5"><b>企业微信主体：</b>苏州普蒂德</p><p class="mb-0.5"><b>用户入口：</b>公众号「临研AI招募助手」</p><p class="mb-0.5"><b>认证流程：</b>需先注册再认证</p><p class="mb-0.5"><b>统计指标：</b>企业微信认证率（已认证 / 未认证）</p><p><b>数据隔离：</b>与艾康逸预筛系统完全独立</p></div>',
+      docCustRules: '<p class="mb-1"><span class="font-semibold text-indigo-700">1. 客户来源：</span>用户扫码后在公众号完成注册，注册成功后才出现在客户列表。</p><p class="mb-1"><span class="font-semibold text-indigo-700">2. 注册前身份未知：</span>未注册用户仅显示"未认证"标记。</p><p class="mb-1"><span class="font-semibold text-indigo-700">3. 多邀请独立追踪：</span>同一客户可被多个项目多次邀请，每条邀请独立记录。</p><p class="mb-1"><span class="font-semibold text-indigo-700">4. 认证状态：</span>每条记录追踪该客户在此邀请下的企微认证状态。</p><p class="mt-2 text-orange-600"><span class="font-semibold">5. 编辑限制：</span>本系统不提供客户编辑功能。如需修改客户信息，请通过<b>企业微信后台的用户管理功能</b>进行操作。</p>',
+      docCustAcceptance: '<p class="mb-1">□ 列表支持按姓名、手机号、项目编码搜索</p><p class="mb-1">□ 每条记录显示对应邀请的企微认证状态</p><p class="mb-1">□ 同一客户的多条邀请记录各自独立，不合并</p><p class="mb-1">□ 点击"查看"弹出该客户的注册信息页（只读）</p><p class="mb-1">□ 不提供编辑功能，客户信息修改走企业微信后台</p>',
+      docStatsMetrics: '<p class="mb-1"><span class="font-semibold text-indigo-700">总邀请码发放数：</span>所有项目、所有中心的邀请码发放总量。</p><p class="mb-1"><span class="font-semibold text-indigo-700">企业微信已认证：</span>扫码后完成企微认证的用户数。</p><p class="mb-1"><span class="font-semibold text-indigo-700">企业微信认证率：</span>已认证数 ÷ 发放总数 × 100%。</p><p><span class="font-semibold text-indigo-700">今日新增认证：</span>当日（0:00-24:00）完成企微认证的用户增量。</p>',
+      docStatsDimensions: '<p class="mb-1"><span class="font-semibold text-indigo-700">以项目为主维度：</span>统计看板按项目聚合展示。</p><p class="mb-1"><span class="font-semibold text-indigo-700">趋势图：</span>按时间轴展示认证趋势变化。</p><p class="mb-1"><span class="font-semibold text-indigo-700">项目分布：</span>各项目的邀请码发放与认证完成对比。</p><p><span class="font-semibold text-indigo-700">明细列表：</span>支持按项目、时间段查看具体邀请记录。</p>',
+      docStatsAcceptance: '<p class="mb-1">□ 总览卡片4个指标数字正确计算</p><p class="mb-1">□ 认证趋势图以项目维度展示</p><p class="mb-1">□ 项目分布图可hover查看具体数值</p><p class="mb-1">□ 明细列表与邀请码列表数据一致</p>',
+    },
+    prescreen: {
+      name: '艾康逸预筛系统',
+      org: '艾康逸',
+      color: '#00B42A',
+      colorLight: '#e8f5e9',
+      sidebarColor: '#001529',
+      qrColor: '#00B42A',
+      qrGradient: 'linear-gradient(135deg, #00B42A 0%, #27c346 40%, #52c41a 100%)',
+      previewSteps: [
+        { title: '扫描二维码', desc: '受邀人使用微信扫描邀请二维码。' },
+        { title: '直接加入企微对应项目', desc: '无需注册，立即加入<b>「艾康逸」</b>企业微信对应项目。企微身份即用户身份。' }
+      ],
+      previewNotice: '<i class="fa-solid fa-circle-check"></i> 提示：扫码即加入，无需注册。企业微信为本系统唯一入口。',
+      previewTitle: '扫码后 · 艾康逸预筛系统',
+      statusLabel: '企微加入状态',
+      statusActive: '已加入',
+      statusInactive: '未加入',
+      statLabelActive: '企业微信已加入',
+      statLabelRate: '企业微信加入率',
+      statLabelToday: '今日新增加入',
+      chartTrendTitle: '近7天企业微信加入趋势',
+      chartFlowTitle: '企微加入流程说明',
+      noticeText: '说明：一个中心可无限次邀请，同一用户可被不同项目/不同中心多次邀请，统计以项目维度为主。扫码即加入，无注册/认证环节。',
+      flowSteps: [
+        { color: 'green', title: '管理员生成邀请码', desc: '选择项目 + 中心，生成带二维码的邀请链接' },
+        { color: 'blue', title: '受邀人扫码直接加入', desc: '扫码后直接加入「艾康逸」企微对应项目，无需注册' }
+      ],
+      custNotice: '说明：用户扫码直接加入艾康逸企微对应项目，无注册环节。企微身份即用户身份，加入后立即出现在客户列表。同一用户可被多项目多次邀请。',
+      docInviteRules: '<p class="mb-1"><span class="font-semibold text-green-700">1. 邀请对象：</span>一个中心可被无限次邀请，无数量上限。</p><p class="mb-1"><span class="font-semibold text-green-700">2. 重复邀请：</span>同一用户可被不同项目、不同中心多次邀请，每条邀请独立追踪。</p><p class="mb-1"><span class="font-semibold text-green-700">3. 编辑即新增：</span>修改邀请码的项目/中心后，不覆盖原记录，而是生成一条新记录。</p><p class="mb-1"><span class="font-semibold text-green-700">4. 二维码联动：</span>编辑弹窗中切换中心，右侧二维码预览实时刷新。</p><p><span class="font-semibold text-green-700">5. 删除规则：</span>软删除，30天内可在「最近删除」中恢复。</p>',
+      docInviteStatus: '<p class="mb-1"><span class="tag" style="background:#e8f5e9;color:#2e7d32;">已加入</span> 受邀人已扫码加入艾康逸企业微信</p><p class="mb-1"><span class="tag" style="background:#fce4ec;color:#c62828;">未加入</span> 邀请码已发放但受邀人尚未扫码加入</p><p class="text-xs text-gray-500 mt-2">⚠️ 本环境无注册/认证环节。扫码即加入，企微身份即用户身份。</p>',
+      docInviteFlow: '<p class="mb-1"><span class="font-semibold text-green-700">受邀人视角：</span></p><div class="flex flex-col gap-1.5 ml-2 mt-1"><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold" style="font-size:10px;">1</span><span class="text-xs">扫描二维码</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-bold" style="font-size:10px;">2</span><span class="text-xs">直接加入「艾康逸」企业微信对应项目</span></div></div><p class="mt-2 mb-1"><span class="font-semibold text-green-700">管理员视角：</span></p><div class="flex flex-col gap-1.5 ml-2 mt-1"><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">1</span><span class="text-xs">选择项目 + 中心 → 生成邀请码</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">2</span><span class="text-xs">分享二维码给目标用户</span></div><div class="flex items-center gap-1.5"><span class="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold" style="font-size:10px;">3</span><span class="text-xs">在列表中追踪用户加入状态</span></div></div>',
+      docInviteAcceptance: '<p class="mb-1">□ 列表支持按项目编码、中心名称搜索</p><p class="mb-1">□ 编辑弹窗内可预览二维码，预览不关闭编辑弹窗</p><p class="mb-1">□ 编辑保存后原记录不变，新记录出现在表首（绿底高亮3秒）</p><p class="mb-1">□ 切换中心时二维码实时刷新</p><p class="mb-1">□ 预览弹窗展示2步流程（扫码→直接加入艾康逸企微）</p><p class="mb-1">□ 删除后30天内可恢复</p>',
+      docInviteEnv: '<div class="text-xs text-gray-700 leading-relaxed"><p class="mb-0.5"><b>企业微信主体：</b>艾康逸（非苏州普蒂德）</p><p class="mb-0.5"><b>用户入口：</b>企业微信（唯一通道）</p><p class="mb-0.5"><b>加入流程：</b>扫码即加入，零注册摩擦</p><p class="mb-0.5"><b>统计指标：</b>企微加入率（已加入 / 未加入）</p><p><b>数据隔离：</b>与完整体系完全独立</p></div>',
+      docCustRules: '<p class="mb-1"><span class="font-semibold text-green-700">1. 客户来源：</span>用户扫码直接加入艾康逸企微对应项目，无注册环节。</p><p class="mb-1"><span class="font-semibold text-green-700">2. 身份即企微：</span>企微身份即用户身份，加入后立即出现在客户列表。</p><p class="mb-1"><span class="font-semibold text-green-700">3. 多邀请独立追踪：</span>同一客户可被多个项目多次邀请。</p><p class="mb-1"><span class="font-semibold text-green-700">4. 无认证环节：</span>本环境不涉及注册和认证，加入即完成。</p><p class="mt-2 text-orange-600"><span class="font-semibold">5. 操作限制：</span>本系统不提供查看/编辑客户功能。如需管理客户信息，请通过<b>企业微信后台的用户管理功能</b>进行操作。</p>',
+      docCustAcceptance: '<p class="mb-1">□ 列表支持按姓名、手机号、项目编码搜索</p><p class="mb-1">□ 每条记录显示对应邀请的企微加入状态</p><p class="mb-1">□ 同一客户的多条邀请记录各自独立，不合并</p><p class="mb-1">□ 无查看/编辑操作，客户管理走企业微信后台</p>',
+      docStatsMetrics: '<p class="mb-1"><span class="font-semibold text-green-700">总邀请码发放数：</span>所有项目、所有中心的邀请码发放总量。</p><p class="mb-1"><span class="font-semibold text-green-700">企业微信已加入：</span>扫码加入艾康逸企微的用户数（扫码即加入）。</p><p class="mb-1"><span class="font-semibold text-green-700">企业微信加入率：</span>已加入数 ÷ 发放总数 × 100%。</p><p><span class="font-semibold text-green-700">今日新增加入：</span>当日（0:00-24:00）新增扫码加入企微的用户增量。</p>',
+      docStatsDimensions: '<p class="mb-1"><span class="font-semibold text-green-700">以项目为主维度：</span>统计看板按项目聚合展示。</p><p class="mb-1"><span class="font-semibold text-green-700">趋势图：</span>按时间轴显示加入趋势变化。</p><p class="mb-1"><span class="font-semibold text-green-700">项目分布：</span>各项目的邀请码发放与加入完成对比。</p><p><span class="font-semibold text-green-700">明细列表：</span>支持按项目、时间段查看具体邀请记录。</p>',
+      docStatsAcceptance: '<p class="mb-1">□ 总览卡片4个指标数字正确计算</p><p class="mb-1">□ 加入趋势图以项目维度展示</p><p class="mb-1">□ 项目分布图可hover查看具体数值</p><p class="mb-1">□ 明细列表与邀请码列表数据一致</p>',
+    }
+  };
+
+  let CURRENT_ENV = 'full';
+  const deletedItems = [];
+  const projects = ['HRS9531-310', 'HS-20093-301'];
+  const centers = ['CN083-桂林市人民医院-黄萍', 'CN041-北京协和医院-李芳', 'CN062-上海市第一人民医院-王磊', 'CN102-广州市第一人民医院-陈静'];
+  const projectInfo = {
+    'HRS9531-310': '评价HRS9531注射液对比XXX在XXX受试者中的有效性和安全性的多中心、随机、双盲、平行对照III期临床研究',
+    'HS-20093-301': '评价HS-20093注射液在XXX患者中的疗效和安全性的多中心、开放、II期临床研究'
+  };
+
+  let editOriginalCenter = '';
+  let currentDeleteId = '', currentDeleteCode = '', currentDeleteCenter = '', currentDeleteCreator = '';
+  let currentRestoreId = '';
+
+  // ====== Toast ======
+  function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = `toast ${type} show`;
+    setTimeout(() => { t.className = 'toast'; }, 2000);
+  }
+
+  // ====== 环境切换 ======
+  function switchEnv(env) {
+    try {
+      CURRENT_ENV = env;
+      const cfg = envConfig[env];
+      if (!cfg) { console.error('Unknown env:', env); return; }
+
+      // 切换按钮状态
+      document.querySelectorAll('.env-switch-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.env === env);
+      });
+
+      // 侧边栏环境信息
+      document.getElementById('sidebar-env-name').textContent = cfg.name + ' · ' + cfg.org;
+      document.getElementById('doc-env-tag').textContent = cfg.name + ' · ' + cfg.org;
+
+      // 二维码颜色
+      try { document.getElementById('preview-qr-section').style.background = cfg.qrGradient; } catch(e) {}
+
+      // 刷新所有页面（逐个 try 防止一个失败阻断全部）
+      try { refreshInviteTable(); } catch(e) { console.error('refreshInviteTable failed:', e); }
+      try { refreshCustTable(); } catch(e) { console.error('refreshCustTable failed:', e); }
+      try { refreshStatsPage(); } catch(e) { console.error('refreshStatsPage failed:', e); }
+      try { refreshFlowSteps(); } catch(e) { console.error('refreshFlowSteps failed:', e); }
+      try { refreshAllDocs(); } catch(e) { console.error('refreshAllDocs failed:', e); }
+      try { updatePreviewQRColors(); } catch(e) { console.error('updatePreviewQRColors failed:', e); }
+    } catch(e) {
+      console.error('switchEnv fatal error:', e);
+    }
+  }
+
+  function updatePreviewQRColors() {
+    const cfg = envConfig[CURRENT_ENV];
+    const svg = document.getElementById('preview-qr-svg');
+    // Rebuild QR SVG with correct color
+    svg.innerHTML = `<rect width="80" height="80" fill="#fff"/><rect x="4" y="4" width="72" height="72" fill="none" stroke="${cfg.qrColor}" stroke-width="2" rx="2"/><rect x="8" y="8" width="28" height="28" fill="${cfg.qrColor}" rx="1"/><rect x="14" y="14" width="16" height="3" fill="#fff"/><rect x="14" y="20" width="16" height="3" fill="#fff"/><rect x="14" y="26" width="8" height="3" fill="#fff"/><rect x="44" y="8" width="28" height="28" fill="${cfg.qrColor}" rx="1"/><rect x="50" y="14" width="16" height="3" fill="#fff"/><rect x="50" y="20" width="16" height="3" fill="#fff"/><rect x="50" y="26" width="8" height="3" fill="#fff"/><rect x="8" y="44" width="28" height="28" fill="${cfg.qrColor}" rx="1"/><rect x="14" y="50" width="16" height="3" fill="#fff"/><rect x="14" y="56" width="16" height="3" fill="#fff"/><rect x="14" y="62" width="8" height="3" fill="#fff"/><rect x="48" y="50" width="24" height="8" fill="${cfg.qrColor}" rx="1"/><rect x="48" y="62" width="24" height="8" fill="${cfg.qrColor}" rx="1"/><rect x="40" y="40" width="4" height="4" fill="${cfg.qrColor}"/><rect x="40" y="48" width="4" height="4" fill="${cfg.qrColor}"/>`;
+  }
+
+  // ====== 页面切换 ======
+  function switchPage(pageName) {
+    document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + pageName).classList.add('active');
+    document.querySelectorAll('.sidebar-menu-item').forEach(i => i.classList.remove('active'));
+    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+    document.querySelectorAll('.right-doc-list').forEach(d => d.style.display = 'none');
+    const docEl = document.getElementById('doc-' + pageName);
+    if (docEl) docEl.style.display = '';
+    if (pageName === 'recycle') refreshRecycleTable();
+  }
+
+  document.querySelectorAll('.sidebar-menu-item').forEach(item => {
+    item.addEventListener('click', () => switchPage(item.dataset.page));
+  });
+
+  // ====== 数据存储（按环境） ======
+  const envData = {
+    full: [
+      { id: 'f1', code: 'HRS9531-310', center: 'CN083-桂林市人民医院-黄萍', creator: '骆敏' },
+      { id: 'f2', code: 'HRS9531-310', center: 'CN041-北京协和医院-李芳', creator: '骆敏' },
+      { id: 'f3', code: 'HS-20093-301', center: 'CN062-上海市第一人民医院-王磊', creator: '张伟' },
+      { id: 'f4', code: 'HS-20093-301', center: 'CN102-广州市第一人民医院-陈静', creator: '张伟' },
+    ],
+    prescreen: [
+      { id: 'p1', code: 'HRS9531-310', center: 'CN083-桂林市人民医院-黄萍', creator: '骆敏' },
+      { id: 'p2', code: 'HRS9531-310', center: 'CN041-北京协和医院-李芳', creator: '骆敏' },
+      { id: 'p3', code: 'HS-20093-301', center: 'CN062-上海市第一人民医院-王磊', creator: '王芳' },
+    ]
+  };
+
+  function getEnvData() { return envData[CURRENT_ENV]; }
+
+  // ====== 邀请码列表 ======
+  function refreshInviteTable() {
+    const data = getEnvData();
+    const tb = document.getElementById('table-body');
+    if (!tb) return;
+    let html = '';
+    data.forEach(item => {
+      html += `<tr data-id="${item.id}"><td>${item.code}</td><td>${item.center}</td><td>${item.creator}</td>
+        <td>
+          <button class="btn-text" onclick="invitePreview('${item.code}','${item.center}','${item.creator}')"><i class="fa-solid fa-eye mr-1"></i>预览</button>
+          <button class="btn-text" onclick="inviteDownload('${item.code}')"><i class="fa-solid fa-download mr-1"></i>下载</button>
+          <button class="btn-text" onclick="inviteEdit('${item.code}','${item.center}','${item.creator}')"><i class="fa-solid fa-pen-to-square mr-1"></i>编辑</button>
+          <button class="btn-text danger" onclick="inviteDelete('${item.code}','${item.center}','${item.creator}','${item.id}')"><i class="fa-solid fa-trash-can mr-1"></i>删除</button>
+        </td></tr>`;
+    });
+    tb.innerHTML = html;
+    updateInvitePagination();
+  }
+
+  function updateInvitePagination() {
+    const count = document.querySelectorAll('#table-body tr').length;
+    document.getElementById('invite-count-text').innerHTML = `共 <b class="text-gray-700">${count}</b> 条`;
+  }
+
+  function inviteDownload(code) {
+    showToast(`正在下载 ${code} 的邀请码...`, 'success');
+    setTimeout(() => showToast('下载完成！', 'success'), 1500);
+  }
+
+  function inviteEdit(code, center, creator) {
+    document.getElementById('modal-title').textContent = '编辑邀请码';
+    document.getElementById('edit-select-project').value = code;
+    document.getElementById('edit-select-center').value = center;
+    document.getElementById('edit-creator').value = creator || '未知';
+    editOriginalCenter = center;
+    document.getElementById('modal-overlay').dataset.mode = 'edit';
+    document.getElementById('btn-edit-preview').style.display = '';
+    document.getElementById('edit-status-text').textContent = '原记录将保留，编辑后生成新记录';
+    generateEditQR();
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+
+  function inviteDelete(code, center, creator, id) {
+    currentDeleteCode = code;
+    currentDeleteId = id;
+    currentDeleteCenter = center;
+    currentDeleteCreator = creator;
+    document.getElementById('delete-target').textContent = `${code} / ${center}`;
+    document.getElementById('delete-overlay').classList.add('show');
+  }
+
+  function openAddModal() {
+    document.getElementById('modal-title').textContent = '新增邀请码';
+    document.getElementById('edit-select-project').value = 'HRS9531-310';
+    document.getElementById('edit-select-center').value = centers[0];
+    document.getElementById('edit-creator').value = '骆敏';
+    editOriginalCenter = '';
+    document.getElementById('modal-overlay').dataset.mode = 'add';
+    document.getElementById('btn-edit-preview').style.display = 'none';
+    document.getElementById('edit-status-text').textContent = '选择项目和中心后生成邀请二维码';
+    generateEditQR();
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+
+  function onEditProjectChange() { generateEditQR(); updateEditStatusText(); }
+  function onEditCenterChange() { generateEditQR(); updateEditStatusText(); }
+
+  function generateEditQR() {
+    const center = document.getElementById('edit-select-center').value;
+    const centerCode = center.split('-')[0] || 'XXX';
+    const qrBox = document.getElementById('edit-qr-box');
+    const tipEl = document.getElementById('edit-qr-tip-text');
+    const hue = (center.charCodeAt(0) || 0) * 15 % 360;
+    const color1 = `hsl(${hue}, 70%, 45%)`;
+    const color2 = `hsl(${(hue + 40) % 360}, 70%, 60%)`;
+    qrBox.className = 'edit-qr-placeholder generated';
+    qrBox.innerHTML = `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="display:block;"><rect width="80" height="80" fill="#fff"/><rect x="3" y="3" width="74" height="74" fill="none" stroke="${color1}" stroke-width="2" rx="2"/><rect x="6" y="6" width="30" height="30" fill="${color1}" rx="2"/><rect x="13" y="13" width="16" height="4" fill="#fff" rx="1"/><rect x="13" y="20" width="16" height="4" fill="#fff" rx="1"/><rect x="13" y="27" width="9" height="4" fill="#fff" rx="1"/><rect x="44" y="6" width="30" height="30" fill="${color2}" rx="2"/><rect x="51" y="13" width="16" height="4" fill="#fff" rx="1"/><rect x="51" y="20" width="16" height="4" fill="#fff" rx="1"/><rect x="51" y="27" width="9" height="4" fill="#fff" rx="1"/><rect x="6" y="44" width="30" height="30" fill="${color1}" rx="2"/><rect x="13" y="51" width="16" height="4" fill="#fff" rx="1"/><rect x="13" y="58" width="16" height="4" fill="#fff" rx="1"/><rect x="13" y="65" width="9" height="4" fill="#fff" rx="1"/><rect x="47" y="50" width="16" height="10" fill="${color2}" rx="2"/><rect x="47" y="64" width="16" height="10" fill="${color2}" rx="2"/><rect x="40" y="40" width="5" height="5" fill="${color1}" rx="1"/></svg>`;
+    tipEl.textContent = `已生成 · ${centerCode}`;
+    tipEl.className = 'edit-qr-tip refreshed';
+  }
+
+  function updateEditStatusText() {
+    const center = document.getElementById('edit-select-center').value;
+    const mode = document.getElementById('modal-overlay').dataset.mode;
+    if (mode === 'edit' && center !== editOriginalCenter) {
+      document.getElementById('edit-status-text').textContent = '中心已变更，保存后将生成新记录，原记录保留';
+    } else if (mode === 'edit') {
+      document.getElementById('edit-status-text').textContent = '原记录将保留，编辑后生成新记录';
+    }
+  }
+
+  function editPreview() {
+    const code = document.getElementById('edit-select-project').value;
+    const center = document.getElementById('edit-select-center').value;
+    const creator = document.getElementById('edit-creator').value;
+    invitePreview(code, center, creator);
+  }
+
+  function handleSave() {
+    const code = document.getElementById('edit-select-project').value;
+    const center = document.getElementById('edit-select-center').value;
+    const creator = document.getElementById('edit-creator').value;
+    if (!code || !center) { showToast('请选择项目和中心', 'error'); return; }
+    const mode = document.getElementById('modal-overlay').dataset.mode;
+    const centerChanged = (mode === 'edit' && center !== editOriginalCenter);
+    const prefix = CURRENT_ENV === 'full' ? 'f' : 'p';
+    const newItem = { id: prefix + Date.now(), code, center, creator };
+    envData[CURRENT_ENV].unshift(newItem);
+    const tbody = document.getElementById('table-body');
+    const tr = document.createElement('tr'); tr.dataset.id = newItem.id;
+    if (mode === 'edit') tr.style.background = '#f6ffed';
+    tr.innerHTML = `<td>${code}</td><td>${center}</td><td>${creator}</td><td><button class="btn-text" onclick="invitePreview('${code}','${center}','${creator}')"><i class="fa-solid fa-eye mr-1"></i>预览</button><button class="btn-text" onclick="inviteDownload('${code}')"><i class="fa-solid fa-download mr-1"></i>下载</button><button class="btn-text" onclick="inviteEdit('${code}','${center}','${creator}')"><i class="fa-solid fa-pen-to-square mr-1"></i>编辑</button><button class="btn-text danger" onclick="inviteDelete('${code}','${center}','${creator}','${newItem.id}')"><i class="fa-solid fa-trash-can mr-1"></i>删除</button></td>`;
+    tbody.insertBefore(tr, tbody.firstChild);
+    if (mode === 'edit') setTimeout(() => { tr.style.background = ''; tr.style.transition = 'background 0.8s'; }, 3000);
+    showToast(mode === 'add' ? '新增邀请码成功！' : (centerChanged ? `中心已变更为 "${center}"，已生成新邀请记录` : '已生成新邀请记录'), 'success');
+    updateInvitePagination();
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+
+  function inviteSearch() {
+    const inputs = document.querySelectorAll('#page-invite .search-bar input');
+    const codeVal = inputs[0].value.trim(); const centerVal = inputs[1].value.trim();
+    if (!codeVal && !centerVal) { showToast('请输入搜索条件', 'info'); return; }
+    let found = 0;
+    document.querySelectorAll('#table-body tr').forEach(r => {
+      const code = r.querySelectorAll('td')[0].textContent;
+      const center = r.querySelectorAll('td')[1].textContent;
+      const match = (!codeVal || code.includes(codeVal)) && (!centerVal || center.includes(centerVal));
+      r.style.display = match ? '' : 'none'; if (match) found++;
+    });
+    if (!found) showToast('未找到匹配记录', 'info');
+  }
+
+  function inviteReset() {
+    document.querySelectorAll('#page-invite .search-bar input').forEach(i => { i.value = ''; });
+    document.querySelectorAll('#table-body tr').forEach(r => r.style.display = '');
+  }
+
+  // ====== 预览 ======
+  function invitePreview(code, center, inviter) {
+    const cfg = envConfig[CURRENT_ENV];
+    document.getElementById('preview-proj-code').textContent = code;
+    document.getElementById('preview-proj-name').textContent = projectInfo[code] || '项目名称待补充';
+    document.getElementById('preview-center-info').textContent = center;
+    document.getElementById('preview-inviter').textContent = (inviter || '未知') + ' 邀请人';
+    document.getElementById('preview-qr-section').style.background = cfg.qrGradient;
+    document.getElementById('preview-right-title').innerHTML = `<i class="fa-solid fa-circle-info"></i> ${cfg.previewTitle}`;
+
+    const stepsEl = document.getElementById('preview-flow-steps');
+    const noticeEl = document.getElementById('preview-flow-notice');
+    const nums = '①②③④⑤⑥⑦⑧';
+    let html = '';
+    cfg.previewSteps.forEach((step, i) => {
+      html += `<div class="preview-flow-step"><div class="step-num">${nums[i] || i+1}</div><div class="step-content"><div class="step-title">${step.title}</div><div class="step-desc">${step.desc}</div></div></div>`;
+    });
+    stepsEl.innerHTML = html;
+    if (cfg.previewNotice) {
+      noticeEl.innerHTML = cfg.previewNotice;
+      noticeEl.style.display = '';
+    } else {
+      noticeEl.innerHTML = '';
+      noticeEl.style.display = 'none';
+    }
+    updatePreviewQRColors();
+    document.getElementById('preview-overlay').classList.add('show');
+  }
+
+  function downloadPreviewQR() {
+    const code = document.getElementById('preview-proj-code').textContent;
+    const center = document.getElementById('preview-center-info').textContent;
+    showToast(`正在下载「${code}」邀请码二维码...`, 'success');
+    setTimeout(() => showToast('下载完成！', 'success'), 1500);
+  }
+
+  // ====== 删除 & 最近删除 ======
+
+  function confirmDelete() {
+    // 从邀请码列表移除
+    const row = document.querySelector(`#table-body tr[data-id="${currentDeleteId}"]`);
+    if (row) row.remove();
+    // 从数据中移除
+    const idx = envData[CURRENT_ENV].findIndex(d => d.id === currentDeleteId);
+    if (idx >= 0) envData[CURRENT_ENV].splice(idx, 1);
+    // 加入删除列表（带删除时间）
+    deletedItems.push({
+      id: currentDeleteId,
+      code: currentDeleteCode,
+      center: currentDeleteCenter,
+      creator: currentDeleteCreator,
+      env: CURRENT_ENV,
+      deletedAt: new Date()
+    });
+    updateInvitePagination();
+    updateRecycleBadge();
+    document.getElementById('delete-overlay').classList.remove('show');
+    showToast(`已删除「${currentDeleteCode}」，可在「最近删除」中恢复`, 'success');
+  }
+
+  function restoreItem(id) {
+    currentRestoreId = id;
+    const item = deletedItems.find(d => d.id === id);
+    if (item) {
+      document.getElementById('restore-target').textContent = `${item.code} / ${item.center}`;
+    }
+    document.getElementById('restore-overlay').classList.add('show');
+  }
+
+  function confirmRestore() {
+    const idx = deletedItems.findIndex(d => d.id === currentRestoreId);
+    if (idx >= 0) {
+      const item = deletedItems[idx];
+      // 切换回原环境
+      if (CURRENT_ENV !== item.env) {
+        switchEnv(item.env);
+      }
+      envData[item.env].unshift({ id: item.id, code: item.code, center: item.center, creator: item.creator });
+      refreshInviteTable();
+      deletedItems.splice(idx, 1);
+      refreshRecycleTable();
+      updateRecycleBadge();
+      showToast(`已恢复「${item.code}」到邀请码列表`, 'success');
+      document.getElementById('restore-overlay').classList.remove('show');
+    }
+  }
+
+  function getDaysLeft(deletedAt) {
+    const now = new Date();
+    const diff = now - deletedAt;
+    const daysPassed = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return 30 - daysPassed;
+  }
+
+  function getDaysLeftClass(days) {
+    if (days > 15) return 'days-left-good';
+    if (days > 7) return 'days-left-warn';
+    return 'days-left-urgent';
+  }
+
+  function formatDateTime(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${y}-${m}-${day} ${h}:${min}`;
+  }
+
+  function refreshRecycleTable() {
+    const tbody = document.getElementById('recycle-body');
+    const empty = document.getElementById('recycle-empty');
+    const pagination = document.getElementById('recycle-pagination');
+
+    if (deletedItems.length === 0) {
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      pagination.style.display = 'none';
+    } else {
+      empty.style.display = 'none';
+      pagination.style.display = '';
+      let html = '';
+      // 倒序排列（最近删除的在前）
+      const sorted = [...deletedItems].reverse();
+      sorted.forEach(item => {
+        const daysLeft = getDaysLeft(item.deletedAt);
+        const cls = getDaysLeftClass(daysLeft);
+        const envTag = item.env === 'full' ? '完整体系' : '艾康逸预筛';
+        html += `<tr data-id="${item.id}">
+          <td>${item.code}</td>
+          <td>${item.center}</td>
+          <td>${item.creator}</td>
+          <td>${formatDateTime(item.deletedAt)} <span class="tag tag-gray text-xs ml-1">${envTag}</span></td>
+          <td><span class="${cls}">${daysLeft} 天</span></td>
+          <td><button class="btn-text restore" onclick="restoreItem('${item.id}')"><i class="fa-solid fa-rotate-left mr-1"></i>恢复</button></td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+    document.getElementById('recycle-count-text').innerHTML = `共 <b class="text-gray-700">${deletedItems.length}</b> 条`;
+  }
+
+  function updateRecycleBadge() {
+    const badge = document.getElementById('recycle-badge');
+    if (deletedItems.length > 0) {
+      badge.style.display = '';
+      badge.textContent = deletedItems.length;
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // ====== 客户管理 ======
+  const custData = {
+    full: [
+      { name: '陈小明', phone: '138****1234', code: 'HRS9531-310', center: 'CN083-桂林市人民医院-黄萍', status: 'active', date: '2024-03-15' },
+      { name: '林小红', phone: '139****5678', code: 'HS-20093-301', center: 'CN041-北京协和医院-李芳', status: 'active', date: '2024-03-16' },
+      { name: '王大伟', phone: '137****9012', code: 'HRS9531-310', center: 'CN062-上海市第一人民医院-王磊', status: 'inactive', date: '2024-03-20' },
+    ],
+    prescreen: [
+      { name: '陈小明', phone: '138****1234', code: 'HRS9531-310', center: 'CN083-桂林市人民医院-黄萍', status: 'active', date: '2024-03-15' },
+      { name: '张丽丽', phone: '136****3456', code: 'HS-20093-301', center: 'CN041-北京协和医院-李芳', status: 'active', date: '2024-03-22' },
+    ]
+  };
+
+  function refreshCustTable() {
+    const cfg = envConfig[CURRENT_ENV];
+    const data = custData[CURRENT_ENV] || [];
+    const tb = document.getElementById('cust-body');
+    if (!tb) return;
+    const statusHeader = document.getElementById('cust-status-header');
+    if (statusHeader) statusHeader.textContent = cfg.statusLabel;
+    const noticeEl = document.getElementById('cust-notice');
+    if (noticeEl) { var ns = noticeEl.querySelector('span'); if (ns) ns.textContent = cfg.custNotice; }
+
+    let html = '';
+    data.forEach((item, i) => {
+      const statusTag = item.status === 'active'
+        ? `<span class="tag tag-green">${cfg.statusActive}</span>`
+        : `<span class="tag tag-gray">${cfg.statusInactive}</span>`;
+      let ops = '';
+      if (CURRENT_ENV === 'full') {
+        ops = `<button class="btn-text" onclick="viewCustReg(${i})"><i class="fa-solid fa-eye mr-1"></i>查看</button>`;
+      } else {
+        ops = `<span class="text-xs text-gray-300">—</span>`;
+      }
+      html += `<tr data-id="${i}"><td>${item.name}</td><td>${item.phone}</td><td>${item.code}</td><td>${item.center}</td><td>${statusTag}</td><td>${item.date}</td><td>${ops}</td></tr>`;
+    });
+    tb.innerHTML = html;
+    document.getElementById('cust-count-text').innerHTML = `共 <b class="text-gray-700">${data.length}</b> 条`;
+  }
+
+  function custSearch() { showToast('搜索客户...', 'info'); }
+  function custReset() {
+    document.querySelectorAll('#page-customer .search-bar input').forEach(i => { i.value = ''; });
+    showToast('已重置筛选条件', 'info');
+  }
+
+  function viewCustReg(idx) {
+    const data = custData[CURRENT_ENV] || [];
+    const item = data[idx];
+    if (!item) return;
+    if (document.getElementById('reg-view-code')) document.getElementById('reg-view-code').value = item.code;
+    if (document.getElementById('reg-view-center')) document.getElementById('reg-view-center').value = item.center;
+    if (document.getElementById('reg-view-center')) {
+      var centerParts = item.center.split('-');
+      if (centerParts.length >= 2) document.getElementById('reg-view-center').value = centerParts.slice(2).join('-');
+    }
+    document.getElementById('reg-view-overlay').classList.add('show');
+  }
+
+  // ====== 统计页面 ======
+  function refreshStatsPage() {
+    const cfg = envConfig[CURRENT_ENV];
+    var el;
+    el = document.getElementById('stat-label-active'); if (el) el.textContent = cfg.statLabelActive;
+    el = document.getElementById('stat-label-rate'); if (el) el.textContent = cfg.statLabelRate;
+    el = document.getElementById('stat-label-today'); if (el) el.textContent = cfg.statLabelToday;
+    el = document.getElementById('chart-title-trend'); if (el) el.textContent = cfg.chartTrendTitle;
+    el = document.getElementById('chart-title-flow'); if (el) el.textContent = cfg.chartFlowTitle;
+    var noticeEl = document.getElementById('stats-notice');
+    if (noticeEl) { var ns = noticeEl.querySelector('span'); if (ns) ns.textContent = cfg.noticeText; }
+  }
+
+  function refreshFlowSteps() {
+    const cfg = envConfig[CURRENT_ENV];
+    const container = document.getElementById('flow-steps-container');
+    if (!container) return;
+    const colors = { blue: 'blue', green: 'green', purple: 'purple' };
+    let html = '';
+    cfg.flowSteps.forEach(step => {
+      html += `<div class="flex items-center gap-3"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-${step.color}-100 flex items-center justify-center text-${step.color}-600 font-bold text-sm">${cfg.flowSteps.indexOf(step) + 1}</div><div class="flex-1 bg-${step.color}-50 rounded-lg p-3"><div class="text-sm font-semibold text-${step.color}-800">${step.title}</div><div class="text-xs text-${step.color}-600 mt-0.5">${step.desc}</div></div></div>`;
+    });
+    container.innerHTML = html;
+  }
+
+  // ====== 右侧产品说明刷新 ======
+  function refreshAllDocs() {
+    const cfg = envConfig[CURRENT_ENV];
+    var el;
+    el = document.getElementById('doc-invite-rules'); if (el) el.innerHTML = cfg.docInviteRules;
+    el = document.getElementById('doc-invite-status'); if (el) el.innerHTML = cfg.docInviteStatus;
+    el = document.getElementById('doc-invite-flow'); if (el) el.innerHTML = cfg.docInviteFlow;
+    el = document.getElementById('doc-invite-acceptance'); if (el) el.innerHTML = cfg.docInviteAcceptance;
+    el = document.getElementById('doc-invite-env'); if (el) el.innerHTML = cfg.docInviteEnv;
+    el = document.getElementById('doc-cust-rules'); if (el) el.innerHTML = cfg.docCustRules;
+    el = document.getElementById('doc-cust-acceptance'); if (el) el.innerHTML = cfg.docCustAcceptance;
+    el = document.getElementById('doc-stats-metrics'); if (el) el.innerHTML = cfg.docStatsMetrics;
+    el = document.getElementById('doc-stats-dimensions'); if (el) el.innerHTML = cfg.docStatsDimensions;
+    el = document.getElementById('doc-stats-acceptance'); if (el) el.innerHTML = cfg.docStatsAcceptance;
+  }
+
+  // ====== 弹窗关闭 ======
+  function closeModal(e) { if (e.target === document.getElementById('modal-overlay')) document.getElementById('modal-overlay').classList.remove('show'); }
+  function closePreview(e) { if (e.target === document.getElementById('preview-overlay')) document.getElementById('preview-overlay').classList.remove('show'); }
+  function closeDelete(e) { if (e.target === document.getElementById('delete-overlay')) document.getElementById('delete-overlay').classList.remove('show'); }
+  function closeRestore(e) { if (e.target === document.getElementById('restore-overlay')) document.getElementById('restore-overlay').classList.remove('show'); }
+
+  // ====== 初始化 ======
+  function initApp() {
+    // 环境切换按钮事件绑定
+    var btnFull = document.getElementById('env-btn-full');
+    var btnPre = document.getElementById('env-btn-prescreen');
+    if (btnFull) btnFull.addEventListener('click', function() { switchEnv('full'); });
+    if (btnPre) btnPre.addEventListener('click', function() { switchEnv('prescreen'); });
+
+    refreshInviteTable();
+    refreshCustTable();
+    refreshStatsPage();
+    refreshFlowSteps();
+    refreshAllDocs();
+    updateRecycleBadge();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
+  }
+</script>
+</body>
+</html>
