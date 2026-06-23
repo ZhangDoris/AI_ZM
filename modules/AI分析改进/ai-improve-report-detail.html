@@ -433,6 +433,23 @@
       border-color: #1677ff;
     }
     .btn-primary:hover { background: #0958d9; }
+    .btn-save-individual {
+      padding: 6px 14px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: #1677ff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-save-individual:hover { background: #0958d9; }
+    .btn-save-individual.saved { background: #52c41a; }
+    .btn-save-individual.saved:hover { background: #389e0d; }
     
     /* 病例按钮样式 */
     .case-btn {
@@ -887,6 +904,9 @@
         <div style="font-size:14px;font-weight:600;color:#666;margin-bottom:8px;display:flex;align-items:center;gap:8px">
           <i class="fas fa-microchip" style="color:#667eea"></i>
           选择查看的模型结果
+          <span style="display:inline-flex;align-items:center;gap:3px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:4px;padding:2px 8px;font-size:11px;color:#ff4d4f;font-weight:500;margin-left:4px;">
+            <i class="fas fa-exclamation-triangle" style="font-size:10px"></i> 开发提示：选择的跑AI改进分析的模型
+          </span>
         </div>
         <div style="font-size:12px;color:#999;margin-bottom:12px;padding-left:24px;display:flex;align-items:center;gap:4px">
           <i class="fas fa-info-circle" style="color:#faad14"></i>
@@ -937,6 +957,11 @@
       
       <!-- 第一步：核心指标 -->
       <div class="report-step-content active" id="stepContent1">
+        <!-- 开发提示 -->
+        <div style="display:flex;align-items:center;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:8px 14px;margin-bottom:16px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px"></i>
+          <span style="font-size:12px;color:#ff4d4f;font-weight:500;">开发提示：以下对比准确数据均来源于模型返回，保存后展示对比</span>
+        </div>
         <!-- AI准确率与错误率 -->
         <div class="content-card">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -1016,6 +1041,17 @@
       
       <!-- 第二步：改进方案 -->
       <div class="report-step-content" id="stepContent2">
+        <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
+            <div><strong>开发提示：</strong></div>
+            <div>①「入排标准2」来源于模型返回，对应到具体入排标准上；</div>
+            <div>②「对他汀使用的判定过于严格」来源于模型返回的对比结论；</div>
+            <div>③「影响 103 例 (56.0%)」来源于模型返回；</div>
+            <div>④ 模型得出此结论的依据来源于哪些患者审核记录，需将这些患者的<strong>唯一标识</strong>返回并存储记录。</div>
+          </div>
+        </div>
         <div class="content-card">
           <h3><i class="fas fa-edit" style="color:#1677ff"></i> 改进方案 <span style="font-size:12px;font-weight:400;color:#aaa">(支持编辑)</span></h3>
           <div class="save-notice">
@@ -1026,13 +1062,7 @@
             <!-- 动态生成 -->
           </div>
           
-          <div class="footer-actions">
-            <button class="btn" onclick="window.history.back()">返回列表</button>
-            
-            <button class="btn btn-primary" onclick="alert('改进方案已保存！\n\n修改后将用于下一次AI提示词。')">
-              <i class="fas fa-save"></i> 保存改进方案
-            </button>
-          </div>
+          
         </div>
       </div>
       
@@ -1048,8 +1078,22 @@
             <div class="test-notice-body">
               <strong>说明：</strong>以下病例列表是AI改进分析模块提出的改进建议所影响的病例。<br>
               这些病例与第二步中的改进建议直接相关，可用于验证改进方案的实际效果。<br>
-              <i class="fas fa-info-circle" style="color:#1677ff;margin-right:4px"></i> <strong>筛选说明：</strong>“是否修改提示词”筛选条件用于筛选那些对应的入排标准是否被修改了提示词的病例（默认显示已修改的）<br>
-              <i class="fas fa-lightbulb" style="color:#52c41a;margin-right:4px"></i> <strong>操作提示：</strong>点击“匹配详情”可查看具体病例的匹配情况，点击“个性测试”可针对单个患者运行当前改进方案进行测试。
+              <i class="fas fa-info-circle" style="color:#1677ff;margin-right:4px"></i> <strong>筛选说明：</strong>"是否修改提示词"筛选条件用于筛选那些对应的入排标准是否被修改了提示词的病例（默认显示已修改的）<br>
+              <i class="fas fa-lightbulb" style="color:#52c41a;margin-right:4px"></i> <strong>操作提示：</strong>点击"匹配详情"可查看具体病例的匹配情况，点击"个性测试"可针对单个患者运行当前改进方案进行测试。
+            </div>
+          </div>
+          
+          <!-- 开发提示 -->
+          <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
+            <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
+            <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
+              <div><strong>开发提示：</strong></div>
+              <div>① 患者数据来源于模型返回的涉及修改方案的患者数据；</div>
+              <div>②「涉及入排标准」是针对此改进分析报告中患者数据所涉及的需要修改提示词的入排标准；</div>
+              <div>③「是否修改提示词」是指第二步中对应入排标准是否已修改了提示词。</div>
+              <div>④「个性测试」是智能匹配，可以一条条入排进行智能匹配，但是这个智能匹配之后需要单独存储，不要覆盖正式数据。</div>
+              <div>⑤「匹配详情」是个性测试的结果展示。</div>
+
             </div>
           </div>
           
@@ -1175,7 +1219,7 @@
             <span class="prd-badge prd-badge-orange">数据</span> 标准关联
           </div>
           <div class="prd-item-body">
-            每条建议<b>对应具体的入选/排除标准</b>（如“入选标准2”），标注影响病例数和占比<br>
+            每条建议<b>对应具体的入选/排除标准</b>（如"入选标准2"），标注影响病例数和占比<br>
             <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> 与入排标准数据直接关联
           </div>
         </div>
@@ -1235,10 +1279,10 @@
             <b>功能说明</b>：展示AI改进分析模块提出的改进建议所影响的病例列表<br>
             <i class="fas fa-exclamation-circle" style="color:#52c41a;margin-right:4px"></i> <strong>数据来源</strong>：汇总所有改进建议的受影响病例<br>
             <i class="fas fa-link" style="color:#1677ff;margin-right:4px"></i> <strong>关联性</strong>：与第二步中的改进建议直接相关，可用于验证改进方案的实际效果<br>
-            <i class="fas fa-search" style="color:#faad14;margin-right:4px"></i> <strong>查询条件</strong>：支持按患者名称、涉及入排标准、是否修改提示词（默认“是”）、匹配状态（未匹配/匹配成功/匹配失败/匹配中）进行筛选<br>
-            <i class="fas fa-info-circle" style="color:#1677ff;margin-right:4px"></i> <strong>筛选说明</strong>：“是否修改提示词”用于筛选那些对应的入排标准是否被修改了提示词的病例，而非显示在列表中<br>
+            <i class="fas fa-search" style="color:#faad14;margin-right:4px"></i> <strong>查询条件</strong>：支持按患者名称、涉及入排标准、是否修改提示词（默认"是"）、匹配状态（未匹配/匹配成功/匹配失败/匹配中）进行筛选<br>
+            <i class="fas fa-info-circle" style="color:#1677ff;margin-right:4px"></i> <strong>筛选说明</strong>："是否修改提示词"用于筛选那些对应的入排标准是否被修改了提示词的病例，而非显示在列表中<br>
             <i class="fas fa-table" style="color:#1677ff;margin-right:4px"></i> <strong>列表字段</strong>：序号、患者姓名、涉及的入排标准、匹配状态、匹配人、操作<br>
-            <i class="fas fa-mouse-pointer" style="color:#faad14;margin-right:4px"></i> <strong>操作</strong>：点击“匹配详情”查看具体病例的匹配情况，点击“个性测试”针对单个患者运行当前改进方案进行测试
+            <i class="fas fa-mouse-pointer" style="color:#faad14;margin-right:4px"></i> <strong>操作</strong>：点击"匹配详情"查看具体病例的匹配情况，点击"个性测试"针对单个患者运行当前改进方案进行测试
           </div>
         </div>
       </div>
@@ -1307,7 +1351,7 @@
             <div class="prd-panel-item-body">
               <b>个性测试</b>：针对单个患者运行当前修改后的改进方案进行测试<br>
               <i class="fas fa-flask" style="color:#52c41a;margin-right:4px"></i> <strong>测试隔离</strong>：测试结果保存到【测试匹配数据表】，<b>不影响原始正式数据</b><br>
-              <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> <strong>数据读取</strong>：点击“匹配详情”时，<b>只读取测试数据表</b><br>
+              <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> <strong>数据读取</strong>：点击"匹配详情"时，<b>只读取测试数据表</b><br>
               <i class="fas fa-info-circle" style="color:#fa8c16;margin-right:4px"></i> <strong>测试范围说明</strong>：<br>
               &nbsp;&nbsp;• 如果仅改动单个入排标准，可以只测试这一个标准<br>
               &nbsp;&nbsp;• 如果改动量较大，则采用当前形式进行完整测试
@@ -1335,9 +1379,9 @@
     const improvements = [
       { id: 1, priority: 'P0', cause: '入选标准2：对他汀使用的判定过于严格', affectedCount: 103, improvement: '识别依折麦布、血脂康、脂必泰等等效降脂方案', prompt: '当患者使用依折麦布、血脂康、脂必泰等降脂药物时，视为等效他汀类方案，不判定为不符合。', prescreen: true, enrolling: false, modifyStatus: 'modified', modifiedAt: '2026-06-10', runCount: 3, modifiedAtRun: 2, version: 'v1.3' },
       { id: 2, priority: 'P0', cause: '排除标准27：TSH轻微偏离正常值就判定排除', affectedCount: 80, improvement: 'TSH轻微偏离正常下限（如偏离<15%）时不直接排除', prompt: '当TSH值在正常范围下限的±15%范围内时，不直接判定为排除。', prescreen: false, enrolling: true, modifyStatus: 'not_modified', modifiedAt: null, runCount: 3, modifiedAtRun: null, version: 'v1.0' },
-      { id: 3, priority: 'P1', cause: '排除标准33：研究者评估依从性', affectedCount: 75, improvement: '“研究者评估依从性”不应由AI做出yes/no判定', prompt: '当遇到“研究者评估依从性”相关标准时，改为提示研究者评估。', prescreen: false, enrolling: false, modifyStatus: 'not_modified', modifiedAt: null, runCount: 2, modifiedAtRun: null, version: 'v1.0' },
-      { id: 4, priority: 'P1', cause: '涉及ASCVD风险评估', affectedCount: 46, improvement: '训练AI识别中危/高危/极高危/超高危四种风险层级', prompt: '当标准涉及ASCVD风险评估时，提示“请研究者进行ASCVD风险分层评估”。', prescreen: true, enrolling: true, modifyStatus: 'modified', modifiedAt: '2026-06-12', runCount: 2, modifiedAtRun: 1, version: 'v1.2' },
-      { id: 5, priority: 'P2', cause: '边界值判断：指标接近下限/上限时缺乏弹性', affectedCount: 50, improvement: '当指标值在标准值的±10%范围内时，不直接判定为不符合', prompt: '当指标值在标准值范围的±10%偏差内时，提示“指标轻微异常，请研究者确认”。', prescreen: false, enrolling: false, modifyStatus: 'pending', modifiedAt: null, runCount: 1, modifiedAtRun: null, version: 'v1.0' }
+      { id: 3, priority: 'P1', cause: '排除标准33：研究者评估依从性', affectedCount: 75, improvement: '"研究者评估依从性"不应由AI做出yes/no判定', prompt: '当遇到"研究者评估依从性"相关标准时，改为提示研究者评估。', prescreen: false, enrolling: false, modifyStatus: 'not_modified', modifiedAt: null, runCount: 2, modifiedAtRun: null, version: 'v1.0' },
+      { id: 4, priority: 'P1', cause: '涉及ASCVD风险评估', affectedCount: 46, improvement: '训练AI识别中危/高危/极高危/超高危四种风险层级', prompt: '当标准涉及ASCVD风险评估时，提示"请研究者进行ASCVD风险分层评估"。', prescreen: true, enrolling: true, modifyStatus: 'modified', modifiedAt: '2026-06-12', runCount: 2, modifiedAtRun: 1, version: 'v1.2' },
+      { id: 5, priority: 'P2', cause: '边界值判断：指标接近下限/上限时缺乏弹性', affectedCount: 50, improvement: '当指标值在标准值的±10%范围内时，不直接判定为不符合', prompt: '当指标值在标准值范围的±10%偏差内时，提示"指标轻微异常，请研究者确认"。', prescreen: false, enrolling: false, modifyStatus: 'pending', modifiedAt: null, runCount: 1, modifiedAtRun: null, version: 'v1.0' }
     ];
     
     // 获取URL参数
@@ -1456,15 +1500,28 @@
               '<i class="fas fa-database"></i> <strong>' + standardText + '</strong>：此建议对应的标准为 <strong>' + standardText + '</strong>，影响 ' + imp.affectedCount + ' 例 (' + pct + '%)，与入排标准数据直接关联' +
             '</div>' +
             '<div style="margin-bottom:12px">' +
-              '<div style="font-size:12px;color:#999;margin-bottom:6px">改进方案</div>' +
+              '<div style="font-size:12px;color:#999;margin-bottom:6px;display:flex;align-items:center;gap:6px">改进方案' +
+                '<span style="display:inline-flex;align-items:center;gap:2px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:3px;padding:1px 6px;font-size:10px;color:#ff4d4f;font-weight:400">' +
+                  '<i class="fas fa-exclamation-triangle" style="font-size:9px"></i> 开发提示：来源于模型返回结论，后端需存储并记录修改情况' +
+                '</span>' +
+              '</div>' +
               '<textarea class="editable" id="improvement-' + imp.id + '">' + imp.improvement + '</textarea>' +
             '</div>' +
             '<div style="margin-bottom:12px">' +
-              '<div style="font-size:12px;color:#999;margin-bottom:6px">提示词</div>' +
+              '<div style="font-size:12px;color:#999;margin-bottom:6px;display:flex;align-items:center;gap:6px">提示词' +
+                '<span style="display:inline-flex;align-items:center;gap:2px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:3px;padding:1px 6px;font-size:10px;color:#ff4d4f;font-weight:400">' +
+                  '<i class="fas fa-exclamation-triangle" style="font-size:9px"></i> 开发提示：来源于模型返回结论，后端需存储并记录修改情况' +
+                '</span>' +
+              '</div>' +
               '<textarea class="editable mono" id="prompt-' + imp.id + '">' + imp.prompt + '</textarea>' +
               '<div class="remark-note" style="margin-top:8px;background:#f6f8fc;border-color:#52c41a">' +
                 '<i class="fas fa-lightbulb" style="color:#52c41a"></i> <strong>备注说明</strong>：预筛启用表示此建议在预筛阶段生效，入排启用表示此建议在入排阶段生效' +
               '</div>' +
+            '</div>' +
+            '<div style="display:flex;justify-content:flex-end;padding-top:12px;border-top:1px solid #f0f0f0">' +
+              '<button class="btn-save-individual" id="saveBtn-' + imp.id + '" onclick="saveSingleImprovement(' + imp.id + ', this)">' +
+                '<i class="fas fa-save"></i> 保存此建议' +
+              '</button>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -1509,6 +1566,24 @@
         labelOn.classList.add('off');
         labelOn.textContent = '已禁用';
       }
+    }
+    
+    // 单独保存一条改进建议
+    function saveSingleImprovement(id, btn) {
+      const improvementText = document.getElementById('improvement-' + id).value;
+      const promptText = document.getElementById('prompt-' + id).value;
+      
+      // 模拟保存
+      btn.innerHTML = '<i class="fas fa-check"></i> 已保存';
+      btn.classList.add('saved');
+      
+      // 2秒后恢复
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-save"></i> 保存此建议';
+        btn.classList.remove('saved');
+      }, 2000);
+      
+      console.log('保存建议 #' + id + ':', { improvement: improvementText, prompt: promptText });
     }
     
     // 显示病例列表
@@ -2397,13 +2472,13 @@
             </div>
             <div class="prd-panel-item-body">
               展示该患者的<b>所有相关入排标准列表</b>，每条标准包含：<br>
-              • <b>标准类型标签</b>（如“入选标准2”、“排除标准27”）<br>
+              • <b>标准类型标签</b>（如"入选标准2"、"排除标准27"）<br>
               • <b>版本号</b>：显示该标准对应的规则版本<br>
               • <b>纳排内容</b>：详细的入排条件描述<br>
               • <b>当前改进方案提示词</b>：黄色背景区域，显示该标准独立的AI提示词配置<br>
               • <b>执行按钮</b>：可单独执行该条标准的测试<br>
               <i class="fas fa-list-check" style="color:#1677ff;margin-right:4px"></i> <strong>设计目的</strong>：一个患者可能涉及多个入排标准，每个标准都有自己独立的提示词，需要逐条验证<br>
-              <i class="fas fa-mouse-pointer" style="color:#faad14;margin-right:4px"></i> <strong>操作方式</strong>：点击单条标准的“执行测试”按钮，或点击右上角“全部执行”批量测试
+              <i class="fas fa-mouse-pointer" style="color:#faad14;margin-right:4px"></i> <strong>操作方式</strong>：点击单条标准的"执行测试"按钮，或点击右上角"全部执行"批量测试
             </div>
           </div>
           
@@ -2413,7 +2488,7 @@
             </div>
             <div class="prd-panel-item-body">
               <i class="fas fa-key" style="color:#faad14;margin-right:4px"></i> <strong>关键特性</strong>：每个入排标准都有自己独立的改进方案提示词<br>
-              <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> <strong>数据来源</strong>：从第二步“改进方案”中各条建议的提示词编辑内容中提取<br>
+              <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> <strong>数据来源</strong>：从第二步"改进方案"中各条建议的提示词编辑内容中提取<br>
               <i class="fas fa-lightbulb" style="color:#52c41a;margin-right:4px"></i> <strong>优势</strong>：不同标准可以有不同的优化策略和关注点，提高匹配的准确性<br>
               <i class="fas fa-info-circle" style="color:#fa8c16;margin-right:4px"></i> <strong>示例</strong>：入选标准2关注LDL-C指标，排除标准27关注TSH值，排除标准33关注依从性
             </div>
@@ -2424,7 +2499,7 @@
               <span class="prd-panel-badge prd-panel-badge-blue">操作</span> 执行单个测试
             </div>
             <div class="prd-panel-item-body">
-              点击某条标准的“执行测试”按钮后，系统将：<br>
+              点击某条标准的"执行测试"按钮后，系统将：<br>
               1. 调用<b>AI模型接口</b>对该条标准进行测试<br>
               2. 使用<b>该标准独立的提示词</b>和患者数据进行匹配<br>
               3. 在下方显示<b>测试结果区域</b>（绿色背景）<br>
@@ -2438,7 +2513,7 @@
               <span class="prd-panel-badge prd-panel-badge-green">操作</span> 全部执行
             </div>
             <div class="prd-panel-item-body">
-              点击右上角“全部执行”按钮后，系统将：<br>
+              点击右上角"全部执行"按钮后，系统将：<br>
               1. <b>依次对所有标准执行测试</b>（间隔1.5秒）<br>
               2. 每条标准使用<b>各自的提示词</b>进行测试<br>
               3. 每条标准测试完成后自动显示结果<br>
@@ -2456,7 +2531,7 @@
               <i class="fas fa-shield-alt" style="color:#52c41a;margin-right:4px"></i> <strong>数据隔离</strong>：测试结果独立存储，与正式数据完全分离<br>
               <i class="fas fa-database" style="color:#1677ff;margin-right:4px"></i> <strong>数据存储</strong>：测试结果保存到【测试匹配数据表】<br>
               <i class="fas fa-redo" style="color:#fa8c16;margin-right:4px"></i> <strong>可重复测试</strong>：同一患者可进行多次测试，每次结果独立保存<br>
-              <i class="fas fa-eye" style="color:#52c41a;margin-right:4px"></i> <strong>数据读取</strong>：后续查看“匹配详情”时，优先读取测试数据表
+              <i class="fas fa-eye" style="color:#52c41a;margin-right:4px"></i> <strong>数据读取</strong>：后续查看"匹配详情"时，优先读取测试数据表
             </div>
           </div>
         </div>
@@ -2611,6 +2686,9 @@
                 <div onclick="toggleAuditRecord()" style="padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fafafa'">
                   <div style="font-size:14px;font-weight:600;color:#666;display:flex;align-items:center;gap:8px">
                     <i class="fas fa-clipboard-check" style="color:#52c41a"></i> 审核记录（历史）
+                    <span style="display:inline-flex;align-items:center;gap:3px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:4px;padding:2px 8px;font-size:11px;color:#ff4d4f;font-weight:500;margin-left:4px">
+                      <i class="fas fa-exclamation-triangle" style="font-size:10px"></i> 开发提示：正式环境数据，仅查询不可修改
+                    </span>
                   </div>
                   <i id="auditToggleIcon" class="fas fa-chevron-down" style="color:#999;transition:transform 0.3s"></i>
                 </div>
@@ -2744,7 +2822,7 @@
               <span class="prd-panel-badge prd-panel-badge-green">操作</span> 病例溯源
             </div>
             <div class="prd-panel-item-body">
-              点击“病例溯源”按钮在当前页面下方展开文件查看区域<br>
+              点击"病例溯源"按钮在当前页面下方展开文件查看区域<br>
               <i class="fas fa-search-location" style="color:#1677ff;margin-right:4px"></i> 功能说明：追溯到具体的病历文件并高亮显示相关段落<br>
               <i class="fas fa-image" style="color:#faad14;margin-right:4px"></i> 展示方式：以图片形式展示原始病历文件
             </div>
@@ -2755,7 +2833,7 @@
               <span class="prd-panel-badge prd-panel-badge-green">操作</span> 审核记录
             </div>
             <div class="prd-panel-item-body">
-              点击“审核记录”按钮在当前页面下方展开历史的审核记录<br>
+              点击"审核记录"按钮在当前页面下方展开历史的审核记录<br>
               <i class="fas fa-search-location" style="color:#1677ff;margin-right:4px"></i> 功能说明：来源于 既往的审核记录，数据是 从crc提交后所有的审核记录<br>
               <i class="fas fa-image" style="color:#faad14;margin-right:4px"></i> 展示方式：跟审核列表的审核记录页面是一样的，数据来源也一致
             </div>
@@ -2772,10 +2850,10 @@
             <div class="prd-panel-item-body">
               <ul style="margin:8px 0 0 16px;padding:0;font-size:12px;line-height:1.8">
                 <li>鼠标悬停在标准项上时，边框变为紫色并显示阴影效果</li>
-                <li>点击“病例溯源”按钮在当前页面下方展开文件查看区域</li>
+                <li>点击"病例溯源"按钮在当前页面下方展开文件查看区域</li>
                 <li>相关文本以黄色背景高亮显示</li>
-                <li>点击“关闭”按钮隐藏溯源区域</li>
-                <li>点击右上角“×”按钮关闭整个匹配详情弹窗</li>
+                <li>点击"关闭"按钮隐藏溯源区域</li>
+                <li>点击右上角"×"按钮关闭整个匹配详情弹窗</li>
               </ul>
             </div>
           </div>

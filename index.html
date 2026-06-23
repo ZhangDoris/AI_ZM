@@ -1466,6 +1466,433 @@
       .chart-row { grid-template-columns: 1fr; }
     }
 
+    /* ===== PROJECT EDIT DRAWER ===== */
+    .proj-edit-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 800;
+      display: none;
+      justify-content: flex-end;
+    }
+    .proj-edit-overlay.open { display: flex; }
+    .proj-edit-drawer {
+      width: 880px;
+      max-width: 92vw;
+      height: 100vh;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+      animation: slideInRight 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(40px); opacity: 0.8; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .proj-edit-header {
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    .proj-edit-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .proj-edit-close {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      border: 1px solid #e8e8e8;
+      background: #fff;
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .proj-edit-close:hover { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .proj-edit-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 28px 80px;
+    }
+    /* 表单分区卡片 */
+    .proj-form-card {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .proj-form-card .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1677ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .proj-form-card .card-title .dot {
+      width: 8px; height: 8px;
+      background: #1677ff;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .proj-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 24px;
+    }
+    .proj-form-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+    .proj-form-grid.col1 { grid-template-columns: 1fr; }
+    .proj-form-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .proj-form-item .form-lbl {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .proj-form-item .form-lbl .req { color: #ff4d4f; }
+    .proj-form-item input,
+    .proj-form-item select,
+    .proj-form-item textarea {
+      padding: 9px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 7px;
+      font-size: 13px;
+      color: #333;
+      background: #fafafa;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .proj-form-item input:focus,
+    .proj-form-item select:focus,
+    .proj-form-item textarea:focus {
+      border-color: #1677ff;
+      box-shadow: 0 0 0 3px rgba(22,119,255,0.1);
+      background: #fff;
+    }
+    .proj-form-item textarea { resize: vertical; min-height: 60px; }
+
+    /* 版本管理条 */
+    .version-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #fafbfc;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .version-bar .v-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #888;
+      white-space: nowrap;
+    }
+    .version-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      color: #666;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .version-chip:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+      background: #f5f9ff;
+    }
+    .version-chip.active {
+      border-color: #1677ff;
+      background: #edf4ff;
+      color: #1677ff;
+      font-weight: 700;
+    }
+    .version-chip .v-weight {
+      font-size: 11px;
+      color: #888;
+      background: #f0f0f0;
+      padding: 1px 7px;
+      border-radius: 10px;
+    }
+    .version-chip.active .v-weight {
+      background: #cce0ff;
+      color: #1677ff;
+    }
+    .version-chip .v-del {
+      font-size: 10px;
+      color: #bbb;
+      margin-left: 2px;
+      cursor: pointer;
+      padding: 0 3px;
+    }
+    .version-chip .v-del:hover { color: #ff4d4f; }
+    .btn-add-ver {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px dashed #1677ff;
+      background: #fff;
+      color: #1677ff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-add-ver:hover {
+      background: #edf4ff;
+    }
+
+    /* 入排标准表格 */
+    .crit-table-wrap {
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .crit-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .crit-table thead tr { background: #f8f9fa; }
+    .crit-table th {
+      padding: 11px 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #888;
+      border-bottom: 1px solid #eee;
+      white-space: nowrap;
+    }
+    .crit-table td {
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #333;
+      border-bottom: 1px solid #f5f5f5;
+      vertical-align: middle;
+    }
+    .crit-table tr:last-child td { border-bottom: none; }
+    .crit-table tr:hover { background: #fafcff; }
+    .crit-table .seq-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .crit-table .seq-num.inclusion {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+    .crit-table .seq-num.exclusion {
+      background: #fff1f0;
+      color: #e54646;
+    }
+    .crit-table .crit-content {
+      max-width: 280px;
+      display: inline-block;
+      line-height: 1.5;
+    }
+    .crit-table .crit-remark {
+      max-width: 120px;
+      color: #999;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .switch-toggle {
+      width: 40px; height: 22px;
+      border-radius: 11px;
+      background: #d9d9d9;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.25s;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .switch-toggle.on { background: #1677ff; }
+    .switch-toggle::after {
+      content: '';
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      top: 2px; left: 2px;
+      transition: left 0.25s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .switch-toggle.on::after { left: 20px; }
+    .crit-action-btn {
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #e8e8e8;
+      background: #fff;
+      color: #666;
+      transition: all 0.15s;
+      margin-right: 4px;
+    }
+    .crit-action-btn:hover { border-color: #1677ff; color: #1677ff; background: #f5f9ff; }
+    .crit-action-btn.del:hover { border-color: #ff4d4f; color: #ff4d4f; background: #fff1f0; }
+    .crit-action-btn.edit { color: #1677ff; border-color: #cce0ff; background: #f5f9ff; font-weight:500; }
+
+    /* 入排标准 Tab */
+    .crit-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 14px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    .crit-tab {
+      padding: 10px 24px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #999;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .crit-tab:hover { color: #666; }
+    .crit-tab.active {
+      color: #1677ff;
+      border-bottom-color: #1677ff;
+    }
+    .crit-tab .badge-count {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .crit-tab .badge-count.inclusion {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+    .crit-tab .badge-count.exclusion {
+      background: #fff1f0;
+      color: #e54646;
+    }
+    .crit-tab.active .badge-count.inclusion {
+      background: #cce8ff;
+      color: #1677ff;
+    }
+    .crit-tab.active .badge-count.exclusion {
+      background: #ffe0e0;
+      color: #ff4d4f;
+    }
+
+    /* 抽屉底部操作栏 */
+    .proj-edit-footer {
+      padding: 14px 28px;
+      border-top: 1px solid #f0f0f0;
+      background: #fff;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .btn-foot {
+      padding: 9px 28px;
+      border-radius: 7px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+      color: #666;
+    }
+    .btn-foot:hover { border-color: #bbb; background: #fafafa; }
+    .btn-foot.primary {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+    }
+    .btn-foot.primary:hover {
+      background: #0958d9;
+      border-color: #0958d9;
+      box-shadow: 0 4px 14px rgba(22,119,255,0.35);
+    }
+
+    /* 行内编辑弹窗 */
+    .crit-inline-edit {
+      padding: 16px;
+    }
+    .crit-inline-edit textarea {
+      width: 100%;
+      resize: vertical;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 7px;
+      font-size: 13px;
+      min-height: 60px;
+      font-family: inherit;
+    }
+    .crit-inline-edit textarea:focus { border-color: #1677ff; outline: none; }
+    .crit-inline-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+    .crit-inline-btns button {
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+      color: #666;
+      font-weight: 500;
+    }
+    .crit-inline-btns button.save {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+    }
+
     /* ===== DETAIL VIEW OVERLAY ===== */
     .detail-overlay {
       position: fixed;
@@ -2769,6 +3196,10 @@
 <div class="detail-overlay" id="detailOverlay"></div>
 <!-- Audit Record Overlay -->
 <div class="audit-record-overlay" id="auditRecordOverlay"></div>
+<!-- Project Edit Drawer -->
+<div class="proj-edit-overlay" id="projEditOverlay">
+  <div class="proj-edit-drawer" id="projEditDrawer"></div>
+</div>
 </div>
 <script>
 // ==================== 树形展开收缩动画 ====================
@@ -2961,6 +3392,47 @@ const aiData = [
   { id:'AI20240601004', name:'赵六', project:'II期临床试验-心血管', aiScore:79, match:'中匹配', tags:['血脂偏高','需进一步检查'], recommendation:'建议评估', analyzed:'2024-05-30 11:00' },
   { id:'AI20240601005', name:'陈七', project:'帕金森病研究', aiScore:91, match:'高匹配', tags:['症状吻合','无禁忌症','知情同意完整'], recommendation:'强烈推荐', analyzed:'2024-05-29 16:22' },
 ];
+
+// ==================== 项目入排标准 Mock 数据 ====================
+// 多版本入排标准数据
+window._criteriaVersions = [
+  {
+    id: 'v1',
+    name: '入排标准（版本1）',
+    weight: 70,
+    criteria: [
+      { id:'c1', type:'inclusion', content:'男性或女性，签署知情同意书当日，年龄>18且<80岁', remark:'年龄范围需严格控制', prescreen:true, enrollment:true },
+      { id:'c2', type:'inclusion', content:'诊断为慢性肾脏病，且筛选期和导入期 eGFR≥25 mL/min/1.73 m²', remark:'需确认 CKD-EPI 公式', prescreen:true, enrollment:true },
+      { id:'c3', type:'inclusion', content:'随机前稳定使用ACEI/ARB/ARNI至少4周', remark:'不能耐受者除外', prescreen:true, enrollment:false },
+      { id:'c4', type:'inclusion', content:'若使用SGLT2i，随机前至少稳定使用8周', remark:'需核实医嘱记录', prescreen:true, enrollment:true },
+      { id:'c5', type:'inclusion', content:'自愿参加并签署书面知情同意书', remark:'', prescreen:true, enrollment:true },
+      { id:'c6', type:'exclusion', content:'筛选时ALT>3×ULN，AST>3×ULN，总胆红素>2.0×ULN', remark:'肝功能异常排除', prescreen:true, enrollment:true },
+      { id:'c7', type:'exclusion', content:'BMI > 35 kg/m²', remark:'体重指数过高排除', prescreen:true, enrollment:true },
+      { id:'c8', type:'exclusion', content:'诊断或怀疑为多囊肾、ANCA相关性血管炎', remark:'', prescreen:true, enrollment:true },
+      { id:'c9', type:'exclusion', content:'筛选时经研究者判断，原发病未得到良好控制的免疫相关性肾脏疾病', remark:'需研究者评估', prescreen:false, enrollment:true },
+      { id:'c10', type:'exclusion', content:'筛选前90天内出现急性肾损伤或接受透析治疗', remark:'', prescreen:true, enrollment:true },
+      { id:'c11', type:'exclusion', content:'既往接受肾移植，或计划于试验期间接受肾移植', remark:'', prescreen:true, enrollment:true },
+      { id:'c12', type:'exclusion', content:'随机前90天内接受过全身性免疫抑制治疗', remark:'≤10mg/日泼尼松除外', prescreen:true, enrollment:true },
+    ]
+  },
+  {
+    id: 'v2',
+    name: '入排标准（版本2）',
+    weight: 30,
+    criteria: [
+      { id:'c13', type:'inclusion', content:'男性或女性，年龄≥18且≤80岁，签署知情同意书', remark:'版本2更新', prescreen:true, enrollment:true },
+      { id:'c14', type:'inclusion', content:'确诊慢性肾脏病CKD 2-4期，eGFR≥20 mL/min/1.73 m²', remark:'放宽eGFR范围', prescreen:true, enrollment:true },
+      { id:'c15', type:'exclusion', content:'筛选前90天内有急性心血管事件（心梗、卒中）', remark:'新增排除项', prescreen:true, enrollment:true },
+      { id:'c16', type:'exclusion', content:'筛选前30天内参加其他干预性临床试验', remark:'新增排除项', prescreen:false, enrollment:true },
+    ]
+  }
+];
+// 当前选中的版本ID
+window._criteriaActiveVersionId = 'v1';
+// 当前选中的Tab: 'inclusion' | 'exclusion'
+window._criteriaActiveTab = 'inclusion';
+// 新增条目时的临时类型
+window._criteriaNewItemType = 'inclusion';
 
 const inviteData = [
   { code:'PROJ-2024-HX-001', project:'II期临床试验-心血管', createdBy:'李明主任', validDate:'2024-12-31', used:12, total:50, status:'有效' },
@@ -4681,11 +5153,12 @@ function buildAdminProjects() {
     }
     row.ops.forEach(op => {
       let cls = '';
-      if(op === '编辑') cls = 'primary';
+      let onclick = '';
+      if(op === '编辑') { cls = 'primary'; onclick = `onclick="openProjEditDrawer('edit',${row.index})"`; }
       else if(op === '删除') cls = 'danger';
       else if(op === '下架') cls = 'warning';
       else if(op === '上架') cls = 'success';
-      btns.push(`<span class="action-btn ${cls}" title="${op}">${op}</span>`);
+      btns.push(`<span class="action-btn ${cls}" title="${op}" ${onclick}>${op}</span>`);
     });
     return btns.join('');
   }
@@ -4789,7 +5262,7 @@ function buildAdminProjects() {
     <!-- 操作工具栏 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary btn-sm" onclick="alert('新增项目')">＋ 新增项目</button>
+        <button class="btn btn-primary btn-sm" onclick="openProjEditDrawer('add')">＋ 新增项目</button>
         <button class="btn btn-default btn-sm" onclick="alert('同步人员信息')">↻ 同步人员信息</button>
         <button class="btn btn-default btn-sm" onclick="alert('同步项目信息')">↻ 同步项目信息</button>
       </div>
@@ -4895,6 +5368,485 @@ function buildAdminProjects() {
 function toggleProjColPanel() {
   const panel = document.getElementById('projColPanel');
   if(panel) panel.style.display = panel.style.display==='none' ? 'block' : 'none';
+}
+
+// ==================== 项目编辑抽屉 ====================
+// 用于新增/编辑项目，包含项目基本信息和入排标准管理
+
+function openProjEditDrawer(mode, projectIndex) {
+  // mode: 'add' | 'edit'
+  // projectIndex: 编辑时传项目序号
+  const drawer = document.getElementById('projEditDrawer');
+  if (!drawer) return;
+  drawer.setAttribute('data-mode', mode);
+  if (projectIndex != null) drawer.setAttribute('data-proj-index', projectIndex);
+  
+  // 重置版本数据和Tab
+  window._criteriaActiveVersionId = 'v1';
+  window._criteriaActiveTab = 'inclusion';
+  
+  renderProjEditDrawer(mode, projectIndex);
+  document.getElementById('projEditOverlay').classList.add('open');
+}
+
+function closeProjEditDrawer() {
+  document.getElementById('projEditOverlay').classList.remove('open');
+}
+
+function renderProjEditDrawer(mode, projectIndex) {
+  const drawer = document.getElementById('projEditDrawer');
+  const isEdit = mode === 'edit';
+  const title = isEdit ? '编辑项目' : '新增项目';
+  
+  drawer.innerHTML = `
+    <div class="proj-edit-header">
+      <div class="proj-edit-title">
+        <i class="fa-solid ${isEdit?'fa-pen-to-square':'fa-plus-circle'}" style="color:#1677ff"></i>
+        ${title}
+      </div>
+      <button class="proj-edit-close" onclick="closeProjEditDrawer()">✕</button>
+    </div>
+    <div class="proj-edit-body">
+      <!-- 基本信息 -->
+      <div class="proj-form-card">
+        <div class="card-title"><span class="dot"></span>基本信息</div>
+        <div class="proj-form-grid">
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>项目编号</label>
+            <input type="text" placeholder="请输入项目编号" value="${isEdit?'PROJ-2024-CKD-001':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>方案编号</label>
+            <input type="text" placeholder="请输入方案编号" value="${isEdit?'CKD-SCHEME-001':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>项目名称</label>
+            <input type="text" placeholder="请输入项目名称" value="${isEdit?'慢性肾脏病II期临床研究':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>项目阶段</label>
+            <select>
+              <option value="">请选择</option>
+              <option ${isEdit?'':'selected'}>准备中</option>
+              <option ${isEdit?'selected':''}>进行中</option>
+              <option>已暂停</option>
+              <option>已结束</option>
+            </select>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl">申办方</label>
+            <input type="text" placeholder="请输入" value="${isEdit?'恒瑞医药':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>适应症</label>
+            <input type="text" placeholder="请输入" value="${isEdit?'慢性肾脏病':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl">试验分期</label>
+            <select>
+              <option value="">请选择</option>
+              <option>I期</option>
+              <option ${isEdit?'selected':''}>II期</option>
+              <option>III期</option>
+              <option>IV期</option>
+            </select>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl"><span class="req">*</span>项目经理</label>
+            <input type="text" placeholder="请输入" value="${isEdit?'沈娟':''}"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl">医学经理</label>
+            <input type="text" placeholder="请输入"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl">市场经理</label>
+            <input type="text" placeholder="请输入"/>
+          </div>
+          <div class="proj-form-item">
+            <label class="form-lbl">领域</label>
+            <select>
+              <option value="">请选择</option>
+              <option>乳腺癌</option><option>肺癌</option><option>妇科肿瘤</option><option>消化肿瘤</option>
+              <option ${isEdit?'selected':''}>泌尿系肿瘤</option><option>代谢内分泌疾病</option><option>血液类疾病</option>
+              <option>风湿免疫性疾病</option><option>其他</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 入排标准管理 -->
+      <div class="proj-form-card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="dot"></span>入排标准配置
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" style="background:#f5f9ff;color:#1677ff;border:1px solid #cce0ff;border-radius:6px;font-size:12px;" onclick="importCritFromTemplate()">
+              <i class="fa-solid fa-file-import"></i> 从模板导入
+            </button>
+            <button class="btn btn-sm" style="background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f;border-radius:6px;font-size:12px;" onclick="addVersion()">
+              <i class="fa-solid fa-plus"></i> 新增版本
+            </button>
+          </div>
+        </div>
+        
+        <!-- 版本管理 -->
+        <div class="version-bar" id="critVersionBar">
+          ${renderCritVersionBar()}
+        </div>
+
+        <!-- 入选/排除 Tab -->
+        <div class="crit-tabs" id="critTabs">
+          ${renderCritTabs()}
+        </div>
+
+        <!-- 入排标准表格 -->
+        <div class="crit-table-wrap" id="critTableWrap">
+          ${renderCritTable()}
+        </div>
+      </div>
+    </div>
+    <div class="proj-edit-footer">
+      <button class="btn-foot" onclick="closeProjEditDrawer()">取消</button>
+      <button class="btn-foot" style="background:#f5f5f5;color:#666;border-color:#e0e0e0" onclick="saveProjAsDraft()">保存草稿</button>
+      <button class="btn-foot primary" onclick="saveProjAndPublish()">保存并发布</button>
+    </div>
+  `;
+}
+
+// === 版本管理 ===
+function renderCritVersionBar() {
+  const versions = window._criteriaVersions || [];
+  const activeId = window._criteriaActiveVersionId;
+  return versions.map(v => {
+    const total = (v.criteria||[]).length;
+    const inc = v.criteria.filter(c=>c.type==='inclusion').length;
+    const exc = total - inc;
+    const canDelete = versions.length > 1;
+    return `
+      <span class="version-chip ${v.id===activeId?'active':''}" onclick="switchCritVersion('${v.id}')" title="入${inc}条 排${exc}条 | 权重可编辑">
+        ${v.name}
+        <span class="v-weight" onclick="event.stopPropagation();startEditWeight('${v.id}')" title="点击编辑权重">⚖ ${v.weight}%</span>
+        ${canDelete ? `<i class="fa-solid fa-xmark v-del" onclick="event.stopPropagation();deleteVersion('${v.id}')" title="删除此版本"></i>` : ''}
+      </span>
+    `;
+  }).join('');
+}
+
+function switchCritVersion(versionId) {
+  window._criteriaActiveVersionId = versionId;
+  refreshCritUI();
+}
+
+function addVersion() {
+  const versions = window._criteriaVersions;
+  const num = versions.length + 1;
+  const newVersion = {
+    id: 'v' + Date.now(),
+    name: '入排标准（版本' + num + '）',
+    weight: 0,
+    criteria: [{
+      id: 'cn' + Date.now(),
+      type: 'inclusion',
+      content: '新标准内容（点击编辑修改）',
+      remark: '',
+      prescreen: true,
+      enrollment: true
+    }]
+  };
+  versions.push(newVersion);
+  window._criteriaActiveVersionId = newVersion.id;
+  refreshCritUI();
+}
+
+function deleteVersion(versionId) {
+  let versions = window._criteriaVersions;
+  if (versions.length <= 1) return;
+  const idx = versions.findIndex(v=>v.id===versionId);
+  if (idx<0) return;
+  if (!confirm('确定要删除「' + versions[idx].name + '」及其全部入排标准吗？')) return;
+  versions.splice(idx, 1);
+  // 如果删除的是当前选中版本，切换到第一个
+  if (window._criteriaActiveVersionId === versionId) {
+    window._criteriaActiveVersionId = versions[0].id;
+  }
+  refreshCritUI();
+}
+
+function startEditWeight(versionId) {
+  const ver = window._criteriaVersions.find(v=>v.id===versionId);
+  if (!ver) return;
+  const newWeight = prompt('请输入该版本的权重（%），与所有版本权重总计应为100%：', ver.weight);
+  if (newWeight === null) return;
+  const w = parseInt(newWeight);
+  if (isNaN(w) || w < 0 || w > 100) { alert('请输入0~100之间的数字'); return; }
+  ver.weight = w;
+  refreshCritUI();
+}
+
+// === Tab 切换 ===
+function renderCritTabs() {
+  const ver = getActiveVersion();
+  const criteria = ver ? ver.criteria : [];
+  const incCount = criteria.filter(c=>c.type==='inclusion').length;
+  const excCount = criteria.filter(c=>c.type==='exclusion').length;
+  const active = window._criteriaActiveTab;
+  return `
+    <button class="crit-tab ${active==='inclusion'?'active':''}" onclick="switchCritTab('inclusion')">
+      <i class="fa-solid fa-circle-check" style="color:#16a34a;font-size:12px"></i> 入选标准 <span class="badge-count inclusion">${incCount}条</span>
+    </button>
+    <button class="crit-tab ${active==='exclusion'?'active':''}" onclick="switchCritTab('exclusion')">
+      <i class="fa-solid fa-circle-xmark" style="color:#e54646;font-size:12px"></i> 排除标准 <span class="badge-count exclusion">${excCount}条</span>
+    </button>
+  `;
+}
+
+function switchCritTab(tab) {
+  window._criteriaActiveTab = tab;
+  window._criteriaNewItemType = tab;
+  refreshCritUI();
+}
+
+// === 表格渲染 ===
+function renderCritTable() {
+  const ver = getActiveVersion();
+  if (!ver) return '<div style="padding:40px;text-align:center;color:#aaa">暂无版本数据</div>';
+  const criteria = ver.criteria || [];
+  const activeTab = window._criteriaActiveTab;
+  const filtered = criteria.filter(c=>c.type===activeTab);
+  
+  if (filtered.length === 0) {
+    return `
+      <div style="padding:48px;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px;opacity:0.3">${activeTab==='inclusion'?'✅':'❌'}</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:12px">暂无${activeTab==='inclusion'?'入选':'排除'}标准</div>
+        <button class="btn btn-primary btn-sm" onclick="addCriteria('${activeTab}')">
+          <i class="fa-solid fa-plus"></i> 添加第一条${activeTab==='inclusion'?'入选':'排除'}标准
+        </button>
+      </div>`;
+  }
+  
+  const isInclusion = activeTab === 'inclusion';
+  const seqClass = isInclusion ? 'inclusion' : 'exclusion';
+  
+  return `
+    <table class="crit-table">
+      <thead>
+        <tr>
+          <th style="width:42px">序号</th>
+          <th style="min-width:260px">${isInclusion?'入选':'排除'}内容</th>
+          <th style="width:100px">备注</th>
+          <th style="width:70px;text-align:center">预筛启用</th>
+          <th style="width:70px;text-align:center">入组启用</th>
+          <th style="width:110px">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map((c,i) => {
+          const editing = window['_editingCritId'] === c.id;
+          return editing ? renderCritEditRow(c, i, seqClass) : renderCritViewRow(c, i, seqClass);
+        }).join('')}
+        <tr>
+          <td colspan="6" style="padding:8px 12px;background:#fafbfc;text-align:center">
+            <button class="btn-add-ver" onclick="addCriteria('${activeTab}')" style="border-color:#ccc;color:#888;font-weight:400">
+              <i class="fa-solid fa-plus" style="font-size:10px"></i> 添加${isInclusion?'入选':'排除'}标准
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+function renderCritViewRow(c, i, seqClass) {
+  return `
+    <tr>
+      <td><span class="seq-num ${seqClass}">${i+1}</span></td>
+      <td><span class="crit-content">${escapeHtml(c.content)}</span></td>
+      <td><span class="crit-remark" title="${escapeHtml(c.remark||'')}">${escapeHtml(c.remark)||'—'}</span></td>
+      <td style="text-align:center">
+        <span class="switch-toggle ${c.prescreen?'on':''}" onclick="toggleCritSwitch('${c.id}','prescreen')"></span>
+      </td>
+      <td style="text-align:center">
+        <span class="switch-toggle ${c.enrollment?'on':''}" onclick="toggleCritSwitch('${c.id}','enrollment')"></span>
+      </td>
+      <td>
+        <button class="crit-action-btn edit" onclick="startEditCriteria('${c.id}')"><i class="fa-solid fa-pen"></i> 编辑</button>
+        <button class="crit-action-btn del" onclick="deleteCriteria('${c.id}')"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>`;
+}
+
+function renderCritEditRow(c, i, seqClass) {
+  return `
+    <tr style="background:#fafcff">
+      <td><span class="seq-num ${seqClass}">${i+1}</span></td>
+      <td>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <textarea id="critEditContent" style="width:100%;min-height:56px;padding:8px;border:1.5px solid #1677ff;border-radius:6px;font-size:13px;resize:vertical;font-family:inherit;outline:none">${escapeHtml(c.content)}</textarea>
+          <input id="critEditRemark" placeholder="备注（可选）" value="${escapeHtml(c.remark||'')}" style="width:100%;padding:6px 8px;border:1px solid #e0e0e0;border-radius:6px;font-size:12px;color:#888;outline:none" onfocus="this.style.borderColor='#1677ff'" onblur="this.style.borderColor='#e0e0e0'"/>
+        </div>
+      </td>
+      <td></td>
+      <td style="text-align:center">
+        <span class="switch-toggle ${c.prescreen?'on':''}" onclick="toggleCritSwitch('${c.id}','prescreen')"></span>
+      </td>
+      <td style="text-align:center">
+        <span class="switch-toggle ${c.enrollment?'on':''}" onclick="toggleCritSwitch('${c.id}','enrollment')"></span>
+      </td>
+      <td>
+        <button class="crit-action-btn" style="color:#52c41a;border-color:#b7eb8f;background:#f6ffed;font-weight:600" onclick="saveCritEdit('${c.id}')"><i class="fa-solid fa-check"></i> 保存</button>
+        <button class="crit-action-btn del" onclick="cancelCritEdit()">取消</button>
+      </td>
+    </tr>`;
+}
+
+// === 入排标准 CRUD ===
+function getActiveVersion() {
+  return (window._criteriaVersions||[]).find(v=>v.id===window._criteriaActiveVersionId) || null;
+}
+
+function addCriteria(type) {
+  const ver = getActiveVersion();
+  if (!ver) return;
+  const newId = 'c' + Date.now();
+  ver.criteria.push({
+    id: newId,
+    type: type,
+    content: '新标准内容（双击此处编辑）',
+    remark: '',
+    prescreen: true,
+    enrollment: true
+  });
+  refreshCritUI();
+  // 自动进入行内编辑
+  setTimeout(() => startEditCriteria(newId), 100);
+}
+
+function startEditCriteria(criteriaId) {
+  window['_editingCritId'] = criteriaId;
+  refreshCritUI();
+}
+
+function cancelCritEdit() {
+  window['_editingCritId'] = null;
+  refreshCritUI();
+}
+
+function saveCritEdit(criteriaId) {
+  const content = document.getElementById('critEditContent')?.value?.trim();
+  const remark = document.getElementById('critEditRemark')?.value?.trim() || '';
+  if (!content) { alert('入排标准内容不能为空'); return; }
+  const ver = getActiveVersion();
+  if (!ver) return;
+  const crit = ver.criteria.find(c=>c.id===criteriaId);
+  if (!crit) return;
+  crit.content = content;
+  crit.remark = remark;
+  window['_editingCritId'] = null;
+  refreshCritUI();
+}
+
+function deleteCriteria(criteriaId) {
+  if (!confirm('确定要删除该条入排标准吗？')) return;
+  const ver = getActiveVersion();
+  if (!ver) return;
+  const idx = ver.criteria.findIndex(c=>c.id===criteriaId);
+  if (idx < 0) return;
+  ver.criteria.splice(idx, 1);
+  window['_editingCritId'] = null;
+  refreshCritUI();
+}
+
+function toggleCritSwitch(criteriaId, field) {
+  const ver = getActiveVersion();
+  if (!ver) return;
+  const crit = ver.criteria.find(c=>c.id===criteriaId);
+  if (!crit) return;
+  crit[field] = !crit[field];
+  refreshCritUI();
+}
+
+// === 模板导入 ===
+function importCritFromTemplate() {
+  const templates = [
+    { name:'肾病临床II期标准模板', inc:8, exc:12 },
+    { name:'肿瘤I期标准模板', inc:6, exc:15 },
+    { name:'心血管III期标准模板', inc:5, exc:10 },
+    { name:'糖尿病新药标准模板', inc:7, exc:9 },
+  ];
+  const options = templates.map((t,i)=>`${i+1}. ${t.name}（入${t.inc}条/排${t.exc}条）`).join('\\n');
+  const choice = prompt('请选择要导入的模板（输入序号）：\\n' + options, '1');
+  if (!choice) return;
+  const idx = parseInt(choice) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= templates.length) { alert('无效的选择'); return; }
+  
+  const tpl = templates[idx];
+  const ver = getActiveVersion();
+  if (!ver) return;
+  
+  // 检查当前版本是否为空，非空则提示
+  if (ver.criteria.length > 0) {
+    if (!confirm('当前版本已有入排标准，导入将追加到末尾，是否继续？')) return;
+  }
+  
+  // 导入示例数据
+  const newCriteria = [];
+  for (let i = 1; i <= tpl.inc; i++) {
+    newCriteria.push({
+      id: 'ct' + Date.now() + 'i' + i,
+      type: 'inclusion',
+      content: '入选标准' + i + '：' + tpl.name + ' - 条件描述（请修改为实际内容）',
+      remark: '',
+      prescreen: true,
+      enrollment: true
+    });
+  }
+  for (let i = 1; i <= tpl.exc; i++) {
+    newCriteria.push({
+      id: 'ct' + Date.now() + 'e' + i,
+      type: 'exclusion',
+      content: '排除标准' + i + '：' + tpl.name + ' - 条件描述（请修改为实际内容）',
+      remark: '',
+      prescreen: true,
+      enrollment: true
+    });
+  }
+  ver.criteria.push(...newCriteria);
+  refreshCritUI();
+  alert('已从模板「' + tpl.name + '」导入 ' + newCriteria.length + ' 条标准，请逐条编辑内容。');
+}
+
+// === 刷新UI辅助 ===
+function refreshCritUI() {
+  // 仅刷新版本条 + Tab + 表格（不重绘整个抽屉，避免表单输入丢失）
+  const vBar = document.getElementById('critVersionBar');
+  const tabs = document.getElementById('critTabs');
+  const table = document.getElementById('critTableWrap');
+  if (vBar) vBar.innerHTML = renderCritVersionBar();
+  if (tabs) tabs.innerHTML = renderCritTabs();
+  if (table) table.innerHTML = renderCritTable();
+}
+
+// === 保存操作 ===
+function saveProjAsDraft() {
+  alert('项目已保存为草稿 ✅');
+  closeProjEditDrawer();
+}
+
+function saveProjAndPublish() {
+  alert('项目已保存并发布 ✅');
+  closeProjEditDrawer();
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // ==================== ADMIN: TENANTS ====================
