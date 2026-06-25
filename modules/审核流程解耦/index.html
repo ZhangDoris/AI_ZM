@@ -1183,6 +1183,122 @@
       width: 2px; height: 16px; background: #e8e8e8; margin: 0 auto;
     }
 
+    /* ===== 提交审核弹窗 ===== */
+    .submit-audit-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45); z-index: 100001;
+      display: none; align-items: center; justify-content: center;
+    }
+    .submit-audit-overlay.open { display: flex; }
+    .submit-audit-panel {
+      background: #fff; border-radius: 12px; width: 520px; max-width: 95vw;
+      max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modalFadeIn 0.2s ease-out;
+    }
+    .submit-audit-header {
+      padding: 16px 24px; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .submit-audit-title { font-size: 16px; font-weight: 600; color: #333; }
+    .submit-audit-close {
+      width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent;
+      font-size: 18px; color: #999; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; transition: all 0.15s;
+    }
+    .submit-audit-close:hover { background: #f5f5f5; color: #333; }
+    .submit-audit-body {
+      padding: 20px 24px; flex: 1; overflow-y: auto;
+    }
+    .submit-audit-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 24px; border-top: 1px solid #f0f0f0; background: #fafbfc; flex-shrink: 0;
+    }
+    .submit-audit-form-row {
+      display: flex; align-items: flex-start; margin-bottom: 16px;
+    }
+    .submit-audit-form-label {
+      width: 80px; flex-shrink: 0; font-size: 13px; font-weight: 500; color: #555;
+      line-height: 34px; position: relative;
+    }
+    .submit-audit-form-label.required::after {
+      content: ' *'; color: #ff4d4f;
+    }
+    .submit-audit-form-control {
+      flex: 1; min-width: 0;
+    }
+    .submit-audit-input {
+      width: 100%; padding: 7px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; background: #fafafa; box-sizing: border-box;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .submit-audit-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); background: #fff; }
+    .submit-audit-input.readonly { background: #f5f5f5; color: #888; cursor: not-allowed; }
+    .submit-audit-textarea {
+      width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; resize: vertical; min-height: 72px; box-sizing: border-box;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+    .submit-audit-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .submit-audit-select {
+      width: 100%; padding: 7px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; background: #fff; box-sizing: border-box;
+      outline: none; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
+    }
+    .submit-audit-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .submit-audit-ref-link {
+      color: #1677ff; font-size: 12px; cursor: pointer; margin-left: 8px; user-select: none;
+      border-bottom: 1px dashed #1677ff; text-decoration: none;
+    }
+    .submit-audit-ref-link:hover { color: #0958d9; border-bottom-style: solid; }
+    .submit-audit-btn {
+      padding: 7px 20px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: none; font-weight: 500; transition: all 0.15s;
+    }
+    .submit-audit-btn-cancel {
+      background: #fff; color: #333; border: 1px solid #d9d9d9;
+    }
+    .submit-audit-btn-cancel:hover { border-color: #1677ff; color: #1677ff; }
+    .submit-audit-btn-submit {
+      background: #165DFF; color: #fff;
+    }
+    .submit-audit-btn-submit:hover { background: #0958d9; box-shadow: 0 2px 8px rgba(22,93,255,0.3); }
+
+    /* 审核人联想搜索 */
+    .autocomplete-wrapper { position: relative; }
+    .autocomplete-input {
+      width: 100%; padding: 7px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; background: #fff; box-sizing: border-box;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .autocomplete-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .autocomplete-input.has-value { background: #f6ffed; border-color: #b7eb8f; }
+    .autocomplete-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 100010;
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto;
+      display: none; margin-top: 3px;
+    }
+    .autocomplete-dropdown.open { display: block; }
+    .autocomplete-item {
+      padding: 8px 14px; font-size: 13px; color: #333; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.1s;
+    }
+    .autocomplete-item:hover, .autocomplete-item.active { background: #e6f4ff; }
+    .autocomplete-item .match-highlight { color: #1677ff; font-weight: 600; }
+    .autocomplete-item .flow-tag {
+      font-size: 11px; padding: 1px 6px; border-radius: 4px;
+      background: #f0f0f0; color: #888;
+    }
+    .autocomplete-item .flow-tag.recommended { background: #e6f4ff; color: #1677ff; }
+    .autocomplete-noresult {
+      padding: 12px 14px; font-size: 12px; color: #999; text-align: center;
+    }
+
     /* AI改进分析模块样式 */
     .ai-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     /* Model field cards */
@@ -2037,6 +2153,282 @@
     .radio-group { display: flex; gap: 20px; }
     .radio-item { font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .radio-item input[type="radio"] { accent-color: #1677ff; }
+
+    /* 智能筛选 - 机构Tab */
+    .sc-org-tabs {
+      display: flex; align-items: center; gap: 0;
+      background: #f5f7fa; border-radius: 10px; padding: 4px;
+      margin-bottom: 16px; width: fit-content;
+    }
+    .sc-org-tab {
+      padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      color: #666; cursor: pointer; transition: all 0.2s; user-select: none; white-space: nowrap;
+    }
+    .sc-org-tab:hover { color: #1677ff; }
+    .sc-org-tab.active {
+      background: #fff; color: #1677ff; font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* 智能筛选 - 子Tab（本人项目/其他项目） */
+    .sc-sub-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid #f0f0f0; margin-bottom: 16px;
+    }
+    .sc-sub-tab {
+      padding: 10px 24px; font-size: 14px; font-weight: 500; color: #888;
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all 0.2s; user-select: none;
+    }
+    .sc-sub-tab:hover { color: #1677ff; }
+    .sc-sub-tab.active {
+      color: #1677ff; font-weight: 600;
+      border-bottom-color: #1677ff;
+    }
+
+    /* 智能筛选 - 搜索栏 */
+    .sc-filter-bar {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 14px 20px; background: #fafbfc; border: 1px solid #f0f0f0;
+      border-radius: 10px; margin-bottom: 16px;
+    }
+    .sc-filter-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+    }
+    .sc-filter-item {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sc-filter-item label {
+      font-size: 13px; color: #666; white-space: nowrap; font-weight: 500;
+    }
+    .sc-filter-item input,
+    .sc-filter-item select {
+      padding: 7px 12px; border: 1.5px solid #e0e0e0; border-radius: 6px;
+      font-size: 13px; color: #333; outline: none; background: #fff;
+      transition: border-color 0.2s; min-width: 140px;
+    }
+    .sc-filter-item input:focus,
+    .sc-filter-item select:focus { border-color: #1677ff; }
+    .sc-filter-item input::placeholder { color: #bbb; }
+
+    /* 患者字段展示面板 */
+    .sc-field-panel-wrapper { position: relative; display: inline-block; }
+    .sc-field-panel {
+      display: none; position: absolute; top: 100%; right: 0; z-index: 100;
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12); padding: 16px;
+      min-width: 220px; margin-top: 6px;
+    }
+    .sc-field-panel.show { display: block; }
+    .sc-field-panel-title {
+      font-size: 13px; font-weight: 600; color: #333; margin-bottom: 12px;
+      padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;
+    }
+    .sc-field-panel label {
+      display: flex; align-items: center; gap: 8px; font-size: 13px;
+      color: #555; padding: 6px 0; cursor: pointer;
+    }
+    .sc-field-panel label:hover { color: #1677ff; }
+    .sc-field-panel input[type="checkbox"] { accent-color: #1677ff; }
+
+    /* 患者列表 - Tab */
+    .sc-patient-tabs {
+      display: flex; gap: 0; border-bottom: 2px solid #f0f0f0; margin-bottom: 16px;
+    }
+    .sc-patient-tab {
+      padding: 8px 20px; font-size: 13px; font-weight: 500; color: #888;
+      cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all 0.2s; user-select: none;
+    }
+    .sc-patient-tab:hover { color: #1677ff; }
+    .sc-patient-tab.active, .sc-patient-tab.badge-tab {
+      color: #1677ff; font-weight: 600;
+      border-bottom-color: #1677ff;
+    }
+
+    /* 患者列表 - 搜索栏 */
+    .sc-patient-filter-bar {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 14px 20px; background: #fafbfc; border: 1px solid #f0f0f0;
+      border-radius: 10px; margin-bottom: 16px;
+    }
+    .sc-patient-filter-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+    }
+
+    /* 患者列表 - 表格容器（横向滚动） */
+    .sc-patient-table-wrap {
+      overflow-x: auto;
+      overflow-y: visible;
+      max-width: 100%;
+    }
+    /* 患者列表 - 表格 */
+    .sc-patient-table {
+      width: 100%; min-width: 1400px; border-collapse: separate; border-spacing: 0; font-size: 13px;
+    }
+    .sc-patient-table th {
+      background: #fafbfc; color: #555; font-weight: 600; font-size: 12px;
+      padding: 10px 12px; text-align: left; border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    .sc-patient-table td {
+      padding: 12px; border-bottom: 1px solid #f5f5f5; color: #333;
+    }
+    .sc-patient-table tbody tr:hover { background: #f9fbff; }
+    .sc-patient-table .col-index { color: #999; width: 40px; text-align: center; }
+
+    /* 固定列 - 左固定（序号） */
+    .sc-patient-table .col-sticky-left-1 {
+      position: sticky; left: 0; z-index: 2;
+      background: #fff;
+    }
+    .sc-patient-table thead .col-sticky-left-1 {
+      background: #fafbfc; z-index: 4;
+    }
+    /* 固定列 - 左固定（患者编号） */
+    .sc-patient-table .col-sticky-left-2 {
+      position: sticky; left: 64px; z-index: 2;
+      background: #fff;
+    }
+    .sc-patient-table thead .col-sticky-left-2 {
+      background: #fafbfc; z-index: 4;
+    }
+    /* 固定列 - 左固定（姓名缩写） */
+    .sc-patient-table .col-sticky-left-3 {
+      position: sticky; left: 138px; z-index: 2;
+      background: #fff;
+    }
+    .sc-patient-table thead .col-sticky-left-3 {
+      background: #fafbfc; z-index: 4;
+    }
+    .sc-patient-table tbody tr:hover .col-sticky-left-1,
+    .sc-patient-table tbody tr:hover .col-sticky-left-2,
+    .sc-patient-table tbody tr:hover .col-sticky-left-3 {
+      background: #f9fbff;
+    }
+    /* 固定列 - 右固定（是否外推） */
+    .sc-patient-table .col-sticky-right-0 {
+      position: sticky; right: 400px; z-index: 2;
+      background: #fff; min-width: 100px; text-align: center;
+    }
+    .sc-patient-table thead .col-sticky-right-0 { background: #fafbfc; z-index: 4; }
+    .sc-patient-table tbody tr:hover .col-sticky-right-0 { background: #f9fbff; }
+    .sc-patient-table .col-sticky-right-0 { box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1); }
+    /* 固定列 - 右固定（项目匹配） */
+    .sc-patient-table .col-sticky-right-1 {
+      position: sticky; right: 300px; z-index: 2;
+      background: #fff; min-width: 100px; text-align: center;
+    }
+    .sc-patient-table thead .col-sticky-right-1 { background: #fafbfc; z-index: 4; }
+    .sc-patient-table tbody tr:hover .col-sticky-right-1 { background: #f9fbff; }
+    .sc-patient-table .col-sticky-right-1 { box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1); }
+    /* 固定列 - 右固定（操作） */
+    .sc-patient-table .col-sticky-right-2 {
+      position: sticky; right: 0; z-index: 2;
+      background: #fff; min-width: 300px;
+    }
+    .sc-patient-table thead .col-sticky-right-2 { background: #fafbfc; z-index: 4; }
+    .sc-patient-table tbody tr:hover .col-sticky-right-2 { background: #f9fbff; }
+    .sc-patient-table .col-sticky-right-2 { box-shadow: -2px 0 4px -2px rgba(0,0,0,0.1); }
+    .sc-match-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 500;
+    }
+    .sc-match-tag.matched { background: #e6fffb; color: #13c2c2; }
+    .sc-match-tag.pending { background: #fff7e6; color: #fa8c16; }
+    /* 患者状态标签 */
+    .sc-status-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 500;
+    }
+    .sc-status-tag.enrolled { background: #f6ffed; color: #52c41a; }
+    .sc-status-tag.failed { background: #fff2f0; color: #ff4d4f; }
+    .sc-status-tag.screening { background: #e6f4ff; color: #1677ff; }
+    /* 是否外推标签 */
+    .sc-extrap-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 500;
+    }
+    .sc-extrap-tag.yes { background: #fff7e6; color: #fa8c16; }
+    .sc-extrap-tag.no { background: #f5f5f5; color: #888; }
+    .sc-action-links {
+      display: flex; flex-wrap: wrap; gap: 2px 8px;
+    }
+    .sc-action-links a {
+      color: #1677ff; cursor: pointer; font-size: 12px; text-decoration: none;
+    }
+    .sc-action-links a:hover { color: #0958d9; text-decoration: underline; }
+    .sc-action-links span { color: #ddd; }
+    /* 项目匹配独立按钮，与其他操作分隔 */
+    .sc-project-match-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; font-size: 12px; font-weight: 500; color: #1677ff;
+      background: #f0f5ff; border: 1px solid #d6e4ff; border-radius: 6px;
+      cursor: pointer; text-decoration: none; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .sc-project-match-btn:hover {
+      background: #e6f0ff; border-color: #91caff; color: #0958d9;
+      box-shadow: 0 2px 6px rgba(22,119,255,0.12);
+    }
+
+    /* 患者列表 - 返回按钮 */
+    .sc-back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; font-size: 13px; color: #666;
+      background: #fff; border: 1.5px solid #e0e0e0; border-radius: 6px;
+      cursor: pointer; transition: all 0.2s; margin-bottom: 12px;
+    }
+    .sc-back-btn:hover {
+      color: #1677ff; border-color: #1677ff; background: #f0f5ff;
+    }
+
+    /* 智能筛选 - 项目表格 */
+    .sc-project-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .sc-project-table th {
+      background: #fafbfc; color: #555; font-weight: 600; font-size: 12px;
+      padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    .sc-project-table td {
+      padding: 14px 16px; border-bottom: 1px solid #f5f5f5;
+      color: #333;
+    }
+    .sc-project-table tbody tr:hover { background: #f9fbff; }
+    .sc-project-table .col-index { color: #999; width: 50px; }
+    .sc-project-table .col-scheme { color: #1677ff; font-weight: 500; }
+    .sc-project-table .col-name { font-weight: 500; max-width: 260px; }
+    .sc-project-table .col-domain { 
+      display: flex; flex-wrap: wrap; gap: 4px;
+    }
+    .sc-domain-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 11px; background: #e6f4ff; color: #1677ff; white-space: nowrap;
+    }
+    .sc-stage-tag {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 11px; font-weight: 500;
+    }
+    .sc-stage-tag.ongoing { background: #e6fffb; color: #13c2c2; }
+    .sc-stage-tag.completed { background: #f6ffed; color: #52c41a; }
+    .sc-stage-tag.preparing { background: #fff7e6; color: #fa8c16; }
+    .sc-patient-link {
+      color: #1677ff; cursor: pointer; font-weight: 500; font-size: 12px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .sc-patient-link:hover { color: #0958d9; text-decoration: underline; }
+    .sc-patient-count {
+      display: inline-block; padding: 1px 8px; border-radius: 10px;
+      background: #e6f4ff; color: #1677ff; font-size: 11px; font-weight: 600;
+    }
+
+    /* 分页 */
+    .sc-pagination {
+      display: flex; align-items: center; justify-content: flex-end;
+      gap: 4px; padding: 12px 16px; border-top: 1px solid #f0f0f0;
+    }
+    .sc-pagination .total-info { font-size: 12px; color: #888; margin-right: 12px; }
 
     /* Pagination */
     .pagination-info { font-size: 13px; color: #888; }
@@ -3662,9 +4054,17 @@
 <div class="nav-item active" id="nav-audit" onclick="switchModule('audit')">
 <span class="nav-icon">📋</span> 审核列表
       </div>
-<div class="nav-item" id="nav-ai" onclick="switchModule('ai')">
-<span class="nav-icon">✨</span> 智能筛选
-      </div>
+<!-- 标注4 -->
+<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
+  <div class="nav-item" id="nav-ai" onclick="switchModule('ai')">
+    <span class="nav-icon">✨</span> 智能筛选
+  </div>
+  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
+    <div class="anno-badge pulse">4
+    </div>
+  </div>
+</div>
+
 
 <div class="nav-item" id="nav-stats" onclick="switchModule('stats')">
 <span class="nav-icon">📊</span> 数据统计
@@ -3676,8 +4076,17 @@
 <span class="nav-icon">🤖</span> AI改进分析
       </div>
 <div class="nav-item" id="nav-admin" onclick="switchModule('admin')">
-<span class="nav-icon">⚙️</span> 后台管理
       </div>
+      <!-- 标注4 -->
+<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
+  <div class="nav-item" id="nav-ai" onclick="switchModule('admin')">
+<span class="nav-icon">⚙️</span> 后台管理
+  </div>
+  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
+    <div class="anno-badge pulse">1
+    </div>
+  </div>
+</div>
 <div class="nav-item" id="nav-desensitize" onclick="switchModule('desensitize')">
 <span class="nav-icon">🔒</span> 脱敏管理
       </div>
@@ -3715,7 +4124,7 @@
 </div>
 
 <!-- 全局通知 (Ant Design TopLeft 风格) -->
-<div class="ant-notification-topLeft" id="globalNotice" style="display:none;">
+<!-- <div class="ant-notification-topLeft" id="globalNotice" style="display:none;">
   <div class="ant-notification-notice" id="globalNoticeContainer">
     <div class="ant-notification-notice-icon">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"><circle cx="12" cy="12" r="12" fill="#e8f0fe"/><circle cx="12" cy="12" r="10" fill="#1677ff"/><path d="M12 7v.5M12 10.5v6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
@@ -3728,7 +4137,7 @@
       <svg id="globalNoticeToggleIcon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   </div>
-</div>
+</div> -->
 
 <script>
 // ==================== 树形展开收缩动画 ====================
@@ -3929,6 +4338,76 @@ const inviteData = [
   { code:'PROJ-2023-PK-004', project:'帕金森病研究', createdBy:'赵磊教授', validDate:'2023-12-31', used:5, total:40, status:'已过期' },
 ];
 
+// 智能筛选 - 项目列表数据
+const scProjectData = [
+  {
+    schemeNo: 'SHR-2019-nCoV-001',
+    name: '关于COVID-19（新型冠状病毒肺炎）传播途径、流行趋势及防控策略的多中心流行病学研究',
+    domains: ['血液类疾病', '风湿免疫性疾病'],
+    stage: 'Ⅱ期',
+    phase: '进行中',
+    patientCount: 56
+  },
+  {
+    schemeNo: 'SHR-A2102-I-102',
+    name: 'HER2阳性乳腺癌患者中评价SHR-A2102联合吡咯替尼的安全性、耐受性、药代动力学及初步疗效的Ⅰb/Ⅱ期临床研究',
+    domains: ['肺癌'],
+    stage: 'Ⅲ期',
+    phase: '进行中',
+    patientCount: 122
+  },
+  {
+    schemeNo: 'HRS-1167-I-101',
+    name: 'HRS-1167在晚期实体瘤患者中的安全性、耐受性、药代动力学及初步疗效的Ⅰ期临床研究',
+    domains: ['妇科肿瘤'],
+    stage: 'Ⅱ期',
+    phase: '进行中',
+    patientCount: 76
+  },
+  {
+    schemeNo: 'SHR-1316-III-302',
+    name: 'SHR-1316联合化疗对比安慰剂联合化疗一线治疗广泛期小细胞肺癌的随机、双盲、多中心Ⅲ期临床研究',
+    domains: ['肺癌', '呼吸系统疾病'],
+    stage: 'Ⅲ期',
+    phase: '进行中',
+    patientCount: 208
+  },
+  {
+    schemeNo: 'HSK21542-302',
+    name: 'HSK21542注射液用于腹部手术后静脉自控镇痛的疗效及安全性研究',
+    domains: ['心血管疾病', '神经系统疾病'],
+    stage: 'Ⅲ期',
+    phase: '进行中',
+    patientCount: 94
+  }
+];
+
+// 智能筛选 - 患者列表数据（按方案编号分组）
+const scPatientData = {
+  'SHR-2019-nCoV-001': [
+    { patientNo:'P2025-001', nameAbbr:'王*明', age:58, gender:'男', domain:'血液类疾病', center:'北京协和医院', createTime:'2025-03-12 10:24', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否' },
+    { patientNo:'P2025-002', nameAbbr:'李*华', age:45, gender:'女', domain:'风湿免疫性疾病', center:'北京协和医院', createTime:'2025-03-15 14:08', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'预筛通过', isExtrapolated:'是' },
+    { patientNo:'P2025-003', nameAbbr:'赵*强', age:62, gender:'男', domain:'血液类疾病', center:'上海瑞金医院', createTime:'2025-04-02 09:15', creator:'陈伟', creatorRole:'CRC', matchStatus:'待匹配', patientStatus:'预筛驳回', isExtrapolated:'否' },
+  ],
+  'SHR-A2102-I-102': [
+    { patientNo:'P2025-004', nameAbbr:'孙*芳', age:51, gender:'女', domain:'肺癌', center:'中山大学肿瘤医院', createTime:'2025-02-20 11:30', creator:'刘洋', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'主知情通过', isExtrapolated:'是' },
+    { patientNo:'P2025-005', nameAbbr:'周*平', age:47, gender:'男', domain:'肺癌', center:'中山大学肿瘤医院', createTime:'2025-03-01 08:45', creator:'刘洋', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'入组筛败', isExtrapolated:'否' },
+  ],
+  'HRS-1167-I-101': [
+    { patientNo:'P2025-006', nameAbbr:'吴*婷', age:39, gender:'女', domain:'妇科肿瘤', center:'复旦大学附属肿瘤医院', createTime:'2025-01-18 15:22', creator:'王强', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否' },
+    { patientNo:'P2025-007', nameAbbr:'郑*军', age:55, gender:'男', domain:'妇科肿瘤', center:'复旦大学附属肿瘤医院', createTime:'2025-02-05 10:11', creator:'王强', creatorRole:'CRC', matchStatus:'待匹配', patientStatus:'未提交', isExtrapolated:'是' },
+  ],
+  'SHR-1316-III-302': [
+    { patientNo:'P2025-008', nameAbbr:'钱*国', age:63, gender:'男', domain:'肺癌', center:'四川大学华西医院', createTime:'2025-03-20 09:38', creator:'李明', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否' },
+    { patientNo:'P2025-009', nameAbbr:'冯*敏', age:48, gender:'女', domain:'呼吸系统疾病', center:'四川大学华西医院', createTime:'2025-03-25 16:44', creator:'李明', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'是' },
+    { patientNo:'P2025-010', nameAbbr:'蒋*峰', age:60, gender:'男', domain:'肺癌', center:'浙江大学附属第一医院', createTime:'2025-04-10 08:52', creator:'赵敏', creatorRole:'CRC', matchStatus:'待匹配', patientStatus:'未提交', isExtrapolated:'否' },
+  ],
+  'HSK21542-302': [
+    { patientNo:'P2025-011', nameAbbr:'沈*琴', age:52, gender:'女', domain:'心血管疾病', center:'南京鼓楼医院', createTime:'2025-02-28 13:15', creator:'黄丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'是' },
+    { patientNo:'P2025-012', nameAbbr:'韩*龙', age:44, gender:'男', domain:'神经系统疾病', center:'南京鼓楼医院', createTime:'2025-03-08 10:30', creator:'黄丽', creatorRole:'CRC', matchStatus:'待匹配', patientStatus:'未提交', isExtrapolated:'否' },
+  ]
+};
+
 // ==================== STATE ====================
 let currentModule = 'audit';
 let currentSub = '';
@@ -3937,6 +4416,73 @@ let auditOrg = 'hengrui';    // 'hengrui' | 'kexin' | 'yunying'
 let auditSubTab = 'pending'; // 'pending' | 'done'
 let currentDetailRow = null;
 let detailTab = 'match'; // 'match' | 'prescreen' | 'history'
+
+// 智能筛选状态
+window._scActiveOrg = '恒瑞医药';
+window._scActiveSubTab = 'my';
+window._scSearchScheme = '';
+window._scSearchName = '';
+window._scSearchDomain = '全部';
+window._scSearchStage = '全部';
+window._scCurrentProject = null; // 当前查看患者列表的项目编号，null=项目列表视图
+
+function setScOrg(org) {
+  window._scActiveOrg = org;
+  window._scCurrentProject = null;
+  switchModule('ai');
+}
+
+function setScSubTab(sub) {
+  window._scActiveSubTab = sub;
+  window._scCurrentProject = null;
+  switchModule('ai');
+}
+
+function scSearch() {
+  window._scSearchScheme = document.getElementById('scSchemeNo')?.value?.trim() || '';
+  window._scSearchName = document.getElementById('scProjName')?.value?.trim() || '';
+  window._scSearchDomain = document.getElementById('scDomain')?.value || '全部';
+  window._scSearchStage = document.getElementById('scStage')?.value || '全部';
+  switchModule('ai');
+}
+
+function scReset() {
+  window._scSearchScheme = '';
+  window._scSearchName = '';
+  window._scSearchDomain = '全部';
+  window._scSearchStage = '全部';
+  switchModule('ai');
+}
+
+function toggleScFieldPanel() {
+  const panel = document.getElementById('scFieldPanel');
+  if(!panel) return;
+  panel.classList.toggle('show');
+}
+
+function scFieldChange() {
+  // 字段选择变化时的处理（可扩展：动态显示/隐藏列）
+}
+
+function backToProjectList() {
+  window._scCurrentProject = null;
+  switchModule('ai');
+}
+
+function openScPatientList(schemeNo) {
+  window._scCurrentProject = schemeNo;
+  switchModule('ai');
+}
+
+// 点击页面其他地方关闭字段面板
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('scFieldPanel');
+  if(!panel) return;
+  const wrapper = panel.closest('.sc-field-panel-wrapper');
+  if(wrapper && !wrapper.contains(e.target)) {
+    panel.classList.remove('show');
+  }
+});
 
 function setAuditOrg(org) {
   auditOrg = org;
@@ -4515,6 +5061,7 @@ function doLogin() {
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('app').classList.add('visible');
     switchModule('audit');
+    updatePRDPanel('main');
     showGlobalNotice();
   } else {
     alert('请输入账号和密码');
@@ -4631,7 +5178,8 @@ function switchModule(mod, sub) {
   }
   
   // 更新 PRD 需求说明面板
-  updatePRDPanel(mod, sub);
+  const prdMod = (mod === 'ai' && window._scCurrentProject) ? 'ai-patient' : mod;
+  updatePRDPanel(prdMod, sub || (mod === 'admin' ? 'projects' : undefined));
 }
 
 // ==================== PRD 需求说明面板 ====================
@@ -4641,197 +5189,144 @@ function updatePRDPanel(mod, sub) {
   
   // 定义各模块的需求说明
   const prdData = {
-    'audit': {
-      title: '审核列表',
+    'main': {
+      title: '本次修改说明',
       sections: [
         {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>系统的主入口，负责审核所有患者筛选记录，是 CRC/研究助理、预筛审核员、入组审核员日常工作的核心页面。'
-        },
-        {
-          title: '目标用户',
-          content: '<ul><li><strong>CRC/研究助理</strong>：提交筛选申请、查看 AI 匹配结果</li><li><strong>预筛审核员</strong>：审核 AI 匹配结果、修正错误判断</li><li><strong>入组审核员</strong>：复核预筛结论、确认入组决策</li></ul>'
-        },
-        {
-          title: '功能要点',
-          content: '<ul><li><strong>机构级 Tab</strong>：恒瑞医药 / 江苏科信 / 运营二部，点击切换机构数据</li><li><strong>审核状态子 Tab</strong>：待审核 / 已审核列表，展示当前机构下对应状态的记录</li><li><strong>多维度筛选</strong>：筛选号、患者编号、方案编号、审核类型、中心名称、审核状态、待操作人、待审核人、提交日期（日期范围）、是否发送邮件、排序（字段 + 升降序），共 10+ 维度</li><li><strong>列表展示</strong>：序号、筛选号（蓝色链接）、审核类型、患者编号、性别、年龄、方案编号、项目名称（超 5 字符截断）、中心号、中心、匹配率、提交人</li><li><strong>操作列</strong>：查看详情、审核、导出</li></ul>'
-        },
-        {
-          title: '交互逻辑',
-          content: '<ul><li>机构 Tab 切换 → 列表数据实时刷新，保留当前审核状态子 Tab</li><li>审核状态子 Tab 切换 → 列表刷新，显示记录条数</li><li>项目名称超过 5 字符 → 截断显示 + 省略号，点击弹出浮动层显示完整名称，再次点击或点击页面其他区域关闭</li><li>表格行悬停 → 背景变浅蓝 (#f5f8ff)</li><li>点击"查看"链接 → 打开详情页覆盖层</li><li>审核状态标签：待分配(灰)/预筛审核中(蓝)/入组审核中(橙)/已完成-入组(绿)/已完成-排除(红)</li></ul>'
-        },
-        {
-          title: '数据模型',
-          content: '<span class="prd-badge prd-badge-data">auditData</span><br/>字段：id、screenNo（筛选号）、org（机构）、auditType（审核类型）、patientNo（患者编号）、gender（性别）、age（年龄）、planNo（方案编号）、projectName（项目名称）、centerNo（中心号）、center（中心名称）、matchRate（AI 匹配率）、submitter（提交人）、status（审核状态）、reviewStage（审核环节）'
-        },
-        {
-          title: '性能要求',
-          content: '<ul><li>列表页加载：< 2 秒</li><li>单页渲染：50 条以内流畅渲染</li><li>Tab 切换：< 500ms</li></ul>'
+          title: '审核流程解耦 · 原型修改说明',
+          content: '<span class="prd-badge prd-badge-core">本次原型修改涉及审核流程解耦功能，覆盖 PC端系统管理-流程设置、项目管理、智能筛选和移动端的智能筛选 模块'
         }
       ]
     },
-    'detail': {
-      title: '查看详情',
-      sections: [
-        {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>审核列表的详情页，展示患者完整的审核信息，包括匹配详情、预筛表、病史与资料三大 Tab，以及右侧审核时间线。'
-        },
-        {
-          title: '页面入口',
-          content: '从审核列表的"操作"列点击"查看"链接，打开详情覆盖层。'
-        },
-        {
-          title: '头部信息栏',
-          content: '<ul><li><strong>返回按钮</strong>：← [筛选号]-[年龄]-[性别]-[中心号]-[中心]（方案编号）</li><li><strong>审核状态标签</strong>：动态渲染，根据 reviewStage 显示不同颜色</li><li><strong>操作按钮</strong>：基本信息、审核记录（打开审核记录弹窗）</li></ul>'
-        },
-        {
-          title: 'Tab：匹配详情',
-          content: '<ul><li><strong>匹配运行信息</strong>：AI 模型、开始/结束匹配时间、RAG 用时、LLM 用时、总用时</li><li><strong>项目信息</strong>：方案编号、项目名称（完整）、入排标准版本及更新时间、导出 PDF 按钮</li><li><strong>匹配度卡片</strong>：双卡片横向排列，匹配度（大号数字 + 红/绿色）、待定占比（大号数字 + 黄色）</li><li><strong>匹配摘要</strong>：黄色提示框，概括入选/排除标准的匹配情况</li><li><strong>AI 建议卡片</strong>：建议结论标签（排除/入组，红/绿色）、排除原因列表（红色左边框）、需补充信息列表</li><li><strong>匹配详情表格</strong>：22 条入排标准逐条展示，列：序号/标准类型/纳排内容/源数据/AI 判断（图标 + 文字）/操作（病历溯源/结果修正），表头蓝色背景，隔行背景色，AI 判断图标：✓绿色(匹配)/✗红色(不匹配)/?黄色(待定)</li></ul>'
-        },
-        {
-          title: 'Tab：预筛表',
-          content: '<ul><li><strong>预筛信息表格</strong>：14 项预筛指标，AI 自动提取，列：序号/项目/AI 提取/操作（编辑/病历溯源）</li><li><strong>备注区</strong>：文本域，默认提示"内容由 AI 生成，仅供参考，请谨慎鉴别"</li></ul>'
-        },
-        {
-          title: 'Tab：病史与资料',
-          content: '<ul><li><strong>左侧目录树</strong>：知情前阶段→原始资料→病例资料、知情前阶段→AI 分类资料、知情后阶段，每个节点显示文档数量</li><li><strong>右侧内容区</strong>：搜索/筛选工具栏（全选/文件名/查询/重置/下载/重新分类）、文档卡片列表（PDF 图标/脱敏标记/文件名/上传时间/下载按钮）、分页控件</li></ul>'
-        },
-        {
-          title: '审核时间线（右侧栏）',
-          content: '<ul><li><strong>位置</strong>：详情页右侧，Tab 内容区旁边的固定侧栏（宽度 300px）</li><li><strong>功能</strong>：展示当前患者最近 3 条审核记录的精简摘要</li><li><strong>摘要展示</strong>：彩色圆点（绿色=入组，红色=排除，橙色=待定）、审核人·审核结论 + 意见摘要（前 30 字）、审核时间（时分）</li><li><strong>查看全部入口</strong>：底部"查看全部审核记录 >"链接，点击打开审核记录全屏弹窗</li><li><strong>空状态逻辑</strong>：无审核记录时不显示时间线列表，展示空状态占位（📭 图标 + "暂无审核记录" + 说明文字）</li></ul>'
-        },
-        {
-          title: '审核记录弹窗（全屏页面）★',
-          content: '<ul><li><strong>入口</strong>：详情页右侧栏"查看全部审核记录 >" 链接或详情页头部"审核记录"按钮</li><li><strong>页面标题</strong>：[筛选号]-[中心号]-[中心名称]-[筛选号][中心号]-审核记录</li><li><strong>审核记录分组</strong>：按审核阶段分为可折叠的卡片组（预筛审核记录/入组审核记录），每组有下载/预筛沟通操作按钮</li><li><strong>分组表格</strong>：列：折叠(60px)/操作人(200px)/操作状态(120px)/操作时间(220px)/操作耗时(140px)</li><li><strong>行展开逻辑</strong>：父行（CRC 提交）默认收起子行，点击 ▶ 按钮展开子行（CRA 审核结果），子行底色浅灰蓝色 (#f8f9fb)，▶ 按钮旋转 90 度</li><li><strong>批注区</strong>：表格下方展示"批注"卡片（如有数据），包含多行审核批注文本</li></ul>'
-        },
-        {
-          title: '数据模型',
-          content: '<span class="prd-badge prd-badge-data">auditTimelineData</span>（审核时间线）、<span class="prd-badge prd-badge-data">auditFlowData</span>（审核流程）、<span class="prd-badge prd-badge-data">matchDetailData</span>（匹配详情）、<span class="prd-badge prd-badge-data">prescreenData</span>（预筛表）、<span class="prd-badge prd-badge-data">annotationData</span>（批注）'
-        }
-      ]
-    },
+    
     'ai': {
-      title: '智能筛选',
+      title: '智能筛选 - 项目列表',
       sections: [
         {
           title: '模块定位',
-          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>AI 智能筛选模块是系统的核心功能之一，利用 AI 大模型自动匹配患者病历数据与临床试验入排标准，辅助研究者快速判断患者是否符合入组条件。'
+          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>智能筛选项目列表页，支持按机构切换查看临床试验项目，提供多维度筛选查询，快速定位目标项目并查看其下患者列表。'
         },
         {
-          title: '核心价值',
-          content: '<ul><li><strong>效率提升</strong>：AI 自动完成入排标准匹配，将单例患者审核从数十分钟缩短至分钟级</li><li><strong>质量保障</strong>：标准化审核流程，降低人为遗漏风险</li><li><strong>全链路追踪</strong>：从提交到最终结论，每个审核节点可追溯</li></ul>'
+          title: '★ 智能筛选（本次修改）',
+          content: `<ul>
+            <li><strong>修改摘要</strong>：
+              <ul style="margin-top:6px">
+                <li><strong style="color:red">列表页面暂不修改</strong></li>
+                <li><strong style="color:red">患者列表</strong>可以自己选择下一步的审核流程</li>
+              </ul>
+            </li>
+          </ul>`
         },
-        {
-          title: '核心功能',
-          content: '<ul><li><strong>智能匹配</strong>：AI 自动分析病历数据，计算匹配分值（0-100 分）</li><li><strong>推荐结论</strong>：基于匹配度给出"强烈推荐"/"建议评估"/"不推荐"三级结论</li><li><strong>标签体系</strong>：展示关键匹配标签（如器官功能、用药史、诊断符合等）</li><li><strong>批量操作</strong>：支持多选批量导出、转审核等操作</li></ul>'
-        },
-        {
-          title: '页面结构',
-          content: '<ul><li><strong>顶部操作区</strong>：重新分析、批量导出按钮</li><li><strong>筛选区</strong>：按姓名/编号搜索、项目筛选、推荐度筛选、AI 分值区间筛选</li><li><strong>数据表格</strong>：展示筛选结果列表</li><li><strong>分页控件</strong>：底部展示总条数和翻页按钮</li></ul>'
-        },
-        {
-          title: '数据说明',
-          content: '<ul><li><strong>AI 匹配分</strong>：≥85 分蓝色，65-84 分橙色，<65 分红色</li><li><strong>推荐结论</strong>：强烈推荐(绿)/建议评估(橙)/不推荐(红)</li></ul>'
-        },
-        {
-          title: '产品边界',
-          content: '<ul><li>面向临床试验中心（医院/研究机构），不面向患者端</li><li>AI 匹配结果为辅助参考，最终审核决策由研究者人工确认</li><li>支持知情前阶段和知情后阶段的审核</li></ul>'
-        }
+       
       ]
     },
-    'aiimprove': {
-      title: 'AI 改进分析',
+    'ai-patient': {
+      title: '智能筛选 - 患者列表',
       sections: [
+       
         {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-admin">管理员专属</span><br/>帮用户看每次跑完筛选后，结果怎么样，哪里可以改得更好。用户看了建议，觉得有道理就改，改完再跑一次，看看结果有没有变好。'
+          title: '★本次修改',
+          content: `<ul>
+            <li><strong>返回按钮</strong>：← 返回项目列表</li>
+            <li><strong>患者编号</strong>：每次新增一个患者，后台自动生成一个患者编号：'项目方案编号+中心号+4位流水号'</li>
+            <li><strong>提交审核</strong>：患者可以自己选择审核流程</li>
+          </ul>`
         },
         {
-          title: '子页面导航',
-          content: '<ul><li><strong>分析设置</strong>：配参数、手动跑一下</li><li><strong>分析报告</strong>：看每个项目的结果列表，点进去看详情</li><li><strong>改进意见管理</strong>：看系统给了哪些建议，哪些改了哪些没改</li><li><strong>执行日志</strong>：看每次跑的记录</li></ul>'
+          title: '项目匹配列',
+          content: `<ul>
+            <li><strong>项目匹配</strong>：查看详细的匹配分析（入排标准逐条判断）</li>
+          </ul>`
         },
         {
-          title: '3.1 分析设置页面',
-          content: '<ul><li><strong>前置条件（重要）</strong>：只有满足以下条件的项目，才能进行分析设置和运行：<ol><li><strong>项目已上架</strong>：项目状态为"已上架/运行中"</li><li><strong>已有患者入组</strong>：项目中至少有患者数据进入筛选流程</li><li><strong>有人工审核数据</strong>：至少有一条患者记录完成了人工审核（CRC 提交、CRA 审核）</li><li><strong>有批注数据</strong>：人工审核过程中留下了批注（审核意见、修正记录等）</li></ol><span style="color: #e74c3c; font-weight: bold;">⚠ 不满足上述条件的项目，系统不会进行分析对比。</span></li><li><strong>模型输入数据字段</strong>：展示默认的输入字段（只读），哪些数据要喂给 AI 去分析，必填的标红，可选的不标</li><li><strong>自动运行设置</strong>：开关（想不想让它自己跑）、选星期几跑（周五到周日）、几点钟跑（比如每天晚上 10 点）、显示上次啥时候跑的、下次打算啥时候跑</li><li><strong>手动运行按钮</strong>：下拉框选哪个项目就跑哪个，选"全部"就跑全部，下拉框只会显示满足前置条件的项目，点了按钮之后按钮变灰显示"执行中..."，跑完了弹个窗告诉你跑完了，一共跑了几个项目、多少条数据</li><li><strong>用户操作顺序</strong>：进页面→看字段→设自动运行（可选）→想马上看结果就点手动跑→跑完去报告页看</li><li><strong>为什么需要这些前置条件</strong>：分析模块的核心价值是"对比"——对比 AI 的判断和人工审核的结果，找出差异和改进空间。如果没有人工审核和批注数据，就无法知道 AI 判断得对不对，也就无法给出有价值的改进建议</li></ul>'
+          title: '操作列',
+          content: `<ul>
+            <li><strong>编辑</strong>：编辑患者基本信息</li>
+            <li><strong>病史与资料</strong>：查看/编辑患者病史和上传的文档资料</li>
+            <li><strong>匹配详情</strong>：查看详细的匹配分析（入排标准逐条判断）</li>
+            <li><strong>提交审核</strong>：可以选择审核流程</li>
+            <li><strong>审核记录</strong>：查看该患者的审核历史轨迹</li>
+            <li><strong>删除</strong>：删除该患者记录（红色，需二次确认）</li>
+          </ul>`
         },
-        {
-          title: '3.2 分析报告页面',
-          content: '<ul><li><strong>搜索</strong>：搜项目号或项目名称</li><li><strong>排序</strong>：按病例数从多到少排，或从少到多排；按准确率从高到低排，或从低到高排</li><li><strong>列表列</strong>：项目编号、方案编号、项目名称、病例数（这个项目有多少条数据）、AI 准确率（系统判断得准不准，百分数）、实际通过率（多少条通过了筛选）、问题数（系统发现有问题的数量）、建议数（系统给了多少条改进建议）、状态（分析中或已完成）、操作（一个"历史记录"按钮）</li><li><strong>交互</strong>：点表格某一行，跳到详情页看这个项目的具体分析；点"历史记录"按钮，右边弹出面板</li></ul>'
-        },
-        {
-          title: '3.3 报告详情页',
-          content: '<ul><li><strong>第一步：总体概况</strong>：这个项目的基本信息（编号、名称、病例数）、准确率是多少、通过率是多少、有几个问题几条建议、几个关键指标的完成情况（用进度条或数字显示）</li><li><strong>第二步：具体问题和建议</strong>：列出系统发现的问题，一个一个说，每个问题配上建议怎么改，比如"他汀类药物判定不太准，建议加上 XX 条件"</li><li><strong>第三步：操作按钮</strong>：返回报告列表</li><li><strong>准确率趋势图</strong>：对所有的历史跑出来的对比分析的准确率进行折线图展示，横轴是时间，纵轴是准确率，可以选择看最近 7 天、30 天、或者自定义时间范围，鼠标移到折线上某个点会显示那天的具体准确率和运行次数，图上标出最高点和最低点</li></ul>'
-        },
-        {
-          title: '3.4 历史记录面板（从报告列表点"历史记录"弹出）',
-          content: '<ul><li><strong>第一块：准确率对比</strong>：显示上次准确率和这次准确率，中间一个箭头连着，下面标出来提高了还是降低了多少个百分点，提高了显示绿色箭头向上，降低了显示红色箭头向下</li><li><strong>第二块：历史记录表格</strong>：列：运行 ID/时间、提示词版本、病例数、AI 准确率、通过率、误拒数（错拒了多少条，越小越好）、提示词修改（系统建议改几条，实际改了几条，如"发现 3 条，实际修改 2 条"）、状态（最新那次标"当前"）；准确率每次跑完跟上次比，90% 以上绿色，80%-90% 蓝色，80% 以下橙色</li><li><strong>第三块：指标追踪分析</strong>：列：指标名称（如"他汀类药物判定"、"甲状腺功能"）、运行次数（这个指标一共跑过多少次）、人工修改状态（有人改过显示"已修改 X 次"，没改显示"-"）、追踪详情（"直接通过"=没人改系统自己跑出来的 / "修改后重跑 X 次"=有人改过改完又跑了 X 次）</li><li><strong>第四块：图例说明</strong>：解释"已修改"、"直接通过"、"修改后重跑"的含义</li><li><strong>关闭方式</strong>：点右上角"关闭"按钮 / 点面板外面的灰色遮罩 / 按键盘 ESC 键</li></ul>'
-        },
-        {
-          title: '3.5 改进意见管理页面',
-          content: '<ul><li><strong>搜索框</strong>：搜建议内容、搜项目名、搜建议状态（已修改/保持现状）</li><li><strong>列表列</strong>：序号、建议内容（系统给的具体建议）、处理方式（已修改/保持现状/待评估）、涉及项目（这条建议影响哪些项目）、提出时间、提出人、同步状态（已同步到其他项目/未同步）、操作（查看详情、编辑、同步）</li><li><strong>查看详情</strong>：弹个框，显示这条建议的完整信息和分析过程</li><li><strong>编辑</strong>：可以改这条建议的处理方式和备注</li></ul>'
-        },
-        {
-          title: '3.6 执行日志页面',
-          content: '<ul><li><strong>搜索框</strong>：按时间范围查、按项目查、按类型查</li><li><strong>列表列</strong>：执行时间、类型、项目数、病例总数、耗时、状态</li><li><strong>交互</strong>：点某一行看详细报告</li></ul>'
-        },
-        {
-          title: '3.7 企业微信通知页面',
-          content: '<ul><li><strong>入口</strong>：企业微信工作台→收到改进建议分析通知</li><li><strong>消息列表</strong>：按时间分组，含标题（项目名称+"AI 改进建议分析"）、内容（发现 X 条改进建议）、管理按钮</li><li><strong>改进建议弹窗</strong>：进度指示、优先级标签（P0 红/P1 橙）、原因描述、改进方案（可编辑）、提示词（可编辑）、预筛/入排开关、操作按钮（下一条/保存并下一条/保存/关闭）</li><li><strong>操作顺序</strong>：点击通知→查看结果→管理改进建议→逐条编辑→保存关闭</li><li><strong>价值</strong>：及时触达、便捷操作、逐条处理、灵活应用</li></ul>'
-        },
-        {
-          title: '页面跳转逻辑',
-          content: '<ul><li>侧边栏点"改进分析" → 进分析设置页</li><li>分析设置页点"查看报告" → 进报告列表页</li><li>报告列表页点某一行 → 进报告详情页</li><li>报告列表页点"历史记录"按钮 → 右边弹出历史记录面板</li><li>报告详情页点"返回列表" → 回到报告列表页</li><li>历史记录面板点"关闭" → 面板关掉</li></ul>'
-        },
-        {
-          title: '状态与颜色规范',
-          content: '<ul><li><strong>状态显示</strong>：正在跑的时候按钮变灰显示"执行中..."，跑完了按钮恢复状态变成"已完成"，跑失败了状态变成"失败"显示错误原因</li><li><strong>准确率</strong>：90% 以上绿色，80%-90% 蓝色，80% 以下橙色</li><li><strong>错误/失败</strong>：红色</li><li><strong>成功</strong>：绿色</li><li><strong>警告/待处理</strong>：黄色</li></ul>'
-        },
-        {
-          title: '表格交互',
-          content: '<ul><li>鼠标移到表格行上，背景变浅灰（hover 效果）</li><li>表头固定，内容太多可以横向滚动</li><li>搜索框输入后实时过滤表格内容</li></ul>'
-        },
-        {
-          title: '弹窗/面板',
-          content: '<ul><li>从右边滑出来的面板，要有半透明遮罩</li><li>点遮罩、点关闭按钮、按 ESC 都能关掉</li><li>弹窗里面内容太多可以滚动</li></ul>'
-        },
-        {
-          title: '数据模型',
-          content: '<span class="prd-badge prd-badge-data">项目数据</span>（项目编号、方案编号、项目名称、病例数）、<span class="prd-badge prd-badge-data">准确率数据</span>（每次跑完分析对比计算）、<span class="prd-badge prd-badge-data">建议数据</span>（系统分析后给出）、<span class="prd-badge prd-badge-data">运行记录</span>（每次跑分析留记录）'
-        }
+       
+        
       ]
     },
-    'stats': {
-      title: '数据统计',
+   
+    'admin-projects': {
+      title: '项目管理设置',
       sections: [
         {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>提供多维度的数据统计和分析，帮助管理者了解系统运行状况、筛选效果、项目进展和人员表现。'
+          title: '★ 项目管理（本次修改）',
+          content: `<ul>
+            <li><strong>功能定位</strong>：项目管理设置，包含新建项目和编辑项目页面</li>
+            <li><strong>修改摘要</strong>：
+              <ul style="margin-top:6px">
+                <li>除了<strong style="color:#1677ff">引用已有模板</strong>之外，还可以在项目管理页面中<strong style="color:#1677ff">手动新增流程模板</strong></li>
+                <li>无需跳转到模板设置中，新增后<strong style="color:#52c41a">在本项目中直接启用</strong></li>
+                <li>审核流程支持<strong>不同时间段使用不同的审核流程</strong>，每条模板可独立设置生效起止时间</li>
+                <li>如果没有合适的审核流程，可在此<strong>直接新建适合的审批流程</strong></li>
+              </ul>
+            </li>
+          </ul>`
         },
         {
-          title: '子页面',
-          content: '<ul><li><strong>概览</strong>：系统整体运行概况，关键指标一览</li><li><strong>筛选统计</strong>：按时间/机构/项目等维度统计筛选数据</li><li><strong>项目统计</strong>：各项目的筛选进度、通过率、准确率等统计</li><li><strong>人员统计</strong>：各用户的工作量、审核效率等统计</li></ul>'
+          title: '编辑项目页面模块',
+          content: `<ul>
+             <li><strong>✅ 审批模板配置</strong>：<span class="prd-badge prd-badge-core">核心修改</span>
+              <ul style="margin-top:4px">
+                <li><strong>引用模板</strong>：从已有审批流模板中选择，预览流程后引用到本项目</li>
+                <li><strong>新建模板</strong>：两步创建 — ① 填写基本信息（名称/版本/类型/阶段）→ ② 设置审批流程节点（角色/名称/时限），支持新增/删除节点，可保存草稿或直接保存并发布</li>
+                <li>每条模板可独立设置<strong>生效/未生效</strong>状态及<strong>生效起止时间</strong></li>
+                <li><span style="color:#ff4d4f">同一生效时间段内同一种审核类型最多启用一条</span></li>
+              </ul>
+            </li>
+             </ul>`
         },
         {
-          title: '目标用户',
-          content: '<ul><li><strong>数据统计人员</strong>：负责数据分析和报表，查看筛选统计、导出数据、生成报告</li><li><strong>项目管理员</strong>：监控项目进展，评估筛选效果</li></ul>'
-        }
+          title: '审批模板配置 - 列表',
+          content: `<ul>
+            <li><strong>列表列</strong>：版本号（点击查看流程详情）、审批流名称、审核类型、筛选阶段、是否生效、生效开始时间、生效结束时间、操作</li>
+            <li><strong>操作列</strong>：编辑生效设置、查看流程（垂直流程图，发起人=紫/审批人=蓝/结束=绿）、删除</li>
+            <li><strong>开发提示</strong>：红色警告框说明生效规则</li>
+          </ul>`
+        },
+        {
+          title: '审批模板配置 - 新建模板流程',
+          content: `<ul>
+            <li><strong>第一步 - 基本信息Tab</strong>：
+              <ul>
+                <li>审批流名称（必填）：文本输入</li>
+                <li>版本号（必填）：如 v2.5.0</li>
+                <li>审核类型（必填）：预筛审核 / 主知情审核 / 导入审核 / 入组审核</li>
+                <li>筛选阶段（必填）：知情前阶段 / 知情后阶段</li>
+                <li>点击<strong>「保存模板设置」</strong>→ 保存至后端 → 自动进入流程设置</li>
+              </ul>
+            </li>
+            <li><strong>第二步 - 流程设置Tab</strong>：
+              <ul>
+                <li>跟【审核流设置】的设置流程一样，只不过保存之后，直接是发布了的，在这边可以手动生效</li>
+                
+              </ul>
+            </li>
+          </ul>`
+        },
+       
+       
       ]
     },
     'admin': {
-      title: '项目后台管理',
+      title: '审批流设置',
       sections: [
         {
           title: '模块定位',
           content: '<span class="prd-badge prd-badge-admin">管理员专属</span><br/>系统后台管理功能，包括项目管理、标准管理、用户管理等核心管理功能。'
         },
-         {
-          title: '★ 项目管理（本次修改）',
-          content: '<ul><li><strong>功能定位</strong>：项目管理设置</li><li><strong>修改摘要</strong>：新建项目和编辑项目的页面，流程引用的部分，加一个除了引用已有的模板之外，还可以在这边手动新增流程模板，不用在跳转到模板设置中了，相当于新增了之后 在本项目中直接启用了</li></ul>'
-        },
+        
         {
           title: '★ 审批流设置（本次修改）',
-          content: '<ul><li><strong>功能定位</strong>：管理系统中的审批流模板，支持新建、编辑、发布、复制、设为默认、同步至项目等操作，实现审核流程的灵活配置与统一管理</li><li><strong>修改摘要</strong>：加了两个字段："审批流名称"和"筛选阶段"，审核类型删除"送检审核"，查看的按钮改名字为"流程设置"，加了查询条件</li></ul>'
+          content: '<ul><li><strong>修改摘要</strong>：加了两个字段："审批流名称"和"筛选阶段"，审核类型删除"送检审核"，查看的按钮改名字为"流程设置"，加了查询条件</li></ul>'
         },
          
         {
@@ -4859,7 +5354,9 @@ function updatePRDPanel(mod, sub) {
     }
   };
   
-  const prd = prdData[mod];
+  // 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
+  const subKey = sub ? mod + '-' + sub : null;
+  const prd = prdData[subKey] || prdData[mod];
   if (!prd) {
     collapsePRDDrawer();
     return;
@@ -4917,7 +5414,7 @@ function loadModuleFromFile(panelElement, filePath, moduleName, subModule) {
   
   // 模块初始化函数映射
   const initFunctionMap = {
-    'audit': 'initAuditModule',
+    'main': 'initMainModule',
     'ai': 'initAiModule',
     'stats': 'initStatsModule',
     'aiimprove': 'initAiImproveModule',
@@ -5114,6 +5611,8 @@ function buildAuditContent() {
             <th>中心</th>
             <th>匹配率</th>
             <th>提交人</th>
+             <th>患者状态</th>
+            <th>是否提交</th>
             <th style="width:200px">操作</th>
           </tr>
         </thead>
@@ -5158,151 +5657,321 @@ function buildAuditContent() {
 }
 
 // ==================== AI SCREENING ====================
-function buildAIContent() {
+function buildAiContent() {
+  // 如果当前在患者列表视图，渲染患者列表页
+  if (window._scCurrentProject) return buildScPatientListContent();
+
+  const orgs = ['恒瑞医药', '江苏科信', '运营二部', '江苏科信3', '测试租户66'];
+  const stages = ['全部', 'Ⅰ期', 'Ⅱ期', 'Ⅲ期', 'Ⅳ期'];
+  const domains = ['全部', '血液类疾病', '肺癌', '妇科肿瘤', '风湿免疫性疾病', '心血管疾病', '神经系统疾病', '消化系统疾病'];
+  const activeOrg = window._scActiveOrg || '恒瑞医药';
+  const activeSub = window._scActiveSubTab || 'my';
+
+  // 渲染筛选后的数据
+  const searchScheme = window._scSearchScheme || '';
+  const searchName = window._scSearchName || '';
+  const searchDomain = window._scSearchDomain || '全部';
+  const searchStage = window._scSearchStage || '全部';
+
+  let filtered = scProjectData;
+  if(searchScheme) filtered = filtered.filter(r => r.schemeNo.toLowerCase().includes(searchScheme.toLowerCase()));
+  if(searchName) filtered = filtered.filter(r => r.name.toLowerCase().includes(searchName.toLowerCase()));
+  if(searchDomain !== '全部') filtered = filtered.filter(r => r.domains.includes(searchDomain));
+  if(searchStage !== '全部') filtered = filtered.filter(r => r.stage === searchStage);
+
+  const stageCls = (s) => {
+    if(s === '进行中') return 'sc-stage-tag ongoing';
+    if(s === '已完成') return 'sc-stage-tag completed';
+    return 'sc-stage-tag preparing';
+  };
+
   return `
-    <div class="breadcrumb">当前位置：<span>智能筛选</span></div>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px">
-      <button class="btn btn-default">🔄 重新分析</button>
-      <button class="btn btn-primary">📤 批量导出</button>
+    <div class="breadcrumb">当前位置：<span>智能筛选</span> / 项目列表</div>
+
+    <!-- 机构Tab -->
+    <div class="sc-org-tabs" id="scOrgTabs">
+      ${orgs.map(o => `<div class="sc-org-tab ${o===activeOrg?'active':''}" onclick="setScOrg('${o}')">${o}</div>`).join('')}
     </div>
-    <div class="filter-bar">
-      <input class="filter-input" placeholder="🔍 搜索姓名/编号" style="width:200px" />
-      <select class="filter-select">
-        <option>全部项目</option>
-        <option>II期临床试验-心血管</option>
-        <option>肿瘤免疫疗法研究</option>
-        <option>糖尿病新药三期</option>
-      </select>
-      <select class="filter-select">
-        <option>推荐度</option>
-        <option>强烈推荐</option>
-        <option>建议评估</option>
-        <option>不推荐</option>
-      </select>
-      <select class="filter-select">
-        <option>AI分值</option>
-        <option>≥ 90</option>
-        <option>70 ~ 90</option>
-        <option>&lt; 70</option>
-      </select>
-      <button class="btn btn-primary btn-sm">搜索</button>
-      <button class="btn btn-default btn-sm">重置</button>
+
+    <!-- 子Tab：本人项目 / 其他项目 -->
+    <div class="sc-sub-tabs" id="scSubTabs">
+      <div class="sc-sub-tab ${activeSub==='my'?'active':''}" onclick="setScSubTab('my')">本人项目</div>
+      <div class="sc-sub-tab ${activeSub==='other'?'active':''}" onclick="setScSubTab('other')">其他项目</div>
     </div>
-    <div class="table-card">
-      <table class="data-table">
+
+    <!-- 搜索栏 -->
+    <div class="sc-filter-bar">
+      <div class="sc-filter-row">
+        <div class="sc-filter-item">
+          <label>方案编号：</label>
+          <input type="text" id="scSchemeNo" placeholder="请输入" value="${searchScheme}" onkeydown="if(event.key==='Enter')scSearch()"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>项目名称：</label>
+          <input type="text" id="scProjName" placeholder="请输入" value="${searchName}" onkeydown="if(event.key==='Enter')scSearch()"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>领域：</label>
+          <select id="scDomain">${domains.map(d => `<option ${d===searchDomain?'selected':''}>${d}</option>`).join('')}</select>
+        </div>
+        <div class="sc-filter-item">
+          <label>试验分期：</label>
+          <select id="scStage">${stages.map(s => `<option ${s===searchStage?'selected':''}>${s}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="sc-filter-row" style="justify-content:center">
+        <button class="btn btn-primary btn-sm" onclick="scSearch()">查询</button>
+        <button class="btn btn-default btn-sm" onclick="scReset()">重置</button>
+        <div class="sc-field-panel-wrapper">
+          <button class="btn btn-default btn-sm" style="color:#1677ff;border-color:#1677ff" onclick="event.stopPropagation();toggleScFieldPanel()">☰ 患者字段展示</button>
+          <div class="sc-field-panel" id="scFieldPanel">
+            <div class="sc-field-panel-title">选择要展示的患者字段</div>
+            <label><input type="checkbox" checked onchange="scFieldChange()" data-field="patientName"/> 患者姓名</label>
+            <label><input type="checkbox" checked onchange="scFieldChange()" data-field="gender"/> 性别</label>
+            <label><input type="checkbox" checked onchange="scFieldChange()" data-field="centerName"/> 中心名称</label>
+            <label><input type="checkbox" onchange="scFieldChange()" data-field="enrollNo"/> 入组号</label>
+            <label><input type="checkbox" onchange="scFieldChange()" data-field="age"/> 年龄</label>
+            <label><input type="checkbox" onchange="scFieldChange()" data-field="centerNo"/> 中心号</label>
+            <label><input type="checkbox" onchange="scFieldChange()" data-field="screenNo"/> 筛选号</label>
+          </div>
+        </div>
+      </div>
+    </div>
+ <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>直接到患者列表，PRD可能挡住了，关掉PRD，就可以看到右侧部分</div>
+          
+          </div>
+        </div>
+    <!-- 项目列表表格 -->
+    <div class="table-card" style="padding:0;overflow:hidden">
+      <table class="sc-project-table">
         <thead>
           <tr>
-            <th><input type="checkbox"/></th>
-            <th>编号</th>
-            <th>受试者</th>
-            <th>匹配项目</th>
-            <th>AI匹配分</th>
-            <th>匹配度</th>
-            <th>匹配标签</th>
-            <th>推荐结论</th>
-            <th>分析时间</th>
-            <th>操作</th>
+            <th class="col-index">序号</th>
+            <th style="min-width:140px">方案编号</th>
+            <th style="min-width:200px">项目名称</th>
+            <th style="min-width:160px">领域</th>
+            <th style="width:90px">试验分期</th>
+            <th style="width:90px">项目阶段</th>
+            <th style="width:130px">操作</th>
           </tr>
         </thead>
         <tbody>
-          ${aiData.map(r => `
+          ${filtered.map((r,i) => `
           <tr>
-            <td><input type="checkbox"/></td>
-            <td style="color:#1677ff;font-weight:500">${r.id}</td>
-            <td><strong>${r.name}</strong></td>
-            <td><span class="tag">${r.project}</span></td>
+            <td class="col-index">${i+1}</td>
+            <td class="col-scheme">${r.schemeNo}</td>
+            <td class="col-name" title="${r.name}">${r.name}</td>
             <td>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-size:20px;font-weight:700;color:${r.aiScore>=85?'#1677ff':r.aiScore>=65?'#d97706':'#e54646'}">${r.aiScore}</span>
-                <div class="score-bar"><div class="score-fill" style="width:${r.aiScore}%;background:${r.aiScore>=85?'linear-gradient(90deg,#1677ff,#7c3aed)':r.aiScore>=65?'linear-gradient(90deg,#faad14,#fa8c16)':'linear-gradient(90deg,#ff7875,#ff4d4f)'}"></div></div>
+              <div class="col-domain">
+                ${r.domains.map(d => `<span class="sc-domain-tag">${d}</span>`).join('')}
               </div>
             </td>
-            <td>${matchBadge(r.match)}</td>
-            <td>${r.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</td>
-            <td>${recoBadge(r.recommendation)}</td>
-            <td style="color:#888;font-size:12px">${r.analyzed}</td>
+            <td>${r.stage}</td>
+            <td><span class="${stageCls(r.phase)}">${r.phase}</span></td>
             <td>
-              <span class="action-link">详情</span>
-              <span class="action-sep">|</span>
-              <span class="action-link">转审核</span>
+              <span class="sc-patient-link" onclick="event.stopPropagation();openScPatientList('${r.schemeNo}')">
+                📋 患者列表（${r.patientCount}）
+              </span>
             </td>
           </tr>`).join('')}
         </tbody>
       </table>
-      <div class="pagination">
-        <span style="font-size:12.5px;color:#888;margin-right:12px">共 ${aiData.length} 条</span>
+      <div class="sc-pagination">
+        <span class="total-info">共 ${filtered.length} 条</span>
         <button class="page-btn">‹</button>
         <button class="page-btn active">1</button>
         <button class="page-btn">›</button>
       </div>
     </div>
+  `;
+}
 
-    <!-- 原型说明 -->
-    <div style="background:#f0f7ff;border:1px solid #91caff;border-radius:12px;padding:24px;margin-top:24px">
-      <div style="font-size:15px;font-weight:600;color:#1677ff;margin-bottom:16px">📋 原型设计说明</div>
-      
-      <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">一、模块定位</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          AI智能筛选模块是系统的核心功能之一，利用AI大模型自动匹配患者病历数据与临床试验入排标准，辅助研究者快速判断患者是否符合入组条件。
+// ==================== 智能筛选 - 患者列表页 ====================
+function buildScPatientListContent() {
+  const schemeNo = window._scCurrentProject || '';
+  const project = scProjectData.find(p => p.schemeNo === schemeNo);
+  const projectName = project ? project.name : schemeNo;
+  const patients = scPatientData[schemeNo] || [];
+  const activeTab = window._scPatientTab || 'patient-list';
+
+  const setTabFn = (tab) => {
+    window._scPatientTab = tab;
+    switchModule('ai');
+  };
+
+  return `
+    <div class="breadcrumb">当前位置：<span>智能筛选</span> / 项目列表 / <span style="color:#1677ff">${schemeNo}</span></div>
+
+    <!-- 返回按钮 -->
+    <button class="sc-back-btn" onclick="backToProjectList()">
+      <span style="font-size:16px">←</span> 返回项目列表
+    </button>
+
+    <!-- 子Tab：待操作 / 患者列表 -->
+    <div class="sc-patient-tabs">
+      <div class="sc-patient-tab badge-tab ${activeTab==='pending'?'active':''}" onclick="setScPatientTab('pending')">待操作</div>
+      <div class="sc-patient-tab ${activeTab==='patient-list'?'active':''}" onclick="setScPatientTab('patient-list')">患者列表</div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="sc-patient-filter-bar">
+      <div class="sc-patient-filter-row">
+        <div class="sc-filter-item">
+          <label>姓名缩写：</label>
+          <input type="text" id="scPatientNameAbbr" placeholder="请输入"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>患者状态：</label>
+          <select id="scPatientStatus">
+            <option>全部</option><option>已入组</option><option>筛选失败</option><option>筛选中</option>
+          </select>
+        </div>
+        <div class="sc-filter-item">
+          <label>审核状态：</label>
+          <select id="scReviewStatus">
+            <option>全部</option>
+            <option>未提交</option>
+            <option>储备</option>
+            <option>预筛审核中</option>
+            <option>预筛审核沟通中</option>
+            <option>预筛驳回</option>
+            <option>预筛通过</option>
+          </select>
+        </div>
+        <div class="sc-filter-item">
+          <label>创建人：</label>
+          <input type="text" id="scPatientCreator" placeholder="请输入"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>中心名称：</label>
+          <input type="text" id="scPatientCenter" placeholder="请输入"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>筛选号：</label>
+          <input type="text" id="scPatientScreenNo" placeholder="请输入"/>
         </div>
       </div>
-
-      <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">二、核心功能</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          • <strong>智能匹配</strong>：AI自动分析病历数据，计算匹配分值（0-100分）<br/>
-          • <strong>推荐结论</strong>：基于匹配度给出"强烈推荐"/"建议评估"/"不推荐"三级结论<br/>
-          • <strong>标签体系</strong>：展示关键匹配标签（如器官功能、用药史、诊断符合等）<br/>
-          • <strong>批量操作</strong>：支持多选批量导出、转审核等操作
+      <div class="sc-patient-filter-row" style="justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="scPatientSearch()">查询</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientReset()">重置</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-default btn-sm" onclick="scPatientNew()">+ 新增患者</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientExport()">导出</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientPreScreenExport()">预筛表导出</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientAuditExport()">审核记录导出</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientColSettings()">列设置</button>
+          <button class="btn btn-default btn-sm" onclick="scPatientAdvancedSearch()">高级搜索</button>
         </div>
       </div>
-
-      <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">三、页面结构</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          <strong>顶部操作区</strong>：重新分析、批量导出按钮<br/>
-          <strong>筛选区</strong>：支持按姓名/编号搜索、项目筛选、推荐度筛选、AI分值区间筛选<br/>
-          <strong>数据表格</strong>：展示筛选结果列表，包含编号、受试者信息、匹配项目、AI评分、匹配度、标签、推荐结论、分析时间等字段<br/>
-          <strong>分页控件</strong>：底部展示总条数和翻页按钮
+    </div>
+    <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 加了返回项目列表的返回按钮</div>
+            <div>② 项目匹配单独一列修改出来，固定到右侧</div>
+            <div>③ 每个患者自动生成一个患者编号，生成规则：项目编号-中心号-4位流水号，新增患者的时候，如果没有选择中心号，暂时不生成，但是提交的时候，肯定有中心号了，就必须生成患者编号</div>
+            <div>④ 在当前页面 把项目名称和项目编码带出来显示。</div>
+            <div>⑤ 点击提交审核按钮，对这个页面进行了修改。</div>
+            </div>
         </div>
+    <!-- 项目信息摘要 -->
+    <div style="display:flex;align-items:center;gap:16px;padding:10px 0;margin-bottom:12px;font-size:13px;color:#666">
+      <span>项目：<strong style="color:#333">${projectName}</strong></span>
+      <span>方案编号：<strong style="color:#1677ff">${schemeNo}</strong></span>
+    </div>
+
+    <!-- 患者表格 -->
+    <div class="table-card" style="padding:0;">
+      <div class="sc-patient-table-wrap">
+      <table class="sc-patient-table">
+        <thead>
+          <tr>
+            <th class="col-index col-sticky-left-1">序号</th>
+            <th class="col-sticky-left-2">患者编号</th>
+            <th class="col-sticky-left-3">姓名缩写</th>
+            <th style="width:50px">年龄</th>
+            <th style="width:50px">性别</th>
+            <th>领域</th>
+            <th>参研中心</th>
+            <th>创建时间</th>
+            <th>创建人</th>
+            <th>创建人角色</th>
+            <th>匹配状态</th>
+            <th>患者状态</th>
+            <th class="col-sticky-right-0">是否外推</th>
+            <th class="col-sticky-right-1">项目匹配</th>
+            <th class="col-sticky-right-2">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${patients.map((p, i) => `
+          <tr>
+            <td class="col-index col-sticky-left-1">${i+1}</td>
+            <td class="col-sticky-left-2" style="color:#1677ff;font-weight:500">${p.patientNo}</td>
+            <td class="col-sticky-left-3" style="color:#1677ff;font-weight:500">${p.nameAbbr}</td>
+            <td>${p.age}</td>
+            <td>${p.gender}</td>
+            <td>${p.domain}</td>
+            <td>${p.center}</td>
+            <td style="color:#888">${p.createTime}</td>
+            <td>${p.creator}</td>
+            <td>${p.creatorRole}</td>
+            <td><span class="sc-match-tag ${p.matchStatus==='已匹配'?'matched':'pending'}">${p.matchStatus}</span></td>
+            <td><span class="sc-status-tag ${p.patientStatus==='已入组'?'enrolled':p.patientStatus==='筛选失败'?'failed':'screening'}">${p.patientStatus}</span></td>
+            <td class="col-sticky-right-0"><span class="sc-extrap-tag ${p.isExtrapolated==='是'?'yes':'no'}">${p.isExtrapolated}</span></td>
+            <td class="col-sticky-right-1">
+              <a href="javascript:void(0)" class="sc-project-match-btn">
+                <i class="fa-solid fa-magnifying-glass-chart"></i> 项目匹配
+              </a>
+            </td>
+            <td class="col-sticky-right-2">
+              <div class="sc-action-links">
+                <a href="javascript:void(0)">编辑</a><span>|</span>
+                <a href="javascript:void(0)">病史与资料</a><span>|</span>
+                <a href="javascript:void(0)">匹配详情</a><span>|</span>
+                <a href="javascript:void(0)" onclick="event.stopPropagation();openSubmitAuditModal('${schemeNo}', ${i})">提交审核</a><span>|</span>
+                <a href="javascript:void(0)">审核记录</a><span>|</span>
+                <a href="javascript:void(0)" style="color:#e54646">删除</a>
+              </div>
+            </td>
+          </tr>`).join('')}
+          ${patients.length === 0 ? `<tr><td colspan="15" style="text-align:center;color:#999;padding:28px">暂无患者数据</td></tr>` : ''}
+        </tbody>
+      </table>
       </div>
-
-      <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">四、交互逻辑</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          • <strong>筛选操作</strong>：选择筛选条件后点击"搜索"按钮，表格数据实时刷新<br/>
-          • <strong>重置条件</strong>：点击"重置"按钮清空所有筛选条件<br/>
-          • <strong>查看详情</strong>：点击操作列"详情"链接，跳转至患者审核详情页<br/>
-          • <strong>转审核</strong>：点击"转审核"链接，将该患者转入审核流程<br/>
-          • <strong>批量导出</strong>：勾选多条记录后点击顶部"批量导出"按钮，导出选中数据的Excel报告<br/>
-          • <strong>重新分析</strong>：点击"重新分析"按钮，对当前筛选结果重新运行AI匹配算法
-        </div>
-      </div>
-
-      <div style="margin-bottom:16px">
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">五、数据说明</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          • <strong>AI匹配分</strong>：0-100分，分数越高表示匹配度越高。≥85分为蓝色，65-84分为橙色，<65分为红色<br/>
-          • <strong>匹配度</strong>：以标签形式展示（高度匹配/部分匹配/不匹配），使用不同颜色区分<br/>
-          • <strong>匹配标签</strong>：展示AI识别到的关键特征标签，如"肝功能正常"、"无高血压史"等<br/>
-          • <strong>推荐结论</strong>：三级标签体系，"强烈推荐"(绿色)、"建议评估"(橙色)、"不推荐"(红色)
-        </div>
-      </div>
-
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:8px">六、视觉规范</div>
-        <div style="font-size:13px;color:#555;line-height:1.8">
-          • <strong>主题色</strong>：#1677ff（蓝色），用于按钮、链接、高亮文字<br/>
-          • <strong>表格样式</strong>：表头浅灰背景(#fafafa)，行悬停浅蓝背景(#f5f8ff)，隔行浅灰背景(#fafafa)<br/>
-          • <strong>标签颜色</strong>：绿色(#52c41a)表示通过/推荐，橙色(#fa8c16)表示待评估，红色(#f5222d)表示拒绝/排除<br/>
-          • <strong>圆角</strong>：卡片、按钮统一使用8-12px圆角<br/>
-          • <strong>字体</strong>：PingFang SC, Microsoft YaHei, sans-serif
-        </div>
+      <div class="sc-pagination">
+        <span class="total-info">共 ${patients.length} 条</span>
+        <button class="page-btn">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">›</button>
       </div>
     </div>
   `;
 }
+
+// 患者列表页辅助函数
+function setScPatientTab(tab) {
+  window._scPatientTab = tab;
+  switchModule('ai');
+}
+
+function scPatientSearch() { alert('执行患者查询…（原型演示）'); }
+function scPatientReset() { alert('重置患者搜索条件…（原型演示）'); }
+function scPatientNew() { alert('新增患者…（原型演示）'); }
+function scPatientExport() { alert('导出患者列表…（原型演示）'); }
+function scPatientPreScreenExport() { alert('导出一份预筛表…（原型演示）'); }
+function scPatientAuditExport() { alert('导出审核记录…（原型演示）'); }
+function scPatientColSettings() { alert('列设置…（原型演示）'); }
+function scPatientAdvancedSearch() { alert('高级搜索…（原型演示）'); }
 
 // ==================== STATS SIDEBAR ====================
 function buildStatsSidebar(active) {
@@ -5608,10 +6277,10 @@ function buildAdminSidebar(active) {
 
     
  <!-- 标注1：用户管理拆分为租户管理和用户管理 -->
-        <div style="position:relative;padding:4px 0 4px 24px;margin:0 4px 0 0;border-left:2px solid #ff4d4f;border-radius:0">
+    <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
          ${renderL2('projects','📁','项目管理')}
           <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-            <div class="anno-badge pulse">2
+            <div class="anno-badge pulse">3
               <div class="anno-tip" style="white-space:normal;min-width:240px">将原来的用户管理拆分成租户管理和用户管理</div>
             </div>
           </div>
@@ -5632,10 +6301,10 @@ function buildAdminSidebar(active) {
         ${renderL3('disease-dict','疾病领域字典管理')}
         ${renderL3('hospitals','医院管理')}
          <!-- 标注1：用户管理拆分为租户管理和用户管理 -->
-        <div style="position:relative;padding:4px 0 4px 24px;margin:0 4px 0 0;border-left:2px solid #ff4d4f;border-radius:0">
+      <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
           ${renderL3('workflow','审批流设置')} 
           <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-            <div class="anno-badge pulse">1
+            <div class="anno-badge pulse">2
               <div class="anno-tip" style="white-space:normal;min-width:240px">将原来的用户管理拆分成租户管理和用户管理</div>
             </div>
           </div>
@@ -12133,7 +12802,7 @@ function getTemplateFlowDetail(type, stage) {
 function showRefTemplateModal() {
   // 引用审批流模板弹窗 — 审批流设置页面风格
   const templates = [
-    { id:1, name:'HRS-1780-301 项目审批流', ver:'v2.5.0', stage:'知情前阶段', type:'预筛审核', status:'published', isDefault:true, creator:'张管理', updater:'张管理', time:'2026-06-22 10:30' },
+    { id:1, name:'HRS-1780-301 预筛审批流', ver:'v2.5.0', stage:'知情前阶段', type:'预筛审核', status:'published', isDefault:true, creator:'张管理', updater:'张管理', time:'2026-06-22 10:30' },
     { id:2, name:'肿瘤项目通用审批流', ver:'v2.4.0', stage:'知情前阶段', type:'预筛审核', status:'published', isDefault:false, creator:'张管理', updater:'李明', time:'2026-06-18 14:20' },
     { id:3, name:'非肿瘤项目通用审批流', ver:'v2.3.0', stage:'知情前阶段', type:'预筛审核', status:'published', isDefault:false, creator:'李明', updater:'李明', time:'2026-06-15 09:15' },
     { id:4, name:'快速审批流模板', ver:'v2.1.0', stage:'知情后阶段', type:'主知情审核', status:'draft', isDefault:false, creator:'张管理', updater:'张管理', time:'2026-06-08 11:00' },
@@ -12434,9 +13103,10 @@ function closeRefTemplateModal() {
 
 // ==================== 审批模板配置（项目管理内） ====================
 let _projectApprovalData = [
-  { ver:'v2.5.0', name:'HRS-1780-301 项目审批流', type:'预筛审核', stage:'知情前阶段', isActive:true, startDate:'2026-06-01', endDate:'2026-12-31' },
-  { ver:'v2.4.0', name:'肿瘤项目通用审批流', type:'预筛审核', stage:'知情前阶段', isActive:true, startDate:'2026-06-01', endDate:'2026-06-30' },
-  { ver:'v2.3.0', name:'非肿瘤项目通用审批流', type:'入组审核', stage:'知情后阶段', isActive:false, startDate:'2026-05-01', endDate:'2026-06-30' },
+  { ver:'v2.1.0', name:'HRS-1780-301 项目预筛审批流', type:'预筛审核', stage:'知情前阶段', isActive:true, startDate:'2026-06-01', endDate:'2026-6-30' },
+  { ver:'v2.2.0', name:'HRS-1780-301 项目预筛审批流', type:'预筛审核', stage:'知情前阶段', isActive:false, startDate:'2026-07-01', endDate:'2026-08-30' },
+  { ver:'v2.1.0', name:'HRS-1780-301 项目主知情审批流', type:'主知情审核', stage:'知情前阶段', isActive:true, startDate:'2026-06-01', endDate:'2026-06-30' },
+  { ver:'v2.1.0', name:'HRS-1780-301 项目入组审批流', type:'入组审核', stage:'知情后阶段', isActive:true, startDate:'2026-06-01', endDate:'2026-06-30' },
 ];
 
 function renderProjectApprovalRows() {
@@ -12833,6 +13503,445 @@ document.addEventListener('click', function(e) {
     modal.style.display = 'none';
   }
 });
+
+// ==================== 提交审核弹窗 ====================
+const submitAuditReviewers = [
+  { value:'zhaolihua', label:'赵立花', pinyin:'zhaolihua', flows:['prescreen','informed'] },
+  { value:'zhangli',    label:'张丽',   pinyin:'zhangli',    flows:['prescreen','informed','enroll'] },
+  { value:'chenwei',    label:'陈伟',   pinyin:'chenwei',    flows:['informed','enroll'] },
+  { value:'liuyang',    label:'刘洋',   pinyin:'liuyang',    flows:['prescreen','enroll'] },
+  { value:'wangqiang',  label:'王强',   pinyin:'wangqiang',  flows:['prescreen','informed','import','enroll'] },
+  { value:'liming',     label:'李明',   pinyin:'liming',     flows:['import','enroll'] },
+  { value:'sunyue',     label:'孙悦',   pinyin:'sunyue',     flows:['prescreen'] },
+  { value:'zhoujie',    label:'周杰',   pinyin:'zhoujie',    flows:['informed','import'] },
+  { value:'wulei',      label:'吴磊',   pinyin:'wulei',      flows:['enroll'] },
+  { value:'guoxia',     label:'郭霞',   pinyin:'guoxia',     flows:['prescreen','informed'] },
+  { value:'mayun',      label:'马芸',   pinyin:'mayun',      flows:['import','enroll'] },
+  { value:'huangli',    label:'黄丽',   pinyin:'huangli',    flows:['prescreen','import'] }
+];
+
+const submitAuditFlows = [
+  { value:'prescreen', label:'预筛审核', reviewerHint:'可审核：赵立花、张丽、刘洋、王强、孙悦、郭霞、黄丽' },
+  { value:'informed',  label:'主知情审核', reviewerHint:'可审核：赵立花、张丽、陈伟、王强、周杰、郭霞' },
+  { value:'import',    label:'导入审核', reviewerHint:'可审核：王强、李明、周杰、马芸、黄丽' },
+  { value:'enroll',    label:'入组审核', reviewerHint:'可审核：张丽、陈伟、刘洋、王强、李明、吴磊、马芸' }
+];
+
+// 根据审核流程推荐可用审核人
+function getRecommendedReviewers(flow) {
+  return submitAuditReviewers.filter(r => r.flows.includes(flow));
+}
+
+// ===== 审核人联想搜索（模糊匹配） =====
+let reviewerCurrentFlow = '';
+let reviewerActiveIndex = -1;
+
+// 过滤并显示联想下拉
+function filterReviewerSuggestions() {
+  const input = document.getElementById('submitAuditReviewer');
+  const dropdown = document.getElementById('reviewerDropdown');
+  const query = (input?.value || '').trim().toLowerCase();
+  if(!query) {
+    hideReviewerDropdown();
+    updateReviewerInputStyle(false);
+    return;
+  }
+  // 从当前流程的推荐人中优先匹配，也可以匹配全局审核人
+  let candidates;
+  if(reviewerCurrentFlow) {
+    const recommended = getRecommendedReviewers(reviewerCurrentFlow);
+    const others = submitAuditReviewers.filter(r => !recommended.includes(r));
+    // 模糊匹配：拼音、中文名均可
+    const matchFn = (r) => r.label.includes(query) || r.pinyin.includes(query) || r.value.includes(query);
+    candidates = [...recommended.filter(matchFn), ...others.filter(matchFn)];
+  } else {
+    candidates = submitAuditReviewers.filter(r => r.label.includes(query) || r.pinyin.includes(query) || r.value.includes(query));
+  }
+  reviewerActiveIndex = -1;
+  if(candidates.length === 0) {
+    dropdown.innerHTML = '<div class="autocomplete-noresult">未找到匹配的审核人</div>';
+  } else {
+    dropdown.innerHTML = candidates.map((r, i) => {
+      const isRecommended = reviewerCurrentFlow && r.flows.includes(reviewerCurrentFlow);
+      const highlighted = r.label.replace(new RegExp('(' + escapeRegExp(query) + ')', 'gi'), '<span class="match-highlight">$1</span>');
+      return `<div class="autocomplete-item" data-value="${r.value}" data-label="${r.label}" data-idx="${i}" 
+        onmousedown="event.preventDefault();selectReviewer('${r.value}','${r.label}')"
+        onmouseenter="setReviewerActive(${i})">
+        <span>${highlighted}</span>
+        <span class="flow-tag ${isRecommended ? 'recommended' : ''}">${isRecommended ? '推荐' : r.flows.slice(0,2).join('/')}</span>
+      </div>`;
+    }).join('');
+  }
+  dropdown.classList.add('open');
+  updateReviewerInputStyle(false);
+}
+
+function showReviewerDropdown() {
+  const input = document.getElementById('submitAuditReviewer');
+  if(input && input.value.trim()) {
+    filterReviewerSuggestions();
+  } else {
+    // 显示当前流程的所有推荐审核人
+    showAllReviewers();
+  }
+}
+
+function showAllReviewers() {
+  const dropdown = document.getElementById('reviewerDropdown');
+  let candidates;
+  if(reviewerCurrentFlow) {
+    const recommended = getRecommendedReviewers(reviewerCurrentFlow);
+    const others = submitAuditReviewers.filter(r => !recommended.includes(r));
+    candidates = [...recommended, ...others];
+  } else {
+    candidates = [...submitAuditReviewers];
+  }
+  reviewerActiveIndex = -1;
+  dropdown.innerHTML = candidates.map((r, i) => {
+    const isRecommended = reviewerCurrentFlow && r.flows.includes(reviewerCurrentFlow);
+    return `<div class="autocomplete-item" data-value="${r.value}" data-label="${r.label}" data-idx="${i}"
+      onmousedown="event.preventDefault();selectReviewer('${r.value}','${r.label}')"
+      onmouseenter="setReviewerActive(${i})">
+      <span>${r.label}</span>
+      <span class="flow-tag ${isRecommended ? 'recommended' : ''}">${isRecommended ? '推荐' : r.flows.slice(0,2).join('/')}</span>
+    </div>`;
+  }).join('');
+  dropdown.classList.add('open');
+}
+
+function hideReviewerDropdown() {
+  const dropdown = document.getElementById('reviewerDropdown');
+  if(dropdown) dropdown.classList.remove('open');
+}
+
+function selectReviewer(value, label) {
+  // 如果该审核人不在当前流程推荐中，给出提示
+  if(reviewerCurrentFlow) {
+    const reviewer = submitAuditReviewers.find(r => r.value === value);
+    if(reviewer && !reviewer.flows.includes(reviewerCurrentFlow)) {
+      showWechatToast('⚠️ 该审核人不在「' + (submitAuditFlows.find(f=>f.value===reviewerCurrentFlow)?.label||'') + '」的推荐列表中，请确认');
+    }
+  }
+  document.getElementById('submitAuditReviewer').value = label;
+  document.getElementById('submitAuditReviewerValue').value = value;
+  hideReviewerDropdown();
+  updateReviewerInputStyle(true);
+}
+
+function setReviewerActive(idx) {
+  reviewerActiveIndex = idx;
+  const items = document.querySelectorAll('#reviewerDropdown .autocomplete-item');
+  items.forEach((item, i) => item.classList.toggle('active', i === idx));
+}
+
+function updateReviewerInputStyle(hasValue) {
+  const input = document.getElementById('submitAuditReviewer');
+  if(input) input.classList.toggle('has-value', hasValue);
+}
+
+// 更新审核人推荐上下文（不展示人名，体现在下拉联想中）
+function updateReviewerHint(flow) {
+  reviewerCurrentFlow = flow;
+  const hintPanel = document.getElementById('reviewerHintText');
+  if(!flow) {
+    if(hintPanel) hintPanel.textContent = '选择审核流程后自动推荐可选审核人';
+    return;
+  }
+  const flowObj = submitAuditFlows.find(f => f.value === flow);
+  if(hintPanel) hintPanel.textContent = '输入姓名搜索';
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// 根据患者状态推荐下一步审核流程
+function getRecommendedFlow(patientStatus) {
+  // 项目配置的标准审核流程：预筛审核 → 主知情审核 → 入组审核
+  const flowMap = {
+    '未提交':     { flow:'prescreen', label:'预筛审核', hint:'患者尚未提交任何审核，建议从预筛审核开始' },
+    '预筛驳回':   { flow:'prescreen', label:'预筛审核', hint:'上次预筛审核被驳回，建议重新提交预筛审核' },
+    '预筛通过':   { flow:'informed',  label:'主知情审核', hint:'预筛审核已通过，下一步建议提交主知情审核' },
+    '主知情通过': { flow:'enroll',    label:'入组审核', hint:'主知情审核已通过，下一步建议提交入组审核' },
+    '入组筛败':   { flow:'informed',  label:'主知情审核', hint:'入组审核未通过，建议重新走主知情审核流程' },
+  };
+  return flowMap[patientStatus] || { flow:'prescreen', label:'预筛审核', hint:'患者当前状态：' + (patientStatus || '未知') + '，默认推荐预筛审核' };
+}
+
+function openSubmitAuditModal(schemeNo, patientIndex) {
+  const patients = scPatientData[schemeNo] || [];
+  const patient = patients[patientIndex];
+  if(!patient) {
+    showWechatToast('未找到患者数据');
+    return;
+  }
+  const project = scProjectData.find(p => p.schemeNo === schemeNo);
+  const projectName = project ? project.name : schemeNo;
+
+  // 智能推荐审核流程
+  const recommended = getRecommendedFlow(patient.patientStatus);
+
+  // 先移除已有的弹窗（如有）
+  let modal = document.getElementById('submitAuditModal');
+  if(modal) modal.remove();
+
+  modal = document.createElement('div');
+  modal.id = 'submitAuditModal';
+  modal.className = 'submit-audit-overlay open';
+  modal.innerHTML = `
+    <div class="submit-audit-panel">
+      <div class="submit-audit-header">
+        <span class="submit-audit-title">
+          <i class="fa-solid fa-paper-plane" style="color:#165DFF;margin-right:8px"></i>提交审核
+        </span>
+        <button class="submit-audit-close" onclick="closeSubmitAuditModal()">&times;</button>
+      </div>
+       <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 加了审核流程的选择，可以从项目已配置的生效的流程中选择 提交哪个流程</div>
+            <div>② 下面提示把目前的审核流程展示出来</div>
+            <div>③ 审核流程 默认选中 应该去执行的流程，就是目前系统现行的固定死的流程</div>
+            <div>④ 当选择了审核流程之后，审核人也需要随着变动，跟流程绑定</div>
+            </div>
+        </div>
+      <div class="submit-audit-body">
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">方案编码</label>
+          <div class="submit-audit-form-control">
+            <input type="text" class="submit-audit-input readonly" value="${schemeNo} - ${projectName}" readonly />
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">参研中心</label>
+          <div class="submit-audit-form-control">
+            <input type="text" class="submit-audit-input" value="${patient.center}" readonly style="background:#f5f5f5;cursor:not-allowed" />
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">患者编号</label>
+          <div class="submit-audit-form-control">
+            <input type="text" class="submit-audit-input readonly" value="${patient.patientNo} - ${patient.nameAbbr}" readonly />
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">审核流程</label>
+          <div class="submit-audit-form-control">
+            <select class="submit-audit-select" id="submitAuditFlow">
+              <option value="">请选择审核流程</option>
+              ${submitAuditFlows.map(f => `<option value="${f.value}" ${f.value === recommended.flow ? 'selected' : ''}>${f.label}</option>`).join('')}
+            </select>
+            <div style="margin-top:6px;padding:8px 12px;background:#f0f5ff;border:1px solid #d6e4ff;border-radius:6px;display:flex;align-items:flex-start;gap:8px">
+              <i class="fa-solid fa-lightbulb" style="color:#1677ff;font-size:13px;margin-top:1px;flex-shrink:0"></i>
+              <div style="font-size:12px;color:#1d39c4;line-height:1.6">
+                <strong>推荐：${recommended.label}</strong>
+                <div style="margin-top:4px;padding-top:4px;border-top:1px dashed #d6e4ff;color:#85a5ff">项目审核链路：<strong>预筛审核</strong> → <strong>主知情审核</strong> → <strong>入组审核</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">审核人</label>
+          <div class="submit-audit-form-control">
+            <div class="autocomplete-wrapper" id="reviewerAutocomplete">
+              <input
+                type="text"
+                class="autocomplete-input"
+                id="submitAuditReviewer"
+                placeholder="输入姓名模糊搜索审核人&#10;"
+                autocomplete="off"
+               
+              />
+              <div class="autocomplete-dropdown" id="reviewerDropdown"></div>
+              <input type="hidden" id="submitAuditReviewerValue" />
+            </div>
+            <div id="reviewerHintPanel" style="margin-top:4px;font-size:11px;color:#999;display:flex;align-items:center;gap:4px">
+              <i class="fa-solid fa-lightbulb" style="color:#1677ff;font-size:11px"></i>
+              <span id="reviewerHintText">输入姓名或拼音搜索，推荐审核人排在前面</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label">重点关注</label>
+          <div class="submit-audit-form-control" style="line-height:34px;display:flex;align-items:center">
+            <span style="font-size:13px;color:#888;">无重点关注项</span>
+            <a class="submit-audit-ref-link" onclick="openRefKeyConcern('${schemeNo}', ${patientIndex})">引用</a>
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label">备注</label>
+          <div class="submit-audit-form-control">
+            <textarea class="submit-audit-textarea" id="submitAuditRemark" placeholder="请输入备注"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="submit-audit-footer">
+        <button class="submit-audit-btn submit-audit-btn-cancel" onclick="closeSubmitAuditModal()">取消</button>
+        <button class="submit-audit-btn submit-audit-btn-submit" onclick="submitAudit('${schemeNo}', ${patientIndex})">
+          <i class="fa-solid fa-check"></i> 提交审核
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+
+  // 点击遮罩关闭
+  modal.addEventListener('click', function(e) {
+    if(e.target === modal) closeSubmitAuditModal();
+  });
+
+  // ESC 关闭
+  const escHandler = function(e) {
+    if(e.key === 'Escape') { closeSubmitAuditModal(); document.removeEventListener('keydown', escHandler); }
+  };
+  document.addEventListener('keydown', escHandler);
+
+  // 初始化审核流程推荐审核人
+  const initialFlow = document.getElementById('submitAuditFlow')?.value;
+  if(initialFlow) updateReviewerHint(initialFlow);
+
+  // 审核流程变更时自动更新推荐审核人，并展开联想下拉
+  const flowSelect = document.getElementById('submitAuditFlow');
+  if(flowSelect) {
+    flowSelect.addEventListener('change', function() {
+      const selectedFlow = this.value;
+      updateReviewerHint(selectedFlow);
+      // 清空之前选择的审核人（如果不在新流程推荐中）
+      const currentReviewerVal = document.getElementById('submitAuditReviewerValue')?.value;
+      if(currentReviewerVal) {
+        const reviewer = submitAuditReviewers.find(r => r.value === currentReviewerVal);
+        if(!reviewer || !reviewer.flows.includes(selectedFlow)) {
+          document.getElementById('submitAuditReviewer').value = '';
+          document.getElementById('submitAuditReviewerValue').value = '';
+          updateReviewerInputStyle(false);
+        }
+      }
+      // 自动展开联想下拉，方便快速选择推荐审核人
+      if(selectedFlow) { showAllReviewers(); }
+    });
+  }
+
+  // 点击弹窗其他区域关闭联想下拉
+  document.addEventListener('click', function closeDropdown(e) {
+    const wrapper = document.getElementById('reviewerAutocomplete');
+    const dropdown = document.getElementById('reviewerDropdown');
+    if(wrapper && dropdown && !wrapper.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  }, { once: true });
+}
+
+function closeSubmitAuditModal() {
+  const modal = document.getElementById('submitAuditModal');
+  if(modal) { modal.remove(); }
+  document.body.style.overflow = '';
+}
+
+function submitAudit(schemeNo, patientIndex) {
+  const reviewerValue = document.getElementById('submitAuditReviewerValue')?.value;
+  const reviewerLabel = document.getElementById('submitAuditReviewer')?.value;
+  const flow = document.getElementById('submitAuditFlow')?.value;
+  const remark = document.getElementById('submitAuditRemark')?.value || '';
+
+  if(!reviewerValue) {
+    showWechatToast('请选择审核人');
+    return;
+  }
+  if(!flow) {
+    showWechatToast('请选择审核流程');
+    return;
+  }
+
+  const patients = scPatientData[schemeNo] || [];
+  const patient = patients[patientIndex];
+  if(!patient) { closeSubmitAuditModal(); return; }
+
+  const reviewerName = reviewerLabel || reviewerValue;
+  const flowLabel = submitAuditFlows.find(f => f.value === flow)?.label || flow;
+
+  closeSubmitAuditModal();
+
+  // 更新患者状态
+  patient.patientStatus = '待审核';
+  document.getElementById('scContent').innerHTML = buildScPatientListContent();
+
+  showWechatToast('审核提交成功！<br>审核流程：' + flowLabel + '｜审核人：' + reviewerName + '｜患者：' + patient.patientNo);
+}
+
+// 引用重点关注的弹窗
+function openRefKeyConcern(schemeNo, patientIndex) {
+  const patients = scPatientData[schemeNo] || [];
+  const patient = patients[patientIndex];
+  if(!patient) return;
+
+  let modal = document.getElementById('refKeyConcernModal');
+  if(modal) modal.remove();
+
+  // 模拟已有的重点关注项数据
+  const concerns = [
+    { id:1, label:'高血压病史', checked:false },
+    { id:2, label:'肝功能异常指标', checked:false },
+    { id:3, label:'肾功能不全', checked:false },
+    { id:4, label:'既往用药史有禁忌', checked:false },
+    { id:5, label:'过敏体质', checked:false }
+  ];
+
+  modal = document.createElement('div');
+  modal.id = 'refKeyConcernModal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:100002;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:12px;width:440px;max-width:95vw;max-height:70vh;box-shadow:0 20px 60px rgba(0,0,0,0.25);display:flex;flex-direction:column">
+      <div style="padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <span style="font-size:15px;font-weight:600;color:#333"><i class="fa-solid fa-triangle-exclamation" style="color:#faad14;margin-right:8px"></i>引用重点关注项</span>
+        <button style="background:none;border:none;font-size:18px;color:#999;cursor:pointer;line-height:1" onclick="closeRefKeyConcern()">&times;</button>
+      </div>
+      <div style="padding:16px 20px;overflow-y:auto;flex:1">
+        <div style="font-size:12px;color:#888;margin-bottom:12px">勾选需要引用的重点关注项，提交后将同步到审核流程中</div>
+        ${concerns.map(c => `
+          <label style="display:flex;align-items:center;padding:10px 12px;border:1px solid #f0f0f0;border-radius:6px;margin-bottom:8px;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='#fff'">
+            <input type="checkbox" value="${c.id}" class="ref-concern-check" style="accent-color:#165DFF;margin-right:10px" />
+            <span style="font-size:13px;color:#333">${c.label}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0">
+        <button style="padding:7px 18px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;color:#333;font-size:13px;cursor:pointer" onclick="closeRefKeyConcern()">取消</button>
+        <button style="padding:7px 18px;border:none;border-radius:6px;background:#165DFF;color:#fff;font-size:13px;cursor:pointer" onclick="confirmRefKeyConcern()"><i class="fa-solid fa-check"></i> 确认引用</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // 点击遮罩关闭
+  modal.addEventListener('click', function(e) {
+    if(e.target === modal) closeRefKeyConcern();
+  });
+}
+
+function closeRefKeyConcern() {
+  const modal = document.getElementById('refKeyConcernModal');
+  if(modal) { modal.remove(); }
+}
+
+function confirmRefKeyConcern() {
+  const checks = document.querySelectorAll('.ref-concern-check:checked');
+  const labels = Array.from(checks).map(cb => {
+    const label = cb.parentElement.querySelector('span');
+    return label ? label.textContent : '';
+  }).filter(Boolean);
+
+  closeRefKeyConcern();
+
+  if(labels.length > 0) {
+    showWechatToast('已引用重点关注项：' + labels.join('、'));
+  } else {
+    showWechatToast('未选择任何重点关注项');
+  }
+}
 </script>
 </body>
 </html>

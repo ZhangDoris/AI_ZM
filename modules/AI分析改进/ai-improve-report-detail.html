@@ -302,6 +302,60 @@
       color: #fa8c16;
       margin-bottom: 12px;
     }
+    /* 长文本截断 + 展开/收起 */
+    .cause-text-wrapper {
+      position: relative;
+      background: #fafafa;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+    }
+    .cause-label-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #e8e8e8;
+      border-radius: 6px 6px 0 0;
+    }
+    .cause-label-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #1677ff;
+      font-weight: 500;
+    }
+    .cause-label-tag i { font-size: 10px; }
+    .cause-text-content {
+      color: #4a4a4a;
+      font-size: 13px;
+      line-height: 1.8;
+      padding: 12px 14px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .cause-text-content.collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .cause-expand-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #1677ff;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 12px;
+      border-radius: 0 0 4px 4px;
+      transition: all 0.2s;
+    }
+    .cause-expand-btn:hover { color: #fff; background: #1677ff; }
     
     /* 文本域 */
     textarea.editable {
@@ -1041,17 +1095,6 @@
       
       <!-- 第二步：改进方案 -->
       <div class="report-step-content" id="stepContent2">
-        <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
-            <div><strong>开发提示：</strong></div>
-            <div>①「入排标准2」来源于模型返回，对应到具体入排标准上；</div>
-            <div>②「对他汀使用的判定过于严格」来源于模型返回的对比结论；</div>
-            <div>③「影响 103 例 (56.0%)」来源于模型返回；</div>
-            <div>④ 模型得出此结论的依据来源于哪些患者审核记录，需将这些患者的<strong>唯一标识</strong>返回并存储记录。</div>
-          </div>
-        </div>
         <div class="content-card">
           <h3><i class="fas fa-edit" style="color:#1677ff"></i> 改进方案 <span style="font-size:12px;font-weight:400;color:#aaa">(支持编辑)</span></h3>
           <div class="save-notice">
@@ -1377,8 +1420,9 @@
     
     // 改进建议数据
     const improvements = [
-      { id: 1, priority: 'P0', cause: '入选标准2：对他汀使用的判定过于严格', affectedCount: 103, improvement: '识别依折麦布、血脂康、脂必泰等等效降脂方案', prompt: '当患者使用依折麦布、血脂康、脂必泰等降脂药物时，视为等效他汀类方案，不判定为不符合。', prescreen: true, enrolling: false, modifyStatus: 'modified', modifiedAt: '2026-06-10', runCount: 3, modifiedAtRun: 2, version: 'v1.3' },
-      { id: 2, priority: 'P0', cause: '排除标准27：TSH轻微偏离正常值就判定排除', affectedCount: 80, improvement: 'TSH轻微偏离正常下限（如偏离<15%）时不直接排除', prompt: '当TSH值在正常范围下限的±15%范围内时，不直接判定为排除。', prescreen: false, enrolling: true, modifyStatus: 'not_modified', modifiedAt: null, runCount: 3, modifiedAtRun: null, version: 'v1.0' },
+      { id: 1, priority: 'P0', cause: '入选标准2：病理学确诊的胃癌或胃食管结合部癌的患者，组织学检查证实为腺癌，且未接受过针对胃癌和胃食管结合部癌的抗肿瘤治疗', affectedCount: 103, improvement: '识别依折麦布、血脂康、脂必泰等等效降脂方案', prompt: '当患者使用依折麦布、血脂康、脂必泰等降脂药物时，视为等效他汀类方案，不判定为不符合。', prescreen: true, enrolling: false, modifyStatus: 'modified', modifiedAt: '2026-06-10', runCount: 3, modifiedAtRun: 2, version: 'v1.3' },
+      { id: 6, priority: 'P0', cause: '入选标准1：有充足的器官和骨髓功能，定义如下：\na）血常规检查：（筛查前14天内未接受过任何直接纠正治疗，如促红细胞生成素、输血、白/粒细胞集落刺激因子、白介素、血小板生成素等；不包括辅助用药如铁剂或地榆升白片、升血小板胶囊等中成药）\n·白细胞计数（WBC）≥3,000/mm³(3.0×10^9/L)\n·嗜中性粒细胞计数（ANC）≥1,500/mm³(1.5×10^9/L)\n·血小板计数（PLT）≥100,000/mm³(100×10^9/L)\n·血红蛋白（Hb）≥9.0g/dL(90g/L)\nb）生化检查：（筛查前14天内未输注白蛋白）\n·血清白蛋白≥3.0g/dL(30g/L)\n·肌酐清除率≥50mL/min（使用Cockcroft-Gault公式计算）\n·总胆红素（BIL）≤1.5倍正常值上限（ULN）\n·谷草转氨酶（AST/SGOT）和谷丙转氨酶（ALT/SGPT）水平≤2.5倍正常值上限（ULN）\nc）国际标准化比值（INR）≤1.5，凝血酶原时间（PT）和活化部分凝血活酶时间（APTT）≤1.5倍ULN\nd）尿蛋白＜2+；如果尿蛋白≥2+，则24小时尿蛋白定量显示蛋白质必须≤1g\ne）心电图检查：Fridericia公式校正QT间期(QTcF)≤470ms\nf）心脏彩超检查：左室射血分数（LVEF）≥50%', affectedCount: 56, improvement: '细化器官功能各项指标判断规则，对边界值做弹性处理', prompt: '当患者的器官功能指标在正常值±10%范围内时，不直接判定为不符合，标记为"异常关注"供研究者复核。', prescreen: true, enrolling: true, modifyStatus: 'not_modified', modifiedAt: null, runCount: 1, modifiedAtRun: null, version: 'v1.0' },
+      { id: 2, priority: 'P0', cause: '排除标准27：TSH轻微偏离正常值就判定排除', affectedCount: 80, improvement: '胃癌或适用于AJCC第8版胃癌分期标准的胃食管结合部癌，在随机前4周内，由研究者根据AJCC第8版胃癌分期标准确认临床分期为T3-4bNany或T2N＋，且无远处转移的患者。建议受试者随机前4周内行腹腔镜探查术及腹腔脱落细胞学检查，必要时行腹腔组织活检，以确认无腹腔远处转移', prescreen: false, enrolling: true, modifyStatus: 'not_modified', modifiedAt: null, runCount: 3, modifiedAtRun: null, version: 'v1.0' },
       { id: 3, priority: 'P1', cause: '排除标准33：研究者评估依从性', affectedCount: 75, improvement: '"研究者评估依从性"不应由AI做出yes/no判定', prompt: '当遇到"研究者评估依从性"相关标准时，改为提示研究者评估。', prescreen: false, enrolling: false, modifyStatus: 'not_modified', modifiedAt: null, runCount: 2, modifiedAtRun: null, version: 'v1.0' },
       { id: 4, priority: 'P1', cause: '涉及ASCVD风险评估', affectedCount: 46, improvement: '训练AI识别中危/高危/极高危/超高危四种风险层级', prompt: '当标准涉及ASCVD风险评估时，提示"请研究者进行ASCVD风险分层评估"。', prescreen: true, enrolling: true, modifyStatus: 'modified', modifiedAt: '2026-06-12', runCount: 2, modifiedAtRun: 1, version: 'v1.2' },
       { id: 5, priority: 'P2', cause: '边界值判断：指标接近下限/上限时缺乏弹性', affectedCount: 50, improvement: '当指标值在标准值的±10%范围内时，不直接判定为不符合', prompt: '当指标值在标准值范围的±10%偏差内时，提示"指标轻微异常，请研究者确认"。', prescreen: false, enrolling: false, modifyStatus: 'pending', modifiedAt: null, runCount: 1, modifiedAtRun: null, version: 'v1.0' }
@@ -1454,6 +1498,45 @@
       return badge + runInfo;
     }
     
+    // 生成可折叠的长文本
+    // 长文本阈值：超过120字符或包含换行超过4行时启用折叠
+    function makeCauseText(imp) {
+      var text = imp.cause || '';
+      var lines = text.split('\n');
+      var needsCollapse = text.length > 120 || lines.length > 5;
+      if (!needsCollapse) {
+        return '<div class="cause-text-wrapper">' +
+          '<div class="cause-label-bar">' +
+            '<span class="cause-label-tag"><i class="fas fa-file-alt"></i> 原始入排内容</span>' +
+          '</div>' +
+          '<div class="cause-text-content">' + text + '</div>' +
+        '</div>';
+      }
+      return '<div class="cause-text-wrapper">' +
+        '<div class="cause-label-bar">' +
+          '<span class="cause-label-tag"><i class="fas fa-file-alt"></i> 原始入排内容</span>' +
+          '<span class="cause-expand-btn" id="causeBtn-' + imp.id + '" onclick="toggleCause(' + imp.id + ')">' +
+            '<i class="fas fa-angle-down"></i> 展开' +
+          '</span>' +
+        '</div>' +
+        '<div class="cause-text-content collapsed" id="causeContent-' + imp.id + '">' + text + '</div>' +
+      '</div>';
+    }
+    
+    // 展开/收起长文本
+    function toggleCause(id) {
+      var content = document.getElementById('causeContent-' + id);
+      var btn = document.getElementById('causeBtn-' + id);
+      if (!content || !btn) return;
+      if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        btn.innerHTML = '<i class="fas fa-angle-up"></i> 收起';
+      } else {
+        content.classList.add('collapsed');
+        btn.innerHTML = '<i class="fas fa-angle-down"></i> 展开';
+      }
+    }
+
     // 渲染改进建议
     function renderImprovements(item) {
       const container = document.getElementById('improvementsList');
@@ -1467,7 +1550,6 @@
         
         return '<div class="improvement-card">' +
           '<div class="improvement-header">' +
-            '<span class="badge ' + priorityClass + '">' + imp.priority + '</span>' +
             '<span style="font-size:14px;font-weight:600;color:#333">建议 #' + imp.id + '</span>' +
             '<span style="background:#e6f7ff;color:#1677ff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;margin-left:8px">' + imp.version + '</span>' +
             statusBadge +
@@ -1493,20 +1575,14 @@
             '</div>' +
           '</div>' +
           '<div class="improvement-body">' +
-            '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
-              '<div class="warning-text" style="margin-bottom:0">' + imp.cause + '</div>' +
-            '</div>' +
-            '<div class="remark-note" style="margin-bottom:12px">' +
+             '<div class="remark-note" style="margin-bottom:12px">' +
               '<i class="fas fa-database"></i> <strong>' + standardText + '</strong>：此建议对应的标准为 <strong>' + standardText + '</strong>，影响 ' + imp.affectedCount + ' 例 (' + pct + '%)，与入排标准数据直接关联' +
             '</div>' +
-            '<div style="margin-bottom:12px">' +
-              '<div style="font-size:12px;color:#999;margin-bottom:6px;display:flex;align-items:center;gap:6px">改进方案' +
-                '<span style="display:inline-flex;align-items:center;gap:2px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:3px;padding:1px 6px;font-size:10px;color:#ff4d4f;font-weight:400">' +
-                  '<i class="fas fa-exclamation-triangle" style="font-size:9px"></i> 开发提示：来源于模型返回结论，后端需存储并记录修改情况' +
-                '</span>' +
-              '</div>' +
-              '<textarea class="editable" id="improvement-' + imp.id + '">' + imp.improvement + '</textarea>' +
+          
+            '<div style="margin-bottom:8px">' +
+              makeCauseText(imp) +
             '</div>' +
+           
             '<div style="margin-bottom:12px">' +
               '<div style="font-size:12px;color:#999;margin-bottom:6px;display:flex;align-items:center;gap:6px">提示词' +
                 '<span style="display:inline-flex;align-items:center;gap:2px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:3px;padding:1px 6px;font-size:10px;color:#ff4d4f;font-weight:400">' +

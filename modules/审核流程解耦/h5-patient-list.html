@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>患者列表 - 智能预筛</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      color: #333;
+    }
+    /* 顶部导航栏 */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+      height: 55px;
+      box-sizing: border-box;
+    }
+    .nav-bar .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .nav-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #555;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-btn:active { background: #eee; }
+    .nav-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 600;
+    }
+    /* Tab切换 */
+    .tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 55px;
+      z-index: 99;
+      height: 46px;
+      box-sizing: border-box;
+    }
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 15px;
+      color: #888;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-item.active {
+      color: #165DFF;
+      font-weight: 600;
+    }
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 3px;
+      background: #165DFF;
+      border-radius: 2px;
+    }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      background: #F53F3F;
+      color: #fff;
+      font-size: 11px;
+      padding: 0 5px;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+    /* 搜索框 */
+    .search-bar {
+      padding: 10px 0;
+      background: #fff;
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 8px 12px;
+      gap: 8px;
+    }
+    .search-input-wrap i {
+      color: #999;
+      font-size: 14px;
+    }
+    .search-input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 14px;
+      color: #333;
+    }
+    .search-input-wrap input::placeholder { color: #bbb; }
+    /* 筛选区 */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      background: #fff;
+    }
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #555;
+      background: #f5f5f5;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .filter-chip:active { background: #e8e8e8; }
+    .filter-chip i { font-size: 10px; color: #999; }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      cursor: pointer;
+      margin-left: auto;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .add-btn:active { opacity: 0.85; }
+    /* 患者卡片 */
+    .patient-card {
+      background: #fff;
+      margin: 4px;
+      border-radius: 0px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .patient-info { display: flex; flex-direction: column; gap: 2px; }
+    .patient-name {
+      font-size: 16px; font-weight: 600; color: #1a1a1a;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .patient-meta {
+      font-size: 12px; color: #999;
+      display: flex; gap: 8px;
+    }
+    .card-header-right {
+      display: flex; gap: 6px;
+    }
+    .icon-btn {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #999;
+      font-size: 14px;
+      cursor: pointer;
+      background: #f5f5f5;
+      transition: all 0.2s;
+    }
+    .icon-btn:active { background: #e0e0e0; color: #333; }
+    /* 状态标签 */
+    .status-tags {
+      display: flex; gap: 6px;
+      padding: 10px 16px;
+      flex-wrap: wrap;
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-matched { background: #E8F5E9; color: #2E7D32; }
+    .tag-unmatched { background: #FFF3E0; color: #E65100; }
+    .tag-unsubmit { background: #F3E5F5; color: #7B1FA2; }
+    .tag-submitted { background: #E3F2FD; color: #1565C0; }
+    /* 中心与操作人信息 */
+    .card-info-row {
+      display: flex; align-items: center;
+      padding: 6px 16px;
+      gap: 20px;
+      font-size: 13px; color: #666;
+    }
+    .card-info-row i { color: #999; font-size: 12px; width: 16px; text-align: center; }
+    .card-info-row span { display: flex; align-items: center; gap: 4px; }
+    /* 操作按钮组 */
+    .action-btns {
+      display: flex; gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid #f5f5f5;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+    }
+    .btn-primary:active { opacity: 0.85; }
+    .btn-outline {
+      background: #fff;
+      color: #165DFF;
+      border: 1px solid #165DFF;
+    }
+    .btn-outline:active { background: #f0f5ff; }
+    .btn-ghost {
+      background: #f5f5f5;
+      color: #555;
+    }
+    .btn-ghost:active { background: #e8e8e8; }
+    /* 病史与资料 可展开区 */
+    .expand-section {
+      border-top: 1px solid #f5f5f5;
+    }
+    .expand-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px; color: #666;
+      user-select: none;
+    }
+    .expand-header-left {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .expand-header i.fa-chevron-down {
+      transition: transform 0.25s ease;
+      font-size: 12px; color: #999;
+    }
+    .expand-header.expanded i.fa-chevron-down {
+      transform: rotate(180deg);
+    }
+    .expand-body {
+      display: none;
+      padding: 0 16px 14px;
+    }
+    .expand-body.show { display: block; }
+    .history-item {
+      display: flex; justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px; color: #555;
+      border-bottom: 1px dashed #f0f0f0;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .hi-label { color: #999; }
+    .data-tag-row {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;
+    }
+    .data-tag {
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #E8F5FE;
+      color: #1976D2;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .data-tag i { font-size: 11px; }
+    .data-tag:active { background: #BBDEFB; }
+    /* 底部占位 */
+    .bottom-spacer { height: 20px; }
+
+    /* 弹窗(Toast) */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #fff;
+      padding: 10px 24px; border-radius: 8px;
+      font-size: 14px; z-index: 999;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* 中心选择器面板 */
+    .center-panel {
+      display: none;
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 200;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      animation: slideUp 0.25s ease;
+    }
+    .center-panel.show { display: block; }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100%); }
+      to { transform: translateX(-50%) translateY(0); }
+    }
+    .panel-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 199;
+    }
+    .panel-overlay.show { display: block; }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px; font-weight: 600;
+    }
+    .panel-close {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; background: #f5f5f5;
+      font-size: 16px; color: #999; cursor: pointer;
+    }
+    .panel-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .panel-item:active { background: #f9f9f9; }
+    .panel-item.active { color: #165DFF; }
+    .panel-item.active::after {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    /* 提交审核弹窗 - H5手机端底部弹出 */
+    .audit-modal {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 300;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      animation: slideUp 0.3s ease;
+      overflow-y: auto;
+      max-height: 85vh;
+    }
+    .audit-modal.show { display: block; }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100%); }
+      to { transform: translateX(-50%) translateY(0); }
+    }
+    .audit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    .audit-header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+    .audit-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f5f5f5;
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+    }
+    .audit-close:active { background: #e8e8e8; }
+    .audit-form {
+      padding: 20px 16px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .form-label .required {
+      color: #F53F3F;
+      margin-right: 4px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      background: #f9f9f9;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: #165DFF;
+      background: #fff;
+    }
+    .form-input::placeholder { color: #bbb; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .form-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      background: #f9f9f9;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-textarea:focus {
+      border-color: #165DFF;
+      background: #fff;
+    }
+    .form-textarea::placeholder { color: #bbb; }
+    .audit-footer {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid #eee;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .audit-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .audit-btn:active { opacity: 0.85; }
+    .audit-btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+      border: 1px solid #ddd;
+    }
+    .audit-btn-submit {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+    }
+
+    /* 智能推荐卡片 */
+    .smart-recommend-card {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #E8F4FF 0%, #F0F7FF 100%);
+      border: 1px solid #B3D8FF;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .recommend-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .recommend-header i {
+      font-size: 14px;
+    }
+    .recommend-body {
+      padding: 12px;
+    }
+    .recommend-text {
+      font-size: 13px;
+      color: #555;
+      margin: 0 0 10px 0;
+      line-height: 1.5;
+    }
+    .audit-chain {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed #B3D8FF;
+      flex-wrap: wrap;
+    }
+    .chain-label {
+      font-size: 12px;
+      color: #888;
+      font-weight: 500;
+    }
+    .chain-item {
+      font-size: 13px;
+      color: #165DFF;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #165DFF;
+    }
+    .chain-item.chain-active {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+      border-color: #165DFF;
+    }
+    .chain-arrow {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+    }
+
+    /* 需求说明面板 — 右侧抽屉 */
+    .prd-drawer {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      width: 20vw;
+      min-width: 300px;
+      max-width: 480px;
+      height: calc(100vh - 56px);
+      background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+      z-index: 60;
+      transform: translateX(100%);
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #e8e8e8;
+    }
+    .prd-drawer.expanded {
+      transform: translateX(0);
+    }
+    .prd-drawer-handle {
+      position: absolute;
+      left: -56px;
+      top: 160px;
+      width: 56px;
+      height: 140px;
+      background: linear-gradient(180deg, #1677ff 0%, #0958d9 100%);
+      color: #fff;
+      border-radius: 10px 0 0 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: -4px 0 22px rgba(22,119,255,0.45);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 61;
+    }
+    .prd-drawer-handle::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: #fff;
+      opacity: 0.3;
+      border-radius: 10px 0 0 10px;
+    }
+    .prd-drawer-handle:hover {
+      width: 64px;
+      left: -64px;
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -6px 0 30px rgba(22,119,255,0.65);
+    }
+    .prd-drawer-handle:active {
+      background: linear-gradient(180deg, #0958d9 0%, #0047b3 100%);
+      box-shadow: -2px 0 12px rgba(22,119,255,0.4);
+      transition: all 0.08s;
+    }
+    .prd-drawer-handle .handle-text {
+      writing-mode: vertical-rl;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 6px;
+    }
+    .prd-drawer-handle .handle-icon {
+      font-size: 18px;
+    }
+    .prd-drawer-handle .handle-hint {
+      position: absolute;
+      right: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .prd-drawer-handle:hover .handle-hint {
+      opacity: 1;
+    }
+    /* 抽屉展开时把手隐藏 */
+    .prd-drawer.expanded .prd-drawer-handle {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    .prd-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .prd-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1677ff;
+      flex-shrink: 0;
+      margin: 0 20px;
+      padding-top: 16px;
+    }
+    .prd-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1677ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prd-panel-close {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: #f5f5f5;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .prd-panel-close:hover {
+      background: #ff4d4f;
+      color: white;
+    }
+    /* 手机端 */
+    @media (max-width: 768px) {
+      .prd-drawer {
+        width: 85vw;
+        min-width: unset;
+        max-width: unset;
+      }
+    }
+    .prd-section {
+      margin-bottom: 16px;
+    }
+    .prd-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      border-left: 3px solid #1677ff;
+    }
+    .prd-section-content {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.8;
+      padding-left: 13px;
+    }
+    .prd-section-content ul {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+    .prd-section-content ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    .prd-section-content li {
+      margin-bottom: 4px;
+    }
+    .prd-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .prd-badge-admin {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+    .prd-badge-core {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+    .prd-badge-data {
+      background: #f0f5ff;
+      color: #1677ff;
+      border: 1px solid #91caff;
+    }
+
+  </style>
+</head>
+<body>
+    <div>
+
+
+
+
+
+ 
+  <!-- 顶部导航栏 -->
+  <div class="nav-bar">
+    <div class="nav-btn" onclick="history.back()"><i class="fas fa-chevron-left"></i></div>
+    <span class="nav-title">患者列表</span>
+    <div class="nav-avatar">我</div>
+  </div>
+
+  <!-- Tab切换 -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('pending')">
+      待操作<span class="tab-badge">10</span>
+    </div>
+    <div class="tab-item" onclick="switchTab('all')">患者列表</div>
+  </div>
+
+  <!-- 搜索+筛选区（sticky） -->
+  <div style="position:sticky;top:101px;z-index:98;background:#fff;padding:0 16px;">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="请输入搜索关键词" oninput="filterPatients()">
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-chip" onclick="showCenterPanel()">
+        <span id="selectedCenter">全部中心</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="add-btn" onclick="toastMsg('新增患者功能')">
+        <i class="fas fa-plus"></i> 新增患者
+      </div>
+    </div>
+  </div>
+
+  <!-- 患者列表容器 -->
+  <div id="patientList"></div>
+  <div class="bottom-spacer"></div>
+
+  <!-- 中心选择面板 -->
+  <div class="panel-overlay" id="panelOverlay" onclick="hideCenterPanel(); closeAuditModal();"></div>
+  <div class="center-panel" id="centerPanel">
+    <div class="panel-header">
+      <span>选择中心</span>
+      <div class="panel-close" onclick="hideCenterPanel()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="panel-item active" onclick="selectCenter('全部中心', this)">全部中心</div>
+    <div class="panel-item" onclick="selectCenter('北京协和医院', this)">北京协和医院</div>
+    <div class="panel-item" onclick="selectCenter('上海瑞金医院', this)">上海瑞金医院</div>
+    <div class="panel-item" onclick="selectCenter('广州中山医院', this)">广州中山医院</div>
+    <div class="panel-item" onclick="selectCenter('华西医院', this)">华西医院</div>
+    <div class="panel-item" onclick="selectCenter('武汉同济医院', this)">武汉同济医院</div>
+    <div style="height: 30px;"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- 提交审核弹窗 - H5手机端底部弹出 -->
+  <div class="audit-modal" id="auditModal">
+    <div class="audit-header">
+      <span class="audit-header-title">提交审核</span>
+      <div class="audit-close" onclick="closeAuditModal()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="audit-form">
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>方案编码：</label>
+        <input type="text" class="form-input" placeholder="测试入组流程" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>参研中心：</label>
+        <select class="form-select" id="auditCenter">
+          <option value="">请选择参研中心</option>
+          <option value="江苏省肿瘤医院">江苏省肿瘤医院</option>
+          <option value="北京协和医院">北京协和医院</option>
+          <option value="上海瑞金医院">上海瑞金医院</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>审核流程：</label>
+        <select class="form-select" id="auditProcess">
+          <option value="">请选择审核流程</option>
+          <option value="预筛审核" selected>预筛审核</option>
+          <option value="主知情审核">主知情审核</option>
+          <option value="入组审核">入组审核</option>
+        </select>
+        <!-- 智能推荐提示 -->
+        <div class="smart-recommend-card">
+          <div class="recommend-header">
+            <i class="fas fa-lightbulb"></i>
+            <span class="recommend-title">推荐：预筛审核</span>
+          </div>
+          <div class="recommend-body">
+            <div class="audit-chain">
+              <span class="chain-label">项目审核链路：</span>
+              <span class="chain-item chain-active">预筛审核</span>
+              <span class="chain-arrow">→</span>
+              <span class="chain-item">主知情审核</span>
+              <span class="chain-arrow">→</span>
+              <span class="chain-item">入组审核</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>审核人：</label>
+        <select class="form-select" id="auditor">
+          <option value="">请选择审核人</option>
+          <option value="赵立花">赵立花</option>
+          <option value="王医生">王医生</option>
+          <option value="陈医生">陈医生</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">重点关注：<a style="color: #2E7D32;">引用</a></label>
+        
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注：</label>
+        <textarea class="form-textarea" placeholder="请输入备注"></textarea>
+      </div>
+    </div>
+    <div class="audit-footer">
+      <button class="audit-btn audit-btn-cancel" onclick="closeAuditModal()">取消</button>
+      <button class="audit-btn audit-btn-submit" onclick="submitAudit()">确定</button>
+    </div>
+  </div>`
+</div>
+<!-- PRD Drawer -->
+<div class="prd-drawer" id="prdDrawer">
+  <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="展开需求说明面板">
+    <span class="handle-hint">点击查看PRD</span>
+    <span class="handle-icon"><i class="fa-solid fa-chevron-left"></i></span>
+    <span class="handle-text">P R D</span>
+  </button>
+  <div class="prd-drawer-body" id="prdPanel"></div>
+</div>
+  <script>
+    // 病患数据
+    const patients = [
+      {
+        id: 1, name: 'ZWMS', gender: '男', age: 52, abbr: 'ZWMS',
+        matchStatus: 'matched', submitStatus: 'unsubmit',
+        center: '北京协和医院', operator: '李医生',
+        diagnosis: '非小细胞肺癌 IIIB期',
+        histories: [
+          { label: '既往史', value: '高血压10年，2型糖尿病5年' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '青霉素过敏' },
+        ],
+        files: ['入院记录', '病理报告', 'CT影像', '基因检测']
+      },
+      {
+        id: 2, name: 'HGKD', gender: '女', age: 48, abbr: 'HGKD',
+        matchStatus: 'unmatched', submitStatus: 'unsubmit',
+        center: '上海瑞金医院', operator: '王医生',
+        diagnosis: '乳腺癌 HER2阳性',
+        histories: [
+          { label: '既往史', value: '无特殊' },
+          { label: '手术史', value: '2024-06 左乳切除术' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '超声影像']
+      },
+      {
+        id: 3, name: 'MXKT', gender: '男', age: 65, abbr: 'MXKT',
+        matchStatus: 'matched', submitStatus: 'submitted',
+        center: '北京协和医院', operator: '李医生',
+        diagnosis: '胃癌 IV期',
+        histories: [
+          { label: '既往史', value: '冠心病3年，高脂血症2年' },
+          { label: '手术史', value: '2024-03 胃大部切除术' },
+          { label: '过敏史', value: '磺胺类过敏' },
+        ],
+        files: ['入院记录', '病理报告', 'CT影像', '心电图', '出院小结']
+      },
+      {
+        id: 4, name: 'RFNE', gender: '女', age: 38, abbr: 'RFNE',
+        matchStatus: 'matched', submitStatus: 'unsubmit',
+        center: '广州中山医院', operator: '陈医生',
+        diagnosis: '宫颈癌 IIA期',
+        histories: [
+          { label: '既往史', value: '无特殊' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '无' },
+          { label: '孕产史', value: 'G2P1，剖宫产1次' },
+        ],
+        files: ['入院记录', '病理报告', 'MRI影像']
+      },
+      {
+        id: 5, name: 'PWCD', gender: '男', age: 59, abbr: 'PWCD',
+        matchStatus: 'unmatched', submitStatus: 'unsubmit',
+        center: '华西医院', operator: '赵医生',
+        diagnosis: '结直肠癌 III期',
+        histories: [
+          { label: '既往史', value: '脂肪肝' },
+          { label: '手术史', value: '2024-01 结肠切除术' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '肠镜报告', '肿瘤标志物']
+      },
+      {
+        id: 6, name: 'QJSL', gender: '男', age: 44, abbr: 'QJSL',
+        matchStatus: 'matched', submitStatus: 'submitted',
+        center: '武汉同济医院', operator: '孙医生',
+        diagnosis: '肝细胞癌 BCLC B期',
+        histories: [
+          { label: '既往史', value: '乙肝病史15年' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '增强CT', '肝功能报告']
+      },
+    ];
+
+    let activeTab = 'pending';
+    let selectedCenter = '全部中心';
+    let searchKeyword = '';
+
+    // 渲染患者卡片
+    function renderCards(data) {
+      const container = document.getElementById('patientList');
+      if (data.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px">暂无数据</div>';
+        return;
+      }
+      container.innerHTML = data.map(p => {
+        const matchedTag = p.matchStatus === 'matched'
+          ? '<span class="status-tag tag-matched"><i class="fas fa-check-circle"></i> 匹配完成</span>'
+          : '<span class="status-tag tag-unmatched"><i class="fas fa-exclamation-circle"></i> 未匹配</span>';
+        const submitTag = p.submitStatus === 'submitted'
+          ? '<span class="status-tag tag-submitted">已提交</span>'
+          : '<span class="status-tag tag-unsubmit">未提交</span>';
+
+        // 病史与资料展开区
+        const historiesHTML = p.histories.map(h =>
+          '<div class="history-item">' +
+            '<span class="hi-label">' + h.label + '</span>' +
+            '<span>' + h.value + '</span>' +
+          '</div>'
+        ).join('');
+
+        const filesHTML = p.files.map(f =>
+          '<span class="data-tag" onclick="event.stopPropagation();toastMsg(\'查看: ' + f + '\')">' +
+            '<i class="fas fa-file-alt"></i> ' + f +
+          '</span>'
+        ).join('');
+
+        return '<div class="patient-card">' +
+          '<div class="card-header">' +
+            '<div class="card-header-left">' +
+              '<div class="patient-info">' +
+                '<div class="patient-name">' +
+                  p.name +
+                  '<span style="font-size:12px;font-weight:400;color:#999">' + p.gender + ' · ' + p.age + '岁</span>' +
+                '</div>' +
+                '<div class="patient-meta">' +
+                  '<span>' + p.diagnosis + '</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="card-header-right">' +
+              '<div class="icon-btn" onclick="toastMsg(\'编辑患者信息\')"><i class="fas fa-edit"></i></div>' +
+              '<div class="icon-btn" onclick="toastMsg(\'删除患者\')"><i class="fas fa-trash-alt"></i></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="status-tags">' + matchedTag + submitTag + '</div>' +
+          '<div class="card-info-row">' +
+            '<span><i class="fas fa-hospital"></i> ' + p.center + '</span>' +
+            '<span><i class="fas fa-user-md"></i> 待操作人：' + p.operator + '</span>' +
+          '</div>' +
+          '<div class="action-btns">' +
+            '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\')">提交审核</button>' +
+            '<button class="action-btn btn-outline" onclick="toastMsg(\'审核记录 - ' + p.name + '\')">审核记录</button>' +
+            '<button class="action-btn btn-ghost" onclick="toastMsg(\'匹配详情 - ' + p.name + '\')">匹配详情</button>' +
+          '</div>' +
+          '<div class="expand-section">' +
+            '<div class="expand-header" onclick="toggleExpand(' + p.id + ')">' +
+              '<div class="expand-header-left"><i class="fas fa-file-medical-alt"></i> 病史与资料 (' + p.files.length + ')</div>' +
+              '<i class="fas fa-chevron-down"></i>' +
+            '</div>' +
+            '<div class="expand-body" id="expandBody-' + p.id + '">' +
+              '<div style="margin-top:4px">' + historiesHTML + '</div>' +
+              '<div class="data-tag-row">' + filesHTML + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      // 绑定展开事件
+      document.querySelectorAll('.expand-header').forEach(el => {
+        el.addEventListener('click', function() {
+          const id = this.getAttribute('onclick').match(/toggleExpand\((\d+)\)/)[1];
+          toggleExpand(Number(id));
+        });
+      });
+    }
+
+    // 展开/收起 病史与资料
+    function toggleExpand(id) {
+      const body = document.getElementById('expandBody-' + id);
+      const card = body.closest('.patient-card');
+      const header = card.querySelector('.expand-header');
+      body.classList.toggle('show');
+      header.classList.toggle('expanded');
+    }
+
+    // Tab切换
+    function switchTab(type) {
+      activeTab = type;
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.tab-item').classList.add('active');
+      filterPatients();
+    }
+
+    // 筛选患者
+    function filterPatients() {
+      const keyword = (document.querySelector('.search-input-wrap input') || {}).value || '';
+      searchKeyword = keyword.toLowerCase();
+
+      let filtered = patients;
+
+      // 按Tab过滤
+      if (activeTab === 'pending') {
+        filtered = filtered.filter(p => p.submitStatus === 'unsubmit');
+      }
+
+      // 按中心过滤
+      if (selectedCenter !== '全部中心') {
+        filtered = filtered.filter(p => p.center === selectedCenter);
+      }
+
+      // 按关键词过滤
+      if (searchKeyword) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(searchKeyword) ||
+          p.diagnosis.toLowerCase().includes(searchKeyword) ||
+          p.center.toLowerCase().includes(searchKeyword) ||
+          p.id.toString().includes(searchKeyword)
+        );
+      }
+
+      renderCards(filtered);
+    }
+
+    // 中心选择面板
+    function showCenterPanel() {
+      document.getElementById('centerPanel').classList.add('show');
+      document.getElementById('panelOverlay').classList.add('show');
+    }
+    function hideCenterPanel() {
+      document.getElementById('centerPanel').classList.remove('show');
+      document.getElementById('panelOverlay').classList.remove('show');
+    }
+    function selectCenter(name, el) {
+      selectedCenter = name;
+      document.getElementById('selectedCenter').textContent = name;
+      document.querySelectorAll('.panel-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      hideCenterPanel();
+      filterPatients();
+    }
+
+    // Toast提示
+    function toastMsg(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 1500);
+    }
+
+    // 提交审核弹窗 - H5手机端
+    function openAuditModal(patientName) {
+      document.getElementById('auditModal').classList.add('show');
+      document.getElementById('panelOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeAuditModal() {
+      document.getElementById('auditModal').classList.remove('show');
+      document.getElementById('panelOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    function submitAudit() {
+      const process = document.getElementById('auditProcess').value;
+      const auditor = document.getElementById('auditor').value;
+      if (!process || !auditor) {
+        toastMsg('请填写必填项');
+        return;
+      }
+      toastMsg('提交审核成功');
+      closeAuditModal();
+    }
+
+    // 初始渲染
+    filterPatients();
+    updatePRDPanel('audit');
+
+// ==================== PRD 需求说明面板 ====================
+function updatePRDPanel(mod, sub) {
+  const prdPanel = document.getElementById('prdPanel');
+  if (!prdPanel) return;
+  
+  // 定义各模块的需求说明
+  const prdData = {
+    'audit': {
+      title: '患者列表',
+      sections: [
+        {
+          title: '★ 本次修改',
+          content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审核功能，点击提交审核，加了可以选择审核流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审核人也要动态变化</span></strong></li></ul>'
+        }
+        
+        
+      ]
+    },
+  }
+// 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
+  const subKey = sub ? mod + '-' + sub : null;
+  const prd = prdData[subKey] || prdData[mod];
+  if (!prd) {
+    collapsePRDDrawer();
+    return;
+  }
+  
+  let html = `
+    <div class="prd-panel-header">
+      <div class="prd-panel-title">📋 ${prd.title}</div>
+      <button class="prd-panel-close" onclick="collapsePRDDrawer()" title="折叠抽屉">✕</button>
+    </div>
+  `;
+  
+  prd.sections.forEach(section => {
+    html += `
+      <div class="prd-section">
+        <div class="prd-section-title">${section.title}</div>
+        <div class="prd-section-content">${section.content}</div>
+      </div>
+    `;
+  });
+  
+  prdPanel.innerHTML = html;
+  expandPRDDrawer();
+}
+    
+/* 折叠 PRD 抽屉 */
+function collapsePRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (drawer) drawer.classList.remove('expanded');
+}
+
+/* 展开 PRD 抽屉 */
+function expandPRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (drawer) drawer.classList.add('expanded');
+}
+
+/* 切换 PRD 抽屉 展开/折叠 */
+function togglePRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (!drawer) return;
+  if (drawer.classList.contains('expanded')) {
+    drawer.classList.remove('expanded');
+  } else {
+    drawer.classList.add('expanded');
+  }
+}
+
+/* 兼容旧调用 */
+function closePRDPanel() { collapsePRDDrawer(); }
+
+  </script>
+
+</body>
+</html>
