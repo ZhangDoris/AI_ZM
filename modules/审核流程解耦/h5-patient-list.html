@@ -494,6 +494,46 @@
       background: #fff;
     }
     .form-textarea::placeholder { color: #bbb; }
+    /* 非标准流程提示区 */
+    .non-standard-warn {
+      display: none;
+      margin-top: 10px;
+      background: #FFF7E6;
+      border: 1px solid #FFD591;
+      border-radius: 8px;
+      padding: 12px;
+      animation: fadeIn 0.25s ease;
+    }
+    .non-standard-warn.show { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .warn-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #D46B08;
+      margin-bottom: 8px;
+    }
+    .warn-header i { font-size: 14px; }
+    .warn-textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 10px;
+      border: 1px solid #FFD591;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #333;
+      background: #fff;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .warn-textarea:focus { border-color: #FA8C16; }
+    .warn-textarea::placeholder { color: #bbb; }
     .audit-footer {
       display: flex;
       gap: 12px;
@@ -875,7 +915,7 @@
       </div>
       <div class="form-group">
         <label class="form-label"><span class="required">*</span>审核流程：</label>
-        <select class="form-select" id="auditProcess">
+        <select class="form-select" id="auditProcess" onchange="onProcessChange()">
           <option value="">请选择审核流程</option>
           <option value="预筛审核" selected>预筛审核</option>
           <option value="主知情审核">主知情审核</option>
@@ -897,6 +937,14 @@
               <span class="chain-item">入组审核</span>
             </div>
           </div>
+        </div>
+        <!-- 非标准流程提示 -->
+        <div class="non-standard-warn" id="nonStandardWarn">
+          <div class="warn-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            检测到您选择的是非标准审核流程，请填写原因，以便审核人确认
+          </div>
+          <textarea class="warn-textarea" id="nonStandardReason" placeholder="请输入选择非标准流程的原因..."></textarea>
         </div>
       </div>
       <div class="form-group">
@@ -939,7 +987,7 @@
         id: 1, name: 'ZWMS', gender: '男', age: 52, abbr: 'ZWMS',
         matchStatus: 'matched', submitStatus: 'unsubmit',
         center: '北京协和医院', operator: '李医生',
-        diagnosis: '非小细胞肺癌 IIIB期',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '高血压10年，2型糖尿病5年' },
           { label: '手术史', value: '无' },
@@ -951,7 +999,7 @@
         id: 2, name: 'HGKD', gender: '女', age: 48, abbr: 'HGKD',
         matchStatus: 'unmatched', submitStatus: 'unsubmit',
         center: '上海瑞金医院', operator: '王医生',
-        diagnosis: '乳腺癌 HER2阳性',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '无特殊' },
           { label: '手术史', value: '2024-06 左乳切除术' },
@@ -963,7 +1011,7 @@
         id: 3, name: 'MXKT', gender: '男', age: 65, abbr: 'MXKT',
         matchStatus: 'matched', submitStatus: 'submitted',
         center: '北京协和医院', operator: '李医生',
-        diagnosis: '胃癌 IV期',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '冠心病3年，高脂血症2年' },
           { label: '手术史', value: '2024-03 胃大部切除术' },
@@ -975,7 +1023,7 @@
         id: 4, name: 'RFNE', gender: '女', age: 38, abbr: 'RFNE',
         matchStatus: 'matched', submitStatus: 'unsubmit',
         center: '广州中山医院', operator: '陈医生',
-        diagnosis: '宫颈癌 IIA期',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '无特殊' },
           { label: '手术史', value: '无' },
@@ -988,7 +1036,7 @@
         id: 5, name: 'PWCD', gender: '男', age: 59, abbr: 'PWCD',
         matchStatus: 'unmatched', submitStatus: 'unsubmit',
         center: '华西医院', operator: '赵医生',
-        diagnosis: '结直肠癌 III期',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '脂肪肝' },
           { label: '手术史', value: '2024-01 结肠切除术' },
@@ -1000,7 +1048,7 @@
         id: 6, name: 'QJSL', gender: '男', age: 44, abbr: 'QJSL',
         matchStatus: 'matched', submitStatus: 'submitted',
         center: '武汉同济医院', operator: '孙医生',
-        diagnosis: '肝细胞癌 BCLC B期',
+        diagnosis: 'SHR-2019-nCoV-001',
         histories: [
           { label: '既往史', value: '乙肝病史15年' },
           { label: '手术史', value: '无' },
@@ -1178,12 +1226,36 @@
       document.getElementById('panelOverlay').classList.remove('show');
       document.body.style.overflow = '';
     }
+    // 推荐流程
+    const RECOMMENDED_PROCESS = '预筛审核';
+
+    // 审核流程切换 — 非标准流程提示
+    function onProcessChange() {
+      const val = document.getElementById('auditProcess').value;
+      const warn = document.getElementById('nonStandardWarn');
+      if (val && val !== RECOMMENDED_PROCESS) {
+        warn.classList.add('show');
+      } else {
+        warn.classList.remove('show');
+        document.getElementById('nonStandardReason').value = '';
+      }
+    }
+
     function submitAudit() {
       const process = document.getElementById('auditProcess').value;
       const auditor = document.getElementById('auditor').value;
       if (!process || !auditor) {
         toastMsg('请填写必填项');
         return;
+      }
+      // 非标准流程必须填写原因
+      if (process !== RECOMMENDED_PROCESS) {
+        const reason = document.getElementById('nonStandardReason').value.trim();
+        if (!reason) {
+          toastMsg('选择非标准流程需填写原因');
+          document.getElementById('nonStandardReason').focus();
+          return;
+        }
       }
       toastMsg('提交审核成功');
       closeAuditModal();
@@ -1205,7 +1277,7 @@ function updatePRDPanel(mod, sub) {
       sections: [
         {
           title: '★ 本次修改',
-          content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审核功能，点击提交审核，加了可以选择审核流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审核人也要动态变化</span></strong></li></ul>'
+          content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审核功能，点击提交审核，加了可以选择审核流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审核人也要动态变化，选择了非推荐的流程，需要提醒他必须填写理由</span></strong></li><li>患者列表加一个项目编号</li></ul>'
         }
         
         
