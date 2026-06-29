@@ -5194,7 +5194,7 @@ function switchModule(mod, sub) {
   };
 
   // 有侧边栏的模块
-  const sidebarModules = ['stats', 'admin', 'aiimprove'];
+  const sidebarModules = ['stats', 'admin', 'aiimprove', 'project-center'];
 
   if (sidebarModules.includes(mod)) {
     // 保留原有侧边栏逻辑
@@ -5220,6 +5220,13 @@ function switchModule(mod, sub) {
       sidebar.innerHTML = buildAIImproveSidebar(currentSub);
       panel.innerHTML = buildAIImproveContent(currentSub);
       if(currentSub === 'logs') setTimeout(() => renderAILogs(), 50);
+    } else if(mod === 'project-center') {
+      currentSub = sub || 'center-list';
+      sidebar.classList.remove('hidden');
+      if(sidebarCollapsed) sidebar.classList.add('collapsed');
+      else sidebar.classList.remove('collapsed');
+      sidebar.innerHTML = buildProjectCenterSidebar(currentSub);
+      panel.innerHTML = buildProjectCenterContent(currentSub);
     }
   } else if (mod === 'projects') {
     sidebar.classList.add('hidden');
@@ -7265,6 +7272,402 @@ function closeFlowTemplateDetail() {
   document.body.style.overflow = '';
 }
 
+// ==================== 参研中心管理 ====================
+let _currentProjectCode = null; // 当前进入的项目编号
+
+// 模拟项目数据（用于获取项目名称）
+const _projects = [
+  { code:'324234', name:'324234' },
+  { code:'测试主知情', name:'测试主知情' },
+  { code:'HSTEST0522', name:'HSTEST0522' },
+  { code:'CY0522', name:'0522' },
+  { code:'CY052102', name:'052102' },
+  { code:'CY0521-其他', name:'052101' },
+  { code:'CY0521', name:'0251' },
+  { code:'测试相同项目', name:'测试相同项目' },
+  { code:'001ZJ测试', name:'注射用化合物001对比注射用xxx在新辅助治疗后存在浸润癌残留的HER2阳性乳腺癌辅助治疗中的随机、开放、平行对照、多中心II期临床研究' },
+  { code:'CY1659', name:'CY1659' },
+];
+
+// 模拟参研中心数据（按项目分组）
+const projectCentersData = {
+  '324234': [
+    { name:'test医院1231', dept:'外科', centerNo:'1111', PI:'11', contractCount:'', province:'北京市', city:'北京市', isLeaderUnit:'否', status:'已启动' },
+    { name:'南京市第一医院', dept:'22', centerNo:'11', PI:'111', contractCount:'33', province:'江苏省', city:'南京市', isLeaderUnit:'是', status:'未启动' },
+    { name:'江苏省人民医院', dept:'', centerNo:'', PI:'111', contractCount:'', province:'江苏省', city:'南京市', isLeaderUnit:'是', status:'已启动' },
+  ],
+  '测试主知情': [
+    { name:'扬州市第一人民医院', dept:'22', centerNo:'11', PI:'51', contractCount:'33', province:'江苏省', city:'扬州市', isLeaderUnit:'是', status:'未启动' },
+    { name:'安顺市贵航集团302医', dept:'', centerNo:'', PI:'22', contractCount:'', province:'贵州省', city:'安顺市', isLeaderUnit:'否', status:'已启动' },
+  ],
+};
+
+// 进入参研中心页面
+function enterProjectCenter(projectCode) {
+  console.log('进入项目:', projectCode);
+  _currentProjectCode = projectCode;
+  switchModule('project-center', 'center-list');
+}
+
+// 返回项目管理列表
+function backToProjects() {
+  _currentProjectCode = null;
+  switchModule('admin', 'projects');
+}
+
+// 构建参研中心侧边栏菜单
+function buildProjectCenterSidebar(active) {
+  window._projectCenterActiveSub = active;
+  
+  const renderL3 = (key, label) => `
+    <div class="sidebar-item-l3 ${active===key?'active':''}" data-label="${label}" onclick="switchModule('project-center','${key}')">
+      <span style="font-size:12px;color:${active===key?'#1677ff':'#ccc'}">•</span>
+      <span class="s-label">${label}</span>
+    </div>`;
+  
+  return `
+    <div class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="${sidebarCollapsed?'展开':'收起'}菜单">${sidebarCollapsed?'›':'‹'}</div>
+    <div class="sidebar-title">项目详情</div>
+    ${renderL3('center-list', '参研中心')}
+    ${renderL3('members', '项目成员')}
+    ${renderL3('folder-config', '文件夹配置管理')}
+  `;
+}
+
+// 构建参研中心内容
+function buildProjectCenterContent(sub) {
+  if(sub === 'center-list') return buildCenterList();
+  if(sub === 'members') return buildProjectMembers();
+  if(sub === 'folder-config') return buildFolderConfig();
+  return buildCenterList();
+}
+
+// 构建参研中心列表页面
+function buildCenterList() {
+  const centers = projectCentersData[_currentProjectCode] || [];
+  const currentProject = _projects.find(p => p.code === _currentProjectCode);
+  const projectName = currentProject ? currentProject.name : _currentProjectCode;
+  
+  return `
+    <div class="breadcrumb">
+      <span style="cursor:pointer;color:#1677ff" onclick="backToProjects()">← 返回项目管理</span>
+      <span style="margin:0 8px;color:#999">/</span>
+      <span>${projectName} - 参研中心</span>
+    </div>
+    
+    <!-- 搜索表单 -->
+    <div class="table-card" style="padding:16px 20px 8px;margin-bottom:12px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center">
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">中心名称：</label>
+          <input type="text" class="filter-input" placeholder="请输入" style="width:180px"/>
+        </div>
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">中心号：</label>
+          <input type="text" class="filter-input" placeholder="请输入" style="width:150px"/>
+        </div>
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">省市：</label>
+          <select class="filter-select" style="width:150px"><option>请选择</option><option>北京市</option><option>江苏省</option></select>
+        </div>
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">启动状态：</label>
+          <select class="filter-select" style="width:150px"><option>请选择</option><option>已启动</option><option>未启动</option></select>
+        </div>
+        <div class="form-row-item" style="margin:0">
+          <button class="btn btn-primary btn-sm">🔍 查询</button>
+          <button class="btn btn-default btn-sm" style="margin-left:8px">↻ 重置</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 操作工具栏 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm">＋ 新增中心</button>
+        <button class="btn btn-default btn-sm">📥 下载导入模版</button>
+        <button class="btn btn-default btn-sm">📤 导入</button>
+        <button class="btn btn-default btn-sm">📦 导出</button>
+        <button class="btn btn-danger btn-sm">🗑 删除选中 (0)</button>
+      </div>
+    </div>
+      <!-- 开发提示 -->
+          <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
+            <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
+            <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
+              <div><strong>开发提示：</strong></div>
+              <div>① 中心号固定在左端，操作列固定在右端，加列表横向滚动条；</div>
+              <div>② 操作列加 【审批流程设置】按钮</div>
+
+
+            </div>
+          </div>
+    <!-- 数据表格 -->
+    <div class="table-card" style="padding:0">
+      <table class="data-table" style="min-width:1200px">
+        <thead>
+          <tr>
+            <th class="col-fixed-left" style="width:50px"><input type="checkbox"/></th>
+            <th class="col-fixed-left" style="left:50px;min-width:150px">中心名称</th>
+            <th style="min-width:80px">科室</th>
+            <th class="col-fixed-left" style="left:200px;min-width:80px">中心号</th>
+            <th style="min-width:80px">PI</th>
+            <th style="min-width:80px">合同例数</th>
+            <th style="min-width:80px">省份</th>
+            <th style="min-width:80px">城市</th>
+            <th style="min-width:100px">是否组长单位</th>
+            <th style="min-width:80px">中心状态</th>
+            <th class="col-fixed-right" style="min-width:200px">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${centers.map((c, idx) => `
+            <tr>
+              <td class="col-fixed-left"><input type="checkbox"/></td>
+              <td class="col-fixed-left" style="left:50px;font-size:13px;color:#1a1a1a">${c.name}</td>
+              <td style="font-size:13px;color:#555">${c.dept||''}</td>
+              <td class="col-fixed-left" style="left:200px;font-size:13px;color:#555">${c.centerNo||''}</td>
+              <td style="font-size:13px;color:#555">${c.PI||''}</td>
+              <td style="font-size:13px;color:#555">${c.contractCount||''}</td>
+              <td style="font-size:13px;color:#555">${c.province}</td>
+              <td style="font-size:13px;color:#555">${c.city}</td>
+              <td style="font-size:13px;color:#555;text-align:center">${c.isLeaderUnit}</td>
+              <td style="font-size:13px;color:#555;text-align:center">${c.status}</td>
+              <td class="col-fixed-right" style="text-align:center">
+                <span class="action-btn primary" style="margin-right:4px" onclick="editCenter('${c.name}')">编辑</span>
+                <span class="action-btn danger" style="margin-right:4px" onclick="deleteCenter('${c.name}')">删除</span>
+                <span class="action-btn success" onclick="setCenterApprovalFlow('${c.name}', '${c.centerNo||''}')">审批流程设置</span>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// 构建项目成员页面
+function buildProjectMembers() {
+  const currentProject = _projects.find(p => p.code === _currentProjectCode);
+  const projectName = currentProject ? currentProject.name : _currentProjectCode;
+  
+  return `
+    <div class="breadcrumb">
+      <span style="cursor:pointer;color:#1677ff" onclick="backToProjects()">← 返回项目管理</span>
+      <span style="margin:0 8px;color:#999">/</span>
+      <span>${projectName} - 项目成员</span>
+    </div>
+    <div class="table-card" style="padding:80px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px"></div>
+      <div style="font-size:15px;color:#666;font-weight:500">项目成员管理</div>
+      <div style="font-size:13px;color:#aaa;margin-top:8px">该页面内容开发中...</div>
+    </div>
+  `;
+}
+
+// 构建文件夹配置管理页面
+function buildFolderConfig() {
+  const currentProject = _projects.find(p => p.code === _currentProjectCode);
+  const projectName = currentProject ? currentProject.name : _currentProjectCode;
+  
+  return `
+    <div class="breadcrumb">
+      <span style="cursor:pointer;color:#1677ff" onclick="backToProjects()">← 返回项目管理</span>
+      <span style="margin:0 8px;color:#999">/</span>
+      <span>${projectName} - 文件夹配置管理</span>
+    </div>
+    <div class="table-card" style="padding:80px;text-align:center">
+      <div style="font-size:48px;margin-bottom:16px"></div>
+      <div style="font-size:15px;color:#666;font-weight:500">文件夹配置管理</div>
+      <div style="font-size:13px;color:#aaa;margin-top:8px">该页面内容开发中...</div>
+    </div>
+  `;
+}
+
+// ==================== 参研中心操作函数 ====================
+
+// 编辑中心
+function editCenter(centerName) {
+  console.log('编辑中心:', centerName);
+  alert('编辑中心功能开发中...\n\n中心名称：' + centerName);
+}
+
+// 删除中心
+function deleteCenter(centerName) {
+  if(confirm('确定要删除中心「' + centerName + '」吗？')) {
+    console.log('删除中心:', centerName);
+    alert('已删除中心：' + centerName);
+  }
+}
+
+// 设置中心审批流程
+function setCenterApprovalFlow(centerName, centerNo) {
+  console.log('设置审批流程:', centerName, centerNo);
+  
+  // 模拟审批模板数据
+  const approvalTemplates = [
+    {
+      id: 'template1',
+      name: '常规模板',
+      flowCount: 2,
+      isMain: false,
+      status: '未生效',
+      flows: [
+        { version: 'v2.5.0', name: '预筛审核', type: '预筛审核', isMain: true, auditType: '预筛审核' },
+        { version: 'v2.0.0', name: '入组审核', type: '入组审核', isMain: false, auditType: '入组审核' }
+      ]
+    },
+    {
+      id: 'template2',
+      name: '肿瘤类模板',
+      flowCount: 3,
+      isMain: false,
+      status: '未生效',
+      flows: [
+        { version: 'v2.4.0', name: 'V1审核', type: '预筛审核', isMain: true, auditType: '预筛审核' },
+        { version: 'v2.2.0', name: 'V2审核', type: '主知情审核', isMain: false, auditType: '主知情审核' },
+        { version: 'v2.0.0', name: '入组审核', type: '入组审核', isMain: false, auditType: '入组审核' }
+      ]
+    }
+  ];
+  
+  // 创建全屏页面
+  const pageHtml = `
+    <div id="centerApprovalPage" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#f5f7fa;z-index:9998;display:flex;flex-direction:column">
+      <!-- 顶部导航栏 -->
+      <div style="background:#fff;padding:16px 24px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="closeCenterApprovalPage()" style="background:none;border:none;font-size:20px;color:#666;cursor:pointer;padding:4px 8px;border-radius:4px;transition:all 0.2s" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='none'">←</button>
+          <div>
+            <div style="font-size:18px;font-weight:600;color:#333">审批流程设置</div>
+            <div style="font-size:13px;color:#888;margin-top:2px">${centerName} ${centerNo?'- 中心号: '+centerNo:''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px">
+          <button class="btn btn-default" onclick="closeCenterApprovalPage()">取消</button>
+          <button class="btn btn-primary" onclick="saveCenterApprovalFlow('${centerName}', '${centerNo}')">保存设置</button>
+        </div>
+      </div>
+      
+      <!-- 内容区域 -->
+      <div style="flex:1;overflow-y:auto;padding:24px;padding-bottom:120px">
+        <div style="max-width:1400px;margin:0 auto">
+          <!-- 模板列表 -->
+          <div style="background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:20px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr style="background:#fafafa;border-bottom:1px solid #e8e8e8">
+                  <th style="padding:14px 16px;text-align:left;font-size:14px;font-weight:600;color:#333;width:200px">版本号</th>
+                  <th style="padding:14px 16px;text-align:left;font-size:14px;font-weight:600;color:#333;width:180px">审核流名称</th>
+                  <th style="padding:14px 16px;text-align:left;font-size:14px;font-weight:600;color:#333;width:120px">审核类型</th>
+                  <th style="padding:14px 16px;text-align:center;font-size:14px;font-weight:600;color:#333;width:100px">是否生效</th>
+                  <th style="padding:14px 16px;text-align:center;font-size:14px;font-weight:600;color:#333;width:140px">生效开始时间</th>
+                  <th style="padding:14px 16px;text-align:center;font-size:14px;font-weight:600;color:#333;width:140px">生效结束时间</th>
+                  <th style="padding:14px 16px;text-align:center;font-size:14px;font-weight:600;color:#333;width:280px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${approvalTemplates.map((template, tIdx) => `
+                  <!-- 模板行 -->
+                  <tr style="background:#f9f9f9;border-bottom:1px solid #e8e8e8">
+                    <td colspan="7" style="padding:16px 20px">
+                      <div style="display:flex;align-items:center;gap:12px">
+                        <span style="font-size:18px"></span>
+                        <span style="font-size:15px;font-weight:600;color:#333">${template.name}</span>
+                        <span style="font-size:13px;color:#888">共 ${template.flowCount} 个流程</span>
+                        <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+                          <span style="font-size:13px;color:#666">★ 主流程</span>
+                          <span style="padding:4px 12px;background:#f5f5f5;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;color:#999">● 未生效</span>
+                        </span>
+                        <div style="display:flex;gap:8px">
+                          <span style="color:#1677ff;cursor:pointer;font-size:13px" onclick="alert('编辑模板')">编辑</span>
+                          <span style="color:#1677ff;cursor:pointer;font-size:13px" onclick="alert('生效模板')">生效</span>
+                          <span style="color:#ff4d4f;cursor:pointer;font-size:13px" onclick="alert('删除模板')">删除</span>
+                          <span style="color:#722ed1;cursor:pointer;font-size:13px" onclick="alert('主流程设置')">主流程设置</span>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- 子流程行 -->
+                  ${template.flows.map((flow, fIdx) => `
+                    <tr style="border-bottom:1px solid #f0f0f0">
+                      <td style="padding:14px 20px;font-size:14px;font-weight:600;color:#333">${flow.version}</td>
+                      <td style="padding:14px 20px">
+                        <div style="display:flex;align-items:center;gap:8px">
+                          <span style="font-size:12px;color:#ccc">●</span>
+                          <span style="font-size:14px;color:#333">${flow.name}</span>
+                          ${flow.isMain ? '<span style="font-size:12px;color:#666">★ 主流程</span>' : ''}
+                        </div>
+                      </td>
+                      <td style="padding:14px 20px">
+                        <span style="display:inline-block;padding:4px 12px;border-radius:4px;font-size:13px;border:1px solid;${flow.auditType === '预筛审核' ? 'background:#e6f7ff;border-color:#91d5ff;color:#1677ff' : flow.auditType === '主知情审核' ? 'background:#fff7e6;border-color:#ffd591;color:#fa8c16' : flow.auditType === '入组审核' ? 'background:#f6ffed;border-color:#b7eb8f;color:#52c41a' : 'background:#f5f5f5;border-color:#d9d9d9;color:#666'}">${flow.auditType}</span>
+                      </td>
+                      <td style="padding:14px 20px;text-align:center"><span style="color:#999;font-size:13px">-</span></td>
+                      <td style="padding:14px 20px;text-align:center"><span style="color:#999;font-size:13px">-</span></td>
+                      <td style="padding:14px 20px;text-align:center"><span style="color:#999;font-size:13px">-</span></td>
+                      <td style="padding:14px 20px;text-align:center">
+                        <span style="color:#722ed1;cursor:pointer;font-size:13px;margin-right:8px" onclick="viewAuditFlow('${flow.name}')">查看审核流程</span>
+                        <span style="color:#ff4d4f;cursor:pointer;font-size:13px" onclick="deleteFlow('${flow.name}')">删除</span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 底部固定提示信息 -->
+      <div style="position:fixed;bottom:0;left:0;right:0;background:#fffbe6;border-top:1px solid #ffe58f;padding:16px 24px;z-index:9999;box-shadow:0 -2px 8px rgba(0,0,0,0.06)">
+        <div style="max-width:1400px;margin:0 auto;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:18px;color:#faad14;flex-shrink:0;margin-top:2px"></span>
+          <div style="font-size:14px;color:#8c8c8c;line-height:1.8;flex:1">
+            <div><strong>提示：</strong></div>
+            <div>• 选择审批模板后，该中心的患者提交审核时将使用配置的审批流程</div>
+            <div>• 如果未设置审批流程，将使用项目默认的审批流程</div>
+            <div>• 可以自定义启用/禁用特定审核类型</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // 添加到页面
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = pageHtml;
+  document.body.appendChild(tempDiv.firstElementChild);
+  document.body.style.overflow = 'hidden';
+}
+
+// 关闭审批流程设置页面
+function closeCenterApprovalPage() {
+  const page = document.getElementById('centerApprovalPage');
+  if(page) {
+    page.remove();
+    document.body.style.overflow = '';
+  }
+}
+
+// 查看审核流程
+function viewAuditFlow(flowName) {
+  alert('查看审核流程：' + flowName);
+}
+
+// 删除流程
+function deleteFlow(flowName) {
+  if(confirm('确定要删除流程「' + flowName + '」吗？')) {
+    alert('已删除流程：' + flowName);
+  }
+}
+
+// 保存中心审批流程设置
+function saveCenterApprovalFlow(centerName, centerNo) {
+  console.log('保存审批流程设置:', centerName, centerNo);
+  alert('✅ 审批流程设置已保存！\n\n中心：' + centerName + '\n中心号：' + (centerNo||'未设置'));
+  closeCenterApprovalPage();
+}
+
 function buildAdminProjects() {
   // 列设置状态（默认显示的列）
   if(!window._projColConfig) {
@@ -7409,8 +7812,8 @@ function buildAdminProjects() {
             <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
             <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
               <div><strong>开发提示：</strong></div>
-              <div>列表页面暂不修改，直接修改新增和编辑页面的审核流程部分</div>
-             
+              <div>① 列表页面暂不修改，直接修改新增和编辑页面的审核流程部分</div>
+              <div>② 点击项目编号，参研中心修改了</div>
             </div>
           </div>
     <!-- 操作工具栏 -->
@@ -7475,7 +7878,7 @@ function buildAdminProjects() {
           <tr>
             <td class="col-fixed-left"><input type="checkbox"/></td>
             ${cols.index?`<td class="col-fixed-left" style="left:40px;color:#888;text-align:center">${p.index}</td>`:''}
-            ${cols.code?`<td class="col-fixed-left" style="left:${leftOffset}px"><span style="color:#1677ff;cursor:pointer;font-size:13px">${p.code}</span></td>`:''}
+            ${cols.code?`<td class="col-fixed-left" style="left:${leftOffset}px"><span style="color:#1677ff;cursor:pointer;font-size:13px" onclick="enterProjectCenter('${p.code}')">${p.code}</span></td>`:''}
             ${cols.schemeNo?`<td style="font-size:13px;color:#555">${truncate(p.schemeNo)}</td>`:''}
             ${cols.name?`<td style="font-size:13px;color:#1a1a1a;max-width:220px">${truncate(p.name)}</td>`:''}
             ${cols.phase?`<td>${projPhaseBadge(p.phase)}</td>`:''}
