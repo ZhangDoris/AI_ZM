@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待审核预筛导出 - 智能预筛系统</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+    
+    /* 顶部标签栏 */
+    .top-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 0 20px;
+    }
+    
+    .tab-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .tab-item:hover {
+      color: #1677ff;
+    }
+    
+    .tab-item.active {
+      color: #1677ff;
+      font-weight: 600;
+      border-bottom-color: #1677ff;
+    }
+    
+    /* 主容器 */
+    .main-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* 二级Tab */
+    .sub-tabs {
+      display: flex;
+      background: #fff;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .sub-tab-item {
+      padding: 12px 24px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      background: #fafafa;
+      border-right: 1px solid #e8e8e8;
+      transition: all 0.2s;
+    }
+    
+    .sub-tab-item:last-child {
+      border-right: none;
+    }
+    
+    .sub-tab-item:hover {
+      background: #f0f5ff;
+      color: #1677ff;
+    }
+    
+    .sub-tab-item.active {
+      background: #fff;
+      color: #1677ff;
+      font-weight: 600;
+    }
+    
+    /* 筛选区域 */
+    .filter-section {
+      background: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .filter-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .filter-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .filter-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-label {
+      font-size: 14px;
+      color: #333;
+      white-space: nowrap;
+      min-width: 80px;
+      text-align: right;
+    }
+    
+    .filter-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .filter-input:focus {
+      border-color: #1677ff;
+    }
+    
+    .filter-select {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .filter-select:focus {
+      border-color: #1677ff;
+    }
+    
+    .date-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    
+    .date-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    .date-separator {
+      color: #999;
+    }
+    
+    /* 按钮区域 */
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      padding: 8px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .btn-primary {
+      background: #1677ff;
+      color: #fff;
+    }
+    
+    .btn-primary:hover {
+      background: #0958d9;
+    }
+    
+    .btn-default {
+      background: #fff;
+      color: #333;
+      border: 1px solid #d9d9d9;
+    }
+    
+    .btn-default:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+    }
+    
+    .btn-success {
+      background: #52c41a;
+      color: #fff;
+    }
+    
+    .btn-success:hover {
+      background: #389e0d;
+    }
+    
+    .btn-info {
+      background: #1677ff;
+      color: #fff;
+    }
+    
+    .btn-info:hover {
+      background: #0958d9;
+    }
+    
+    .btn-warning {
+      background: #faad14;
+      color: #fff;
+    }
+    
+    .btn-warning:hover {
+      background: #d48806;
+    }
+    
+    /* 表格区域 */
+    /* 开发提示条 */
+    .dev-tip-bar {
+      background: #fffbe6;
+      border: 1px dashed #faad14;
+      border-radius: 4px;
+      padding: 10px 16px;
+      margin: 12px 0;
+      font-size: 13px;
+      color: #ad6800;
+      line-height: 1.6;
+    }
+    
+    .dev-tip-bar i {
+      color: #faad14;
+      margin-right: 6px;
+    }
+
+    .table-section {
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table thead {
+      background: #1677ff;
+      color: #fff;
+    }
+    
+    .data-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 500;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    
+    .data-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .data-table tbody tr:hover {
+      background: #f5f7fa;
+    }
+    
+    .data-table tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+    
+    .data-table tbody tr:nth-child(even):hover {
+      background: #f5f7fa;
+    }
+    
+    .action-links {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-link {
+      color: #1677ff;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    .action-link:hover {
+      text-decoration: underline;
+    }
+    
+    .action-separator {
+      color: #ddd;
+    }
+    
+    /* 滚动条样式 */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+    
+    .table-wrapper::-webkit-scrollbar {
+      height: 8px;
+    }
+    
+    .table-wrapper::-webkit-scrollbar-track {
+      background: #f5f5f5;
+    }
+    
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 4px;
+    }
+    
+    .table-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #999;
+    }
+    
+    /* 提示弹窗样式 */
+    .tip-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .tip-modal.show {
+      display: flex;
+    }
+    
+    .tip-modal-content {
+      background: #fff;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    
+    .tip-modal-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fafbfc;
+    }
+    
+    .tip-modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .tip-modal-close {
+      cursor: pointer;
+      font-size: 20px;
+      color: #999;
+      transition: color 0.2s;
+    }
+    
+    .tip-modal-close:hover {
+      color: #333;
+    }
+    
+    .tip-modal-body {
+      padding: 24px;
+    }
+    
+    .tip-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      background: #fff7e6;
+      border-left: 4px solid #faad14;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .tip-icon {
+      font-size: 20px;
+      color: #faad14;
+      flex-shrink: 0;
+    }
+    
+    .tip-text {
+      flex: 1;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .tip-text strong {
+      color: #d48806;
+      font-weight: 600;
+    }
+    
+    .tip-modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background: #fafbfc;
+    }
+    
+    /* 指导标识样式 */
+    .guide-highlight {
+      animation: pulse-border 1.5s ease-in-out infinite;
+      border-color: #faad14 !important;
+      box-shadow: 0 0 0 3px rgba(250, 173, 20, 0.3) !important;
+    }
+    
+    @keyframes pulse-border {
+      0%, 100% {
+        box-shadow: 0 0 0 3px rgba(250, 173, 20, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 0 6px rgba(250, 173, 20, 0.5);
+      }
+    }
+    
+    .guide-label {
+      position: relative;
+    }
+    
+    .guide-label::after {
+      content: ' 请在此处输入方案编号';
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 10px;
+      padding: 6px 12px;
+      background: #faad14;
+      color: #fff;
+      font-size: 12px;
+      white-space: nowrap;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    
+    .guide-label.active::after {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部标签栏 -->
+  <div class="top-tabs">
+    <div class="tab-item active">恒瑞医药</div>
+    <div class="tab-item">江苏科信</div>
+    <div class="tab-item">运营二部</div>
+    <div class="tab-item">江苏科信3</div>
+    <div class="tab-item">测试租户66</div>
+  </div>
+  
+  <!-- 主容器 -->
+  <div class="main-container">
+    <!-- 二级Tab -->
+    <div class="sub-tabs">
+      <div class="sub-tab-item">待操作</div>
+      <div class="sub-tab-item active">审核列表</div>
+    </div>
+    
+    <!-- 筛选区域 -->
+    <div class="filter-section">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">筛选号：</label>
+          <input type="text" class="filter-input" placeholder="请输入" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">患者缩写：</label>
+          <input type="text" class="filter-input" placeholder="请输入" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label guide-label" id="schemeNoLabel">方案编号：</label>
+          <input type="text" class="filter-input" id="schemeNoInput" placeholder="请输入" />
+        </div>
+      </div>
+      
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">审核类型：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="prescreen">预筛审核</option>
+            <option value="enrolling">入组审核</option>
+            <option value="consent">主知情审核</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">中心名称：</label>
+          <input type="text" class="filter-input" placeholder="请输入" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">审核状态：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="pending">待审核</option>
+            <option value="approved">已通过</option>
+            <option value="rejected">已驳回</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">待操作人：</label>
+          <input type="text" class="filter-input" placeholder="请输入" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">待审核人：</label>
+          <input type="text" class="filter-input" placeholder="请输入" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">提交日期：</label>
+          <div class="date-range">
+            <input type="date" class="date-input" />
+            <span class="date-separator">至</span>
+            <input type="date" class="date-input" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">是否发送邮件：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="yes">是</option>
+            <option value="no">否</option>
+          </select>
+        </div>
+        <div class="filter-item" style="flex: 2;">
+          <label class="filter-label">排序：</label>
+          <select class="filter-select" style="flex: 1;">
+            <option value="">请选择</option>
+            <option value="submitTime">提交时间</option>
+            <option value="patientNo">患者编号</option>
+          </select>
+          <select class="filter-select" style="flex: 1;">
+            <option value="">请选择</option>
+            <option value="asc">升序</option>
+            <option value="desc">降序</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- 按钮组 -->
+      <div class="button-group">
+        <button class="btn btn-primary">
+          <i class="fas fa-search"></i> 查询
+        </button>
+        <button class="btn btn-default">
+          <i class="fas fa-redo"></i> 重置
+        </button>
+        <button class="btn btn-success">
+          <i class="fas fa-download"></i> 导出
+        </button>
+        <button class="btn btn-warning" onclick="showPrescreenExportTip()">
+          <i class="fas fa-download"></i> 预筛表导出
+        </button>
+        <button class="btn btn-info">
+          <i class="fas fa-cog"></i> 患者字段展示
+        </button>
+        <button class="btn btn-info">
+          <i class="fas fa-columns"></i> 列设置
+        </button>
+        <button class="btn btn-primary">
+          <i class="fas fa-filter"></i> 高级搜索
+        </button>
+      </div>
+    </div>
+
+    <!-- 开发提示 -->
+    <div class="dev-tip-bar">
+      <i class="fas fa-lightbulb"></i>
+      <strong>开发提示：</strong>加了预筛表导出功能，点击预筛表导出，需要查询一下本次导出是不是只有一个项目导出，如果是多个项目，需要弹出提示，请在查询条件中，填写方案编号
+    </div>
+   
+    <!-- 表格区域 -->
+    <div class="table-section">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>筛选号</th>
+              <th>审核类型</th>
+              <th>患者缩写</th>
+              <th>性别</th>
+              <th>年龄</th>
+              <th>方案编号</th>
+              <th>中心号</th>
+              <th>中心</th>
+              <th>匹配率</th>
+              <th>提交人</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td></td>
+              <td>预筛审核</td>
+              <td>测试文件4</td>
+              <td>女</td>
+              <td>39</td>
+              <td>测试项目5</td>
+              <td>222</td>
+              <td>安顺市贵航集团302医院</td>
+              <td>0.0%</td>
+              <td>刘</td>
+              <td>
+                <div class="action-links">
+                  <a href="javascript:void(0)" class="action-link">查看</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">抄送</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">审核记录</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">邮件记录</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>333</td>
+              <td>入组审核</td>
+              <td>测试文件</td>
+              <td>女性</td>
+              <td>40</td>
+              <td>测试主知情</td>
+              <td>CN001</td>
+              <td>北京大学肿瘤医院</td>
+              <td>100.0%</td>
+              <td>刘</td>
+              <td>
+                <div class="action-links">
+                  <a href="javascript:void(0)" class="action-link">查看</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">抄送</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">审核记录</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">邮件记录</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td></td>
+              <td>主知情审核</td>
+              <td>113</td>
+              <td>女性</td>
+              <td>39</td>
+              <td>测试主知情</td>
+              <td>CN001</td>
+              <td>北京大学肿瘤医院</td>
+              <td>100.0%</td>
+              <td>刘</td>
+              <td>
+                <div class="action-links">
+                  <a href="javascript:void(0)" class="action-link">查看</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">抄送</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">审核记录</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">邮件记录</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>44555</td>
+              <td>入组审核</td>
+              <td>测试文件</td>
+              <td>女</td>
+              <td>50</td>
+              <td>测试项目5</td>
+              <td>222</td>
+              <td>安顺市贵航集团302医院</td>
+              <td>30.56%</td>
+              <td>C</td>
+              <td>
+                <div class="action-links">
+                  <a href="javascript:void(0)" class="action-link">查看</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">抄送</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">审核记录</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">邮件记录</a>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>111</td>
+              <td>入组审核</td>
+              <td>基因检测提示</td>
+              <td>女</td>
+              <td>40</td>
+              <td>测试项目5</td>
+              <td>222</td>
+              <td>安顺市贵航集团302医院</td>
+              <td>0.0%</td>
+              <td>C</td>
+              <td>
+                <div class="action-links">
+                  <a href="javascript:void(0)" class="action-link">查看</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">抄送</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">审核记录</a>
+                  <span class="action-separator">|</span>
+                  <a href="javascript:void(0)" class="action-link">邮件记录</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 预筛表导出提示弹窗 -->
+  <div class="tip-modal" id="prescreenExportTipModal">
+    <div class="tip-modal-content">
+      <div class="tip-modal-header">
+        <div class="tip-modal-title">预筛表导出提示</div>
+        <span class="tip-modal-close" onclick="closePrescreenExportTip()">×</span>
+      </div>
+      <div class="tip-modal-body">
+        <div class="tip-message">
+          <i class="fas fa-exclamation-triangle tip-icon"></i>
+          <div class="tip-text">
+            <strong>本次导出有3个项目</strong><br/>
+            请在筛选条件中<strong>筛选一个项目</strong>进行导出，以避免数据混乱。
+          </div>
+        </div>
+      </div>
+      <div class="tip-modal-footer">
+        <button class="btn btn-default" onclick="closePrescreenExportTip()">取消</button>
+        <button class="btn btn-primary" onclick="confirmPrescreenExport()">确认</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Tab切换功能
+    document.querySelectorAll('.tab-item').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
+    document.querySelectorAll('.sub-tab-item').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.sub-tab-item').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+    
+    // 按钮点击事件（示例）
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const text = this.textContent.trim();
+        console.log('点击了：' + text);
+        // 这里可以添加具体的业务逻辑
+      });
+    });
+    
+    // 操作链接点击事件
+    document.querySelectorAll('.action-link').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const action = this.textContent.trim();
+        console.log('执行操作：' + action);
+        // 这里可以添加具体的业务逻辑
+      });
+    });
+    
+    // ==================== 预筛表导出功能 ====================
+    
+    // 显示预筛表导出提示
+    function showPrescreenExportTip() {
+      const modal = document.getElementById('prescreenExportTipModal');
+      if (modal) {
+        modal.classList.add('show');
+      }
+    }
+    
+    // 关闭预筛表导出提示
+    function closePrescreenExportTip() {
+      const modal = document.getElementById('prescreenExportTipModal');
+      if (modal) {
+        modal.classList.remove('show');
+      }
+    }
+    
+    // 确认预筛表导出 - 高亮方案编号输入框
+    function confirmPrescreenExport() {
+      // 关闭提示弹窗
+      closePrescreenExportTip();
+      
+      // 获取方案编号输入框和标签
+      const schemeNoInput = document.getElementById('schemeNoInput');
+      const schemeNoLabel = document.getElementById('schemeNoLabel');
+      
+      if (schemeNoInput && schemeNoLabel) {
+        // 添加高亮样式
+        schemeNoInput.classList.add('guide-highlight');
+        schemeNoLabel.classList.add('active');
+        
+        // 聚焦到输入框
+        schemeNoInput.focus();
+        
+        // 5秒后移除高亮效果
+        setTimeout(() => {
+          schemeNoInput.classList.remove('guide-highlight');
+          schemeNoLabel.classList.remove('active');
+        }, 5000);
+      }
+    }
+  </script>
+</body>
+</html>
