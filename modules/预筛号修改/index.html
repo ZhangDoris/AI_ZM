@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>预筛号修改</title>
+  <!-- Ant Design CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #f5f7fa; color: #1a1a1a; }
+
+    /* Tab样式 */
+    .tab-container {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .tab-header {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #e8e8e8;
+      padding: 0 20px;
+    }
+    .tab-item {
+      padding: 14px 24px;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .tab-item:hover {
+      color: #1677ff;
+    }
+    .tab-item.active {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1677ff;
+    }
+
+    /* 筛选栏 */
+    .filter-bar {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .filter-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .filter-label {
+      font-size: 13px;
+      color: #666;
+      white-space: nowrap;
+      min-width: 70px;
+    }
+    .filter-input,
+    .filter-select {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid #e8e8e8;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #333;
+      outline: none;
+      background: #fafafa;
+      transition: border-color 0.2s;
+    }
+    .filter-input:focus,
+    .filter-select:focus {
+      border-color: #1677ff;
+      background: white;
+    }
+
+    /* 按钮组 */
+    .button-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: #1677ff;
+      color: white;
+      box-shadow: 0 2px 8px rgba(22,119,255,0.3);
+    }
+    .btn-primary:hover {
+      background: #0958d9;
+    }
+    .btn-default {
+      background: white;
+      color: #555;
+      border: 1.5px solid #e0e0e0;
+    }
+    .btn-default:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+    }
+
+    /* 表格容器 */
+    .table-card {
+      background: white;
+      border-radius: 12px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 1200px;
+    }
+    .data-table thead th {
+      background: #fafbfc;
+      color: #555;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    .data-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f5f5f5;
+      color: #333;
+    }
+    .data-table tbody tr:hover {
+      background: #f9fbff;
+    }
+
+    /* 操作列链接 */
+    .action-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 8px;
+    }
+    .action-link {
+      color: #1677ff;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .action-link:hover {
+      color: #0958d9;
+      text-decoration: underline;
+    }
+    .action-sep {
+      color: #ddd;
+    }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      padding: 12px 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .page-btn {
+      padding: 4px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background: white;
+      color: #666;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .page-btn:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+    }
+    .page-btn.active {
+      background: #1677ff;
+      color: white;
+      border-color: #1677ff;
+    }
+
+    /* 内容区域 */
+    .content-area {
+      padding: 24px;
+    }
+
+    /* 返回按钮 */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: #666;
+      background: #fff;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .back-btn:hover {
+      color: #1677ff;
+      border-color: #1677ff;
+      background: #f0f5ff;
+    }
+
+    /* 滚动条 */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #e0e0e0;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div class="content-area">
+    <!-- 返回按钮 -->
+    <button class="back-btn" onclick="window.location.href='../index.html'">
+      <span style="font-size:16px">←</span> 返回主页-目前路径：智能筛选-患者列表
+    </button>
+    
+
+    <!-- Tab切换 -->
+    <div class="tab-container">
+      <div class="tab-header">
+        <div class="tab-item active" id="tab-pending" onclick="switchTab('pending')">待操作</div>
+        <div class="tab-item" id="tab-patient-list" onclick="switchTab('patient-list')">患者列表</div>
+      </div>
+    </div>
+<!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 点击提交审核，后端自动生成“预筛选号”，规则：YS+3位中心号+4位序号（第一个序号就是0001））</div>
+            <div>② 待操作和审核列表上加“预筛选号”，查询条件加“预筛选号”</div>
+            <div>③ 导出和预筛表导出也需要加“预筛选号”</div>
+            <div>④ 查询条件加“匹配状态”</div>
+             </div>
+        </div>
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">姓名缩写：</label>
+          <input type="text" class="filter-input" placeholder="请输入"/>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">患者状态：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="已入组">已入组</option>
+            <option value="筛选失败">筛选失败</option>
+            <option value="筛选中">筛选中</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">创建人：</label>
+          <input type="text" class="filter-input" placeholder="请输入"/>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">中心名称：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="安顺市贵航集团302医院">安顺市贵航集团302医院</option>
+            <option value="南京市第一医院">南京市第一医院</option>
+            <option value="江苏省人民医院">江苏省人民医院</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">筛选号：</label>
+          <input type="text" class="filter-input" placeholder="请输入"/>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">预筛号：</label>
+          <input type="text" class="filter-input" placeholder="请输入"/>
+        </div>
+      </div>
+      <div class="button-group">
+        <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
+        <button class="btn btn-default"><i class="fas fa-redo"></i> 重置</button>
+        <button class="btn btn-default"><i class="fas fa-plus"></i> 新增患者</button>
+        <button class="btn btn-default"><i class="fas fa-download"></i> 导出</button>
+        <button class="btn btn-default"><i class="fas fa-file-export"></i> 预筛表导出</button>
+        <button class="btn btn-default"><i class="fas fa-file-alt"></i> 审核记录导出</button>
+        <button class="btn btn-default"><i class="fas fa-cog"></i> 列设置</button>
+        <button class="btn btn-default"><i class="fas fa-search-plus"></i> 高级搜索</button>
+      </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width:50px">序号</th>
+              <th style="min-width:120px">姓名缩写</th>
+              <th style="width:60px">年龄</th>
+              <th style="width:60px">性别</th>
+              <th style="min-width:100px">领域</th>
+              <th style="min-width:180px">参研中心</th>
+              <th style="min-width:100px">筛选号</th>
+              <th style="min-width:100px">预筛号</th>
+              <th style="min-width:160px">创建时间</th>
+              <th style="min-width:80px">创建人</th>
+              <th style="min-width:80px">创建人角色</th>
+              <th style="width:280px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- 动态生成数据 -->
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span style="font-size:12.5px;color:#888;margin-right:12px">共 <strong id="total-count">0</strong> 条</span>
+        <button class="page-btn">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">›</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 模拟数据
+    const mockData = [
+      {
+        id: 1,
+        nameAbbr: '入组通过1',
+        age: '',
+        gender: '',
+        domain: '肺癌',
+        center: '安顺市贵航集团302医院',
+        screenNo: '333',
+        preScreenNo: 'PS001',
+        createTime: '2026-05-25 23:44:19',
+        creator: '刘雪红',
+        creatorRole: 'CRA专员'
+      },
+      {
+        id: 2,
+        nameAbbr: '中心号',
+        age: '',
+        gender: '',
+        domain: '肺癌',
+        center: '安顺市贵航集团302医院',
+        screenNo: '--',
+        preScreenNo: 'PS002',
+        createTime: '2026-05-25 23:22:05',
+        creator: '刘雪红',
+        creatorRole: 'CRA专员'
+      },
+      {
+        id: 3,
+        nameAbbr: '入组通过-三条记录',
+        age: '',
+        gender: '',
+        domain: '肺癌',
+        center: '安顺市贵航集团302医院',
+        screenNo: '333',
+        preScreenNo: 'PS003',
+        createTime: '2026-05-25 19:38:50',
+        creator: '刘雪红',
+        creatorRole: 'CRA专员'
+      },
+      {
+        id: 4,
+        nameAbbr: '入组审核沟通中',
+        age: '',
+        gender: '',
+        domain: '肺癌',
+        center: '安顺市贵航集团302医院',
+        screenNo: '23232',
+        preScreenNo: 'PS004',
+        createTime: '2026-05-25 19:38:32',
+        creator: '刘雪红',
+        creatorRole: 'CRA专员'
+      },
+      {
+        id: 5,
+        nameAbbr: '入组筛败-医学',
+        age: '0',
+        gender: '',
+        domain: '肺癌',
+        center: '安顺市贵航集团302医院',
+        screenNo: '11111',
+        preScreenNo: 'PS005',
+        createTime: '2026-05-25 19:38:21',
+        creator: '刘雪红',
+        creatorRole: 'CRA专员'
+      }
+    ];
+
+    let currentTab = 'pending';
+
+    // 切换Tab
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      // 更新Tab样式
+      document.getElementById('tab-pending').classList.remove('active');
+      document.getElementById('tab-patient-list').classList.remove('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      
+      // 重新渲染表格
+      renderTable();
+    }
+
+    // 渲染表格
+    function renderTable() {
+      const tbody = document.getElementById('table-body');
+      const totalCount = document.getElementById('total-count');
+      
+      // 根据当前Tab过滤数据（这里演示用，实际应该根据业务逻辑过滤）
+      let displayData = mockData;
+      if (currentTab === 'pending') {
+        // 待操作：可以显示特定状态的数据
+        displayData = mockData.filter(item => item.screenNo !== '--');
+      } else {
+        // 患者列表：显示所有数据
+        displayData = mockData;
+      }
+      
+      // 生成表格行
+      tbody.innerHTML = displayData.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td style="color:#1677ff;font-weight:500">${item.nameAbbr}</td>
+          <td>${item.age || ''}</td>
+          <td>${item.gender || ''}</td>
+          <td>${item.domain}</td>
+          <td>${item.center}</td>
+          <td>${item.screenNo}</td>
+          <td style="color:#1677ff;font-weight:500">${item.preScreenNo}</td>
+          <td style="color:#888">${item.createTime}</td>
+          <td>${item.creator}</td>
+          <td>${item.creatorRole}</td>
+          <td>
+            <div class="action-links">
+              <a href="javascript:void(0)" class="action-link">编辑</a><span class="action-sep">|</span>
+              <a href="javascript:void(0)" class="action-link">病史与资料</a><span class="action-sep">|</span>
+              <a href="javascript:void(0)" class="action-link">项目匹配</a><span class="action-sep">|</span>
+              <a href="javascript:void(0)" class="action-link">匹配详情</a><span class="action-sep">|</span>
+              <a href="javascript:void(0)" class="action-link">审核记录</a><span class="action-sep">|</span>
+              <a href="javascript:void(0)" class="action-link" style="color:#ff4d4f">删除</a>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+      
+      // 更新总数
+      totalCount.textContent = displayData.length;
+    }
+
+    // 初始化
+    window.onload = function() {
+      renderTable();
+    };
+  </script>
+</body>
+</html>
