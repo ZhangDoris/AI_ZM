@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI改进分析 - 设置</title>
+  <!-- Font Awesome 图标库 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -68,7 +70,7 @@
     .main-layout {
       display: flex;
       gap: 0;
-      max-width: 1400px;
+      max-width: 100%;
       margin: 0 auto;
       min-height: calc(100vh - 64px);
     }
@@ -88,6 +90,7 @@
       max-height: calc(100vh - 64px);
       position: sticky;
       top: 64px;
+      flex-shrink: 0;
     }
 
     /* 功能模块卡片 */
@@ -120,6 +123,112 @@
       font-size: 16px;
       font-weight: 600;
       color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 帮助图标 */
+    .help-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f0f0f0;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .help-icon:hover {
+      background: #165dff;
+      color: #fff;
+    }
+
+    .help-icon i {
+      font-size: 14px;
+    }
+
+    /* 悬浮提示框 */
+    .floating-notice {
+      display: none;
+      position: fixed;
+      top: auto;
+      left: auto;
+      margin-top: 8px;
+      background: linear-gradient(135deg, #fff9e6 0%, #fff3e0 100%);
+      border: 2px solid #ffd591;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(255, 213, 145, 0.4);
+      z-index: 10000;
+      max-width: 500px;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .floating-notice.show {
+      display: block;
+    }
+
+    .floating-notice .notice-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .floating-notice .notice-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #d48806;
+      margin-bottom: 10px;
+    }
+
+    .floating-notice p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .floating-notice ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .floating-notice ul li {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 6px;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .floating-notice ul li::before {
+      content: '•';
+      position: absolute;
+      left: 4px;
+      color: #d48806;
+      font-weight: bold;
+    }
+
+    .floating-notice ul li strong {
+      color: #d48806;
+      font-weight: 600;
     }
 
     .module-body {
@@ -895,6 +1004,72 @@
       color: #d48806;
     }
 
+    /* 手动执行重要提示样式 */
+    .important-notice {
+      background: linear-gradient(135deg, #fff9e6 0%, #fff3e0 100%);
+      border: 2px solid #ffd591;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(255, 213, 145, 0.3);
+    }
+
+    .notice-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .notice-content {
+      flex: 1;
+    }
+
+    .notice-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #d48806;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notice-content p {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    .notice-content ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .notice-content ul li {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 6px;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .notice-content ul li::before {
+      content: '•';
+      position: absolute;
+      left: 4px;
+      color: #d48806;
+      font-weight: bold;
+    }
+
+    .notice-content ul li strong {
+      color: #d48806;
+      font-weight: 600;
+    }
+
     .prd-field-table {
       width: 100%;
       border-collapse: collapse;
@@ -1085,12 +1260,26 @@
 
     <!-- 手动执行 -->
     <div class="module-card">
-      <div class="module-header">
+      <div class="module-header" style="position: relative;">
         <div class="module-title">手动执行</div>
+        <div class="help-icon" id="manualHelpIcon" onmouseenter="showManualNotice()" onmouseleave="hideManualNotice()">
+          <i class="fas fa-question-circle"></i>
+        </div>
+        
+        <!-- 悬浮提示框 -->
+        <div class="floating-notice" id="manualFloatingNotice">
+          <div class="notice-icon">⚠️</div>
+          <div class="notice-title">重要提示</div>
+          <p>只有满足以下条件的项目，才能进行分析设置和运行：</p>
+          <ul>
+            <li><strong>项目已上架</strong>：项目状态为"已上架/运行中"</li>
+            <li><strong>已有患者入组</strong>：项目中至少有患者数据进入筛选流程</li>
+            <li><strong>有人工审核数据</strong>：至少有一条患者记录完成了人工审核（CRC 提交、CRA 审核）</li>
+            <li><strong>有批注数据</strong>：人工审核过程中留下了批注（审核意见、修正记录等）</li>
+          </ul>
+        </div>
       </div>
       <div class="module-body">
-      
-      <div class="config-row">
         <div class="config-label">选择项目：</div>
         <div class="multi-select-wrapper" style="flex: 1;">
           <div class="select-display" id="manualSelectDisplay" onclick="toggleManualDropdown()">
@@ -1150,8 +1339,6 @@
       </button>
       
       </div>
-    </div>
-    
     </div>
 
     <!-- 右侧PRD说明 -->
@@ -1760,6 +1947,33 @@
       const pageTitle = urlParams.get('title');
       if (pageTitle) {
         document.querySelector('.nav-title').textContent = decodeURIComponent(pageTitle);
+      }
+    }
+
+    // ========== 手动执行悬浮提示功能 ==========
+
+    // 显示手动执行提示框
+    function showManualNotice() {
+      const notice = document.getElementById('manualFloatingNotice');
+      const icon = document.getElementById('manualHelpIcon');
+      if (notice && icon) {
+        // 获取图标的位置
+        const rect = icon.getBoundingClientRect();
+        
+        // 设置提示框位置（在图标下方）
+        notice.style.top = (rect.bottom + 8) + 'px';
+        notice.style.left = rect.left + 'px';
+        
+        // 显示提示框
+        notice.classList.add('show');
+      }
+    }
+
+    // 隐藏手动执行提示框
+    function hideManualNotice() {
+      const notice = document.getElementById('manualFloatingNotice');
+      if (notice) {
+        notice.classList.remove('show');
       }
     }
 
