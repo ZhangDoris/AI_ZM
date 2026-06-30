@@ -325,6 +325,18 @@
           <input type="text" class="filter-input" placeholder="请输入"/>
         </div>
       </div>
+      <div class="filter-row">
+        <div class="filter-item">
+          <label class="filter-label">匹配状态：</label>
+          <select class="filter-select">
+            <option value="">请选择</option>
+            <option value="匹配成功">匹配成功</option>
+            <option value="匹配失败">匹配失败</option>
+            <option value="待匹配">待匹配</option>
+            <option value="匹配中">匹配中</option>
+          </select>
+        </div>
+      </div>
       <div class="button-group">
         <button class="btn btn-primary"><i class="fas fa-search"></i> 查询</button>
         <button class="btn btn-default"><i class="fas fa-redo"></i> 重置</button>
@@ -351,6 +363,7 @@
               <th style="min-width:180px">参研中心</th>
               <th style="min-width:100px">筛选号</th>
               <th style="min-width:100px">预筛号</th>
+              <th style="min-width:100px">匹配状态</th>
               <th style="min-width:160px">创建时间</th>
               <th style="min-width:80px">创建人</th>
               <th style="min-width:80px">创建人角色</th>
@@ -383,6 +396,7 @@
         center: '安顺市贵航集团302医院',
         screenNo: '333',
         preScreenNo: 'PS001',
+        matchStatus: '已匹配',
         createTime: '2026-05-25 23:44:19',
         creator: '刘雪红',
         creatorRole: 'CRA专员'
@@ -396,6 +410,7 @@
         center: '安顺市贵航集团302医院',
         screenNo: '--',
         preScreenNo: 'PS002',
+        matchStatus: '待匹配',
         createTime: '2026-05-25 23:22:05',
         creator: '刘雪红',
         creatorRole: 'CRA专员'
@@ -409,6 +424,7 @@
         center: '安顺市贵航集团302医院',
         screenNo: '333',
         preScreenNo: 'PS003',
+        matchStatus: '已匹配',
         createTime: '2026-05-25 19:38:50',
         creator: '刘雪红',
         creatorRole: 'CRA专员'
@@ -422,6 +438,7 @@
         center: '安顺市贵航集团302医院',
         screenNo: '23232',
         preScreenNo: 'PS004',
+        matchStatus: '匹配中',
         createTime: '2026-05-25 19:38:32',
         creator: '刘雪红',
         creatorRole: 'CRA专员'
@@ -435,6 +452,7 @@
         center: '安顺市贵航集团302医院',
         screenNo: '11111',
         preScreenNo: 'PS005',
+        matchStatus: '已匹配',
         createTime: '2026-05-25 19:38:21',
         creator: '刘雪红',
         creatorRole: 'CRA专员'
@@ -472,7 +490,22 @@
       }
       
       // 生成表格行
-      tbody.innerHTML = displayData.map((item, index) => `
+      tbody.innerHTML = displayData.map((item, index) => {
+        // 根据匹配状态设置样式
+        let matchStatusClass = '';
+        let matchStatusStyle = '';
+        if (item.matchStatus === '已匹配') {
+          matchStatusClass = 'matched';
+          matchStatusStyle = 'background:#e6fffb;color:#13c2c2;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block;';
+        } else if (item.matchStatus === '待匹配') {
+          matchStatusClass = 'pending';
+          matchStatusStyle = 'background:#fff7e6;color:#fa8c16;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block;';
+        } else if (item.matchStatus === '匹配中') {
+          matchStatusClass = 'matching';
+          matchStatusStyle = 'background:#e6f4ff;color:#1677ff;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:500;display:inline-block;';
+        }
+        
+        return `
         <tr>
           <td>${index + 1}</td>
           <td style="color:#1677ff;font-weight:500">${item.nameAbbr}</td>
@@ -482,6 +515,7 @@
           <td>${item.center}</td>
           <td>${item.screenNo}</td>
           <td style="color:#1677ff;font-weight:500">${item.preScreenNo}</td>
+          <td><span style="${matchStatusStyle}">${item.matchStatus}</span></td>
           <td style="color:#888">${item.createTime}</td>
           <td>${item.creator}</td>
           <td>${item.creatorRole}</td>
@@ -496,7 +530,7 @@
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
       
       // 更新总数
       totalCount.textContent = displayData.length;
