@@ -2897,6 +2897,191 @@
       font-weight:600;
     }
 
+    /* 预筛沟通弹窗样式 */
+    .comm-modal {
+      display:none;
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      bottom:0;
+      background:rgba(0,0,0,0.45);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+    }
+    .comm-modal.open {
+      display:flex;
+    }
+    .comm-modal-content {
+      background:#fff;
+      border-radius:8px;
+      width:90%;
+      max-width:700px;
+      max-height:85vh;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      box-shadow:0 8px 32px rgba(0,0,0,0.2);
+    }
+    .comm-modal-header {
+      padding:16px 24px;
+      border-bottom:1px solid #f0f0f0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      background:#fafbfc;
+    }
+    .comm-modal-title {
+      font-size:18px;
+      font-weight:600;
+      color:#333;
+    }
+    .comm-modal-close {
+      cursor:pointer;
+      font-size:24px;
+      color:#999;
+      line-height:1;
+      transition:color 0.2s;
+    }
+    .comm-modal-close:hover {
+      color:#333;
+    }
+    .comm-modal-body {
+      padding:24px;
+      overflow-y:auto;
+      flex:1;
+    }
+    .comm-section {
+      margin-bottom:20px;
+    }
+    .comm-label {
+      display:block;
+      font-size:14px;
+      color:#333;
+      margin-bottom:8px;
+      font-weight:500;
+    }
+    .comm-search-box {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .comm-search-input {
+      flex:1;
+      padding:8px 12px;
+      border:1px solid #d9d9d9;
+      border-radius:4px;
+      font-size:14px;
+      outline:none;
+      transition:border-color 0.2s;
+    }
+    .comm-search-input:focus {
+      border-color:#1890ff;
+    }
+    .comm-default-tag {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 12px;
+      background:#fff2f0;
+      color:#ff4d4f;
+      border:1px solid #ffccc7;
+      border-radius:4px;
+      font-size:13px;
+      font-weight:500;
+      cursor:pointer;
+      user-select:none;
+      transition:all 0.2s;
+    }
+    .comm-default-tag:hover {
+      background:#ffece8;
+      border-color:#ffa39e;
+    }
+    .comm-default-tag input[type="checkbox"] {
+      width:16px;
+      height:16px;
+      cursor:pointer;
+      accent-color:#ff4d4f;
+    }
+    .comm-user-table {
+      width:100%;
+      border-collapse:collapse;
+      border:1px solid #e8e8e8;
+      border-radius:4px;
+      overflow:hidden;
+    }
+    .comm-user-table th {
+      background:#1e6da4;
+      color:#fff;
+      padding:12px;
+      text-align:left;
+      font-weight:500;
+      font-size:14px;
+    }
+    .comm-user-table td {
+      padding:12px;
+      border-bottom:1px solid #f0f0f0;
+      font-size:14px;
+      color:#333;
+    }
+    .comm-user-table tr:last-child td {
+      border-bottom:none;
+    }
+    .comm-user-table tr:hover td {
+      background:#f5f7fa;
+    }
+    .comm-delete-link {
+      color:#ff4d4f;
+      cursor:pointer;
+      text-decoration:none;
+      font-size:13px;
+    }
+    .comm-delete-link:hover {
+      text-decoration:underline;
+    }
+    .comm-textarea {
+      width:100%;
+      min-height:120px;
+      padding:12px;
+      border:1px solid #d9d9d9;
+      border-radius:4px;
+      font-size:14px;
+      resize:vertical;
+      outline:none;
+      transition:border-color 0.2s;
+    }
+    .comm-textarea:focus {
+      border-color:#1890ff;
+    }
+    .comm-attachment {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .comm-upload-btn {
+      padding:8px 16px;
+      background:#1890ff;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      font-size:14px;
+      transition:background 0.2s;
+    }
+    .comm-upload-btn:hover {
+      background:#096dd9;
+    }
+    .comm-modal-footer {
+      padding:16px 24px;
+      border-top:1px solid #f0f0f0;
+      display:flex;
+      justify-content:flex-end;
+      gap:12px;
+      background:#fafbfc;
+    }
+
     /* Notification dot */
     .notif-dot { width:7px; height:7px; background:#ff4d4f; border-radius:50%; display:inline-block; margin-left:4px; vertical-align:middle; }
 
@@ -5961,8 +6146,7 @@ function buildAuditContent() {
             <th>中心</th>
             <th>匹配率</th>
             <th>提交人</th>
-             <th>患者状态</th>
-            <th>是否提交</th>
+
             <th style="width:200px">操作</th>
           </tr>
         </thead>
@@ -5987,6 +6171,8 @@ function buildAuditContent() {
               <span class="action-link" onclick="openDetailById(${r.id})">查看</span>
               <span class="action-sep">|</span>
               <span class="action-link">抄送</span>
+              <span class="action-sep">|</span>
+              <span class="action-link">审核</span>
               <span class="action-sep">|</span>
               <span class="action-link">审核记录</span>
               <span class="action-sep">|</span>
@@ -6232,6 +6418,8 @@ function buildScPatientListContent() {
             <div>④ 在当前页面 把项目编码带出来显示。</div>
             <div>⑤ 点击提交审核按钮，对这个页面进行了修改。</div>
             <div>⑥ 点击审核记录按钮，对这个页面进行了修改。</div>
+            <div>⑦ 沟通艾特的页面加一个默认是否艾特提交人。</div>
+            <div>⑧ 审核列表的审核记录和审核页面也需要同步修改审核记录的显示内容和沟通页面。</div>
             </div>
         </div>
     <!-- 项目信息摘要 -->
@@ -6467,11 +6655,21 @@ function renderAuditRecordContent(patientNo) {
           <strong>原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审核流程
         </div>
         </div>
-        
+         <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 点击预筛沟通，加了一个 默认艾特提交人的选项</div>
+            <div>② 如果选中，就一直默认艾特，如果不选中，就默认不艾特，除非手动艾特了</div>
+            <div>③ 这个动作 谁都可以设置，不用局限于谁，后台记录好，谁设置了 艾特，谁取消了</div>
+ 
+            </div>
+        </div>
         
         <div style="margin-bottom:16px;display:flex;justify-content:flex-end;gap:12px">
           <button class="audit-action-btn default">下载</button>
-          <button class="audit-action-btn primary">预筛沟通</button>
+          <button class="audit-action-btn primary" onclick="openCommModal('prescreen')">预筛沟通</button>
         </div>
         <table class="audit-table">
           <thead>
@@ -6520,7 +6718,7 @@ function renderAuditRecordContent(patientNo) {
         </div>
         <div style="margin-bottom:16px;display:flex;justify-content:flex-end;gap:12px">
           <button class="audit-action-btn default">下载</button>
-          <button class="audit-action-btn primary">入组沟通</button>
+          <button class="audit-action-btn primary" onclick="openCommModal('enrolling')">入组沟通</button>
         </div>
         <table class="audit-table">
           <thead>
@@ -15558,6 +15756,163 @@ window.addEventListener('DOMContentLoaded', function() {
     window.history.replaceState({}, '', newUrl);
   }
 });
+
+// ==================== 预筛沟通弹窗 ====================
+let _currentCommType = null; // 'prescreen' 或 'enrolling'
+
+// 打开预筛沟通弹窗
+function openCommModal(type) {
+  _currentCommType = type;
+  const modal = document.getElementById('commModal');
+  if (modal) {
+    modal.classList.add('open');
+    
+    // 重置checkbox状态为选中
+    const checkbox = document.getElementById('defaultAtCRC');
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+    
+    // 如果用户列表为空，添加默认用户
+    const userList = document.getElementById('commUserList');
+    if (userList && userList.children.length === 0) {
+      addDefaultUser();
+    }
+    
+    console.log('打开沟通弹窗，类型:', type);
+  }
+}
+
+// 关闭预筛沟通弹窗
+function closeCommModal() {
+  const modal = document.getElementById('commModal');
+  if (modal) {
+    modal.classList.remove('open');
+  }
+}
+
+// 添加默认用户（CRC/协调员）
+function addDefaultUser() {
+  const userList = document.getElementById('commUserList');
+  if (!userList) return;
+  
+  // 检查是否已存在该用户
+  const existingRows = userList.querySelectorAll('tr');
+  for (let row of existingRows) {
+    if (row.querySelector('td:nth-child(2)').textContent === '阮媛媛') {
+      return; // 已存在，不重复添加
+    }
+  }
+  
+  // 获取当前行数
+  const rowCount = existingRows.length + 1;
+  
+  // 创建新行
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = `
+    <td>${rowCount}</td>
+    <td>阮媛媛</td>
+    <td>临床协调员</td>
+    <td>181****9397</td>
+    <td><a href="javascript:void(0)" class="comm-delete-link" onclick="removeUser(this)">删除</a></td>
+  `;
+  
+  userList.appendChild(newRow);
+}
+
+// 监听checkbox变化
+document.addEventListener('DOMContentLoaded', function() {
+  const checkbox = document.getElementById('defaultAtCRC');
+  if (checkbox) {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        // 勾选时添加默认用户
+        addDefaultUser();
+      } else {
+        // 取消勾选时移除默认用户
+        removeDefaultUser();
+      }
+    });
+  }
+});
+
+// 移除默认用户
+function removeDefaultUser() {
+  const userList = document.getElementById('commUserList');
+  if (!userList) return;
+  
+  const rows = userList.querySelectorAll('tr');
+  rows.forEach(row => {
+    const name = row.querySelector('td:nth-child(2)').textContent;
+    if (name === '阮媛媛') {
+      row.remove();
+      // 重新编号
+      const remainingRows = userList.querySelectorAll('tr');
+      remainingRows.forEach((r, index) => {
+        r.querySelector('td:first-child').textContent = index + 1;
+      });
+    }
+  });
+}
+
+// 删除用户
+function removeUser(element) {
+  const row = element.closest('tr');
+  if (row) {
+    row.remove();
+    // 重新编号
+    const rows = document.querySelectorAll('#commUserList tr');
+    rows.forEach((r, index) => {
+      r.querySelector('td:first-child').textContent = index + 1;
+    });
+  }
+}
+
+// 发送沟通消息
+function sendCommMessage() {
+  const textarea = document.querySelector('.comm-textarea');
+  const remark = textarea ? textarea.value.trim() : '';
+  
+  if (!remark) {
+    showWechatToast('请输入批注内容');
+    return;
+  }
+  
+  // 获取选中的用户列表
+  const users = [];
+  const rows = document.querySelectorAll('#commUserList tr');
+  rows.forEach(row => {
+    const name = row.querySelector('td:nth-child(2)').textContent;
+    const role = row.querySelector('td:nth-child(3)').textContent;
+    const phone = row.querySelector('td:nth-child(4)').textContent;
+    users.push({ name, role, phone });
+  });
+  
+  if (users.length === 0) {
+    showWechatToast('请至少选择一个提醒人员');
+    return;
+  }
+  
+  // 检查默认选项是否勾选
+  const defaultAtCRC = document.getElementById('defaultAtCRC');
+  const isDefaultChecked = defaultAtCRC && defaultAtCRC.checked;
+  
+  // 模拟发送
+  console.log('发送沟通消息:', {
+    type: _currentCommType,
+    users: users,
+    remark: remark,
+    defaultAtCRC: isDefaultChecked
+  });
+  
+  showWechatToast('✅ 消息已发送！');
+  closeCommModal();
+  
+  // 清空输入
+  if (textarea) {
+    textarea.value = '';
+  }
+}
 </script>
 
 <!-- 审核记录弹窗 -->
@@ -15569,6 +15924,70 @@ window.addEventListener('DOMContentLoaded', function() {
     </div>
     <div class="audit-modal-body" id="auditRecordContent">
       <!-- 动态渲染审核记录内容 -->
+    </div>
+  </div>
+</div>
+
+<!-- 预筛沟通弹窗 -->
+<div id="commModal" class="comm-modal">
+  <div class="comm-modal-content">
+    <div class="comm-modal-header">
+      <div class="comm-modal-title">预筛沟通</div>
+      <span class="comm-modal-close" onclick="closeCommModal()">×</span>
+    </div>
+    <div class="comm-modal-body">
+      <!-- 选择提醒人员 -->
+      <div class="comm-section">
+        <label class="comm-label">请选择提醒人员：</label>
+        <div class="comm-search-box">
+          <input type="text" class="comm-search-input" placeholder="请输入关键词搜索" />
+          <label class="comm-default-tag">
+            <input type="checkbox" id="defaultAtCRC" checked />
+            <span>默认艾特CRC/协调员</span>
+          </label>
+        </div>
+      </div>
+      
+      <!-- 用户列表表格 -->
+      <div class="comm-section">
+        <table class="comm-user-table">
+          <thead>
+            <tr>
+              <th style="width:60px">序号</th>
+              <th>用户姓名</th>
+              <th>角色</th>
+              <th>手机号</th>
+              <th style="width:80px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="commUserList">
+            <tr>
+              <td>1</td>
+              <td>阮媛媛</td>
+              <td>临床协调员</td>
+              <td>181****9397</td>
+              <td><a href="javascript:void(0)" class="comm-delete-link" onclick="removeUser(this)">删除</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- 批注 -->
+      <div class="comm-section">
+        <textarea class="comm-textarea" placeholder="添加批注"></textarea>
+      </div>
+      
+      <!-- 附件 -->
+      <div class="comm-section">
+        <div class="comm-attachment">
+          <span style="font-size:14px;color:#333;">附件：</span>
+          <button class="comm-upload-btn">点击上传</button>
+        </div>
+      </div>
+    </div>
+    <div class="comm-modal-footer">
+      <button class="btn btn-default" onclick="closeCommModal()">取消</button>
+      <button class="btn btn-primary" onclick="sendCommMessage()">发送</button>
     </div>
   </div>
 </div>
