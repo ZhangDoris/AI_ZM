@@ -62,6 +62,64 @@
     }
     .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
 
+    /* 右侧面板 — 嵌入布局 */
+    #right-panel {
+      transition: width 0.3s ease, min-width 0.3s ease;
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible;
+      background: #fffbeb;
+      border-left: 2px dashed #fcd34d;
+    }
+    #right-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-left: none;
+    }
+    /* 抽屉把手 — 在面板内部，相对于面板定位 */
+    .drawer-handle {
+      position: absolute;
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #165DFF 0%, #0E47D1 100%);
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: -2px 0 8px rgba(22,93,255,0.25);
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .drawer-handle:hover {
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -4px 0 12px rgba(22,93,255,0.35);
+    }
+    .drawer-handle i {
+      writing-mode: horizontal-tb;
+      font-size: 16px;
+    }
+    /* 左侧面板自适应 */
+    #left-panel {
+      transition: width 0.3s ease, flex-basis 0.3s ease;
+      flex: 1;
+      min-width: 0;
+    }
+
     .btn-click:active { transform: scale(0.96); }
     .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
   </style>
@@ -77,7 +135,7 @@
   <div id="app" class="flex h-screen relative">
 
     <!-- 左侧：产品界面 -->
-    <div id="left-panel" class="w-[75%] lg:w-[78%] overflow-y-auto bg-gray-50 relative">
+    <div id="left-panel" class="overflow-y-auto bg-gray-50 relative">
 
       <!-- 顶部导航栏 -->
       <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
@@ -235,12 +293,17 @@
       </div>
     </div>
 
+
     <!-- 分隔线 -->
     <div id="divider" class="w-px bg-gray-300"></div>
 
-    <!-- 右侧：功能说明（仅保留4条） -->
-    <div id="right-panel" class="w-[25%] lg:w-[22%] overflow-y-auto bg-amber-50 border-l-2 border-dashed border-amber-300">
-      <div class="p-4">
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[25%] lg:w-[22%]">
+      <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()" title="收起/展开说明面板">
+        <i class="fas fa-chevron-right" id="drawerIcon"></i>
+        <span>PRD</span>
+      </button>
+      <div class="p-4 overflow-y-auto" style="max-height: 100vh;">
         <!-- 原型说明标识 -->
         <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
           <div class="flex items-center gap-2 mb-1">
@@ -259,7 +322,7 @@
 
         <div class="space-y-3">
           <!-- 说明 1 -->
-          <div class="proto-desc p-3 active-highlight" data-proto-id="1">
+          <div class="proto-desc p-3" data-proto-id="1">
             <div class="flex items-start gap-2">
               <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
               <div>
@@ -610,6 +673,9 @@
       svg.innerHTML = '';
       connections.length = 0;
 
+      // 面板收缩时不绘制连线
+      if (rightPanelCollapsed) return;
+
       const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
       const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
 
@@ -713,11 +779,31 @@
       }
     }
 
+    // ========== 右侧面板抽屉 ==========
+    let rightPanelCollapsed = false;
+    function toggleRightPanel() {
+      rightPanelCollapsed = !rightPanelCollapsed;
+      const panel = document.getElementById('right-panel');
+      const btn = document.getElementById('drawerHandle');
+      const icon = document.getElementById('drawerIcon');
+      const divider = document.getElementById('divider');
+      if (rightPanelCollapsed) {
+        panel.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        divider.style.display = 'none';
+      } else {
+        panel.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        divider.style.display = '';
+      }
+      setTimeout(drawConnections, 320);
+    }
+
     // ========== 初始化 ==========
     function init() { drawConnections(); bindHoverEvents(); }
     document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
     let resizeTimer;
-    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 150); });
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { init(); }, 150); });
     document.getElementById('left-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
     document.getElementById('right-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
   </script>
