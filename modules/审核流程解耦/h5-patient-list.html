@@ -384,6 +384,27 @@
       font-weight: 900;
       font-size: 14px;
     }
+    /* 中心搜索框 */
+    .center-search-wrap {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .center-search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background: #f9f9f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .center-search-input:focus {
+      border-color: #165DFF;
+      background-color: #fff;
+    }
+    .center-search-input::placeholder { color: #bbb; }
 
     /* 提交审核弹窗 - H5手机端底部弹出 */
     .audit-modal {
@@ -881,12 +902,18 @@
       <span>选择中心</span>
       <div class="panel-close" onclick="hideCenterPanel()"><i class="fas fa-times"></i></div>
     </div>
-    <div class="panel-item active" onclick="selectCenter('全部中心', this)">全部中心</div>
-    <div class="panel-item" onclick="selectCenter('北京协和医院', this)">北京协和医院</div>
-    <div class="panel-item" onclick="selectCenter('上海瑞金医院', this)">上海瑞金医院</div>
-    <div class="panel-item" onclick="selectCenter('广州中山医院', this)">广州中山医院</div>
-    <div class="panel-item" onclick="selectCenter('华西医院', this)">华西医院</div>
-    <div class="panel-item" onclick="selectCenter('武汉同济医院', this)">武汉同济医院</div>
+    <!-- 联想搜索框 -->
+    <div class="center-search-wrap">
+      <input type="text" class="center-search-input" id="centerSearchInput" placeholder="搜索中心名称..." oninput="filterCenters()">
+    </div>
+    <div id="centerList">
+      <div class="panel-item active" onclick="selectCenter('全部中心', this)">全部中心</div>
+      <div class="panel-item" onclick="selectCenter('北京协和医院', this)">北京协和医院</div>
+      <div class="panel-item" onclick="selectCenter('上海瑞金医院', this)">上海瑞金医院</div>
+      <div class="panel-item" onclick="selectCenter('广州中山医院', this)">广州中山医院</div>
+      <div class="panel-item" onclick="selectCenter('华西医院', this)">华西医院</div>
+      <div class="panel-item" onclick="selectCenter('武汉同济医院', this)">武汉同济医院</div>
+    </div>
     <div style="height: 30px;"></div>
   </div>
 
@@ -1225,6 +1252,21 @@
       filterPatients();
     }
 
+    // 中心联想搜索过滤
+    function filterCenters() {
+      const keyword = document.getElementById('centerSearchInput').value.toLowerCase().trim();
+      const centerItems = document.querySelectorAll('#centerList .panel-item');
+      
+      centerItems.forEach(item => {
+        const centerName = item.textContent.toLowerCase();
+        if (keyword === '' || centerName.includes(keyword)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
     // Toast提示
     function toastMsg(msg) {
       const toast = document.getElementById('toast');
@@ -1296,7 +1338,7 @@ function updatePRDPanel(mod, sub) {
       sections: [
         {
           title: '★ 本次修改',
-          content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审核功能，点击提交审核，加了可以选择审核流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审核人也要动态变化，选择了非推荐的流程，需要提醒他必须填写理由</span></strong></li><li>患者列表加一个项目编号</li></ul>'
+          content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审核功能，点击提交审核，加了可以选择审核流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审核人也要动态变化，选择了非推荐的流程，需要提醒他必须填写理由</span></strong></li><li>患者列表加一个项目编号</li><li>全部中心的选择需要加联想下拉框，目前是改了一种样式，比较适配手机</li></ul>'
         }
         
         
