@@ -605,9 +605,6 @@
     .btn-default { background: white; color: #555; border: 1.5px solid #e0e0e0; }
     .btn-default:hover { border-color: #1677ff; color: #1677ff; }
     .btn-danger { background: #ff4d4f; color: white; }
-    .btn-danger:hover { background: #ff7875; }
-    .btn-success { background: #52c41a; color: white; }
-    .btn-success:hover { background: #73d13d; }
     .btn-sm { padding: 5px 12px; font-size: 12px; }
     
     /* 趋势图按钮 */
@@ -2720,12 +2717,10 @@
     /* Modal overlay (simple) */
     .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:999; align-items:center; justify-content:center; }
     .modal-overlay.open { display:flex; }
-    .modal-container { background:white; border-radius:8px; width:90%; max-width:600px; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden; display:flex; flex-direction:column; }
-    .modal-header { padding:16px 24px; border-bottom:1px solid #f0f0f0; display:flex; align-items:center; justify-content:space-between; background:#fafbfc; }
-    .modal-title { font-size:18px; font-weight:700; margin:0; color:#333; }
-    .modal-close { cursor:pointer; color:#999; font-size:24px; transition:color 0.2s; }
+    .modal-box { background:white; border-radius:16px; padding:28px; width:480px; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    .modal-title { font-size:16px; font-weight:700; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+    .modal-close { margin-left:auto; cursor:pointer; color:#aaa; font-size:18px; }
     .modal-close:hover { color:#333; }
-    .modal-body { padding:24px; overflow-y:auto; flex:1; }
 
     /* 审核记录弹窗样式 */
     .audit-modal {
@@ -3086,106 +3081,6 @@
       background:#096dd9;
     }
     .comm-modal-footer {
-      padding:16px 24px;
-      border-top:1px solid #f0f0f0;
-      display:flex;
-      justify-content:flex-end;
-      gap:12px;
-      background:#fafbfc;
-    }
-
-    /* 审核操作弹窗样式 */
-    .audit-action-modal {
-      background:#fff;
-      width:90%;
-      max-width:1100px;
-      max-height:85vh;
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      box-shadow:0 8px 32px rgba(0,0,0,0.2);
-      border-radius:8px;
-    }
-    .audit-status-bar {
-      padding:16px 24px;
-      background:#fff;
-      font-size:15px;
-    }
-    .audit-status-label {
-      color:#666;
-      margin-right:8px;
-    }
-    .audit-status-value {
-      color:#fa8c16;
-      font-weight:600;
-    }
-    .audit-record-title {
-      display:flex;
-      align-items:center;
-      padding:12px 24px;
-      background:#fafbfc;
-      border-bottom:1px solid #f0f0f0;
-    }
-    .audit-record-line {
-      flex:1;
-      height:1px;
-      background:#e8e8e8;
-      margin-right:12px;
-    }
-    .audit-record-title span:last-child {
-      font-size:14px;
-      font-weight:600;
-      color:#333;
-    }
-    .audit-record-table {
-      width:100%;
-      border-collapse:collapse;
-      font-size:14px;
-    }
-    .audit-record-table thead th {
-      background:#1e6da4;
-      color:#fff;
-      padding:12px;
-      text-align:left;
-      font-weight:500;
-      border-right:1px solid rgba(255,255,255,0.1);
-    }
-    .audit-record-table thead th:last-child {
-      border-right:none;
-    }
-    .audit-record-table tbody td {
-      padding:12px;
-      border-bottom:1px solid #f0f0f0;
-      color:#333;
-      vertical-align:middle;
-    }
-    .audit-record-table tbody tr:nth-child(even) {
-      background:#f9fbff;
-    }
-    .audit-record-table .fold-icon {
-      cursor:pointer;
-      color:#999;
-      transition:transform 0.2s;
-    }
-    .audit-record-table .fold-icon.expanded {
-      transform:rotate(90deg);
-    }
-    .audit-batch-note {
-      padding:12px;
-      background:#f5f7fa;
-      border-radius:4px;
-      margin:8px 0;
-    }
-    .audit-batch-note-label {
-      font-weight:600;
-      color:#333;
-      margin-bottom:8px;
-    }
-    .audit-batch-note-content {
-      color:#666;
-      font-size:13px;
-    }
-    .audit-modal-footer {
       padding:16px 24px;
       border-top:1px solid #f0f0f0;
       display:flex;
@@ -6227,7 +6122,7 @@ function buildAuditContent() {
             <div>① 审核记录页面跟智能筛选一样需要修改,待审核页面和已审核列表都需要修改审核记录</div>
             <div>② 审核：待审核页面</div>
 
-            <div>③ 撤回审核：（按钮上需要加一个提示）当这条数据还没有下一个动作的时候，本人撤回审核，但是一旦进入了 下一个流程节点了，不包括审核沟通，就不能撤回，也不显示这个按钮了</div>
+            <div>③ 撤回审核：当这条数据还没有下一个动作的时候，本人撤回审核，但是一旦进入了 下一个流程节点了，不包括审核沟通，就不能撤回，也不显示这个按钮了</div>
 
             </div>
         </div>
@@ -6275,7 +6170,7 @@ function buildAuditContent() {
               <span class="action-link">抄送</span>
               ${r.status==='pending' ? `
               <span class="action-sep">|</span>
-              <span class="action-link" onclick="openAuditModal(${r.id}, '${r.screenNo}', '${r.patientNo}')">审核</span>
+              <span class="action-link">审核</span>
               ` : ''}
               ${r.status==='done' ? `
               <span class="action-sep">|</span>
@@ -6582,7 +6477,6 @@ function buildScPatientListContent() {
               <div class="sc-action-links">
                 <a href="javascript:void(0)">查看</a><span>|</span>
                 <a href="javascript:void(0)">抄送</a><span>|</span>
-                <a href="javascript:void(0)" onclick="event.stopPropagation();openSubmitAuditModal('${schemeNo}', ${i})">提交审核</a><span>|</span>
                 <a href="javascript:void(0)" onclick="event.stopPropagation();openAuditRecordModal('${p.patientNo}')">审核记录</a><span>|</span>
                 <a href="javascript:void(0)">邮件记录</a>
               </div>
@@ -6696,113 +6590,6 @@ function confirmRevokeAudit(id, screenNo) {
   }
 }
 
-// ==================== 审核弹窗 ====================
-let _currentAuditId = null;
-let _currentAuditScreenNo = null;
-let _currentAuditPatientNo = null;
-
-// 打开审核弹窗
-function openAuditModal(id, screenNo, patientNo) {
-  _currentAuditId = id;
-  _currentAuditScreenNo = screenNo;
-  _currentAuditPatientNo = patientNo;
-  
-  const modal = document.getElementById('auditModal');
-  if (modal) {
-    modal.classList.add('open');
-    // 渲染审核记录内容
-    renderAuditModalContent(patientNo);
-  }
-}
-
-// 关闭审核弹窗
-function closeAuditModal() {
-  const modal = document.getElementById('auditModal');
-  if (modal) {
-    modal.classList.remove('open');
-  }
-}
-
-// 渲染审核弹窗内容
-function renderAuditModalContent(patientNo) {
-  // 模拟审核记录数据
-  const auditRecords = [
-    { operator: '刘雪红', status: '已提交', receiveTime: '', operateTime: '2026-06-26 16:41:19', duration: '', note: '111', expanded: true },
-    { operator: 'CRA专员188', status: '待审核', receiveTime: '2026-06-26 16:41:19', operateTime: '', duration: '', note: '' },
-    { operator: '刘雪红', status: '待审核', receiveTime: '2026-06-26 16:41:19', operateTime: '', duration: '', note: '' }
-  ];
-  
-  const tbody = document.getElementById('auditRecordTableBody');
-  if (!tbody) return;
-  
-  tbody.innerHTML = auditRecords.map((record, index) => {
-    const isExpanded = record.expanded || false;
-    const foldIconClass = isExpanded ? 'fold-icon expanded' : 'fold-icon';
-    const foldIcon = isExpanded ? '∨' : '›';
-    
-    let html = `<tr>`;
-    html += `<td><span class="${foldIconClass}" onclick="toggleAuditRow(this)">${foldIcon}</span></td>`;
-    html += `<td>${record.operator}</td>`;
-    html += `<td><span class="audit-status-tag ${record.status === '已提交' ? 'submitted' : 'pending'}">${record.status}</span></td>`;
-    html += `<td>${record.receiveTime}</td>`;
-    html += `<td>${record.operateTime}</td>`;
-    html += `<td>${record.duration}</td>`;
-    html += `</tr>`;
-    
-    // 如果有批注，显示批注行
-    if (record.note) {
-      html += `<tr class="audit-note-row">`;
-      html += `<td colspan="6">`;
-      html += `<div class="audit-batch-note">`;
-      html += `<div class="audit-batch-note-label">批注：</div>`;
-      html += `<div class="audit-batch-note-content">${record.note}</div>`;
-      html += `</div>`;
-      html += `</td>`;
-      html += `</tr>`;
-    }
-    
-    return html;
-  }).join('');
-}
-
-// 切换审核记录行展开/折叠
-function toggleAuditRow(icon) {
-  icon.classList.toggle('expanded');
-  const isExpanded = icon.classList.contains('expanded');
-  icon.textContent = isExpanded ? '∨' : '›';
-  
-  // 找到对应的批注行并切换显示
-  const row = icon.closest('tr');
-  const noteRow = row.nextElementSibling;
-  if (noteRow && noteRow.classList.contains('audit-note-row')) {
-    noteRow.style.display = isExpanded ? 'table-row' : 'none';
-  }
-}
-
-// 预筛沟通
-function openPreScreenComm() {
-  alert('打开预筛沟通弹窗');
-  // TODO: 实现预筛沟通功能
-}
-
-// 驳回审核
-function rejectAudit() {
-  if (confirm('确认驳回该审核吗？')) {
-    alert('已驳回审核');
-    closeAuditModal();
-    renderModule('audit');
-  }
-}
-
-// 通过审核
-function approveAudit() {
-  if (confirm('确认通过该审核吗？')) {
-    alert('已通过审核');
-    closeAuditModal();
-    renderModule('audit');
-  }
-}
-
 // ==================== 撤回审核确认 ====================
 function confirmRevokeAudit(id, screenNo) {
   if (confirm('确认撤回筛选号「' + screenNo + '」的审核结果吗？撤回后将恢复到待审核状态。')) {
@@ -6812,6 +6599,8 @@ function confirmRevokeAudit(id, screenNo) {
 }
 
 // ==================== 审核记录弹窗 ====================
+let _currentAuditPatientNo = null;
+
 // 打开审核记录弹窗
 function openAuditRecordModal(patientNo) {
   _currentAuditPatientNo = patientNo;
@@ -16205,74 +15994,6 @@ function sendCommMessage() {
     <div class="comm-modal-footer">
       <button class="btn btn-default" onclick="closeCommModal()">取消</button>
       <button class="btn btn-primary" onclick="sendCommMessage()">发送</button>
-    </div>
-  </div>
-</div>
-
-<!-- 审核弹窗 -->
-<div class="modal-overlay" id="auditModal">
-  <div class="modal-container audit-action-modal">
-    <div class="modal-header">
-      <h3 class="modal-title">审核</h3>
-      <button class="modal-close" onclick="closeAuditModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <!-- 当前状态 -->
-      <div class="audit-status-bar">
-        <span class="audit-status-label">当前状态：</span>
-        <span class="audit-status-value" id="auditCurrentStatus">审核中</span>
-      </div>
-       <!-- 非正常流程提示 -->
-        <div class="audit-abnormal-notice">
-          <div style="display:flex;align-items:center;flex:1">
-            <span class="audit-abnormal-label">非正常流程</span>
-            <span class="audit-abnormal-text">提示：若需要走正常流程，请驳回重新提交审核</span>
-          </div>
-          <br/>
-          <div class="audit-abnormal-reason">
-          <strong>原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审核流程
-        </div>
-        </div>
-         <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 点击预筛沟通，加了一个 默认艾特提交人的选项</div>
-            <div>② 如果选中，就一直默认艾特，如果不选中，就默认不艾特，除非手动艾特了</div>
-            <div>③ 这个动作 谁都可以设置，不用局限于谁，后台记录好，谁设置了 艾特，谁取消了</div>
-            <div>④ 下面的三个按钮需要改成悬浮，不要随着页面移动</div>
- 
-            </div>
-        </div>
-        
-      <!-- 审核记录标题 -->
-      <div class="audit-record-title">
-        <span class="audit-record-line"></span>
-        <span>审核记录</span>
-      </div>
-      
-      <!-- 审核记录表格 -->
-      <table class="audit-record-table">
-        <thead>
-          <tr>
-            <th style="width:60px">折叠</th>
-            <th>操作人</th>
-            <th>操作状态</th>
-            <th>接收时间</th>
-            <th>操作时间</th>
-            <th>操作耗时</th>
-          </tr>
-        </thead>
-        <tbody id="auditRecordTableBody">
-          <!-- 动态渲染审核记录 -->
-        </tbody>
-      </table>
-    </div>
-    <div class="modal-footer audit-modal-footer">
-      <button class="btn btn-primary" onclick="openPreScreenComm()">预筛沟通</button>
-      <button class="btn btn-danger" onclick="rejectAudit()">驳回</button>
-      <button class="btn btn-success" onclick="approveAudit()">通过</button>
     </div>
   </div>
 </div>
