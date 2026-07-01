@@ -2261,7 +2261,7 @@
               '<span style="background:#e6f7ff;color:#1677ff;padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600">' + std.type + '</span>' +
               '<span style="color:#999;font-size:12px">版本：' + std.version + '</span>' +
             '</div>' +
-            '<button onclick="executeSingleTest(' + std.id + ', \'' + std.type + '\', \'' + std.content.replace(/'/g, "\\'") + '\', \'' + std.prompt.replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\')" style="padding:6px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background=\'#0958d9\'" onmouseout="this.style.background=\'#1677ff\'">' +
+            '<button onclick="executeAllTests()" style="padding:6px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px" onmouseover="this.style.background=\'#0958d9\'" onmouseout="this.style.background=\'#1677ff\'">' +
               '<i class="fas fa-play"></i>执行测试' +
             '</button>' +
           '</div>' +
@@ -2272,9 +2272,7 @@
             '</div>' +
             '<div style="font-size:12px;line-height:1.6;color:#666;white-space:pre-wrap">' + std.prompt + '</div>' +
           '</div>' +
-          '<div id="testResult_' + std.id + '" style="margin-top:12px;display:none;padding:12px;background:#f6ffed;border:1px solid #b7eb8f;border-radius:4px;font-size:13px;color:#52c41a">' +
-            '<i class="fas fa-check-circle" style="margin-right:6px"></i><strong>测试结果：</strong><span id="resultText_' + std.id + '">-</span>' +
-          '</div>' +
+        
         '</div>';
       }).join('');
     }
@@ -2329,6 +2327,10 @@
       resultDiv.style.color = '#faad14';
       resultText.textContent = '正在调用AI模型进行测试...';
       
+      // 显示loading遮罩
+      const loadingOverlay = document.getElementById('testLoadingOverlay');
+      loadingOverlay.style.display = 'flex';
+      
       // 模拟延迟后显示结果
       setTimeout(() => {
         const mockResults = [
@@ -2343,12 +2345,21 @@
         resultDiv.style.color = '#52c41a';
         resultText.textContent = randomResult;
       }, 1000);
+      
+      // 3秒后关闭loading遮罩、关闭个性测试弹窗，回到列表页
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+        closePersonalTest();
+      }, 4000);
     }
     
     // 执行全部测试
     function executeAllTests() {
       console.log('执行全部标准测试...');
-      alert('将依次对所有入排标准执行测试，请稍后查看各条标准的测试结果。');
+      
+      // 显示loading遮罩
+      const loadingOverlay = document.getElementById('testLoadingOverlay');
+      loadingOverlay.style.display = 'flex';
       
       // 获取所有标准并依次执行
       const standardsList = document.getElementById('standardsList');
@@ -2361,6 +2372,12 @@
         }, delay);
         delay += 1500; // 每条间隔1.5秒
       });
+      
+      // 所有测试完成后，再等待3秒关闭loading遮罩、关闭个性测试弹窗，回到列表页
+      setTimeout(() => {
+        loadingOverlay.style.display = 'none';
+        closePersonalTest();
+      }, delay + 1000);
     }
     
     // 生成模拟纳排内容
@@ -2439,7 +2456,174 @@
         icon.style.transform = 'rotate(0deg)';
       }
     }
+    
+    // 渲染审核记录内容
+    function renderAuditRecordContent() {
+      const container = document.getElementById('auditRecordContent');
+      if (!container) return;
+      
+      // 审核记录数据
+      const data = {
+        prescreen: [
+          { operator:'沈夏萍', role:'临床协调员', status:'已提交', statusClass:'submitted', time:'2026-06-29 18:52:34', duration:'—' },
+          { operator:'魏燕玲', role:'CRA专员', status:'待审核', statusClass:'pending', time:'—', duration:'—' }
+        ]
+      };
+      
+      let html = '';
+      
+      // 预筛审核记录
+      if (data.prescreen && data.prescreen.length > 0) {
+        html += `
+          <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+            <div onclick="toggleAuditSection(this)" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f0f0f0;cursor:pointer">
+              <span style="font-size:16px;font-weight:700;color:#333;display:flex;align-items:center;gap:8px">
+                <i class="fas fa-clipboard-check" style="color:#1677ff"></i> 预筛审核记录
+              </span>
+              <span style="font-size:14px;color:#1677ff;font-weight:600">^ 收起</span>
+            </div>
+            
+            
+            <!-- 开发提示 -->
+            <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin-bottom:16px">
+              <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+              <div style="font-size:12px;color:#333;line-height:1.9">
+                <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+                <div>① 页面样子用原来的即可，保持一致</div>
+                 </div>
+            </div>
+           
+            
+            <!-- 审核记录表格 -->
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="background:#f5f5f5;border-bottom:2px solid #e8e8e8">
+                  <th style="padding:12px;text-align:left;font-weight:700;color:#666;width:60px">折叠</th>
+                  <th style="padding:12px;text-align:left;font-weight:700;color:#666">操作人</th>
+                  <th style="padding:12px;text-align:left;font-weight:700;color:#666">操作状态</th>
+                  <th style="padding:12px;text-align:left;font-weight:700;color:#666">操作时间</th>
+                  <th style="padding:12px;text-align:left;font-weight:700;color:#666">操作耗时</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.prescreen.map((record, idx) => `
+                  <tr style="border-bottom:1px solid #f0f0f0;transition:background 0.2s" onmouseover="this.style.background='#f5f7fa'" onmouseout="this.style.background='#fff'">
+                    <td style="padding:12px;text-align:center">
+                      ${idx === 0 ? '<span style="cursor:pointer;font-size:16px;color:#999">›</span>' : ''}
+                    </td>
+                    <td style="padding:12px;color:#333">${record.operator}<span style="color:#999">&lt;${record.role}&gt;</span></td>
+                    <td style="padding:12px">
+                      <span style="padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;${record.statusClass === 'submitted' ? 'background:#fff7e6;color:#fa8c16' : record.statusClass === 'completed' ? 'background:#f6ffed;color:#52c41a' : 'background:#f0f5ff;color:#1677ff'}">${record.status}</span>
+                    </td>
+                    <td style="padding:12px;color:#666;font-size:12px">${record.time}</td>
+                    <td style="padding:12px;color:#666">${record.duration}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // 切换审核记录区域展开/收起
+    function toggleAuditSection(header) {
+      const section = header.parentElement;
+      const table = section.querySelector('table');
+      const buttons = section.querySelectorAll('.audit-action-btn');
+      const toggle = header.querySelector('.audit-section-toggle');
+      
+      if (table && table.style.display === 'none') {
+        table.style.display = 'table';
+        buttons.forEach(btn => btn.style.display = 'inline-flex');
+        header.querySelector('.audit-section-toggle, span:last-child').textContent = '^ 收起';
+      } else if (table) {
+        table.style.display = 'none';
+        buttons.forEach(btn => btn.style.display = 'none');
+        header.querySelector('.audit-section-toggle, span:last-child').textContent = ' 展开';
+      }
+    }
+    
+    // 打开审核记录弹窗
+    function openAuditRecordModal() {
+      const modal = document.getElementById('auditRecordModal');
+      modal.style.display = 'flex';
+      modal.style.animation = 'fadeIn 0.3s ease-out';
+      
+      // 渲染审核记录内容
+      renderAuditRecordContent();
+      
+      // 禁止背景滚动
+      document.body.style.overflow = 'hidden';
+    }
+    
+    // 关闭审核记录弹窗
+    function closeAuditRecordModal() {
+      const modal = document.getElementById('auditRecordModal');
+      modal.style.display = 'none';
+      
+      // 恢复背景滚动
+      document.body.style.overflow = '';
+    }
+    
+    // 添加点击遮罩层关闭弹窗
+    document.addEventListener('DOMContentLoaded', function() {
+      const modal = document.getElementById('auditRecordModal');
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) {
+            closeAuditRecordModal();
+          }
+        });
+      }
+      
+      // 添加ESC键关闭弹窗
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeAuditRecordModal();
+        }
+      });
+    });
+    
+    // 添加淡入动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
+  
+  <!-- 测试Loading遮罩 -->
+  <div id="testLoadingOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:20000;justify-content:center;align-items:center;">
+    <div style="background:#fff;border-radius:12px;padding:40px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.15);min-width:300px;">
+      <div style="margin-bottom:20px;">
+        <div style="width:60px;height:60px;border:4px solid #f0f0f0;border-top:4px solid #1677ff;border-radius:50%;animation:testLoadingSpin 1s linear infinite;margin:0 auto;"></div>
+      </div>
+      <div style="font-size:16px;font-weight:600;color:#333;margin-bottom:8px;">数据请求中</div>
+      <div style="font-size:14px;color:#999;">请稍候,正在执行测试...</div>
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #f0f0f0;">
+        <div style="font-size:12px;color:#999;">关闭当前页面</div>
+      </div>
+    </div>
+  </div>
+  
+  <style>
+    @keyframes testLoadingSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
   
   <!-- 个性测试弹窗 -->
   <div id="personalTestOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:3000;display:none;justify-content:center;align-items:center" onclick="closePersonalTest()">
@@ -2645,8 +2829,8 @@
         <div style="padding:24px;overflow-y:auto;flex:1">
           
 
-          <!-- 患者信息卡片 -->
-          <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+          <!-- 患者信息卡片（固定在顶部） -->
+          <div id="stickyPatientCard" style="position:sticky;top:0;z-index:100;background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:20px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
               <div style="font-size:16px;font-weight:600;color:#1a1a1a">
                 <i class="fas fa-user-circle" style="color:#667eea;margin-right:8px"></i>患者基本信息
@@ -2659,6 +2843,9 @@
                 <div style="background:#f6ffed;border:1px solid #b7eb8f;color:#52c41a;padding:6px 12px;border-radius:6px;font-size:13px;font-weight:600">
                   <i class="fas fa-check-circle"></i> 匹配通过
                 </div>
+                <button onclick="openAuditRecordModal()" style="padding:8px 16px;background:linear-gradient(135deg,#52c41a,#389e0d);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.3s;box-shadow:0 2px 6px rgba(82,196,26,0.3)" onmouseover="this.style.boxShadow='0 4px 10px rgba(82,196,26,0.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 2px 6px rgba(82,196,26,0.3)';this.style.transform='translateY(0)'">
+                  <i class="fas fa-clipboard-check"></i> 审核记录
+                </button>
               </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;font-size:13px">
@@ -2669,6 +2856,36 @@
               <div><strong>匹配耗时：</strong><span id="detailDuration">-</span></div>
             </div>
           </div>
+          
+          <!-- 审核记录弹窗 -->
+          <div id="auditRecordModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;justify-content:center;align-items:center" class="audit-modal">
+            <div style="background:#fff;border-radius:12px;width:90%;max-width:900px;max-height:85vh;box-shadow:0 8px 32px rgba(0,0,0,0.2);display:flex;flex-direction:column" class="audit-modal-content">
+              <!-- 弹窗头部 -->
+              <div style="padding:20px 24px;background:linear-gradient(135deg,#f6ffed,#e6f7ff);border-bottom:2px solid #52c41a;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:18px;font-weight:700;color:#333;display:flex;align-items:center;gap:10px">
+                  <i class="fas fa-clipboard-check" style="color:#52c41a;font-size:22px"></i>
+                  <span>WBQI-审核记录</span>
+                </div>
+                <button onclick="closeAuditRecordModal()" style="padding:8px 16px;background:#fff;border:2px solid #52c41a;border-radius:6px;cursor:pointer;color:#52c41a;font-weight:600;font-size:14px;transition:all 0.2s" onmouseover="this.style.background='#52c41a';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#52c41a'">
+                  <i class="fas fa-times"></i> 关闭
+                </button>
+              </div>
+              
+              <!-- 弹窗内容（可滚动） -->
+              <div id="auditRecordContent" style="padding:24px;overflow-y:auto;flex:1;background:#fafafa">
+                <!-- 动态渲染审核记录内容 -->
+              </div>
+              
+              <!-- 弹窗底部 -->
+              <div style="padding:16px 24px;background:#fff;border-top:1px solid #e8e8e8;border-radius:0 0 12px 12px;display:flex;justify-content:flex-end;gap:12px">
+                <button onclick="closeAuditRecordModal()" style="padding:10px 24px;background:#fff;border:2px solid #d9d9d9;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;color:#666;transition:all 0.2s" onmouseover="this.style.borderColor='#1677ff';this.style.color='#1677ff'" onmouseout="this.style.borderColor='#d9d9d9';this.style.color='#666'">
+                  <i class="fas fa-times-circle"></i> 关闭
+                </button>
+              </div>
+            </div>
+          </div>
+          
+       
           
           <!-- 逐条标准匹配结果 -->
           <div style="margin-bottom:24px">
@@ -2763,46 +2980,6 @@
                   <strong>优化提示词：</strong>"请识别所有降脂药物（包括他汀类、依折麦布、血脂康、脂必泰等），并将其视为等效降脂方案，不因药物名称不同而判定为不符合标准。"
                 </div>
               </div>
-
-              <!-- 审核记录（可折叠） -->
-              <div style="margin-bottom:16px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
-                <div onclick="toggleAuditRecord()" style="padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.2s" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#fafafa'">
-                  <div style="font-size:14px;font-weight:600;color:#666;display:flex;align-items:center;gap:8px">
-                    <i class="fas fa-clipboard-check" style="color:#52c41a"></i> 审核记录（历史）
-                    <span style="display:inline-flex;align-items:center;gap:3px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:4px;padding:2px 8px;font-size:11px;color:#ff4d4f;font-weight:500;margin-left:4px">
-                      <i class="fas fa-exclamation-triangle" style="font-size:10px"></i> 开发提示：正式环境数据，仅查询不可修改
-                    </span>
-                  </div>
-                  <i id="auditToggleIcon" class="fas fa-chevron-down" style="color:#999;transition:transform 0.3s"></i>
-                </div>
-                <div id="auditRecordContent" style="display:none;padding:16px;background:#f6ffed;border-top:1px solid #e8e8e8">
-                  <!-- 审核记录表格 -->
-                  <table style="width:100%;border-collapse:collapse;font-size:13px">
-                    <thead>
-                      <tr style="background:#fafafa;border-bottom:2px solid #e8e8e8">
-                        <th style="padding:10px;text-align:left;font-weight:600;color:#666;width:100px">操作人</th>
-                        <th style="padding:10px;text-align:left;font-weight:600;color:#666;width:100px">操作状态</th>
-                        <th style="padding:10px;text-align:left;font-weight:600;color:#666;width:180px">操作时间</th>
-                        <th style="padding:10px;text-align:left;font-weight:600;color:#666">备注</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr style="border-bottom:1px solid #f0f0f0">
-                        <td style="padding:10px;color:#333">万华&lt;CRC&gt;</td>
-                        <td style="padding:10px"><span style="background:#fff7e6;color:#fa8c16;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600">已提交</span></td>
-                        <td style="padding:10px;color:#666">2026-06-18 08:58:25</td>
-                        <td style="padding:10px;color:#333">-</td>
-                      </tr>
-                      <tr style="border-bottom:1px solid #f0f0f0">
-                        <td style="padding:10px;color:#333">王鸿霄&lt;CRA专员&gt;</td>
-                        <td style="padding:10px"><span style="background:#f6ffed;color:#52c41a;padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600">待审核</span></td>
-                        <td style="padding:10px;color:#666">2026-06-18 09:15:30</td>
-                        <td style="padding:10px;color:#333">-</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
              
             </div>
           </div>
@@ -2858,7 +3035,7 @@
           
           <div class="prd-panel-item">
             <div class="prd-panel-item-header">
-              <span class="prd-panel-badge prd-panel-badge-green">字段</span> 患者基本信息
+              <span class="prd-panel-badge prd-panel-badge-green">字段</span> 患者基本信息(固定在上面，不随着滚动条滚动)
             </div>
             <div class="prd-panel-item-body">
               展示患者姓名、项目编号、入排版本号、匹配时间等关键信息<br>
