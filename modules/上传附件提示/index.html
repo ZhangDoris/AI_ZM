@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>患者详情 - WCXI+病史与资料</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .header-back {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .page-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            padding: 8px 0;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        /* 操作按钮区 */
+        .action-bar {
+            background: white;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #73d13d;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 12px;
+        }
+
+        /* 阶段卡片 */
+        .stage-card {
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stage-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .stage-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .stage-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .stage-icon {
+            margin-right: 8px;
+            color: #1890ff;
+        }
+
+        .expand-icon {
+            color: #999;
+            font-size: 12px;
+            transition: transform 0.3s;
+        }
+
+        .expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* 子项 */
+        .sub-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .sub-item:last-child {
+            border-bottom: none;
+        }
+
+        .sub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .sub-name {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-icon {
+            margin-left: 6px;
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sub-count {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .arrow-icon {
+            color: #ccc;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        /* 上传按钮组 */
+        .upload-btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .upload-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-btn-blue {
+            background: #1890ff;
+            color: white;
+        }
+
+        .upload-btn-blue:hover {
+            background: #40a9ff;
+        }
+
+        .upload-btn-green {
+            background: #52c41a;
+            color: white;
+        }
+
+        .upload-btn-green:hover {
+            background: #73d13d;
+        }
+
+        /* 上传中提示 */
+        .uploading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .uploading-overlay.show {
+            display: flex;
+        }
+
+        .uploading-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px 40px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .uploading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .uploading-text {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .uploading-progress {
+            margin-top: 16px;
+            width: 200px;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        /* 美化Toast提示 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 240px;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .toast-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .toast-success .toast-icon {
+            background: #52c41a;
+        }
+
+        .toast-error .toast-icon {
+            background: #ff4d4f;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toast-message {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .uploading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1890ff, #52c41a);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+            50% {
+                width: 70%;
+            }
+            100% {
+                width: 100%;
+            }
+        }
+
+        /* 文件选择器（隐藏） */
+        .file-input {
+            display: none;
+        }
+
+        /* 响应式优化 */
+        @media (max-width: 375px) {
+            .header-title {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+
+            .uploading-card {
+                padding: 24px 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="header-top">
+            <span class="header-back">✕</span>
+            <div style="text-align: center;">
+                <div class="header-title">患者详情</div>
+                <div class="header-subtitle">ai-match.hengrui.com</div>
+            </div>
+            <span style="font-size: 18px;">⋯</span>
+        </div>
+    </div>
+  <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 点击上传时成功的提示</div>
+            <div>② 点击脱敏上传时失败的提示</div>
+            <div>③ 本次修改只是针对与上传功能提示</div>
+           </div>
+        </div>
+    <!-- 页面标题 -->
+    <div class="page-title">WCXI+病史与资料</div>
+
+    <!-- 操作栏 -->
+    <div class="action-bar">
+        <label class="checkbox-label">
+            <input type="checkbox" id="selectAll">
+            <span>全选</span>
+        </label>
+        <div class="btn-group">
+            <button class="btn btn-primary">下载</button>
+            <button class="btn btn-success">项目匹配</button>
+        </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="content">
+        <!-- 预筛阶段 -->
+        <div class="stage-card expanded" data-stage="prescreen">
+            <div class="stage-header" onclick="toggleStage(this)">
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-icon">📁</span>
+                    <span class="stage-name">预筛阶段</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-count">(0)</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+            </div>
+            
+            <div class="stage-content">
+                <!-- 原始资料 -->
+                <div class="sub-item">
+                    <div class="sub-header">
+                        <div class="sub-name">
+                            <span style="margin-right: 6px;"></span>
+                            原始资料
+                            <span class="info-icon" title="信息说明">ⓘ</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="sub-count">(0)</span>
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="upload-btn-group">
+                        <button class="upload-btn upload-btn-blue" onclick="triggerUpload('original')">上传</button>
+                        <button class="upload-btn upload-btn-green" onclick="triggerUpload('desensitized')">已脱敏上传</button>
+                    </div>
+                </div>
+
+                <!-- 基因检测报告 -->
+                <div class="sub-item">
+                    <div class="sub-header">
+                        <div class="sub-name">
+                            <span style="margin-right: 6px;">📄</span>
+                            基因检测报告
+                            <span class="info-icon" title="信息说明">ⓘ</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="sub-count">(0)</span>
+                            <span class="arrow-icon">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 审批上传附件存档 -->
+                <div class="sub-item">
+                    <div class="sub-header">
+                        <div class="sub-name">
+                            <span style="margin-right: 6px;">📄</span>
+                            审批上传附件存档
+                            <span class="info-icon" title="信息说明">ⓘ</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="sub-count">(0)</span>
+                            <span class="arrow-icon">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI分类资料 -->
+                <div class="sub-item">
+                    <div class="sub-header">
+                        <div class="sub-name">
+                            <span style="margin-right: 6px;">📄</span>
+                            AI分类资料
+                            <span class="info-icon" title="信息说明">ⓘ</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <span class="sub-count">(0)</span>
+                            <span class="arrow-icon">›</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 入组阶段 -->
+        <div class="stage-card" data-stage="enrollment">
+            <div class="stage-header" onclick="toggleStage(this)">
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-icon"></span>
+                    <span class="stage-name">入组阶段</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-count">(0)</span>
+                    <span class="expand-icon">▼</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 不参与AI匹配资料 -->
+        <div class="stage-card" data-stage="no-ai">
+            <div class="stage-header" onclick="toggleStage(this)">
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-icon">📁</span>
+                    <span class="stage-name">不参与AI匹配资料</span>
+                    <span class="info-icon" title="信息说明"></span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-count">(0)</span>
+                    <span class="arrow-icon">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 存档资料 -->
+        <div class="stage-card" data-stage="archive">
+            <div class="stage-header" onclick="toggleStage(this)">
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-icon">📁</span>
+                    <span class="stage-name">存档资料</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-count">(0)</span>
+                    <span class="arrow-icon">›</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统 -->
+        <div class="stage-card" data-stage="system">
+            <div class="stage-header" onclick="toggleStage(this)">
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-icon">📁</span>
+                    <span class="stage-name">系统</span>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <span class="stage-count">(0)</span>
+                    <span class="arrow-icon">›</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast提示 -->
+    <div class="toast" id="toast">
+        <div class="toast-icon" id="toastIcon"></div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle"></div>
+            <div class="toast-message" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <!-- 隐藏的文件输入框 -->
+    <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.bmp,.txt,.zip,.rar">
+
+    <!-- 上传中提示遮罩 -->
+    <div class="uploading-overlay" id="uploadingOverlay">
+        <div class="uploading-card">
+            <div class="uploading-spinner"></div>
+            <div class="uploading-text">上传中，请稍后...</div>
+            <div class="uploading-progress">
+                <div class="uploading-progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 当前上传类型
+        let currentUploadType = '';
+
+        // 切换阶段展开/收起
+        function toggleStage(header) {
+            const stageCard = header.parentElement;
+            const isExpanded = stageCard.classList.contains('expanded');
+            
+            if (isExpanded) {
+                stageCard.classList.remove('expanded');
+            } else {
+                stageCard.classList.add('expanded');
+            }
+        }
+
+        // 触发文件上传
+        function triggerUpload(type) {
+            currentUploadType = type;
+            document.getElementById('fileInput').click();
+        }
+
+        // 监听文件选择
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const files = e.target.files;
+            
+            if (files && files.length > 0) {
+                // 显示上传中提示
+                showUploadingOverlay();
+                
+                // 模拟上传过程（实际项目中替换为真实的上传逻辑）
+                simulateUpload(files);
+            }
+        });
+
+        // 显示上传中遮罩
+        function showUploadingOverlay() {
+            const overlay = document.getElementById('uploadingOverlay');
+            overlay.classList.add('show');
+        }
+
+        // 隐藏上传中遮罩
+        function hideUploadingOverlay() {
+            const overlay = document.getElementById('uploadingOverlay');
+            overlay.classList.remove('show');
+        }
+
+        // 模拟上传过程
+        function simulateUpload(files) {
+            console.log(`开始上传 ${files.length} 个文件，类型：${currentUploadType}`);
+            
+            // 模拟2秒后上传完成
+            setTimeout(() => {
+                hideUploadingOverlay();
+                
+                // 根据上传类型决定成功或失败
+                if (currentUploadType === 'original') {
+                    // 普通上传 - 显示成功
+                    showToast('success', '上传成功', `共上传 ${files.length} 个文件`);
+                } else if (currentUploadType === 'desensitized') {
+                    // 脱敏上传 - 显示失败
+                    showToast('error', '上传失败', '请重新上传');
+                }
+                
+                // 清空文件输入框，允许重复选择同一文件
+                document.getElementById('fileInput').value = '';
+            }, 2000);
+            
+            // 实际的上传代码示例（需要后端支持）：
+            /*
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+            formData.append('type', currentUploadType);
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideUploadingOverlay();
+                if (data.success) {
+                    alert('上传成功！');
+                    // 更新界面显示新上传的文件
+                } else {
+                    alert('上传失败：' + data.message);
+                }
+            })
+            .catch(error => {
+                hideUploadingOverlay();
+                alert('上传出错：' + error.message);
+            });
+            */
+        }
+
+        // 全选功能
+        document.getElementById('selectAll').addEventListener('change', function(e) {
+            const checkboxes = document.querySelectorAll('.sub-item input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+        });
+
+        // 显示Toast提示
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastTitle = document.getElementById('toastTitle');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            // 设置样式类
+            toast.className = 'toast';
+            toast.classList.add(type === 'success' ? 'toast-success' : 'toast-error');
+            
+            // 设置图标
+            if (type === 'success') {
+                toastIcon.innerHTML = '✓';
+            } else {
+                toastIcon.innerHTML = '✕';
+            }
+            
+            // 设置标题和消息
+            toastTitle.textContent = title;
+            toastMessage.textContent = message;
+            
+            // 显示Toast
+            toast.classList.add('show');
+            
+            // 2秒后自动隐藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 阻止页面滚动时的橡皮筋效果（iOS）
+        document.addEventListener('touchmove', function(e) {
+            if (document.querySelector('.uploading-overlay.show')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // 点击遮罩外部不关闭（防止误触）
+        document.getElementById('uploadingOverlay').addEventListener('click', function(e) {
+            // 上传过程中不允许关闭
+            e.stopPropagation();
+        });
+    </script>
+</body>
+</html>
