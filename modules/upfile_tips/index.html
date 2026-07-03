@@ -270,6 +270,7 @@
             text-align: center;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             animation: fadeInUp 0.3s ease-out;
+            max-width: 90%;
         }
 
         @keyframes fadeInUp {
@@ -303,6 +304,102 @@
             font-size: 16px;
             color: #333;
             font-weight: 500;
+        }
+
+        .uploading-actions {
+            margin-top: 20px;
+        }
+
+        .btn-background-upload {
+            padding: 8px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-background-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 后台上传按钮提示 */
+        .background-upload-hint {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #faad14;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 后台上传提示条 */
+        .background-upload-tip {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 448px;
+            background: white;
+            color: #666;
+            padding: 10px 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 9998;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 6px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .background-upload-tip.show {
+            display: flex;
+        }
+
+        .tip-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .tip-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e8e8e8;
+            border-top-color: #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .tip-close {
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            color: #999;
+        }
+
+        .tip-close:hover {
+            opacity: 1;
+            color: #666;
         }
 
         .uploading-progress {
@@ -411,9 +508,228 @@
                 padding: 24px 32px;
             }
         }
+
+        /* PRD 需求说明面板 — 右侧抽屉 */
+        .prd-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 20vw;
+            min-width: 300px;
+            max-width: 480px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+            z-index: 60;
+            transform: translateX(100%);
+            transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e8e8e8;
+        }
+        .prd-drawer.expanded {
+            transform: translateX(0);
+        }
+        .prd-drawer-handle {
+            position: absolute;
+            left: -56px;
+            top: 160px;
+            width: 56px;
+            height: 140px;
+            background: linear-gradient(180deg, #1677ff 0%, #0958d9 100%);
+            color: #fff;
+            border-radius: 10px 0 0 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: -4px 0 22px rgba(22,119,255,0.45);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            border: none;
+            outline: none;
+            z-index: 61;
+        }
+        .prd-drawer-handle::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            opacity: 0.3;
+            border-radius: 10px 0 0 10px;
+        }
+        .prd-drawer-handle:hover {
+            width: 64px;
+            left: -64px;
+            background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+            box-shadow: -6px 0 30px rgba(22,119,255,0.65);
+        }
+        .prd-drawer-handle:active {
+            background: linear-gradient(180deg, #0958d9 0%, #0047b3 100%);
+            box-shadow: -2px 0 12px rgba(22,119,255,0.4);
+            transition: all 0.08s;
+        }
+        .prd-drawer-handle .handle-text {
+            writing-mode: vertical-rl;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 6px;
+        }
+        .prd-drawer-handle .handle-icon {
+            font-size: 18px;
+        }
+        .prd-drawer-handle .handle-hint {
+            position: absolute;
+            right: calc(100% + 10px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .prd-drawer-handle:hover .handle-hint {
+            opacity: 1;
+        }
+        /* 抽屉展开时把手隐藏 */
+        .prd-drawer.expanded .prd-drawer-handle {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+        .prd-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .prd-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1677ff;
+            flex-shrink: 0;
+            margin: 0 20px;
+            padding-top: 16px;
+        }
+        .prd-panel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1677ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .prd-panel-close {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f5f5;
+            color: #999;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .prd-panel-close:hover {
+            background: #ff4d4f;
+            color: white;
+        }
+        /* 手机端 */
+        @media (max-width: 768px) {
+            .prd-drawer {
+                width: 85vw;
+                min-width: unset;
+                max-width: unset;
+            }
+        }
+        .prd-section {
+            margin-bottom: 16px;
+        }
+        .prd-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            padding-left: 10px;
+            border-left: 3px solid #1677ff;
+        }
+        .prd-section-content {
+            font-size: 12px;
+            color: #555;
+            line-height: 1.8;
+            padding-left: 13px;
+        }
+        .prd-section-content ul {
+            margin: 4px 0;
+            padding-left: 16px;
+        }
+        .prd-section-content ol {
+            margin: 4px 0;
+            padding-left: 20px;
+        }
+        .prd-section-content li {
+            margin-bottom: 4px;
+        }
+        .prd-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        .prd-badge-admin {
+            background: #fff7e6;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        .prd-badge-core {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .prd-badge-data {
+            background: #f0f5ff;
+            color: #1677ff;
+            border: 1px solid #91caff;
+        }
     </style>
 </head>
 <body>
+    <!-- 后台上传提示条 -->
+    <div class="background-upload-tip" id="backgroundUploadTip">
+        <div class="tip-left">
+            <div class="tip-spinner"></div>
+            <span id="tipText">正在后台上传文件...</span>
+        </div>
+        <span class="tip-close" onclick="closeBackgroundTip()">×</span>
+    </div>
+
+    <!-- PRD Drawer -->
+    <div class="prd-drawer expanded" id="prdDrawer">
+        <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="展开需求说明面板">
+            <span class="handle-hint">点击查看PRD</span>
+            <span class="handle-icon"><i class="fa-solid fa-chevron-left"></i></span>
+            <span class="handle-text">P R D</span>
+        </button>
+        <div class="prd-drawer-body" id="prdPanel"></div>
+    </div>
+
     <!-- 顶部导航 -->
     <div class="header">
         <div class="header-top">
@@ -425,16 +741,6 @@
             <span style="font-size: 18px;">⋯</span>
         </div>
     </div>
-  <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 点击上传时成功的提示</div>
-            <div>② 点击脱敏上传时失败的提示</div>
-            <div>③ 本次修改只是针对与上传功能提示</div>
-           </div>
-        </div>
     <!-- 页面标题 -->
     <div class="page-title">WCXI+病史与资料</div>
 
@@ -610,12 +916,22 @@
             <div class="uploading-progress">
                 <div class="uploading-progress-bar"></div>
             </div>
+            <div class="uploading-actions">
+                <button class="btn-background-upload" onclick="switchToBackgroundUpload()">后台上传</button>
+                <div class="background-upload-hint">
+                    💡 开启后切到后台可继续上传，请勿退出登录。
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // 当前上传类型
         let currentUploadType = '';
+        // 后台上传任务队列
+        let backgroundUploadQueue = [];
+        // 全局文件计数器（用于显示第几个文件）
+        let globalFileCounter = 0;
 
         // 切换阶段展开/收起
         function toggleStage(header) {
@@ -660,6 +976,96 @@
             overlay.classList.remove('show');
         }
 
+        // 切换到后台上传
+        function switchToBackgroundUpload() {
+            // 隐藏全屏遮罩
+            hideUploadingOverlay();
+            
+            // 显示后台上传提示条
+            showBackgroundUploadTip();
+            
+            console.log('已切换到后台上传模式');
+        }
+
+        // 显示后台上传提示
+        function showBackgroundUploadTip() {
+            const tip = document.getElementById('backgroundUploadTip');
+            const tipText = document.getElementById('tipText');
+            
+            // 全局计数器+1
+            globalFileCounter++;
+            
+            // 添加到后台上传队列
+            const uploadTask = {
+                type: currentUploadType,
+                typeName: currentUploadType === 'original' ? '原始资料' : '脱敏资料',
+                timestamp: new Date().getTime(),
+                fileNumber: globalFileCounter  // 记录这是第几个文件
+            };
+            backgroundUploadQueue.push(uploadTask);
+            
+            console.log(`📦 添加上传任务到队列 [第${uploadTask.fileNumber}个]:`, uploadTask);
+            console.log(' 当前队列长度:', backgroundUploadQueue.length);
+            
+            // 更新提示文字，显示队列数量
+            updateBackgroundTipText();
+            tip.classList.add('show');
+            
+            // 模拟后台上传完成（3秒后）
+            setTimeout(() => {
+                // 从队列中移除已完成的任务
+                const completedTask = backgroundUploadQueue.shift();
+                
+                console.log(`✅ 完成任务 [第${completedTask.fileNumber}个]:`, completedTask);
+                console.log('📊 剩余队列长度:', backgroundUploadQueue.length);
+                
+                // 只有脱敏上传才会失败，且只显示一个错误提示
+                if (completedTask.type === 'desensitized') {
+                    // 脱敏上传 - 显示失败（只提示一次）
+                    showToast('error', '上传失败', `第${completedTask.fileNumber}个文件上传失败，请重新上传`);
+                } else {
+                    // 普通上传 - 显示成功
+                    showToast('success', '上传成功', `第${completedTask.fileNumber}个文件已在后台上传完成`);
+                }
+                
+                // 如果队列为空，关闭提示条
+                if (backgroundUploadQueue.length === 0) {
+                    console.log(' 队列已空，关闭提示条');
+                    closeBackgroundTip();
+                } else {
+                    // 否则更新提示文字
+                    console.log(' 队列还有任务，更新提示');
+                    updateBackgroundTipText();
+                }
+            }, 3000);
+        }
+
+        // 更新后台提示文字
+        function updateBackgroundTipText() {
+            const tipText = document.getElementById('tipText');
+            const count = backgroundUploadQueue.length;
+            
+            if (count === 1) {
+                const task = backgroundUploadQueue[0];
+                tipText.textContent = `正在后台上传 ${task.typeName}...`;
+                console.log('💬 提示文字:', tipText.textContent);
+            } else {
+                tipText.textContent = `正在后台上传 ${count} 个文件...`;
+                console.log('💬 提示文字:', tipText.textContent);
+            }
+        }
+
+        // 关闭后台上传提示
+        function closeBackgroundTip() {
+            const tip = document.getElementById('backgroundUploadTip');
+            tip.classList.remove('show');
+            // 清空队列
+            backgroundUploadQueue = [];
+            // 重置全局计数器
+            globalFileCounter = 0;
+            console.log('🔄 重置文件计数器');
+        }
+
         // 模拟上传过程
         function simulateUpload(files) {
             console.log(`开始上传 ${files.length} 个文件，类型：${currentUploadType}`);
@@ -672,10 +1078,7 @@
                 if (currentUploadType === 'original') {
                     // 普通上传 - 显示成功
                     showToast('success', '上传成功', `共上传 ${files.length} 个文件`);
-                } else if (currentUploadType === 'desensitized') {
-                    // 脱敏上传 - 显示失败
-                    showToast('error', '上传失败', '请重新上传');
-                }
+                } 
                 
                 // 清空文件输入框，允许重复选择同一文件
                 document.getElementById('fileInput').value = '';
@@ -760,6 +1163,94 @@
         document.getElementById('uploadingOverlay').addEventListener('click', function(e) {
             // 上传过程中不允许关闭
             e.stopPropagation();
+        });
+
+        // ==================== PRD 需求说明面板 ====================
+        function updatePRDPanel() {
+            const prdPanel = document.getElementById('prdPanel');
+            if (!prdPanel) return;
+            
+            // 定义测试说明内容
+            const prdData = {
+                title: '上传附件提示 - 测试说明',
+                sections: [
+                    {
+                        title: '★ 功能概述',
+                        content: '<ul><li>手机端文件上传功能</li><li>支持后台上传模式</li><li>多文件队列管理</li></ul>'
+                    },
+                    {
+                        title: '场景1：单个文件上传（基础功能）',
+                        content: '<ol><li>点击"上传"按钮（蓝色）</li><li>选择一个文件</li><li>在"上传中"弹窗点击"后台上传"按钮</li></ol><p><strong>预期效果：</strong></p><ul><li>✅ 顶部提示条显示："正在后台上传 原始资料..."</li><li>✅ 3秒后弹出Toast："上传成功 - 文件已在后台上传完成"（绿色对勾）</li><li>✅ 顶部提示条自动关闭</li></ul>'
+                    },
+                    {
+                        title: '场景2：连续上传两个文件（队列功能）',
+                        content: '<ol><li>点击"上传"按钮 → 选择文件A → 点击"后台上传"<br/>顶部提示："正在后台上传 原始资料..."</li><li><strong>立即</strong>再次点击"上传"按钮 → 选择文件B → 点击"后台上传"<br/><strong>预期效果：</strong>顶部提示更新为 <strong>"正在后台上传 2 个文件..."</strong></li><li>等待3秒（文件A完成）<br/><strong>预期效果：</strong><ul><li>✅ 弹出Toast："上传成功 - 文件已在后台上传完成"</li><li>✅ 顶部提示更新为 <strong>"正在后台上传 脱敏资料..."</strong>（显示剩余的文件B）</li></ul></li><li>再等待3秒（文件B完成）<br/><strong>预期效果：</strong><ul><li>✅ 弹出Toast："上传失败 - 请重新上传"（红色叉叉）</li><li>✅ 顶部提示自动关闭</li></ul></li></ol>'
+                    },
+                    {
+                        title: '场景3：混合类型上传',
+                        content: '<ol><li>点击"上传"（原始资料）→ 选择文件 → 点击"后台上传"<br/>提示："正在后台上传 原始资料..."</li><li>点击"已脱敏上传"（脱敏资料）→ 选择文件 → 点击"后台上传"<br/><strong>预期效果：</strong>提示更新为 <strong>"正在后台上传 2 个文件..."</strong></li><li>3秒后第一个完成<br/>Toast显示对应类型的成功/失败消息<br/>提示更新为剩余文件的类型</li></ol>'
+                    },
+                    {
+                        title: '关键验证点',
+                        content: '<p><strong>✅ 队列计数是否正确</strong></p><ul><li>上传第1个文件 → 显示 "正在后台上传 X资料..."</li><li>上传第2个文件 → 显示 "正在后台上传 2 个文件..."</li><li>上传第3个文件 → 显示 "正在后台上传 3 个文件..."</li><li>每完成一个 → 数量减1</li></ul><p><strong>✅ Toast提示是否区分文件类型</strong></p><ul><li>原始资料成功 → "文件已在后台上传完成"</li><li>脱敏资料失败 → "请重新上传"</li></ul><p><strong>✅ 提示条是否持续显示</strong></p><ul><li>只要队列中还有任务，提示条就不关闭</li><li>只有队列为空时才自动关闭</li></ul>'
+                    },
+                    {
+                        title: '💡 开发提示',
+                        content: '<ul><li>① 点击上传时成功的提示</li><li>② 点击脱敏上传时失败的提示</li><li>③ 本次修改只是针对与上传功能提示</li></ul>'
+                    }
+                ]
+            };
+            
+            let html = `
+                <div class="prd-panel-header">
+                    <div class="prd-panel-title">📋 ${prdData.title}</div>
+                    <button class="prd-panel-close" onclick="collapsePRDDrawer()" title="折叠抽屉">✕</button>
+                </div>
+            `;
+            
+            prdData.sections.forEach(section => {
+                html += `
+                    <div class="prd-section">
+                        <div class="prd-section-title">${section.title}</div>
+                        <div class="prd-section-content">${section.content}</div>
+                    </div>
+                `;
+            });
+            
+            prdPanel.innerHTML = html;
+            expandPRDDrawer();
+        }
+        
+        /* 折叠 PRD 抽屉 */
+        function collapsePRDDrawer() {
+            const drawer = document.getElementById('prdDrawer');
+            if (drawer) drawer.classList.remove('expanded');
+        }
+
+        /* 展开 PRD 抽屉 */
+        function expandPRDDrawer() {
+            const drawer = document.getElementById('prdDrawer');
+            if (drawer) drawer.classList.add('expanded');
+        }
+
+        /* 切换 PRD 抽屉 展开/折叠 */
+        function togglePRDDrawer() {
+            const drawer = document.getElementById('prdDrawer');
+            if (!drawer) return;
+            if (drawer.classList.contains('expanded')) {
+                drawer.classList.remove('expanded');
+            } else {
+                drawer.classList.add('expanded');
+                updatePRDPanel();
+            }
+        }
+
+        // 兼容旧调用
+        function closePRDPanel() { collapsePRDDrawer(); }
+        
+        // 页面加载完成后自动展开PRD并填充内容
+        window.addEventListener('DOMContentLoaded', function() {
+            updatePRDPanel();
         });
     </script>
 </body>
