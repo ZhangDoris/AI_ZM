@@ -726,7 +726,7 @@
       border: 1px solid #91caff;
     }
 
-    /* ==================== 思维链样式 ==================== */
+    /* ==================== 思考链样式 ==================== */
     /* 患者信息摘要 */
     .tc-patient-summary {
       display: flex;
@@ -1118,7 +1118,7 @@
     <div class="tab-nav-inner">
       <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
       <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
-      <div class="tab-item" onclick="switchTab('thinkchain')">思维链</div>
+      <div class="tab-item" onclick="switchTab('thinkchain')">思考链</div>
     </div>
   </div>
 
@@ -1264,12 +1264,12 @@
       </div>
     </div>
 
-    <!-- Tab 3: 思维链 -->
+    <!-- Tab 3: 思考链 -->
     <div id="tab-thinkchain" class="tab-content" style="display:none;">
       <div class="card">
         <!-- 类型选择 -->
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
-          <span style="font-size:14px;font-weight:600;color:#333">思维链类型：</span>
+          <span style="font-size:14px;font-weight:600;color:#333">思考链类型：</span>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#666">
             <input type="radio" name="tcType" value="inclusion" checked onchange="switchTcType(this.value)"> 入排
           </label>
@@ -1278,7 +1278,7 @@
           </label>
      
         </div>
-        <!-- 思维链列表区 -->
+        <!-- 思考链列表区 -->
         <div id="thinkChainListArea"></div>
       </div>
     </div>
@@ -1504,7 +1504,7 @@
             <div class="action-links">
               <span class="action-link">编辑</span>
               <span class="action-link">病历溯源</span>
-              <span class="action-link" style="color:#999">思维链</span>
+              <span class="action-link" style="color:#999">思考链</span>
             </div>
           </td>
         </tr>
@@ -1557,7 +1557,7 @@
               <span class="action-link">结果修正</span>
             </div>
             <div class="action-links" style="margin-top:4px">
-              <span class="action-link" style="color:#999">思维链</span>
+              <span class="action-link" style="color:#999">思考链</span>
               <span class="action-link" style="color:#999">清空修正</span>
             </div>
           </td>
@@ -1590,7 +1590,7 @@
       });
       document.getElementById(`tab-${tab}`).style.display = 'block';
       
-      // 思维链Tab首次切换时渲染结果
+      // 思考链Tab首次切换时渲染结果
       if (tab === 'thinkchain') {
         renderThinkChainList();
       }
@@ -1721,9 +1721,9 @@ function togglePRDDrawer() {
 /* 兼容旧调用 */
 function closePRDPanel() { collapsePRDDrawer(); }
 
-// ==================== 思维链数据与渲染 ====================
+// ==================== 思考链数据与渲染 ====================
 
-// 思维链结果数据 - 每个类型下可能有多个思维链
+// 思考链结果数据 - 每个类型下可能有多个思考链
 // 实际项目中这里应该从API获取，现在用模拟数据
 const tcResultsByType = {
   // 入排类型
@@ -1731,21 +1731,56 @@ const tcResultsByType = {
     {
       id: 'tc_001',
       name: 'ASCVD心血管风险评估',
+      version: 'v3.0',
+      inclusionCriteria: 'c1',
+      steps: [
+        {
+          stepId: 'step_1',
+          title: 'ASCVD疾病判定',
+          content: `首先，必须明确患者是否已经患有动脉粥样硬化性心血管疾病（ASCVD），这是整个评估流程的起点。请仔细核对患者病历，看其是否符合以下三大类疾病中的任意一种。如果符合其中任何一项，即可判定为"有 ASCVD"，随后进入第二步进行一级预防人群的评级；如果以下三项均不符合，则判定为"无 ASCVD"。
+
+1. 冠心病：满足以下任一条件即可判定。
+- **急性冠状动脉综合征**：包括心肌梗死（或陈旧性心肌梗死）以及不稳定性心绞痛。请注意，如果入院诊断和出院诊断不一致，应以出院诊断为准。
+- **稳定性冠心病**：满足以下任一证据即可：冠脉造影显示管腔直径狭窄≥50%；冠脉 CTA 显示狭窄≥50%或为中度及以上狭窄（需排除仅收缩期狭窄和心肌桥）；运动负荷试验证实存在心肌缺血；诊断为慢性稳定性劳力型心绞痛、缺血性心肌病或处于急性冠脉综合征的稳定病程阶段。特别提醒，仅有平扫 CT 提示冠脉硬化但没有≥50%狭窄证据的情况，不纳入此类。
+- **有冠脉血运重建术病史**：包括经皮冠状动脉介入治疗（PCI，如支架植入、球囊扩张术）术后，或冠状动脉旁路移植术（CABG，即心脏搭桥手术）术后。
+
+2. 缺血性脑血管疾病：满足以下任一条件即可判定。
+- **缺血性脑卒中**：必须是 TOAST 分型中的大动脉粥样硬化型，且需同时满足三个条件：①临床上有突发偏瘫、失语等急性神经功能缺损症状；②CT/MRI 等影像学报告提示有脑梗死，且梗死部位能解释临床症状；③通过血管造影、CT/MR 血管成像等金标准证实，梗死灶同侧的供血大动脉狭窄≥50%或有明确的易损斑块。请注意，腔隙性脑梗死不符合 ASCVD 的定义。
+- **短暂性脑缺血发作（TIA）**：需同时满足两个条件：①临床上有突发偏瘫、失语等一过性急性神经功能缺损症状；②血管评估证实是由动脉粥样硬化所致。
+- **颈动脉狭窄≥50%**：经血管造影、CT/MR 血管成像或颈动脉超声等检查证实。
+- **颈动脉血运重建术病史**：包括颈动脉内膜剥脱术或颈动脉支架植入术。
+
+3. 外周动脉疾病：满足以下任一条件即可判定。
+- 休息时踝肱指数（ABI）≤0.9 的间歇性跛行。
+- 通过血管造影或超声显示外周动脉粥样硬化狭窄≥50%的间歇性跛行。
+- 既往因动脉粥样硬化行外周动脉（不包括颈动脉）血运重建术的病史。`
+        },
+        {
+          stepId: 'step_2',
+          title: '直接高危筛查',
+          content: '此步骤仅适用于在第一步中被判定为"有ASCVD"的患者。需要判断患者是否符合超高危标准：近期发生ACS事件（12个月内）、既往有多次严重心血管事件、多血管床病变、糖尿病合并靶器官损害等。'
+        },
+        {
+          stepId: 'step_3',
+          title: '10年ASCVD发病风险评估',
+          content: '如果患者未通过直接高危筛查，则需要结合其高血压情况和其他危险因素（如年龄、吸烟、血脂水平等），使用中国ASCVD一级预防风险评估工具计算10年发病风险。'
+        }
+      ],
       markdown: `【患者基本信息】
 性别：女
 年龄：54岁（截至2026-03-20）
 
-【第一步：ASCVD事件判定】
+【第一步：】
 是否存在ASCVD：否
 判定依据：病历中无冠心病、无缺血性脑血管疾病（颈动脉仅报告斑块，未报告狭窄≥50%）、无外周动脉疾病的诊断或检查依据。
 
-【第二步：直接高危筛查（3项）】
+【第二步：】
 1. LDL-C≥4.9或TC≥7.2：否（TC=4.08，LDL-C=1.81）
 2. 糖尿病且年龄≥40岁：否（空腹血糖=5.51，无糖尿病诊断）
 3. CKD 3~4期：否（尿素=6.10，肌酐=63，均正常，无CKD诊断）
 是否直接评为高危：否
 
-【第三步：10年ASCVD发病风险评估前置数据】
+【第三步：】
 高血压确诊状态：未确诊（病历“现病史”提及“伴血压升高”，但无具体数值，也无“高血压病”诊断）
 危险因素1（吸烟史）：无记录
 危险因素2（HDL-C<1.0）：否（HDL-C=1.09）
@@ -1762,19 +1797,38 @@ LDL-C值：1.81 mmol/L
     {
       id: 'tc_002',
       name: '肿瘤入排标准核查',
+      version: 'v2.0',
+      inclusionCriteria: 'c2',
+      steps: [
+        {
+          stepId: 'step_1',
+          title: '',
+          content: '首先核查患者年龄是否在18-75岁范围，这是最基本的入排条件。'
+        },
+        {
+          stepId: 'step_2',
+          title: '',
+          content: '确认患者是否符合以下任一条件：组织学确诊、ER状态、HER2状态等诊断指标。'
+        },
+        {
+          stepId: 'step_3',
+          title: '',
+          content: '逐一检查排除标准：严重肝肾功能不全、活动性恶性肿瘤（近5年内）、妊娠或哺乳期妇女、预期寿命<1年、参与其他临床试验。'
+        }
+      ],
       markdown: `【患者基本信息】
 性别：女
 年龄：36岁
 
-【第一步：年龄核查】
+【第一步：】
 是否在18-75岁范围：是（36岁）
 
-【第二步：诊断条件确认】
+【第二步：】
 组织学确诊：是（浸润性导管癌）
 ER状态：阳性（90%）
 HER2状态：阴性
 
-【第三步：排除标准筛查】
+【第三步：】
 严重肝肾功能不全：否
 活动性恶性肿瘤（近5年内）：是（当前乳腺癌）
 妊娠或哺乳期：否
@@ -1789,6 +1843,25 @@ HER2状态：阴性
     {
       id: 'tc_003',
       name: '代谢综合征诊断',
+      version: 'v1.5',
+      screeningTable: 's1',
+      steps: [
+        {
+          stepId: 'step_1',
+          title: '',
+          content: '提取患者基本信息：姓名、性别、年龄、身高、体重、BMI等。'
+        },
+        {
+          stepId: 'step_2',
+          title: '',
+          content: '提取实验室指标：空腹血糖、餐后2h血糖、HbA1c、TC、LDL-C、HDL-C、尿酸等。'
+        },
+        {
+          stepId: 'step_3',
+          title: '',
+          content: '根据以下标准进行综合评估：腹型肥胖（腰围）、高血糖、高血压、高TG、低HDL-C。符合项数≥3项则诊断为代谢综合征。'
+        }
+      ],
       markdown: `【基本信息提取】
 姓名：张三
 性别：女
@@ -1797,7 +1870,7 @@ HER2状态：阴性
 体重：62kg
 BMI：24.8
 
-【实验室指标提取】
+【第一步】
 空腹血糖：5.51 mmol/L
 餐后2h血糖：7.2 mmol/L
 HbA1c：5.6%
@@ -1806,7 +1879,7 @@ LDL-C：1.81 mmol/L
 HDL-C：1.09 mmol/L
 尿酸：320 μmol/L
 
-【综合评估】
+【第二步】
 腹型肥胖：否（腰围82cm，女性<85cm）
 高血糖：否（空腹5.51<6.1）
 高血压：否（血压120/75<130/85）
@@ -1814,7 +1887,7 @@ HDL-C：1.09 mmol/L
 低HDL-C：否（HDL-C=1.09≥1.0）
 符合项数：0/5，不满足≥3项的诊断标准
 
-【结论】
+【第三步】
 不符合代谢综合征诊断标准。`
     }
   ],
@@ -1823,21 +1896,54 @@ HDL-C：1.09 mmol/L
     {
       id: 'tc_001',
       name: 'ASCVD心血管风险评估',
+      steps: [
+        {
+          stepId: 'step_1',
+          title: '',
+          content: `首先，必须明确患者是否已经患有动脉粥样硬化性心血管疾病（ASCVD），这是整个评估流程的起点。请仔细核对患者病历，看其是否符合以下三大类疾病中的任意一种。如果符合其中任何一项，即可判定为"有 ASCVD"，随后进入第二步进行一级预防人群的评级；如果以下三项均不符合，则判定为"无 ASCVD"。
+
+1. 冠心病：满足以下任一条件即可判定。
+- **急性冠状动脉综合征**：包括心肌梗死（或陈旧性心肌梗死）以及不稳定性心绞痛。请注意，如果入院诊断和出院诊断不一致，应以出院诊断为准。
+- **稳定性冠心病**：满足以下任一证据即可：冠脉造影显示管腔直径狭窄≥50%；冠脉 CTA 显示狭窄≥50%或为中度及以上狭窄（需排除仅收缩期狭窄和心肌桥）；运动负荷试验证实存在心肌缺血；诊断为慢性稳定性劳力型心绞痛、缺血性心肌病或处于急性冠脉综合征的稳定病程阶段。特别提醒，仅有平扫 CT 提示冠脉硬化但没有≥50%狭窄证据的情况，不纳入此类。
+- **有冠脉血运重建术病史**：包括经皮冠状动脉介入治疗（PCI，如支架植入、球囊扩张术）术后，或冠状动脉旁路移植术（CABG，即心脏搭桥手术）术后。
+
+2. 缺血性脑血管疾病：满足以下任一条件即可判定。
+- **缺血性脑卒中**：必须是 TOAST 分型中的大动脉粥样硬化型，且需同时满足三个条件：①临床上有突发偏瘫、失语等急性神经功能缺损症状；②CT/MRI 等影像学报告提示有脑梗死，且梗死部位能解释临床症状；③通过血管造影、CT/MR 血管成像等金标准证实，梗死灶同侧的供血大动脉狭窄≥50%或有明确的易损斑块。请注意，腔隙性脑梗死不符合 ASCVD 的定义。
+- **短暂性脑缺血发作（TIA）**：需同时满足两个条件：①临床上有突发偏瘫、失语等一过性急性神经功能缺损症状；②血管评估证实是由动脉粥样硬化所致。
+- **颈动脉狭窄≥50%**：经血管造影、CT/MR 血管成像或颈动脉超声等检查证实。
+- **颈动脉血运重建术病史**：包括颈动脉内膜剥脱术或颈动脉支架植入术。
+
+3. 外周动脉疾病：满足以下任一条件即可判定。
+- 休息时踝肱指数（ABI）≤0.9 的间歇性跛行。
+- 通过血管造影或超声显示外周动脉粥样硬化狭窄≥50%的间歇性跛行。
+- 既往因动脉粥样硬化行外周动脉（不包括颈动脉）血运重建术的病史。`
+        },
+        {
+          stepId: 'step_2',
+          title: '',
+          content: '此步骤仅适用于在第一步中被判定为"有ASCVD"的患者。需要判断患者是否符合超高危标准：近期发生ACS事件（12个月内）、既往有多次严重心血管事件、多血管床病变、糖尿病合并靶器官损害等。'
+        },
+        {
+          stepId: 'step_3',
+          title: '10年ASCVD发病风险评估',
+          content: '如果患者未通过直接高危筛查，则需要结合其高血压情况和其他危险因素（如年龄、吸烟、血脂水平等），使用中国ASCVD一级预防风险评估工具计算10年发病风险。'
+        }
+      ],
       markdown: `【患者基本信息】
 性别：女
 年龄：54岁（截至2026-03-20）
 
-【第一步：ASCVD事件判定】
+【第一步：】
 是否存在ASCVD：否
 判定依据：病历中无冠心病、无缺血性脑血管疾病（颈动脉仅报告斑块，未报告狭窄≥50%）、无外周动脉疾病的诊断或检查依据。
 
-【第二步：直接高危筛查（3项）】
+【第二步：】
 1. LDL-C≥4.9或TC≥7.2：否（TC=4.08，LDL-C=1.81）
 2. 糖尿病且年龄≥40岁：否（空腹血糖=5.51，无糖尿病诊断）
 3. CKD 3~4期：否（尿素=6.10，肌酐=63，均正常，无CKD诊断）
 是否直接评为高危：否
 
-【第三步：10年ASCVD发病风险评估前置数据】
+【第三步：】
 高血压确诊状态：未确诊
 危险因素合计个数：0
 TC值：4.08 mmol/L
@@ -1850,16 +1956,35 @@ LDL-C值：1.81 mmol/L
   ]
 };
 
-// 当前思维链类型
+// 当前思考链类型
 let currentTcType = 'inclusion';
 
-// 切换思维链类型
+// 切换思考链类型
 function switchTcType(type) {
   currentTcType = type;
   renderThinkChainList();
 }
 
-// 渲染思维链列表
+// 切换思考链项收缩/展开
+function toggleThinkChainItem(chainId) {
+  const contentDiv = document.getElementById(chainId);
+  const icon = document.getElementById(`icon-${chainId}`);
+  if (!contentDiv || !icon) return;
+  
+  if (contentDiv.style.display === 'none') {
+    // 展开
+    contentDiv.style.display = 'block';
+    icon.classList.remove('fa-chevron-down');
+    icon.classList.add('fa-chevron-up');
+  } else {
+    // 收缩
+    contentDiv.style.display = 'none';
+    icon.classList.remove('fa-chevron-up');
+    icon.classList.add('fa-chevron-down');
+  }
+}
+
+// 渲染思考链列表
 function renderThinkChainList() {
   const container = document.getElementById('thinkChainListArea');
   if (!container) return;
@@ -1870,7 +1995,7 @@ function renderThinkChainList() {
     container.innerHTML = `
       <div style="text-align:center;padding:40px;color:#999">
         <div style="font-size:32px;margin-bottom:12px">🧠</div>
-        <div>暂无该类型的思维链结果</div>
+        <div>暂无该类型的思考链结果</div>
       </div>
     `;
     return;
@@ -1878,20 +2003,22 @@ function renderThinkChainList() {
   
   let html = '';
   chains.forEach((chain, index) => {
+    const chainId = `tc-item-${index}`;
     html += `
       <div style="margin-bottom:20px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
-        <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
+        <div onclick="toggleThinkChainItem('${chainId}')" style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;cursor:pointer">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="background:#1677ff;color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${index + 1}</span>
             <span style="font-size:14px;font-weight:600;color:#333">${chain.name}</span>
           </div>
           <div style="display:flex;align-items:center;gap:12px">
-            <button onclick="viewThinkChain('${chain.id}')" style="padding:4px 12px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
-              <i class="fas fa-edit"></i> 查看/编辑思维链
+            <i id="icon-${chainId}" class="fas fa-chevron-up" style="color:#999;font-size:14px"></i>
+            <button onclick="viewThinkChain('${chain.id}');event.stopPropagation()" style="padding:4px 12px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
+              <i class="fas fa-edit"></i> 查看/编辑思考链
             </button>
           </div>
         </div>
-        <div style="padding:16px;background:#fff">
+        <div id="${chainId}" style="padding:16px;background:#fff">
           <pre style="margin:0;font-family:inherit;font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${chain.markdown}</pre>
         </div>
       </div>
@@ -1909,21 +2036,212 @@ function renderThinkChainList() {
   container.innerHTML = html;
 }
 
-// 查看/编辑思维链
+// 查看/编辑思考链
 function viewThinkChain(chainId) {
-  // 找到对应的思维链数据
+  // 找到对应的思考链数据
   const allChains = [...(tcResultsByType['inclusion'] || []), ...(tcResultsByType['screening'] || []), ...(tcResultsByType['custom'] || [])];
   const chain = allChains.find(c => c.id === chainId);
   
   if (!chain) {
-    alert('未找到该思维链');
+    alert('未找到该思考链');
     return;
   }
   
-  // 打开思维链管理页面，传递思维链ID参数
-  window.open(`./index.html?editChain=${chainId}`, '_blank');
+  // 打开思考链详情弹窗
+  openThinkChainDetailModal(chain);
 }
+
+// 打开思考链详情弹窗
+function openThinkChainDetailModal(chain) {
+  const modal = document.getElementById('thinkChainDetailModal');
+  if (!modal) return;
+  
+  // 保存当前链数据
+  tcCurrentChain = chain;
+  
+  // 填充标题
+  document.getElementById('tcDetailTitle').textContent = chain.name || '思考链详情';
+  
+  // 填充版本号和入排内容（如果有）
+  const versionInfo = document.getElementById('tcVersionInfo');
+  const criteriaInfo = document.getElementById('tcCriteriaInfo');
+  
+  if (chain.version) {
+    versionInfo.innerHTML = `<strong>版本号：</strong>${chain.version}`;
+    versionInfo.style.display = 'block';
+  } else {
+    versionInfo.style.display = 'none';
+  }
+  
+  if (chain.inclusionCriteria) {
+    criteriaInfo.innerHTML = `<strong>入排标准：</strong>${chain.inclusionCriteria}`;
+    criteriaInfo.style.display = 'block';
+  } else {
+    criteriaInfo.style.display = 'none';
+  }
+  
+  // 渲染步骤列表
+  renderThinkChainSteps(chain.steps || []);
+  
+  // 显示弹窗
+  modal.style.display = 'flex';
+}
+
+// 关闭思考链详情弹窗
+function closeThinkChainDetailModal() {
+  const modal = document.getElementById('thinkChainDetailModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// 渲染思考链步骤
+function renderThinkChainSteps(steps) {
+  const container = document.getElementById('tcStepsContainer');
+  if (!container) return;
+  
+  if (steps.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#999">暂无步骤</div>';
+    return;
+  }
+  
+  let html = '';
+  steps.forEach((step, index) => {
+    const stepNum = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][index] || (index + 1);
+    const content = step.content || '-';
+    
+    // 判断是否超过2行（简单判断：超过80个字符）
+    const isLong = content.length > 80;
+    const displayContent = isLong ? content.substring(0, 80) + '...' : content;
+    
+    html += `
+      <div style="margin-bottom:16px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
+        <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;font-weight:600;color:#1677ff">第${stepNum}步</span>
+          <button onclick="editStep(${index})" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:12px;cursor:pointer">
+            <i class="fas fa-edit"></i> 编辑
+          </button>
+        </div>
+        <div style="padding:16px;background:#fff">
+          <div id="step-content-${index}" style="font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${displayContent}</div>
+          ${isLong ? `<button onclick="toggleStepExpand(${index}, this)" data-expanded="false" style="margin-top:8px;padding:4px 12px;background:#f0f5ff;color:#1677ff;border:1px solid #1677ff;border-radius:4px;font-size:12px;cursor:pointer">更多</button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// 切换步骤展开/收起
+function toggleStepExpand(index, button) {
+  const contentDiv = document.getElementById(`step-content-${index}`);
+  if (!contentDiv) return;
+  
+  const fullContent = tcCurrentChain.steps[index].content;
+  const isExpanded = button.getAttribute('data-expanded') === 'true';
+  
+  if (!isExpanded) {
+    contentDiv.innerHTML = fullContent.replace(/\n/g, '<br>');
+    button.textContent = '收起';
+    button.setAttribute('data-expanded', 'true');
+  } else {
+    const shortContent = fullContent.substring(0, 80) + '...';
+    contentDiv.innerHTML = shortContent;
+    button.textContent = '更多';
+    button.setAttribute('data-expanded', 'false');
+  }
+}
+
+// 编辑步骤
+function editStep(stepIndex) {
+  const step = tcCurrentChain.steps[stepIndex];
+  if (!step) return;
+  
+  // 保存当前编辑的步骤索引
+  window.currentEditingStepIndex = stepIndex;
+  
+  // 填充编辑表单
+  document.getElementById('editStepContent').value = step.content || '';
+  
+  // 显示编辑弹窗
+  document.getElementById('editStepModal').style.display = 'flex';
+}
+
+// 关闭步骤编辑弹窗
+function closeEditStepModal() {
+  document.getElementById('editStepModal').style.display = 'none';
+}
+
+// 保存步骤编辑
+function saveStepEdit() {
+  const stepIndex = window.currentEditingStepIndex;
+  if (stepIndex === undefined || !tcCurrentChain) return;
+  
+  const newContent = document.getElementById('editStepContent').value.trim();
+  
+  if (!newContent) {
+    alert('步骤内容不能为空');
+    return;
+  }
+  
+  // 更新步骤数据
+  tcCurrentChain.steps[stepIndex].content = newContent;
+  
+  // 重新渲染步骤列表
+  renderThinkChainSteps(tcCurrentChain.steps);
+  
+  // 关闭编辑弹窗
+  closeEditStepModal();
+  
+  // 提示成功
+  alert('保存成功！');
+}
+
+// 当前显示的思考链数据
+let tcCurrentChain = null;
   </script>
+
+<!-- 思考链详情弹窗 -->
+<div class="modal-overlay" id="thinkChainDetailModal" style="display:none">
+  <div class="modal-panel" style="width:900px;max-height:85vh">
+    <div class="modal-header">
+      <h3 id="tcDetailTitle">思考链详情</h3>
+      <button class="modal-close" onclick="closeThinkChainDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 60px);padding:20px 24px">
+      <!-- 版本号和入排内容 -->
+      <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:8px">
+        <div id="tcVersionInfo" style="margin-bottom:8px;font-size:13px;color:#333;display:none"></div>
+        <div id="tcCriteriaInfo" style="font-size:13px;color:#333;display:none"></div>
+      </div>
+      
+      <!-- 步骤列表 -->
+      <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
+      <div id="tcStepsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑步骤弹窗 -->
+<div class="modal-overlay" id="editStepModal" style="display:none">
+  <div class="modal-panel" style="width:700px;max-height:80vh">
+    <div class="modal-header">
+      <h3>编辑步骤</h3>
+      <button class="modal-close" onclick="closeEditStepModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(80vh - 60px);padding:20px 24px">
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">步骤内容 <span style="color:red">*</span></label>
+        <textarea class="form-input" id="editStepContent" rows="10" placeholder="请输入步骤内容" style="resize:vertical;min-height:200px"></textarea>
+      </div>
+      <div style="text-align:right;padding-top:16px;border-top:1px solid #e8e8e8">
+        <button onclick="closeEditStepModal()" style="margin-right:8px;padding:8px 20px;background:#fff;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;cursor:pointer">取消</button>
+        <button onclick="saveStepEdit()" style="padding:8px 20px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

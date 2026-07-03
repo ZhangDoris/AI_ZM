@@ -4667,7 +4667,16 @@
 <span class="brand-name">AI智能筛选系统</span>
 </div>
 <div class="nav-menu">
-
+     <!-- 标注4 -->
+<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
+ <div class="nav-item active" id="nav-audit" onclick="switchModule('audit')">
+<span class="nav-icon">📋</span> 审核列表
+      </div>
+  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
+    <div class="anno-badge pulse">4
+    </div>
+  </div>
+</div>
 
       <!-- 智能筛选 -->
 <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
@@ -4739,21 +4748,21 @@
 </div>
 
 <!-- 全局通知 (Ant Design TopLeft 风格) -->
-<!-- <div class="ant-notification-topLeft" id="globalNotice" style="display:none;">
+ <!-- <div class="ant-notification-topLeft" id="globalNotice" style="display:none;">
   <div class="ant-notification-notice" id="globalNoticeContainer">
     <div class="ant-notification-notice-icon">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none"><circle cx="12" cy="12" r="12" fill="#e8f0fe"/><circle cx="12" cy="12" r="10" fill="#1677ff"/><path d="M12 7v.5M12 10.5v6.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
     </div>
     <div class="ant-notification-notice-body">
-      <div class="ant-notification-notice-title">审核流程解耦 · 原型修改说明</div>
-      <div class="ant-notification-notice-desc">本次原型修改涉及<strong>审核流程解耦</strong>功能，覆盖 <strong>系统管理-流程设置</strong>、<strong>系统管理-流程模板管理（新增）</strong>、<strong>项目管理的编辑页面、项目的参研中心</strong>、<strong>智能筛选的患者提交审核、审核记录页面</strong> 模块，还涉及历史数据修改，具体如下：1. 流程配置，2. 项目中流程设置，不能影响已有项目；详情页的  审核状态标签需要配置成灵活的</div>
+      <div class="ant-notification-notice-title"> 原型修改说明</div>
+      <div class="ant-notification-notice-desc">本次原型修改涉及<strong>思考链</strong>功能，覆盖<strong>项目管理的编辑页面</strong>、<strong>智能筛选的匹配详情、审核列表的查看页面</strong> 模块</div>
    
     </div>
     <div class="ant-notification-notice-close" onclick="event.stopPropagation();toggleGlobalNotice()" title="折叠/展开">
       <svg id="globalNoticeToggleIcon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
   </div>
-</div> -->
+</div>  -->
 
 <script>
 // ==================== 树形展开收缩动画 ====================
@@ -5474,6 +5483,7 @@ function buildDetailContent(row) {
       <div class="detail-tab active" onclick="switchDetailTab('match')">匹配详情</div>
       <div class="detail-tab" onclick="switchDetailTab('prescreen')">预筛表</div>
       <div class="detail-tab" onclick="switchDetailTab('history')">病史与资料</div>
+      <div class="detail-tab" onclick="switchDetailTab('thinkchain')">思维链</div>
     </div>
 
     <!-- Tab 1: 匹配详情 -->
@@ -5534,6 +5544,25 @@ function buildDetailContent(row) {
           <br/>
           <div>需补充以下信息:</div>
           <div class="reason-item"><i>1. 需要研究者明确评估：该患者的免疫相关性肾脏疾病（慢性肾炎）在筛选时是否得到良好控制。【排除标准4】<span class="locate-btn">定位</span></i></div>
+        </div>
+      </div>
+
+      <!-- 思维链区域 -->
+      <div style="margin-top:24px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
+        <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <i class="fas fa-brain" style="color:#1677ff;font-size:16px"></i>
+            <span style="font-size:14px;font-weight:600;color:#333">思维链分析</span>
+          </div>
+          <button onclick="viewThinkChain('${row.id}')" style="padding:4px 12px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
+            <i class="fas fa-edit"></i> 查看/编辑思维链
+          </button>
+        </div>
+        <div id="tc-preview-${row.id}" style="padding:16px;background:#fff">
+          <div style="font-size:13px;color:#666;line-height:1.8">
+            <strong>第一步：</strong>ASCVD心血管风险评估<br/>
+            <small style="color:#999">点击"查看/编辑思维链"查看完整分析过程...</small>
+          </div>
         </div>
       </div>
 
@@ -5661,6 +5690,28 @@ function buildDetailContent(row) {
             <span>‹</span><span style="color:#1677ff;font-weight:600">1</span><span>›</span>
             <span>10条/页</span>
             <span>前往 <input type="number" style="width:40px;padding:2px 4px;border:1px solid #e8e8e8;border-radius:4px;text-align:center" value="1"/> 页</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: 思维链 -->
+    <div class="detail-tab-content" id="detailTabThinkchain">
+      <!-- 思维链区域（参考匹配详情页面的实现） -->
+      <div style="margin-top:24px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
+        <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:8px">
+            <i class="fas fa-brain" style="color:#1677ff;font-size:16px"></i>
+            <span style="font-size:14px;font-weight:600;color:#333">思维链分析</span>
+          </div>
+          <button onclick="viewThinkChain('${row.id}')" style="padding:6px 16px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer">
+            <i class="fas fa-edit"></i> 查看/编辑思维链
+          </button>
+        </div>
+        <div id="tc-preview-${row.id}" style="padding:16px;background:#fff">
+          <div style="font-size:13px;color:#666;line-height:1.8">
+            <strong>第一步：</strong>ASCVD心血管风险评估<br/>
+            <small style="color:#999">点击“查看/编辑思维链”查看完整分析过程...</small>
           </div>
         </div>
       </div>
@@ -5816,8 +5867,8 @@ function updatePRDPanel(mod, sub) {
       title: '本次修改说明',
       sections: [
         {
-          title: '审核流程解耦 · 原型修改说明',
-          content: '<span class="prd-badge prd-badge-core">本次原型修改涉及<strong>审核流程解耦</strong>功能，覆盖 <strong>系统管理-流程设置</strong>、<strong>系统管理-流程模板管理（新增）</strong>、<strong>项目管理的编辑页面、项目的参研中心</strong>、<strong>智能筛选的患者提交审核、审核记录页面</strong> 模块，还涉及历史数据修改，具体如下：1. 流程配置，2. 项目中流程设置，不能影响已有项目；详情页的  审核状态标签需要配置成灵活的，支持显示不同配置的审核状态名称</div>'
+          title: '思考链',
+          content: '<span class="prd-badge prd-badge-core">按照标注的 步骤条是相关需要修改的功能，每个功能页面有相关的开发提示。本次原型修改涉及思考链功能，覆盖项目管理的编辑页面、智能筛选的匹配详情、审核列表的查看页面 模块</div>'
         }
       ]
     },
@@ -5825,17 +5876,14 @@ function updatePRDPanel(mod, sub) {
     'ai': {
       title: '智能筛选 - 项目列表',
       sections: [
-        {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>智能筛选项目列表页，支持按机构切换查看临床试验项目，提供多维度筛选查询，快速定位目标项目并查看其下患者列表。'
-        },
+       
         {
           title: '★ 智能筛选（本次修改）',
           content: `<ul>
             <li><strong>修改摘要</strong>：
               <ul style="margin-top:6px">
                 <li><strong style="color:red">列表页面暂不修改</strong></li>
-                <li><strong style="color:red">患者列表</strong>可以自己选择下一步的审核流程</li>
+                <li><strong style="color:red">患者列表</strong>匹配详情页面加思考链</li>
               </ul>
             </li>
           </ul>`
@@ -5886,104 +5934,15 @@ function updatePRDPanel(mod, sub) {
             <li><strong>功能定位</strong>：项目管理设置，包含新建项目和编辑项目页面</li>
             <li><strong>修改摘要</strong>：
               <ul style="margin-top:6px">
-                <li><strong style="color:#1677ff">引用已有模板</strong>：从已有审核流模板中选择，预览流程后引用到本项目</li>
+                <li><strong style="color:#1677ff">思考链修改</strong></li>
                
-              </ul>
-            </li>
-          </ul>`
-        },
-        {
-          title: '编辑项目页面模块',
-          content: `<ul>
-             <li><strong>✅ 审核模板配置</strong>：<span class="prd-badge prd-badge-core">核心修改</span>
-              <ul style="margin-top:4px">
-                <li><strong>引用模板</strong>：从已有审核流模板中选择，预览流程后引用到本项目</li>
-                <li>每条模板可独立设置<strong>生效/未生效</strong>状态</li>
-              </ul>
-            </li>
-             </ul>`
-        },
-       
-       
-       
-       
-      ]
-    },
-    'admin': {
-      title: '审核流设置',
-      sections: [
-        {
-          title: '模块定位',
-          content: '<span class="prd-badge prd-badge-admin">管理员专属</span><br/>系统后台管理功能，包括项目管理、标准管理、用户管理等核心管理功能。'
-        },
-        
-        {
-          title: '★ 审核流设置（本次修改）',
-          content: '<ul><li><strong>修改摘要</strong>：审核类型删除"送检审核"，查看的按钮改名字为"流程设置"，加了查询条件</li></ul>'
-        },
-         
-       
-      ]
-    },
-     'admin-flow-template': {
-      title: '流程模板管理',
-      sections: [
-        {
-          title: '【1】功能说明',
-          content: '<span class="prd-badge prd-badge-admin">管理员专属</span><br/>用户可以先单独配置好各类审核流程，比如预审、主知情、导入、入组审核等，再把这些流程组合起来保存成专属审核模板。后续做项目时，直接选用现成的审核模板即可，不用重复配置。该功能支持对审核模板进行新增、查看、编辑、删除、启用、停用操作。'
-        },
-        {
-          title: '【2】前置条件',
-          content: '用户需提前配置完成各类基础审核流（预审审核、主知情审核、导入审核、入组审核等），才可新建、组装审核流模板。'
-        },
-        {
-          title: '【3】核心交互逻辑',
-          content: `<ul>
-            <li><strong>正常流程</strong>：用户提前配置预审审核、主知情审核、导入审核、入组审核等各类基础审核流；点击新增流程模板，填写模板名称、模板描述，绑定已配置的基础审核流完成模板组装，最后启用模板即可投入使用。</li>
-            <li><strong>按钮状态</strong>：列表操作栏默认展示查看详情、编辑、启用、停用、删除按钮。模板为停用/未启用状态时，支持查看、编辑、删除操作；模板启用后，锁定编辑、删除权限，仅保留查看详情权限。</li>
-            <li><strong>输入限制</strong>：模板名称、模板描述为常规文本输入，按需设置必填规则，无特殊字符限制。</li>
-          </ul>`
-        },
-        {
-          title: '【4】数据规则（前端）',
-          content: `<ul>
-            <li><strong>默认展示</strong>：默认展示全部审核流模板，按创建时间倒序排列；无数据时展示空状态文案</li>
-            <li><strong>数据来源</strong>：接口返回 / 本地固定 / 字典枚举</li>
-          </ul>`
-        },
-        {
-          title: '【5】接口逻辑（后端）',
-          content: `<ul>
-            <li><strong>调用接口</strong>：模板查询、新增、编辑、删除、启用、停用接口</li>
-            <li><strong>关键入参</strong>：模板名称、模板描述、绑定的审核流ID、模板状态（启用/停用）、模板ID</li>
-            <li><strong>返回处理</strong>：空数据、null、0、异常返回处理方式</li>
-          </ul>`
-        },
-        {
-          title: '【6】异常 & 边界（重点）',
-          content: `<ul>
-            <li><strong>加载中</strong>：展示 loading</li>
-            <li><strong>无数据</strong>：页面空状态文案 / 占位图</li>
-            <li><strong>请求失败</strong>：报错 toast / 重试逻辑</li>
-            <li><strong>重复操作</strong>：禁止新建同名审核模板；启用状态模板禁止重复启用、编辑删除</li>
-          </ul>`
-        },
-        {
-          title: '【7】提示文案',
-          content: `<ul>
-            <li><strong>成功提示</strong>：模板新增 / 编辑 / 启用 / 停用 / 删除成功</li>
-            <li><strong>失败提示</strong>：模板名称重复、启用状态模板不支持编辑 / 删除、流程配置异常</li>
-            <li><strong>二次确认文案</strong>：
-              <ul style="margin-top:4px">
-                <li>删除模板后不可恢复，是否确认删除？</li>
-                <li>启用模板后将锁定编辑删除权限，是否确认启用？</li>
-                <li>停用模板后项目无法选用，是否确认停用？</li>
               </ul>
             </li>
           </ul>`
         }
       ]
     }
+    
   };
   
   // 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
@@ -6514,7 +6473,7 @@ function buildScPatientListContent() {
           <button class="btn btn-primary btn-sm" onclick="scPatientSearch()">查询</button>
           <button class="btn btn-default btn-sm" onclick="scPatientReset()">重置</button>
           <button class="btn btn-primary btn-sm" style="background:linear-gradient(135deg,#722ed1,#531dab);border:none" onclick="executeThinkChainOnSelected()">
-            <i class="fa-solid fa-brain"></i> 执行思维链
+            <i class="fa-solid fa-brain"></i> 执行思考链
           </button>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -6634,13 +6593,13 @@ function toggleSelectAllPatients() {
 
 // 更新选中状态
 function updateSelectedPatients() {
-  // 这里可以记录选中的患者ID，用于执行思维链
+  // 这里可以记录选中的患者ID，用于执行思考链
   const selectedIds = Array.from(document.querySelectorAll('.patient-checkbox:checked'))
     .map(cb => cb.dataset.patientId);
   console.log('选中的患者:', selectedIds);
 }
 
-// 执行思维链（对选中的患者）
+// 执行思考链（对选中的患者）
 function executeThinkChainOnSelected() {
   const selectedCheckboxes = document.querySelectorAll('.patient-checkbox:checked');
   if (selectedCheckboxes.length === 0) {
@@ -6649,7 +6608,7 @@ function executeThinkChainOnSelected() {
   }
   
   const patientIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.patientId);
-  console.log('执行思维链，患者IDs:', patientIds);
+  console.log('执行思考链，患者IDs:', patientIds);
   
   // 调用执行函数
   executeThinkChain(patientIds);
@@ -8669,9 +8628,8 @@ function buildAdminProjects() {
             <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
             <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
               <div><strong>开发提示：</strong></div>
-              <div>① 列表页面暂不修改，直接修改新增和编辑页面的审核流程部分</div>
-              <div>② 点击项目编号，参研中心修改了，选中第一条数据的项目编号可看到效果</div>
-            </div>
+              <div>① 列表页面暂不修改，直接修改新增和编辑页面的思考链部分</div>
+                </div>
           </div>
     <!-- 操作工具栏 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -13792,33 +13750,49 @@ let criteriaVersions = [
 ];
 let activeCriteriaVersion = 'v2.0';
 
-// ==================== 思维链数据结构 ====================
-// 存储当前项目的思维链列表
+// ==================== 思考链数据结构 ====================
+// 存储当前项目的思考链列表
 let thinkChains = [
   {
     id: 'tc_001',
     name: 'ASCVD心血管风险评估',
-    type: 'custom',
+    type: 'screening',
     enabled: true,
     steps: [
       {
         stepId: 'step_1',
-        title: 'ASCVD疾病判定',
-        content: '首先，必须明确患者是否已经患有动脉粥样硬化性心血管疾病（ASCVD），这是整个评估流程的起点。请仔细核对患者病历，确认是否有冠心病、心肌梗死、冠脉血运重建史或外周动脉疾病等诊断。'
+      
+        content: `首先，必须明确患者是否已经患有动脉粥样硬化性心血管疾病（ASCVD），这是整个评估流程的起点。请仔细核对患者病历，看其是否符合以下三大类疾病中的任意一种。如果符合其中任何一项，即可判定为"有 ASCVD"，随后进入第二步进行一级预防人群的评级；如果以下三项均不符合，则判定为"无 ASCVD"。
+
+1. 冠心病：满足以下任一条件即可判定。
+- **急性冠状动脉综合征**：包括心肌梗死（或陈旧性心肌梗死）以及不稳定性心绞痛。请注意，如果入院诊断和出院诊断不一致，应以出院诊断为准。
+- **稳定性冠心病**：满足以下任一证据即可：冠脉造影显示管腔直径狭窄≥50%；冠脉 CTA 显示狭窄≥50%或为中度及以上狭窄（需排除仅收缩期狭窄和心肌桥）；运动负荷试验证实存在心肌缺血；诊断为慢性稳定性劳力型心绞痛、缺血性心肌病或处于急性冠脉综合征的稳定病程阶段。特别提醒，仅有平扫 CT 提示冠脉硬化但没有≥50%狭窄证据的情况，不纳入此类。
+- **有冠脉血运重建术病史**：包括经皮冠状动脉介入治疗（PCI，如支架植入、球囊扩张术）术后，或冠状动脉旁路移植术（CABG，即心脏搭桥手术）术后。
+
+2. 缺血性脑血管疾病：满足以下任一条件即可判定。
+- **缺血性脑卒中**：必须是 TOAST 分型中的大动脉粥样硬化型，且需同时满足三个条件：①临床上有突发偏瘫、失语等急性神经功能缺损症状；②CT/MRI 等影像学报告提示有脑梗死，且梗死部位能解释临床症状；③通过血管造影、CT/MR 血管成像等金标准证实，梗死灶同侧的供血大动脉狭窄≥50%或有明确的易损斑块。请注意，腔隙性脑梗死不符合 ASCVD 的定义。
+- **短暂性脑缺血发作（TIA）**：需同时满足两个条件：①临床上有突发偏瘫、失语等一过性急性神经功能缺损症状；②血管评估证实是由动脉粥样硬化所致。
+- **颈动脉狭窄≥50%**：经血管造影、CT/MR 血管成像或颈动脉超声等检查证实。
+- **颈动脉血运重建术病史**：包括颈动脉内膜剥脱术或颈动脉支架植入术。
+
+3. 外周动脉疾病：满足以下任一条件即可判定。
+- 休息时踝肱指数（ABI）≤0.9 的间歇性跛行。
+- 通过血管造影或超声显示外周动脉粥样硬化狭窄≥50%的间歇性跛行。
+- 既往因动脉粥样硬化行外周动脉（不包括颈动脉）血运重建术的病史。`
       },
       {
         stepId: 'step_2',
-        title: '超高危判定',
+      
         content: '此步骤仅适用于在第一步中被判定为“有ASCVD”的患者。需要判断患者是否符合超高危标准：近期发生ACS事件（12个月内）、既往有多次严重心血管事件、多血管床病变、糖尿病合并靶器官损害等。'
       },
       {
         stepId: 'step_3',
-        title: '直接高危筛查',
+      
         content: '此步骤仅适用于在第一步中被判定为“无ASCVD”的患者。筛查是否存在直接高危因素：糖尿病伴靶器官损害、严重慢性肾脏病（eGFR<30ml/min）、家族性高胆固醇血症、LDL-C≥4.9mmol/L等。'
       },
       {
         stepId: 'step_4',
-        title: '10年ASCVD发病风险评估',
+      
         content: '如果患者未通过直接高危筛查，则需要结合其高血压情况和其他危险因素（如年龄、吸烟、血脂水平等），使用中国ASCVD一级预防风险评估工具计算10年发病风险。'
       }
     ],
@@ -13834,17 +13808,17 @@ let thinkChains = [
     steps: [
       {
         stepId: 'step_1',
-        title: '年龄核查',
+      
         content: '首先核查患者年龄是否在18-85岁之间，这是最基本的入排条件。'
       },
       {
         stepId: 'step_2',
-        title: '诊断条件确认',
+
         content: '确认患者是否符合以下任一条件：急性冠脉综合征病史、心肌梗死病史、冠脉血运重建术后、冠脉狭窄≥50%。'
       },
       {
         stepId: 'step_3',
-        title: '排除标准筛查',
+       
         content: '逐一检查排除标准：严重肝肾功能不全、活动性恶性肿瘤（近5年内）、妊娠或哺乳期妇女、预期寿命<1年、参与其他临床试验。'
       }
     ],
@@ -13859,22 +13833,22 @@ let thinkChains = [
     steps: [
       {
         stepId: 'step_1',
-        title: '基本信息提取',
+      
         content: '从病历中提取患者基本信息：姓名、性别、年龄。'
       },
       {
         stepId: 'step_2',
-        title: '人体测量指标提取',
+   
         content: '提取人体测量指标：身高、体重、腰围、臀围、BMI。'
       },
       {
         stepId: 'step_3',
-        title: '实验室指标提取',
+      
         content: '提取实验室指标：空腹血糖、餐后2h血糖、HbA1c、血脂四项、尿酸。'
       },
       {
         stepId: 'step_4',
-        title: '综合评估',
+     
         content: '根据提取的数据，综合评估患者是否符合代谢综合征诊断标准。'
       }
     ],
@@ -13882,7 +13856,7 @@ let thinkChains = [
   }
 ];
 
-// 当前编辑的思维链ID
+// 当前编辑的思考链ID
 let editingThinkChainId = null;
 
 function buildAdminProjectEdit(isNew) {
@@ -14148,6 +14122,7 @@ function buildAdminProjectEdit(isNew) {
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">🧠</span> 思考链配置
+             <div>开发提示：思路跟之前是一样的，只不过是换了展示样式</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addThinkChain()">
@@ -14156,6 +14131,7 @@ function buildAdminProjectEdit(isNew) {
             <span class="edit-section-arrow" id="thinkChainArrow">▼</span>
           </div>
         </div>
+        
         <div class="edit-section-body" id="thinkChainBody">
           ${renderThinkChainTable()}
         </div>
@@ -14278,10 +14254,12 @@ function buildAdminProjectEdit(isNew) {
 
       <!-- 底部操作栏 -->
       <div class="edit-bottom-bar">
-        <button class="btn btn-default" onclick="switchModule('admin','projects')">
+        <div style="color:red"> 开发提示：直接到思考链模块</div>
+       
+        <div class="btn-group">
+           <button class="btn btn-default" onclick="switchModule('admin','projects')">
           <i class="fa-solid fa-arrow-left"></i> 返回
         </button>
-        <div class="btn-group">
           <button class="btn btn-default" onclick="saveProject()">
             <i class="fa-solid fa-floppy-disk"></i> 保存
           </button>
@@ -16198,15 +16176,15 @@ function sendCommMessage() {
   }
 }
 
-// ==================== 思维链功能函数 ====================
+// ==================== 思考链功能函数 ====================
 
-// 渲染思维链表格（树形结构）
+// 渲染思考链表格（树形结构）
 function renderThinkChainTable() {
   if (thinkChains.length === 0) {
     return `
       <div style="text-align:center;padding:40px;color:#999">
         <div style="font-size:48px;margin-bottom:12px">🧠</div>
-        <div>暂无思维链配置，点击“新增思考链”开始配置</div>
+        <div>暂无思考链配置，点击“新增思考链”开始配置</div>
       </div>
     `;
   }
@@ -16276,14 +16254,18 @@ function renderThinkChainTable() {
             <div style="padding:16px 20px;border-left:3px solid #1677ff;margin-left:20px">
               <div style="margin-bottom:12px;font-weight:600;color:#1a1a1a;font-size:14px">📝 思考步骤 (${chain.steps.length}步)</div>
               <div style="display:flex;flex-direction:column;gap:12px">
-                ${chain.steps.map((step, stepIndex) => `
+                ${chain.steps.map((step, stepIndex) => {
+                  const content = step.content || '-';
+                  return `
                   <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:12px">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                      <span style="font-size:13px;font-weight:600;color:#1677ff">第 ${stepIndex + 1} 步：${step.title || '未命名步骤'}</span>
+                      <span style="font-size:13px;font-weight:600;color:#1677ff">第 ${stepIndex + 1} 步：</span>
                     </div>
-                    <div style="font-size:13px;color:#666;line-height:1.6">${step.content || '-'}</div>
+                    <div style="position:relative">
+                      <div class="step-content-${chain.id}-${stepIndex}" data-step-id="${chain.id}-${stepIndex}" style="font-size:13px;color:#666;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis">${content}</div>
+                    </div>
                   </div>
-                `).join('')}
+                `}).join('')}
               </div>
             </div>
           </td>
@@ -16299,13 +16281,55 @@ function renderThinkChainTable() {
   return html;
 }
 
+// 检查步骤内容是否超过2行，并添加“更多”按钮
+function checkAndAddMoreButton() {
+  const stepContents = document.querySelectorAll('[data-step-id]');
+  
+  stepContents.forEach(contentDiv => {
+    const stepId = contentDiv.getAttribute('data-step-id');
+    // 使用scrollHeight和clientHeight判断是否超出2行
+    // 当设置了-webkit-line-clamp:2时，如果实际内容超过2行，scrollHeight会大于clientHeight
+    setTimeout(() => {
+      if (contentDiv.scrollHeight > contentDiv.clientHeight) {
+        // 内容超过2行，添加“更多”按钮
+        const button = document.createElement('button');
+        button.textContent = '更多';
+        button.style.cssText = 'margin-top:8px;padding:4px 12px;background:#f0f5ff;color:#1677ff;border:1px solid #1677ff;border-radius:4px;font-size:12px;cursor:pointer';
+        button.onclick = function() {
+          toggleStepContent(stepId, this);
+        };
+        contentDiv.parentNode.appendChild(button);
+      }
+    }, 100);
+  });
+}
+
+// 切换步骤内容展开/收起
+function toggleStepContent(stepId, button) {
+  const contentDiv = document.querySelector(`[data-step-id="${stepId}"]`);
+  
+  if (contentDiv) {
+    if (contentDiv.style.webkitLineClamp === 'unset' || contentDiv.style.webkitLineClamp === '') {
+      // 收起：恢复2行限制
+      contentDiv.style.webkitLineClamp = '2';
+      contentDiv.style.overflow = 'hidden';
+      button.textContent = '更多';
+    } else {
+      // 展开：显示全部内容
+      contentDiv.style.webkitLineClamp = 'unset';
+      contentDiv.style.overflow = 'visible';
+      button.textContent = '收起';
+    }
+  }
+}
+
 // 当前编辑的步骤列表
 let currentEditingSteps = [];
 
-// 打开思维链编辑弹窗（新建）
+// 打开思考链编辑弹窗（新建）
 function addThinkChain() {
   editingThinkChainId = null;
-  document.getElementById('thinkChainEditTitle').textContent = '新建思维链';
+  document.getElementById('thinkChainEditTitle').textContent = '新建思考链';
   document.getElementById('tcName').value = '';
   setSelectedTcType('inclusion');
   
@@ -16329,13 +16353,13 @@ function addThinkChain() {
   document.getElementById('thinkChainEditModal').style.display = 'flex';
 }
 
-// 打开思维链编辑弹窗（编辑）
+// 打开思考链编辑弹窗（编辑）
 function editThinkChain(chainId) {
   const chain = thinkChains.find(c => c.id === chainId);
   if (!chain) return;
   
   editingThinkChainId = chainId;
-  document.getElementById('thinkChainEditTitle').textContent = '编辑思维链';
+  document.getElementById('thinkChainEditTitle').textContent = '编辑思考链';
   document.getElementById('tcName').value = chain.name;
   setSelectedTcType(chain.type || '');
   
@@ -16384,7 +16408,7 @@ function editThinkChain(chainId) {
   document.getElementById('thinkChainEditModal').style.display = 'flex';
 }
 
-// 关闭思维链编辑弹窗
+// 关闭思考链编辑弹窗
 function closeThinkChainEdit() {
   document.getElementById('thinkChainEditModal').style.display = 'none';
 }
@@ -16476,7 +16500,7 @@ function loadInclusionConditions() {
       criteriaSelect.appendChild(option);
     });
     
-    // 自动设置思维链名称为版本号
+    // 自动设置思考链名称为版本号
     document.getElementById('tcName').value = version;
   } else {
     // 如果没有选择版本，清空下拉框
@@ -16503,7 +16527,7 @@ function onScreeningContentChange() {
   const content = document.getElementById('tcScreeningContentSelect').value;
   
   if (content) {
-    // 自动设置思维链名称为筛选表名称
+    // 自动设置思考链名称为筛选表名称
     const selectElement = document.getElementById('tcScreeningContentSelect');
     const selectedText = selectElement.options[selectElement.selectedIndex].text;
     document.getElementById('tcName').value = selectedText;
@@ -16610,7 +16634,7 @@ function setSelectedTcType(type) {
   }
 }
 
-// 保存思维链
+// 保存思考链
 function saveThinkChain() {
   const name = document.getElementById('tcName').value.trim();
   const type = getSelectedTcType();
@@ -16622,7 +16646,7 @@ function saveThinkChain() {
   
   // 自定义类型需要检查名称
   if (type === 'custom' && !name) {
-    alert('请输入思维链名称');
+    alert('请输入思考链名称');
     return;
   }
   
@@ -16686,18 +16710,18 @@ function saveThinkChain() {
     thinkChains.push(chainData);
   }
   
-  showWechatToast('✅ 思维链保存成功！');
+  showWechatToast('✅ 思考链保存成功！');
   closeThinkChainEdit();
   
   // 刷新表格（如果在项目编辑页面）
   if (document.getElementById('projectApprovalTableBody')) {
-    // TODO: 刷新思维链表格
+    // TODO: 刷新思考链表格
   }
 }
 
-// 删除思维链
+// 删除思考链
 function deleteThinkChain(chainId) {
-  if (!confirm('确定要删除这个思维链吗？')) return;
+  if (!confirm('确定要删除这个思考链吗？')) return;
   
   const index = thinkChains.findIndex(c => c.id === chainId);
   if (index !== -1) {
@@ -16708,7 +16732,7 @@ function deleteThinkChain(chainId) {
   }
 }
 
-// 启用/禁用思维链
+// 启用/禁用思考链
 function toggleThinkChain(chainId) {
   const chain = thinkChains.find(c => c.id === chainId);
   if (chain) {
@@ -16729,6 +16753,8 @@ function toggleTreeRow(chainId) {
       childrenRow.style.display = 'table-row';
       icon.classList.remove('fa-chevron-down');
       icon.classList.add('fa-chevron-up');
+      // 展开后检查并添加“更多”按钮
+      setTimeout(() => checkAndAddMoreButton(), 100);
     } else {
       childrenRow.style.display = 'none';
       icon.classList.remove('fa-chevron-up');
@@ -16737,7 +16763,7 @@ function toggleTreeRow(chainId) {
   }
 }
 
-// 刷新思维链表格（在项目编辑页面）
+// 刷新思考链表格（在项目编辑页面）
 function renderProjectApprovalTable() {
   const thinkChainBody = document.getElementById('thinkChainBody');
   if (thinkChainBody) {
@@ -16745,9 +16771,9 @@ function renderProjectApprovalTable() {
   }
 }
 
-// ==================== 思维链执行功能 ====================
+// ==================== 思考链执行功能 ====================
 
-// 在智能筛选页面执行思维链
+// 在智能筛选页面执行思考链
 async function executeThinkChain(patientIds) {
   if (!patientIds || patientIds.length === 0) {
     alert('请先选择患者');
@@ -16811,7 +16837,7 @@ async function executeThinkChain(patientIds) {
   }, 500);
 }
 
-// 显示思维链结果
+// 显示思考链结果
 function showThinkChainResult(patientIds) {
   // 这里应该是调用API获取真实结果，现在用模拟数据
   const mockResult = generateMockThinkChainResult(patientIds[0]);
@@ -16953,6 +16979,204 @@ function runThinkChainInBackground() {
   document.getElementById('thinkChainLoadingModal').style.display = 'none';
   showWechatToast('✅ 已在后台运行，完成后会通知您');
   // TODO: 实现后台任务逻辑
+}
+
+// ==================== 审核详情页面的思维链功能 ====================
+
+// 当前显示的思维链数据（用于审核详情页）
+let auditTcCurrentChain = null;
+
+// 查看/编辑思维链（从审核详情页调用）
+function viewThinkChain(patientId) {
+  console.log('查看思维链:', patientId);
+  
+  // 这里应该根据patientId获取对应的思维链数据
+  // 暂时使用模拟数据
+  const mockChain = {
+    id: 'tc_audit_' + patientId,
+    name: 'ASCVD心血管风险评估',
+    version: 'v3.0',
+    inclusionCriteria: 'c1',
+    steps: [
+      {
+        stepId: 'step_1',
+        content: `首先，必须明确患者是否已经患有动脉粥样硬化性心血管疾病（ASCVD），这是整个评估流程的起点。请仔细核对患者病历，看其是否符合以下三大类疾病中的任意一种。如果符合其中任何一项，即可判定为"有 ASCVD"，随后进入第二步进行一级预防人群的评级；如果以下三项均不符合，则判定为"无 ASCVD"。
+
+1. 冠心病：满足以下任一条件即可判定。
+- **急性冠状动脉综合征**：包括心肌梗死（或陈旧性心肌梗死）以及不稳定性心绞痛。请注意，如果入院诊断和出院诊断不一致，应以出院诊断为准。
+- **稳定性冠心病**：满足以下任一证据即可：冠脉造影显示管腔直径狭窄≥50%；冠脉 CTA 显示狭窄≥50%或为中度及以上狭窄（需排除仅收缩期狭窄和心肌桥）；运动负荷试验证实存在心肌缺血；诊断为慢性稳定性劳力型心绞痛、缺血性心肌病或处于急性冠脉综合征的稳定病程阶段。特别提醒，仅有平扫 CT 提示冠脉硬化但没有≥50%狭窄证据的情况，不纳入此类。
+- **有冠脉血运重建术病史**：包括经皮冠状动脉介入治疗（PCI，如支架植入、球囊扩张术）术后，或冠状动脉旁路移植术（CABG，即心脏搭桥手术）术后。
+
+2. 缺血性脑血管疾病：满足以下任一条件即可判定。
+- **缺血性脑卒中**：必须是 TOAST 分型中的大动脉粥样硬化型，且需同时满足三个条件：临床上有突发偏瘫、失语等急性神经功能缺损症状；②CT/MRI 等影像学报告提示有脑梗死，且梗死部位能解释临床症状；③通过血管造影、CT/MR 血管成像等金标准证实，梗死灶同侧的供血大动脉狭窄≥50%或有明确的易损斑块。请注意，腔隙性脑梗死不符合 ASCVD 的定义。
+- **短暂性脑缺血发作（TIA）**：需同时满足两个条件：①临床上有突发偏瘫、失语等一过性急性神经功能缺损症状；②血管评估证实是由动脉粥样硬化所致。
+- **颈动脉狭窄≥50%**：经血管造影、CT/MR 血管成像或颈动脉超声等检查证实。
+- **颈动脉血运重建术病史**：包括颈动脉内膜剥脱术或颈动脉支架植入术。
+
+3. 外周动脉疾病：满足以下任一条件即可判定。
+- 休息时踝肱指数（ABI）≤0.9 的间歇性跛行。
+- 通过血管造影或超声显示外周动脉粥样硬化狭窄≥50%的间歇性跛行。
+- 既往因动脉粥样硬化行外周动脉（不包括颈动脉）血运重建术的病史。`
+      },
+      {
+        stepId: 'step_2',
+        content: '如果第一步判断为\"无 ASCVD\"，则需要评估患者是否存在 LDL-C ≥ 4.9 mmol/L 或 TC ≥ 7.2 mmol/L 的情况。如果存在，直接评为高危人群；如果不存在，继续下一步评估。'
+      },
+      {
+        stepId: 'step_3',
+        content: '评估糖尿病患者：年龄≥40岁且确诊糖尿病的患者，需要进一步评估是否有靶器官损害或其他危险因素。'
+      }
+    ]
+  };
+  
+  openAuditThinkChainDetailModal(mockChain);
+}
+
+// 打开审核详情的思维链弹窗
+function openAuditThinkChainDetailModal(chain) {
+  const modal = document.getElementById('auditThinkChainDetailModal');
+  if (!modal) return;
+  
+  // 保存当前链数据
+  auditTcCurrentChain = chain;
+  
+  // 填充标题
+  document.getElementById('auditTcDetailTitle').textContent = chain.name || '思维链详情';
+  
+  // 填充版本号和入排内容（如果有）
+  const versionInfo = document.getElementById('auditTcVersionInfo');
+  const criteriaInfo = document.getElementById('auditTcCriteriaInfo');
+  
+  if (chain.version) {
+    versionInfo.innerHTML = `<strong>版本号：</strong>${chain.version}`;
+    versionInfo.style.display = 'block';
+  } else {
+    versionInfo.style.display = 'none';
+  }
+  
+  if (chain.inclusionCriteria) {
+    criteriaInfo.innerHTML = `<strong>入排标准：</strong>${chain.inclusionCriteria}`;
+    criteriaInfo.style.display = 'block';
+  } else {
+    criteriaInfo.style.display = 'none';
+  }
+  
+  // 渲染步骤列表
+  renderAuditThinkChainSteps(chain.steps || []);
+  
+  // 显示弹窗
+  modal.style.display = 'flex';
+}
+
+// 关闭审核详情的思维链弹窗
+function closeAuditThinkChainDetailModal() {
+  const modal = document.getElementById('auditThinkChainDetailModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// 渲染审核详情的思维链步骤
+function renderAuditThinkChainSteps(steps) {
+  const container = document.getElementById('auditTcStepsContainer');
+  if (!container) return;
+  
+  if (steps.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:#999">暂无步骤</div>';
+    return;
+  }
+  
+  let html = '';
+  steps.forEach((step, index) => {
+    const stepNum = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'][index] || (index + 1);
+    const content = step.content || '-';
+    
+    // 判断是否超过2行（简单判断：超过80个字符）
+    const isLong = content.length > 80;
+    const displayContent = isLong ? content.substring(0, 80) + '...' : content;
+    
+    html += `
+      <div style="margin-bottom:16px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
+        <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:14px;font-weight:600;color:#1677ff">第${stepNum}步</span>
+          <button onclick="editAuditStep(${index})" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:12px;cursor:pointer">
+            <i class="fas fa-edit"></i> 编辑
+          </button>
+        </div>
+        <div style="padding:16px;background:#fff">
+          <div id="audit-step-content-${index}" style="font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${displayContent}</div>
+          ${isLong ? `<button onclick="toggleAuditStepExpand(${index}, this)" data-expanded="false" style="margin-top:8px;padding:4px 12px;background:#f0f5ff;color:#1677ff;border:1px solid #1677ff;border-radius:4px;font-size:12px;cursor:pointer">更多</button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+// 切换审核详情步骤展开/收起
+function toggleAuditStepExpand(index, button) {
+  const contentDiv = document.getElementById(`audit-step-content-${index}`);
+  if (!contentDiv) return;
+  
+  const fullContent = auditTcCurrentChain.steps[index].content;
+  const isExpanded = button.getAttribute('data-expanded') === 'true';
+  
+  if (!isExpanded) {
+    contentDiv.innerHTML = fullContent.replace(/\n/g, '<br>');
+    button.textContent = '收起';
+    button.setAttribute('data-expanded', 'true');
+  } else {
+    const shortContent = fullContent.substring(0, 80) + '...';
+    contentDiv.innerHTML = shortContent;
+    button.textContent = '更多';
+    button.setAttribute('data-expanded', 'false');
+  }
+}
+
+// 编辑审核详情步骤
+function editAuditStep(stepIndex) {
+  const step = auditTcCurrentChain.steps[stepIndex];
+  if (!step) return;
+  
+  // 保存当前编辑的步骤索引
+  window.auditCurrentEditingStepIndex = stepIndex;
+  
+  // 填充编辑表单
+  document.getElementById('editAuditStepContent').value = step.content || '';
+  
+  // 显示编辑弹窗
+  document.getElementById('editAuditStepModal').style.display = 'flex';
+}
+
+// 关闭审核详情步骤编辑弹窗
+function closeEditAuditStepModal() {
+  document.getElementById('editAuditStepModal').style.display = 'none';
+}
+
+// 保存审核详情步骤编辑
+function saveAuditStepEdit() {
+  const stepIndex = window.auditCurrentEditingStepIndex;
+  if (stepIndex === undefined || !auditTcCurrentChain) return;
+  
+  const newContent = document.getElementById('editAuditStepContent').value.trim();
+  
+  if (!newContent) {
+    alert('步骤内容不能为空');
+    return;
+  }
+  
+  // 更新步骤数据
+  auditTcCurrentChain.steps[stepIndex].content = newContent;
+  
+  // 重新渲染步骤列表
+  renderAuditThinkChainSteps(auditTcCurrentChain.steps);
+  
+  // 关闭编辑弹窗
+  closeEditAuditStepModal();
+  
+  // 提示成功
+  alert('保存成功！');
 }
 
 </script>
@@ -17102,14 +17326,26 @@ function runThinkChainInBackground() {
   </div>
 </div>
 
-<!-- 思维链编辑弹窗 -->
+<!-- 思考链编辑弹窗 -->
 <div class="modal-overlay" id="thinkChainEditModal" style="display:none">
   <div class="modal-panel" style="width:800px;max-height:90vh">
     <div class="modal-header">
-      <h3 id="thinkChainEditTitle">新建思维链</h3>
+      <h3 id="thinkChainEditTitle">新建思考链</h3>
       <button class="modal-close" onclick="closeThinkChainEdit()">✕</button>
     </div>
-    <div class="modal-body" style="overflow-y:auto;max-height:calc(90vh - 120px);padding:20px 24px">
+    <!-- 开发提示 - 单独一行 -->
+    <div style="background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:0 24px 16px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+        <div style="font-size:12px;color:#333;line-height:1.9">
+          <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+          <div>① 选择了对应的入排内容和筛选表内容之后，会出来思考链</div>
+          <div>② 按照之前的思路配置思考链</div>
+          <div>③ 步骤上加了顺序调整，可以向上向下调整顺序</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(90vh - 150px);padding:0 24px 20px">
       <!-- 基本信息 -->
              
       <div class="form-group">
@@ -17138,9 +17374,9 @@ function runThinkChainInBackground() {
           <label class="form-label">选择版本 <span class="required">*</span></label>
           <select class="form-select" id="tcInclusionVersion" onchange="loadInclusionConditions()">
             <option value="">请选择版本</option>
-            <option value="v1.0">v1.0 (2026-01-15)</option>
-            <option value="v2.0">v2.0 (2026-03-20)</option>
-            <option value="v3.0">v3.0 (2026-06-10)</option>
+            <option value="v1.0">v1.0 </option>
+            <option value="v2.0">v2.0</option>
+            <option value="v3.0">v3.0</option>
           </select>
         </div>
         <div class="form-group">
@@ -17205,7 +17441,7 @@ function runThinkChainInBackground() {
   </div>
 </div>
 
-<!-- 思维链执行Loading弹窗 -->
+<!-- 思考链执行Loading弹窗 -->
 <div class="modal-overlay" id="thinkChainLoadingModal" style="display:none;z-index:9999">
   <div class="modal-panel" style="width:480px;text-align:center;padding:40px 30px">
     <div style="font-size:48px;margin-bottom:20px">🧠</div>
@@ -17224,7 +17460,7 @@ function runThinkChainInBackground() {
   </div>
 </div>
 
-<!-- 思维链结果展示弹窗 -->
+<!-- 思考链结果展示弹窗 -->
 <div class="modal-overlay" id="thinkChainResultModal" style="display:none;z-index:9998">
   <div class="modal-panel" style="width:900px;max-height:90vh">
     <div class="modal-header">
@@ -17237,6 +17473,88 @@ function runThinkChainInBackground() {
     <div class="modal-footer">
       <button class="btn btn-cancel" onclick="closeThinkChainResult()">关闭</button>
       <button class="btn btn-primary" onclick="exportThinkChainResult()"><i class="fa-solid fa-download"></i> 导出报告</button>
+    </div>
+  </div>
+</div>
+
+<!-- 审核详情思维链弹窗 -->
+<div class="modal-overlay" id="auditThinkChainDetailModal" style="display:none;z-index:9998">
+  <div class="modal-panel" style="width:900px;max-height:85vh">
+    <div class="modal-header">
+      <h3 id="auditTcDetailTitle">思维链详情</h3>
+      <button class="modal-close" onclick="closeAuditThinkChainDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 60px);padding:20px 24px">
+      <!-- 版本号和入排内容 -->
+      <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:8px">
+        <div id="auditTcVersionInfo" style="margin-bottom:8px;font-size:13px;color:#333;display:none"></div>
+        <div id="auditTcCriteriaInfo" style="font-size:13px;color:#333;display:none"></div>
+      </div>
+      
+      <!-- 步骤列表 -->
+      <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
+      <div id="auditTcStepsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑审核详情步骤弹窗 -->
+<div class="modal-overlay" id="editAuditStepModal" style="display:none;z-index:9999">
+  <div class="modal-panel" style="width:700px;max-height:80vh">
+    <div class="modal-header">
+      <h3>编辑步骤</h3>
+      <button class="modal-close" onclick="closeEditAuditStepModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(80vh - 60px);padding:20px 24px">
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">步骤内容 <span style="color:red">*</span></label>
+        <textarea class="form-input" id="editAuditStepContent" rows="10" placeholder="请输入步骤内容" style="resize:vertical;min-height:200px"></textarea>
+      </div>
+      <div style="text-align:right;padding-top:16px;border-top:1px solid #e8e8e8">
+        <button onclick="closeEditAuditStepModal()" style="margin-right:8px;padding:8px 20px;background:#fff;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;cursor:pointer">取消</button>
+        <button onclick="saveAuditStepEdit()" style="padding:8px 20px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 审核详情思维链弹窗 -->
+<div class="modal-overlay" id="auditThinkChainDetailModal" style="display:none;z-index:9998">
+  <div class="modal-panel" style="width:900px;max-height:85vh">
+    <div class="modal-header">
+      <h3 id="auditTcDetailTitle">思维链详情</h3>
+      <button class="modal-close" onclick="closeAuditThinkChainDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 60px);padding:20px 24px">
+      <!-- 版本号和入排内容 -->
+      <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:8px">
+        <div id="auditTcVersionInfo" style="margin-bottom:8px;font-size:13px;color:#333;display:none"></div>
+        <div id="auditTcCriteriaInfo" style="font-size:13px;color:#333;display:none"></div>
+      </div>
+      
+      <!-- 步骤列表 -->
+      <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
+      <div id="auditTcStepsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑审核详情步骤弹窗 -->
+<div class="modal-overlay" id="editAuditStepModal" style="display:none;z-index:9999">
+  <div class="modal-panel" style="width:700px;max-height:80vh">
+    <div class="modal-header">
+      <h3>编辑步骤</h3>
+      <button class="modal-close" onclick="closeEditAuditStepModal()">✕</button>
+    </div>
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(80vh - 60px);padding:20px 24px">
+      <div class="form-group" style="margin-bottom:16px">
+        <label class="form-label">步骤内容 <span style="color:red">*</span></label>
+        <textarea class="form-input" id="editAuditStepContent" rows="10" placeholder="请输入步骤内容" style="resize:vertical;min-height:200px"></textarea>
+      </div>
+      <div style="text-align:right;padding-top:16px;border-top:1px solid #e8e8e8">
+        <button onclick="closeEditAuditStepModal()" style="margin-right:8px;padding:8px 20px;background:#fff;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;cursor:pointer">取消</button>
+        <button onclick="saveAuditStepEdit()" style="padding:8px 20px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer">保存</button>
+      </div>
     </div>
   </div>
 </div>
