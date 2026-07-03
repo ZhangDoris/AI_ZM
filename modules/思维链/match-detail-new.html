@@ -1116,9 +1116,11 @@
   <!-- Tab导航 -->
   <div class="tab-navigation">
     <div class="tab-nav-inner">
+      
       <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
       <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
       <div class="tab-item" onclick="switchTab('thinkchain')">思考链</div>
+      <div class="tab-item" style="color: #ff4d4f;">开发提示:只加了思考链,如果项目没有配置思维链，就不显示这个tab</div>
     </div>
   </div>
 
@@ -1267,17 +1269,22 @@
     <!-- Tab 3: 思考链 -->
     <div id="tab-thinkchain" class="tab-content" style="display:none;">
       <div class="card">
-        <!-- 类型选择 -->
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
-          <span style="font-size:14px;font-weight:600;color:#333">思考链类型：</span>
-          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#666">
-            <input type="radio" name="tcType" value="inclusion" checked onchange="switchTcType(this.value)"> 入排
-          </label>
-          <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#666">
-            <input type="radio" name="tcType" value="screening" onchange="switchTcType(this.value)"> 筛选表
-          </label>
-     
+         <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 每一条都是在项目中配置的思考链对应的返回结果</div>
+            <div>② 可以查看和修改思考链，查看每个人都可以看，但是点击进去的编辑按钮只有管理员和医学经理、项目经理有，有修改权限</div>
+            <div>③ 如果还没思考完成，页面显示 思考中，请稍后再来</div>
+            </div>
         </div>
+       
+         <!-- 思维链类型选择 -->
+      <div style="margin-bottom:16px;display:flex;gap:8px">
+        <button onclick="switchTcType('inclusion')" style="padding:6px 16px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer">入排条件</button>
+        <button onclick="switchTcType('screening')" style="padding:6px 16px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:13px;cursor:pointer">筛选表</button>
+      </div>
         <!-- 思考链列表区 -->
         <div id="thinkChainListArea"></div>
       </div>
@@ -1310,6 +1317,7 @@
               </tr>
             </thead>
             <tbody id="prescreenTable">
+            
               <!-- 动态生成 -->
             </tbody>
           </table>
@@ -1660,7 +1668,7 @@ function updatePRDPanel(mod, sub) {
       sections: [
         {
           title: '★ 本次修改',
-          content: '<ul><li><strong style= "color: red">修改摘要</strong></li><li>① 去掉分组和预筛的标签页</li><li>② 匹配详情和预筛表中加历史版本，点击不同的版本刷新当前页面的内容</li></ul>'
+          content: '<ul><li><strong style= "color: red">修改摘要</strong></li><li>① 只加了思考链,如果项目没有配置思维链，就不显示这个tab</li><li>② 每一条都是在项目中配置的思考链对应的返回结果</li><li>③ 可以查看和修改思考链，查看每个人都可以看，但是点击进去的编辑按钮只有管理员和医学经理、项目经理有，有修改权限</li></ul>'
         }
         
         
@@ -2014,7 +2022,7 @@ function renderThinkChainList() {
           <div style="display:flex;align-items:center;gap:12px">
             <i id="icon-${chainId}" class="fas fa-chevron-up" style="color:#999;font-size:14px"></i>
             <button onclick="viewThinkChain('${chain.id}');event.stopPropagation()" style="padding:4px 12px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
-              <i class="fas fa-edit"></i> 查看/编辑思考链
+              <i class="fas fa-edit"></i> 查看思考链
             </button>
           </div>
         </div>
@@ -2025,11 +2033,11 @@ function renderThinkChainList() {
     `;
   });
   
-  // 免责声明
+  // 免责声明 - 悬浮固定在底部
   html += `
-    <div style="display:flex;align-items:center;gap:8px;padding:12px;background:#fff7e6;border-radius:4px;color:#fa8c16;font-size:13px;margin-top:16px">
-      <i class="fas fa-exclamation-circle"></i>
-      <span>以上内容由AI生成，仅供参考，请谨慎鉴别</span>
+    <div style="position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:12px 24px;background:#fff7e6;border-top:1px solid #ffd591;color:#fa8c16;font-size:13px;z-index:1000;box-shadow:0 -2px 8px rgba(0,0,0,0.08)">
+      <i class="fas fa-exclamation-circle" style="flex-shrink:0"></i>
+      <span style="flex:1">以上内容由AI生成，仅供参考，请谨慎鉴别。如果需要校正思考链，可以修改思考链的逻辑。</span>
     </div>
   `;
   
@@ -2118,9 +2126,7 @@ function renderThinkChainSteps(steps) {
       <div style="margin-bottom:16px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
         <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:14px;font-weight:600;color:#1677ff">第${stepNum}步</span>
-          <button onclick="editStep(${index})" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:12px;cursor:pointer">
-            <i class="fas fa-edit"></i> 编辑
-          </button>
+         
         </div>
         <div style="padding:16px;background:#fff">
           <div id="step-content-${index}" style="font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${displayContent}</div>
@@ -2209,6 +2215,14 @@ let tcCurrentChain = null;
       <h3 id="tcDetailTitle">思考链详情</h3>
       <button class="modal-close" onclick="closeThinkChainDetailModal()">✕</button>
     </div>
+       <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
+          <div style="font-size:12px;color:#333;line-height:1.9">
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 编辑按钮只有管理员和医学经理、项目经理有，有修改权限</div>
+            </div>
+        </div>
     <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 60px);padding:20px 24px">
       <!-- 版本号和入排内容 -->
       <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:8px">
