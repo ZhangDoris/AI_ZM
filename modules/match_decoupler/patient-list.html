@@ -810,22 +810,16 @@
       </div>
     </div>
     <div class="nav-menu">
+       <div class="nav-item" onclick="window.location.href='audit-list.html'">
+        <i class="fas fa-clipboard-check nav-icon"></i>
+        <span>审核列表</span>
+      </div>
       <div class="nav-item active">
         <i class="fas fa-brain nav-icon"></i>
         <span>智能预筛</span>
       </div>
-      <div class="nav-item">
-        <i class="fas fa-project-diagram nav-icon"></i>
-        <span>项目管理</span>
-      </div>
-      <div class="nav-item">
-        <i class="fas fa-history nav-icon"></i>
-        <span>历史记录</span>
-      </div>
-      <div class="nav-item">
-        <i class="fas fa-cog nav-icon"></i>
-        <span>系统设置</span>
-      </div>
+     
+      
     </div>
     <div class="nav-right">
       <div class="nav-avatar">管</div>
@@ -1024,7 +1018,7 @@
       <p class="prd-text" style="margin-top:16px;"><strong>B. 直接提交审批：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
-        <li><strong>步骤1：</strong>用户点击操作列的"提交审批"按钮</li>
+        <li id="prd-stepB1"><strong>步骤1：</strong>用户点击操作列的"提交审批"按钮</li>
         <li><strong>步骤2：</strong>系统检查是否已进行项目匹配</li>
         <li style="padding-left:16px;">• 若已匹配 → 直接提交审批</li>
         <li style="padding-left:16px;">• 若未匹配 → 弹出提醒对话框</li>
@@ -1385,7 +1379,7 @@
               <a href="javascript:void(0)">编辑</a><span>|</span>
               <a href="javascript:void(0)">抄送</a><span>|</span>
               <a href="match-detail-new.html?id=${p.id}&screenNo=${encodeURIComponent(p.screenNo)}&age=${p.age}&gender=${encodeURIComponent(p.gender)}&centerNo=${p.centerNo}&center=${encodeURIComponent(p.center)}">匹配详情</a><span>|</span>
-              <a href="javascript:void(0)" onclick="submitAudit(${p.id})">提交审批</a><span>|</span>
+              <a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})">提交审批</a><span>|</span>
               <a href="javascript:void(0)" onclick="viewAuditRecord('${p.patientNo}')">审批记录</a><span>|</span>
               <a href="javascript:void(0)">邮件记录</a>
             </div>
@@ -1712,8 +1706,44 @@
 
       // PRD侧边栏中各步骤元素的实际位置
       const steps = [
-        { id: 'prd-step1', label: '1' }
+        { id: 'prd-step1', label: 'A' }
       ];
+
+      // 提交审批按钮连线
+      const submitAuditBtn = document.querySelector('.submit-audit-btn');
+      if (submitAuditBtn) {
+        const saRect = submitAuditBtn.getBoundingClientRect();
+        const saX = saRect.right;
+        const saY = saRect.top + saRect.height / 2;
+        const stepB1 = document.getElementById('prd-stepB1');
+        if (stepB1) {
+          const bRect = stepB1.getBoundingClientRect();
+          const prdBX = bRect.left - 8;
+          const prdBY = bRect.top + bRect.height / 2;
+          const midBX = (saX + prdBX) / 2;
+          const pathB = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          pathB.setAttribute('d', `M ${saX} ${saY} C ${midBX} ${saY}, ${midBX} ${prdBY}, ${prdBX} ${prdBY}`);
+          pathB.setAttribute('class', 'connector-line');
+          pathB.setAttribute('marker-end', 'url(#connectorArrow)');
+          svg.appendChild(pathB);
+          const cB1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          cB1.setAttribute('cx', saX); cB1.setAttribute('cy', saY); cB1.setAttribute('r', '5');
+          cB1.setAttribute('class', 'connector-circle');
+          svg.appendChild(cB1);
+          const cB2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          cB2.setAttribute('cx', prdBX); cB2.setAttribute('cy', prdBY); cB2.setAttribute('r', '5');
+          cB2.setAttribute('class', 'connector-circle');
+          svg.appendChild(cB2);
+          const textB = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          textB.setAttribute('x', midBX);
+          textB.setAttribute('y', (saY + prdBY) / 2 - 6);
+          textB.setAttribute('class', 'connector-label');
+          textB.textContent = 'B';
+          svg.appendChild(textB);
+          pathB.addEventListener('mouseenter', () => { pathB.classList.add('highlight'); submitAuditBtn.style.textShadow = '0 0 6px rgba(250,140,22,0.6)'; });
+          pathB.addEventListener('mouseleave', () => { pathB.classList.remove('highlight'); submitAuditBtn.style.textShadow = ''; });
+        }
+      }
 
       steps.forEach((step) => {
         const el = document.getElementById(step.id);
