@@ -1229,6 +1229,17 @@
         </div>
       </div>
 
+      <div class="config-row" style="background: #f8f9fa; padding: 12px 16px; border-radius: 6px; margin-top: 8px;">
+        <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%;">
+          <span style="font-size: 14px; color: #d48806; flex-shrink: 0;">💡</span>
+          <div style="flex: 1;">
+            <p style="font-size: 13px; color: #666; line-height: 1.6; margin: 0;">
+              <strong style="color: #555;">备注：</strong>因数据量较大，首次执行将默认分析最近一个月的数据；后续执行将自动切换为增量模式，仅处理新增数据。
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div class="config-row" id="modelConfig">
         <div class="config-label">选择模型：</div>
         <div style="flex: 1; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
@@ -1310,6 +1321,35 @@
       <div class="selected-tags" id="manualSelectedTags"></div>
       <div class="selected-info" id="manualSelectedInfo">
         已选择 0 个项目
+      </div>
+
+      <div class="config-row">
+        <div class="config-label">执行类型：</div>
+        <div style="flex: 1; display: flex; gap: 24px; align-items: center;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+            <input type="radio" name="executionType" value="full" checked onchange="updateExecutionType('full')">
+            <span>全量处理</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px;">
+            <input type="radio" name="executionType" value="incremental" onchange="updateExecutionType('incremental')">
+            <span>增量处理</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="config-row" style="background: #f8f9fa; padding: 12px 16px; border-radius: 6px; margin-top: 8px;">
+        <div style="display: flex; align-items: flex-start; gap: 8px; width: 100%;">
+          <span style="font-size: 14px; color: #d48806; flex-shrink: 0;">💡</span>
+          <div style="flex: 1;">
+            <p style="font-size: 13px; color: #666; line-height: 1.6; margin: 0 0 4px 0;">
+              <strong style="color: #555;">备注：</strong>
+            </p>
+            <ul style="font-size: 13px; color: #666; line-height: 1.8; margin: 0; padding-left: 20px;">
+              <li><strong style="color: #555;">全量执行：</strong>处理所有所选项目所有审核记录。</li>
+              <li><strong style="color: #555;">增量执行：</strong>仅处理自上次执行以来的新增审核记录。</li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div class="config-row">
@@ -1481,6 +1521,9 @@
 
     // 手动执行模型选择（默认全选）
     let manualSelectedModels = ['deepseek-r1', 'deepseek-v4pro', 'glm-5.1', 'mimax-m2.7'];
+
+    // 执行类型（默认全量跑）
+    let executionType = 'full';
 
     // 模拟100+项目数据
     const allProjects = [];
@@ -1938,6 +1981,12 @@
         // 选择
         manualSelectedModels.push(modelId);
       }
+    }
+
+    // 更新执行类型
+    function updateExecutionType(type) {
+      executionType = type;
+      console.log('执行类型已更改为:', type === 'full' ? '全量跑' : '增量跑');
     }
 
     // 初始化
