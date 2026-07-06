@@ -182,9 +182,9 @@
     .ai-report-table { background: #fff; border-radius: 12px; border: 1px solid #f0f0f0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow-x: auto; overflow-y: hidden; }
     .ai-report-table-header { 
       display: grid; 
-      grid-template-columns: 140px 180px 80px repeat(4, 90px 60px 70px) 120px; 
+      grid-template-columns: 140px 180px 80px 120px repeat(4, 90px 60px 70px 100px) 120px; 
       grid-template-rows: auto auto;
-      min-width: 1300px; 
+      min-width: 1500px; 
       background: #fafafa; 
       border-bottom: 2px solid #e8e8e8; 
       font-size: 12px; 
@@ -196,8 +196,8 @@
     }
     .ai-report-table-row { 
       display: grid; 
-      grid-template-columns: 140px 180px 80px repeat(4, 90px 60px 70px) 120px; 
-      min-width: 1300px; 
+      grid-template-columns: 140px 180px 80px 120px repeat(4, 90px 60px 70px 100px) 120px; 
+      min-width: 1500px; 
       padding: 12px 16px; 
       border-bottom: 1px solid #f5f5f5; 
       cursor: pointer; 
@@ -1371,10 +1371,17 @@
     <div class="container">
     <div class="breadcrumb">当前位置：<span onclick="switchModule('aiimprove','reports')">AI改进分析</span> / AI改进分析报告</div>
     <div class="table-card" style="margin-bottom:16px;padding:20px">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">
         <div><div style="font-size:12px;color:#666;margin-bottom:6px;font-weight:500">项目编号</div><input type="text" class="filter-input" id="searchProjId" data-connect-to="searchInput" style="width:100%" placeholder="请输入项目编号"></div>
         <div><div style="font-size:12px;color:#666;margin-bottom:6px;font-weight:500">方案编号</div><input type="text" class="filter-input" id="searchPlanNo" style="width:100%" placeholder="请输入方案编号"></div>
         <div><div style="font-size:12px;color:#666;margin-bottom:6px;font-weight:500">项目名称</div><input type="text" class="filter-input" id="searchProjName" style="width:100%" placeholder="请输入项目名称"></div>
+        <div><div style="font-size:12px;color:#fa8c16;margin-bottom:6px;font-weight:500"><i class="fas fa-clock" style="margin-right:4px"></i>分析时间</div><div style="display:flex;gap:8px"><input type="date" class="filter-input" id="searchAnalysisStart" style="flex:1;border-color:#ffd591" placeholder="开始日期"><span style="color:#fa8c16;line-height:32px">-</span><input type="date" class="filter-input" id="searchAnalysisEnd" style="flex:1;border-color:#ffd591" placeholder="结束日期"></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px">
+        <div><div style="font-size:12px;color:#fa8c16;margin-bottom:6px;font-weight:500"><i class="fas fa-robot" style="margin-right:4px"></i>模型<span style="color:#ff4d4f">*</span></div><select class="filter-input" id="searchModel" style="width:100%;border-color:#ffd591"><option value="">请选择模型</option><option value="deepseek-r1">DeepSeek-R1</option><option value="deepseek-v4pro">DeepSeek-V4 Pro</option><option value="glm-5.1">GLM-5.1</option><option value="minimax-m2.7">MiniMax-M2.7</option></select></div>
+        <div><div style="font-size:12px;color:#fa8c16;margin-bottom:6px;font-weight:500"><i class="fas fa-edit" style="margin-right:4px"></i>是否修改</div><select class="filter-input" id="searchIsModified" style="width:100%;border-color:#ffd591"><option value="">全部</option><option value="yes">已修改</option><option value="no">未修改</option></select></div>
+        <div><div style="font-size:12px;color:#fa8c16;margin-bottom:6px;font-weight:500"><i class="fas fa-calendar-alt" style="margin-right:4px"></i>修改时间</div><div style="display:flex;gap:8px"><input type="date" class="filter-input" id="searchModifyStart" style="flex:1;border-color:#ffd591" placeholder="开始日期"><span style="color:#fa8c16;line-height:32px">-</span><input type="date" class="filter-input" id="searchModifyEnd" style="flex:1;border-color:#ffd591" placeholder="结束日期"></div></div>
+        <div></div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f0f0f0;padding-top:16px">
         <button class="btn btn-primary" onclick="renderAIReports()" style="padding:8px 20px"><i class="fas fa-search"></i> 查询</button>
@@ -1390,162 +1397,45 @@
           <span style="grid-row: span 2; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-right: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center;">方案编号</span>
           <span style="grid-row: span 2; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-right: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center;">项目名称</span>
           <span style="grid-row: span 2; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-right: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center;">病例数</span>
+          <span style="grid-row: span 2; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); border-right: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; color:#fa8c16; font-weight:500">分析时间</span>
           
           <!-- deepseek-r1 分组 -->
-          <span style="grid-column: span 3; background: #e6f7ff; color: #1677ff; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #91d5ff;">deepseek-r1</span>
+          <span style="grid-column: span 4; background: #e6f7ff; color: #1677ff; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #91d5ff;">deepseek-r1</span>
           
           <!-- deepseek-v4pro 分组 -->
-          <span style="grid-column: span 3; background: #f6ffed; color: #52c41a; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #b7eb8f;">deepseek-v4pro</span>
+          <span style="grid-column: span 4; background: #f6ffed; color: #52c41a; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #b7eb8f;">deepseek-v4pro</span>
           
           <!-- glm-5.1 分组 -->
-          <span style="grid-column: span 3; background: #fff7e6; color: #fa8c16; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #ffd591;">glm-5.1</span>
+          <span style="grid-column: span 4; background: #fff7e6; color: #fa8c16; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #ffd591;">glm-5.1</span>
           
           <!-- MiniMax-M2.7 分组 -->
-          <span style="grid-column: span 3; background: #fff1f0; color: #ff4d4f; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #ffa39e;">MiniMax-M2.7</span>
+          <span style="grid-column: span 4; background: #fff1f0; color: #ff4d4f; font-weight: 700; padding: 8px 0; text-align: center; border-bottom: 1px solid #ffa39e;">MiniMax-M2.7</span>
           
           <span style="grid-row: span 2; background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%); display: flex; align-items: center; justify-content: center;">操作</span>
           
           <!-- 第二行：具体列名（模型下的子列） -->
           <span style="text-align:center; cursor:pointer; user-select:none; border-bottom: 2px solid #f0f0f0; padding: 10px 0;" onclick="toggleSort('aiAccuracy')" title="点击排序" id="headerAiAccuracy">AI准确率<span id="sortIconAiAccuracy" style="font-size:14px;margin-left:4px;color:#666">⇅</span></span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">建议数</span>
-          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">修改时间</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">AI准确率</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">建议数</span>
-          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">修改时间</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">AI准确率</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">建议数</span>
-          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">修改时间</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">AI准确率</span>
           <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">建议数</span>
-          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0;">已修改数</span>
-        </div>
-        <!-- SHR-1918-302 项目的4个模型数据 -->
-        <div class="ai-report-table-row connectable-element" id="detailRow1" data-connect-to="detailRow1">
-          <span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('SHR-1918-302')">SHR-1918-302</span>
-          <span class="proj-name" title="SHR-1918-302 高脂血症III期" style="cursor:pointer" onclick="viewAIReportDetail('SHR-1918-302')">SHR-1918...</span>
-          <span style="text-align:center">184</span>
-          <!-- DeepSeek-R1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">75.8%</span>
-          <span style="text-align:center;color:#1677ff">8</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">3</span>
-          <!-- DeepSeek-V4 Pro -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">73.2%</span>
-          <span style="text-align:center;color:#1677ff">9</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">4</span>
-          <!-- GLM-5.1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">71.5%</span>
-          <span style="text-align:center;color:#1677ff">10</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <!-- MiniMax-M2.7 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">69.8%</span>
-          <span style="text-align:center;color:#1677ff">11</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">3</span>
-          <span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('SHR-1918-302')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>
-        </div>
-        <!-- CRD-2024-HX 项目的4个模型数据 -->
-        <div class="ai-report-table-row even-row">
-          <span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('CRD-2024-HX')">CRD-HX-2024-001</span>
-          <span class="proj-name" title="心血管创新药II期临床" style="cursor:pointer" onclick="viewAIReportDetail('CRD-2024-HX')">心血管创新药II...</span>
-          <span style="text-align:center">156</span>
-          <!-- DeepSeek-R1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">71.3%</span>
-          <span style="text-align:center;color:#1677ff">4</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <!-- DeepSeek-V4 Pro -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">69.8%</span>
-          <span style="text-align:center;color:#1677ff">5</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">3</span>
-          <!-- GLM-5.1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">68.2%</span>
-          <span style="text-align:center;color:#1677ff">6</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <!-- MiniMax-M2.7 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">66.5%</span>
-          <span style="text-align:center;color:#1677ff">7</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">1</span>
-          <span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('CRD-2024-HX')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>
-        </div>
-        <!-- CRD-2024-TM 项目的4个模型数据 -->
-        <div class="ai-report-table-row">
-          <span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('CRD-2024-TM')">CRD-TM-2024-003</span>
-          <span class="proj-name" title="肿瘤免疫疗法研究" style="cursor:pointer" onclick="viewAIReportDetail('CRD-2024-TM')">肿瘤免疫疗法研究</span>
-          <span style="text-align:center">203</span>
-          <!-- DeepSeek-R1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">69.8%</span>
-          <span style="text-align:center;color:#1677ff">6</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">4</span>
-          <!-- DeepSeek-V4 Pro -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">67.5%</span>
-          <span style="text-align:center;color:#1677ff">7</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">3</span>
-          <!-- GLM-5.1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">65.8%</span>
-          <span style="text-align:center;color:#1677ff">8</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">5</span>
-          <!-- MiniMax-M2.7 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">64.2%</span>
-          <span style="text-align:center;color:#1677ff">9</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('CRD-2024-TM')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>
-        </div>
-        <!-- CRD-2023-DM 项目的4个模型数据 -->
-        <div class="ai-report-table-row even-row">
-          <span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('CRD-2023-DM')">CRD-DM-2023-008</span>
-          <span class="proj-name" title="糖尿病新药三期临床" style="cursor:pointer" onclick="viewAIReportDetail('CRD-2023-DM')">糖尿病新药三期临...</span>
-          <span style="text-align:center">178</span>
-          <!-- DeepSeek-R1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">77.2%</span>
-          <span style="text-align:center;color:#1677ff">3</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">1</span>
-          <!-- DeepSeek-V4 Pro -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">75.5%</span>
-          <span style="text-align:center;color:#1677ff">4</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <!-- GLM-5.1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">73.8%</span>
-          <span style="text-align:center;color:#1677ff">5</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">1</span>
-          <!-- MiniMax-M2.7 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">71.9%</span>
-          <span style="text-align:center;color:#1677ff">6</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">0</span>
-          <span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('CRD-2023-DM')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>
-        </div>
-        <!-- CRD-2024-PK 项目的4个模型数据 -->
-        <div class="ai-report-table-row">
-          <span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('CRD-2024-PK')">CRD-PK-2024-005</span>
-          <span class="proj-name" title="帕金森病早期干预研究" style="cursor:pointer" onclick="viewAIReportDetail('CRD-2024-PK')">帕金森病早期干预...</span>
-          <span style="text-align:center">67</span>
-          <!-- DeepSeek-R1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">62.4%</span>
-          <span style="text-align:center;color:#1677ff">5</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <!-- DeepSeek-V4 Pro -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">60.8%</span>
-          <span style="text-align:center;color:#1677ff">6</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">3</span>
-          <!-- GLM-5.1 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">58.5%</span>
-          <span style="text-align:center;color:#1677ff">7</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">1</span>
-          <!-- MiniMax-M2.7 -->
-          <span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">56.2%</span>
-          <span style="text-align:center;color:#1677ff">8</span>
-          <span style="text-align:center;color:#52c41a;font-weight:500">2</span>
-          <span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('CRD-2024-PK')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">已修改数</span>
+          <span style="text-align:center; border-bottom: 2px solid #f0f0f0; padding: 10px 0; color:#fa8c16; font-weight:500">修改时间</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SVG连线层 -->
-  <svg class="svg-lines-layer" id="svgLinesLayer">
-    <defs>
-      <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-        <polygon points="0 0, 10 3, 0 6" fill="#f59e0b" />
-      </marker>
-    </defs>
-  </svg>
+  
 
  
     </div><!-- end left-panel-inner -->
@@ -1556,7 +1446,17 @@
     
     <div class="prh-section">
       <div class="prh-section-title"><span class="section-num">3</span> 分析报告模块</div>
-      
+        <div class="prh-item" data-connect-target="searchInput">
+        <div class="prh-item-label" style="color: red;">本次修改：7月6日</div>
+        <div class="prh-item-desc">
+          <ul>
+            <li>① 查询条件加了：分析时间、模型选择、是否修改、修改时间（当选择了是否修改和修改时间的查询条件时，模型选择是必填项，否则不知道该怎么查询了）</li>
+            <li>② 列表加了 分析时间， 每个模型上加了修改时间</li>
+            <li>③ 注意：页面上所有的开发提示，都只是用于开发标注，不用展示在页面上</li>
+            <li>④ 详情页的标题 改成只有方案编号 ，不要项目名称了</li>
+          </ul>
+        </div>
+      </div>
       <div class="prh-item" data-connect-target="searchInput">
         <div class="prh-item-label">3.1 搜索功能</div>
         <div class="prh-item-desc">支持按项目编号、方案编号、项目名称进行组合搜索，快速定位目标项目。</div>
@@ -1628,10 +1528,6 @@
         <div class="prh-item-desc">逐一列出系统发现的问题，每个问题配改进建议。例如"他汀类药物判定不太准，建议加上XX条件"。</div>
       </div>
 
-      <div class="prh-item" data-connect-target="detailRow3">
-        <div class="prh-item-label">准确率趋势图</div>
-        <div class="prh-item-desc">折线图展示历史准确率趋势，横轴时间，纵轴准确率。支持选择最近7天/30天/90天或自定义时间范围。鼠标悬停显示具体准确率和运行次数，标注最高点和最低点。</div>
-      </div>
     </div>
     </div><!-- end container -->
   </div><!-- end split-layout -->
@@ -1886,13 +1782,93 @@
   <script>
     let sortField = null, sortOrder = 'asc';
     
-    // 模拟数据
+    // 辅助函数：获取最新修改时间
+    function getLatestModifyTime(item) {
+      if (!item.models || item.models.length === 0) return null;
+      const times = item.models.map(m => m.modifiedTime).filter(t => t);
+      if (times.length === 0) return null;
+      return new Date(times.sort().reverse()[0]);
+    }
+    
+    // 辅助函数：格式化日期显示
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hour = String(date.getHours()).padStart(2, '0');
+      const minute = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hour}:${minute}`;
+    }
+    
+    // 模拟数据 - 包含分析时间和每个模型的详细信息
     const reportData = [
-      { projId: 'SHR-1918-302', planNo: 'SHR-1918-302', projName: 'SHR-1918-302 高脂血症III期', cases: 184, aiAcc: 75.8, passRate: 76.6, problems: 5, suggestions: 8, modifiedCount: 3, status: 'completed' },
-      { projId: 'CRD-2024-HX', planNo: 'CRD-HX-2024-001', projName: '心血管创新药II期临床', cases: 156, aiAcc: 71.3, passRate: 68.2, problems: 3, suggestions: 4, modifiedCount: 2, status: 'completed' },
-      { projId: 'CRD-2024-TM', planNo: 'CRD-TM-2024-003', projName: '肿瘤免疫疗法研究', cases: 203, aiAcc: 69.8, passRate: 72.1, problems: 4, suggestions: 6, modifiedCount: 4, status: 'completed' },
-      { projId: 'CRD-2023-DM', planNo: 'CRD-DM-2023-008', projName: '糖尿病新药三期临床', cases: 178, aiAcc: 77.2, passRate: 81.5, problems: 2, suggestions: 3, modifiedCount: 1, status: 'running' },
-      { projId: 'CRD-2024-PK', planNo: 'CRD-PK-2024-005', projName: '帕金森病早期干预研究', cases: 67, aiAcc: 62.4, passRate: 55.8, problems: 5, suggestions: 5, modifiedCount: 2, status: 'completed' }
+      { 
+        projId: 'SHR-1918-302', 
+        planNo: 'SHR-1918-302', 
+        projName: 'SHR-1918-302 高脂血症III期', 
+        cases: 184, 
+        analysisTime: '2026-07-05T14:30:00',
+        models: [
+          { name: 'deepseek-r1', accuracy: 75.8, suggestions: 8, modifiedCount: 3, modifiedTime: '2026-07-05T14:35:00' },
+          { name: 'deepseek-v4pro', accuracy: 73.2, suggestions: 9, modifiedCount: 4, modifiedTime: '2026-07-05T14:40:00' },
+          { name: 'glm-5.1', accuracy: 71.5, suggestions: 10, modifiedCount: 2, modifiedTime: '2026-07-05T14:45:00' },
+          { name: 'minimax-m2.7', accuracy: 69.8, suggestions: 11, modifiedCount: 3, modifiedTime: '2026-07-05T14:50:00' }
+        ]
+      },
+      { 
+        projId: 'CRD-2024-HX', 
+        planNo: 'CRD-HX-2024-001', 
+        projName: '心血管创新药II期临床', 
+        cases: 156, 
+        analysisTime: '2026-07-04T10:15:00',
+        models: [
+          { name: 'deepseek-r1', accuracy: 71.3, suggestions: 4, modifiedCount: 2, modifiedTime: '2026-07-04T10:20:00' },
+          { name: 'deepseek-v4pro', accuracy: 69.8, suggestions: 5, modifiedCount: 3, modifiedTime: '2026-07-04T10:25:00' },
+          { name: 'glm-5.1', accuracy: 68.2, suggestions: 6, modifiedCount: 2, modifiedTime: '2026-07-04T10:30:00' },
+          { name: 'minimax-m2.7', accuracy: 66.5, suggestions: 7, modifiedCount: 1, modifiedTime: '2026-07-04T10:35:00' }
+        ]
+      },
+      { 
+        projId: 'CRD-2024-TM', 
+        planNo: 'CRD-TM-2024-003', 
+        projName: '肿瘤免疫疗法研究', 
+        cases: 203, 
+        analysisTime: '2026-07-03T16:45:00',
+        models: [
+          { name: 'deepseek-r1', accuracy: 69.8, suggestions: 6, modifiedCount: 4, modifiedTime: '2026-07-03T16:50:00' },
+          { name: 'deepseek-v4pro', accuracy: 67.5, suggestions: 7, modifiedCount: 3, modifiedTime: '2026-07-03T16:55:00' },
+          { name: 'glm-5.1', accuracy: 65.8, suggestions: 8, modifiedCount: 5, modifiedTime: '2026-07-03T17:00:00' },
+          { name: 'minimax-m2.7', accuracy: 64.2, suggestions: 9, modifiedCount: 2, modifiedTime: '2026-07-03T17:05:00' }
+        ]
+      },
+      { 
+        projId: 'CRD-2023-DM', 
+        planNo: 'CRD-DM-2023-008', 
+        projName: '糖尿病新药三期临床', 
+        cases: 178, 
+        analysisTime: '2026-07-02T09:20:00',
+        models: [
+          { name: 'deepseek-r1', accuracy: 77.2, suggestions: 3, modifiedCount: 1, modifiedTime: '2026-07-02T09:25:00' },
+          { name: 'deepseek-v4pro', accuracy: 75.5, suggestions: 4, modifiedCount: 2, modifiedTime: '2026-07-02T09:30:00' },
+          { name: 'glm-5.1', accuracy: 73.8, suggestions: 5, modifiedCount: 1, modifiedTime: '2026-07-02T09:35:00' },
+          { name: 'minimax-m2.7', accuracy: 71.9, suggestions: 6, modifiedCount: 0, modifiedTime: null }
+        ]
+      },
+      { 
+        projId: 'CRD-2024-PK', 
+        planNo: 'CRD-PK-2024-005', 
+        projName: '帕金森病早期干预研究', 
+        cases: 67, 
+        analysisTime: '2026-07-01T11:30:00',
+        models: [
+          { name: 'deepseek-r1', accuracy: 62.4, suggestions: 5, modifiedCount: 2, modifiedTime: '2026-07-01T11:35:00' },
+          { name: 'deepseek-v4pro', accuracy: 60.8, suggestions: 6, modifiedCount: 3, modifiedTime: '2026-07-01T11:40:00' },
+          { name: 'glm-5.1', accuracy: 58.5, suggestions: 7, modifiedCount: 1, modifiedTime: '2026-07-01T11:45:00' },
+          { name: 'minimax-m2.7', accuracy: 56.2, suggestions: 8, modifiedCount: 2, modifiedTime: '2026-07-01T11:50:00' }
+        ]
+      }
     ];
 
     // 改进建议数据
@@ -1950,14 +1926,60 @@
     function switchModule(mod, page) { console.log('Switch to', mod, page); }
     
     function renderAIReports() {
-      const projId = document.getElementById('reportProjId').value.toLowerCase();
-      const planNo = document.getElementById('reportPlanNo').value.toLowerCase();
-      const projName = document.getElementById('reportProjName').value.toLowerCase();
+      const projId = document.getElementById('searchProjId').value.toLowerCase();
+      const planNo = document.getElementById('searchPlanNo').value.toLowerCase();
+      const projName = document.getElementById('searchProjName').value.toLowerCase();
+      const analysisStart = document.getElementById('searchAnalysisStart').value;
+      const analysisEnd = document.getElementById('searchAnalysisEnd').value;
+      const model = document.getElementById('searchModel').value;
+      const isModified = document.getElementById('searchIsModified').value;
+      const modifyStart = document.getElementById('searchModifyStart').value;
+      const modifyEnd = document.getElementById('searchModifyEnd').value;
+      
+      // 验证：如果选择了是否修改或修改时间，模型必须填写
+      if ((isModified || modifyStart || modifyEnd) && !model) {
+        alert('当选择「是否修改」或「修改时间」时，模型为必填项！');
+        return;
+      }
       
       let filtered = reportData.filter(item => {
-        return (!projId || item.projId.toLowerCase().includes(projId)) &&
-               (!planNo || item.planNo.toLowerCase().includes(planNo)) &&
-               (!projName || item.projName.toLowerCase().includes(projName));
+        // 基本筛选
+        if (projId && !item.projId.toLowerCase().includes(projId)) return false;
+        if (planNo && !item.planNo.toLowerCase().includes(planNo)) return false;
+        if (projName && !item.projName.toLowerCase().includes(projName)) return false;
+        
+        // 分析时间筛选
+        if (analysisStart || analysisEnd) {
+          const analysisTime = item.analysisTime ? new Date(item.analysisTime) : null;
+          if (!analysisTime) return false;
+          if (analysisStart && analysisTime < new Date(analysisStart)) return false;
+          if (analysisEnd && analysisTime > new Date(analysisEnd + 'T23:59:59')) return false;
+        }
+        
+        // 模型筛选
+        if (model) {
+          const hasModel = item.models && item.models.some(m => m.name === model);
+          if (!hasModel) return false;
+        }
+        
+        // 是否修改筛选
+        if (isModified === 'yes') {
+          const hasModified = item.models && item.models.some(m => m.modifiedCount > 0);
+          if (!hasModified) return false;
+        } else if (isModified === 'no') {
+          const allUnmodified = item.models && item.models.every(m => m.modifiedCount === 0);
+          if (!allUnmodified) return false;
+        }
+        
+        // 修改时间筛选
+        if (modifyStart || modifyEnd) {
+          const latestModifyTime = getLatestModifyTime(item);
+          if (!latestModifyTime) return false;
+          if (modifyStart && latestModifyTime < new Date(modifyStart)) return false;
+          if (modifyEnd && latestModifyTime > new Date(modifyEnd + 'T23:59:59')) return false;
+        }
+        
+        return true;
       });
       
       // 排序
@@ -1968,17 +1990,74 @@
       }
       
       console.log('查询结果:', filtered.length, '条');
-      alert('查询完成，找到 ' + filtered.length + ' 条记录');
+      renderTableRows(filtered);
     }
     
     function resetAIReportFilters() {
-      document.getElementById('reportProjId').value = '';
-      document.getElementById('reportPlanNo').value = '';
-      document.getElementById('reportProjName').value = '';
+      document.getElementById('searchProjId').value = '';
+      document.getElementById('searchPlanNo').value = '';
+      document.getElementById('searchProjName').value = '';
+      document.getElementById('searchAnalysisStart').value = '';
+      document.getElementById('searchAnalysisEnd').value = '';
+      document.getElementById('searchModel').value = '';
+      document.getElementById('searchIsModified').value = '';
+      document.getElementById('searchModifyStart').value = '';
+      document.getElementById('searchModifyEnd').value = '';
       sortField = null;
       sortOrder = 'asc';
       document.getElementById('sortIconAiAccuracy').textContent = '⇅';
       renderAIReports();
+    }
+    
+    // 缓存表头HTML
+    let cachedTableHeaderHTML = '';
+    
+    // 渲染表格行
+    function renderTableRows(data) {
+      const container = document.getElementById('aiReportList');
+      if (!container) return;
+      
+      // 首次渲染时缓存表头
+      if (!cachedTableHeaderHTML) {
+        const headerEl = document.getElementById('reportTableHeader');
+        if (headerEl) {
+          cachedTableHeaderHTML = headerEl.outerHTML;
+        }
+      }
+      
+      let html = '<div class="ai-report-table">';
+      html += cachedTableHeaderHTML;
+      
+      data.forEach((item, index) => {
+        const isEven = index % 2 === 1;
+        const rowClass = isEven ? 'ai-report-table-row even-row' : 'ai-report-table-row';
+        
+        html += `<div class="${rowClass}">`;
+        html += `<span style="color:#1677ff;font-size:12px;cursor:pointer;text-decoration:underline" onclick="viewAIReportDetail('${item.projId}')">${item.projId}</span>`;
+        html += `<span class="proj-name" title="${item.projName}" style="cursor:pointer" onclick="viewAIReportDetail('${item.projId}')">${item.projName.length > 15 ? item.projName.substring(0, 15) + '...' : item.projName}</span>`;
+        html += `<span style="text-align:center">${item.cases}</span>`;
+        html += `<span style="text-align:center;color:#fa8c16;font-size:12px">${formatDate(item.analysisTime)}</span>`;
+        
+        // 为每个模型添加数据
+        if (item.models && item.models.length >= 4) {
+          for (let i = 0; i < 4; i++) {
+            const m = item.models[i];
+            const hasModified = m.modifiedCount > 0;
+            const modCountColor = hasModified ? '#fa8c16' : '#999';
+            const modTimeColor = hasModified ? '#fa8c16' : '#999';
+            html += `<span class="sort-col" style="text-align:center;color:#1677ff;font-weight:600">${m.accuracy}%</span>`;
+            html += `<span style="text-align:center;color:#1677ff">${m.suggestions}</span>`;
+            html += `<span style="text-align:center;color:${modCountColor};font-weight:${hasModified?'600':'400'}">${m.modifiedCount}</span>`;
+            html += `<span style="text-align:center;color:${modTimeColor};font-size:11px">${formatDate(m.modifiedTime)}</span>`;
+          }
+        }
+        
+        html += `<span style="text-align:center"><button class="action-btn history-btn" onclick="event.stopPropagation();viewHistoryDetail('${item.projId}')" title="查看历史记录"><i class="fas fa-list"></i> 历史记录</button></span>`;
+        html += `</div>`;
+      });
+      
+      html += '</div>';
+      container.innerHTML = html;
     }
     
     function toggleSort(field) {
@@ -2591,8 +2670,8 @@
           const endDate = new Date();
           const startDate = new Date();
           startDate.setDate(endDate.getDate() - 30);
-          document.getElementById('endDate').value = formatDate(endDate);
-          document.getElementById('startDate').value = formatDate(startDate);
+          document.getElementById('endDate').value = formatChartDate(endDate);
+          document.getElementById('startDate').value = formatChartDate(startDate);
         }
       } else {
         customRange.classList.remove('show');
@@ -2600,7 +2679,7 @@
       updateChart();
     }
     
-    function formatDate(date) {
+    function formatChartDate(date) {
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -3140,6 +3219,9 @@
       
       // 初始化连线功能
       initConnectionLines();
+      
+      // 初始渲染表格
+      renderAIReports();
     });
     
     // ========== SVG连线功能 ==========
