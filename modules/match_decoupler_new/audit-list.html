@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能预筛 - 审核列表</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #1a1a1a; }
+    .top-nav { background: #fff; height: 56px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .nav-brand { display: flex; align-items: center; margin-right: 40px; }
+    .idy-letters { font-size: 18px; font-weight: 800; color: #1677ff; letter-spacing: 2px; }
+    .idy-divider { width: 1.5px; height: 18px; background: #d9d9d9; margin: 0 6px; display: inline-block; }
+    .brand-name { font-size: 14px; color: #555; font-weight: 500; }
+    .nav-menu { display: flex; gap: 0; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 6px; padding: 0 18px; height: 56px; cursor: pointer; color: #666; font-size: 13.5px; position: relative; }
+    .nav-item:hover { color: #1677ff; }
+    .nav-item.active { color: #1677ff; font-weight: 600; }
+    .nav-item.active::after { content: ''; position: absolute; bottom: 0; left: 18px; right: 18px; height: 2px; background: #1677ff; border-radius: 1px 1px 0 0; }
+    .nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#1677ff,#4096ff); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+    .nav-username { font-size: 13px; color: #555; }
+    .logout-btn { font-size: 12px; color: #999; cursor: pointer; }
+    .page-layout { display: flex; min-height: calc(100vh - 56px); }
+    .page-main { flex: 1; max-width: calc(100% - 420px); padding: 20px 24px; }
+    .org-tabs { display: flex; background: #fff; border-radius: 12px 12px 0 0; padding: 0 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .org-tab { padding: 14px 24px; font-size: 14px; color: #888; cursor: pointer; position: relative; font-weight: 500; }
+    .org-tab:hover { color: #1677ff; }
+    .org-tab.active { color: #1677ff; font-weight: 600; }
+    .org-tab.active::after { content: ''; position: absolute; bottom: 0; left: 24px; right: 24px; height: 2px; background: #1677ff; border-radius: 1px 1px 0 0; }
+    .sub-tabs-wrap { background: #fff; border-top: 1px solid #f5f5f5; padding: 0 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: flex; align-items: center; }
+    .sub-tab { padding: 10px 18px; font-size: 13px; color: #999; cursor: pointer; position: relative; font-weight: 500; }
+    .sub-tab:hover { color: #1677ff; }
+    .sub-tab.active { color: #1677ff; font-weight: 600; }
+    .sub-tab.active::after { content: ''; position: absolute; bottom: 0; left: 18px; right: 18px; height: 2px; background: #1677ff; border-radius: 1px 1px 0 0; }
+    .filter-form-wrap { background: #fff; padding: 16px 24px 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); border-top: 1px solid #f0f0f0; border-radius: 0 0 12px 12px; }
+    .filter-form-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px 20px; margin-bottom: 14px; }
+    .filter-form-item { display: flex; align-items: center; gap: 10px; }
+    .filter-form-label { font-size: 13px; color: #666; white-space: nowrap; min-width: 70px; text-align: right; }
+    .filter-form-input { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; min-width: 0; }
+    .filter-form-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+    .filter-form-select { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; color: #999; outline: none; cursor: pointer; min-width: 0; }
+    .filter-form-date-range { flex: 1; display: flex; align-items: center; gap: 6px; }
+    .filter-form-date-range input { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; }
+    .filter-form-actions { display: flex; gap: 8px; align-items: center; }
+    .btn-filter { padding: 8px 16px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; color: #555; font-size: 13px; cursor: pointer; }
+    .btn-filter:hover { border-color: #1677ff; color: #1677ff; }
+    .btn-filter.primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .spacer { flex: 1; }
+    .table-card { background: #fff; border-radius: 12px; padding: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); overflow: hidden; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; padding: 12px 14px; font-size: 12px; font-weight: 600; color: #666; background: #fafafa; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .data-table td { padding: 12px 14px; border-bottom: 1px solid #f5f5f5; font-size: 13px; color: #333; }
+    .data-table tr:hover { background: #fafbff; }
+    .proj-name-trunc { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+    .text-ellipsis-cell { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .match-rate { font-weight: 600; }
+    .match-rate.zero { color: #ff4d4f; }
+    .match-rate.full { color: #52c41a; }
+    .action-link { color: #1677ff; font-size: 12px; cursor: pointer; }
+    .action-link:hover { text-decoration: underline; }
+    .action-sep { color: #e0e0e0; margin: 0 4px; font-size: 12px; }
+    .pagination { display: flex; align-items: center; justify-content: flex-end; padding: 14px 20px; border-top: 1px solid #f0f0f0; gap: 6px; }
+    .page-btn { padding: 5px 12px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; font-size: 13px; cursor: pointer; }
+    .page-btn.active { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .detail-overlay { position: fixed; top: 56px; left: 0; right: 0; bottom: 0; background: #f0f2f5; z-index: 500; overflow-y: auto; display: none; }
+    .detail-overlay.show { display: block; }
+    .detail-header { background: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 10; }
+    .detail-back-btn { font-size: 13px; color: #1677ff; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: none; background: transparent; }
+    .detail-back-btn:hover { background: #f0f6ff; }
+    .detail-back-btn span { max-width: 500px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .detail-header-actions { display: flex; gap: 8px; flex-shrink: 0; margin-left: auto; }
+    .detail-header-actions .btn-sm { padding: 5px 14px; font-size: 12px; border-radius: 6px; border: 1px solid #1677ff; background: #1677ff; color: #fff; cursor: pointer; }
+    .review-stage-bar { position: relative; padding: 20px; margin: 16px 20px 0; border-radius: 10px; font-size: 13px; font-weight: 600; min-height: 80px; }
+    .review-stage-bar .stage-desc { font-size: 11.5px; font-weight: 400; opacity: 0.8; margin-left: auto; }
+    .review-stage-bar.pre-screen { background: linear-gradient(135deg,#e6f4ff,#bae0ff); color: #0958d9; border: 1.5px solid #91caff; }
+    .review-stage-bar.enrolling { background: linear-gradient(135deg,#fffbe6,#fff1b8); color: #ad6800; border: 1.5px solid #ffe58f; }
+    .review-stage-bar.completed-in { background: linear-gradient(135deg,#f6ffed,#d9f7be); color: #237804; border: 1.5px solid #b7eb8f; }
+    .review-stage-bar.completed-ex { background: linear-gradient(135deg,#fff1f0,#ffd8d2); color: #a8071a; border: 1.5px solid #ffa39e; }
+    .review-stage-bar.pending { background: linear-gradient(135deg,#fafafa,#f0f0f0); color: #8c8c8c; border: 1.5px solid #e0e0e0; }
+    /* 印章样式 - 浮动定位 */
+    .stamp-seal {
+      position: fixed;
+      top: 80px;
+      right: 450px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-15deg);
+      z-index: 600;
+      opacity: 0.9;
+    }
+    .stamp-seal.pre-screen {
+      border: 4px solid #1677ff;
+      box-shadow: 0 0 0 2px rgba(22,119,255,0.2), inset 0 0 0 2px rgba(22,119,255,0.1);
+    }
+    .stamp-seal.pre-screen .stamp-text {
+      background: #1677ff;
+      color: #fff;
+    }
+    .stamp-seal.enrolling {
+      border: 4px solid #faad14;
+      box-shadow: 0 0 0 2px rgba(250,173,20,0.2), inset 0 0 0 2px rgba(250,173,20,0.1);
+    }
+    .stamp-seal.enrolling .stamp-text {
+      background: #faad14;
+      color: #fff;
+    }
+    .stamp-seal.completed-in {
+      border: 4px solid #52c41a;
+      box-shadow: 0 0 0 2px rgba(82,196,26,0.2), inset 0 0 0 2px rgba(82,196,26,0.1);
+    }
+    .stamp-seal.completed-in .stamp-text {
+      background: #52c41a;
+      color: #fff;
+    }
+    .stamp-seal.completed-ex {
+      border: 4px solid #ff4d4f;
+      box-shadow: 0 0 0 2px rgba(255,77,79,0.2), inset 0 0 0 2px rgba(255,77,79,0.1);
+    }
+    .stamp-seal.completed-ex .stamp-text {
+      background: #ff4d4f;
+      color: #fff;
+    }
+    .stamp-seal.pending {
+      border: 4px solid #8c8c8c;
+      box-shadow: 0 0 0 2px rgba(140,140,140,0.2), inset 0 0 0 2px rgba(140,140,140,0.1);
+    }
+    .stamp-seal.pending .stamp-text {
+      background: #8c8c8c;
+      color: #fff;
+    }
+    .stamp-seal::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border: 2px dashed currentColor;
+      border-radius: 50%;
+      opacity: 0.3;
+    }
+    .stamp-text {
+      padding: 8px 20px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      transform: rotate(-15deg);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+    .detail-tabs-wrap { background: #fff; margin: 16px 20px 0; border-radius: 10px; overflow: hidden; }
+    .detail-tabs-nav { display: flex; border-bottom: 1px solid #e8e8e8; padding: 0 20px; }
+    .detail-tab { padding: 14px 22px; font-size: 13.5px; color: #888; cursor: pointer; font-weight: 500; position: relative; }
+    .detail-tab:hover { color: #1677ff; }
+    .detail-tab.active { color: #1677ff; font-weight: 600; }
+    .detail-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 22px; right: 22px; height: 2px; background: #1677ff; border-radius: 1px 1px 0 0; }
+    .detail-tab-content { padding: 20px; display: none; }
+    .detail-tab-content.active { display: block; }
+    .match-meta-panel { background: #f8fafc; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
+    .match-meta-title { font-size: 13px; font-weight: 600; color: #555; margin-bottom: 12px; }
+    .match-meta-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px 24px; }
+    .match-meta-item { font-size: 12.5px; display: flex; gap: 8px; }
+    .match-meta-label { color: #999; }
+    .match-meta-value { color: #333; font-weight: 500; }
+    .detail-proj-info { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px 20px; background: #f8fafc; border-radius: 10px; margin-bottom: 14px; }
+    .detail-proj-info .info-label { color: #999; }
+    .detail-proj-info .info-value { color: #333; font-weight: 500; }
+    .detail-proj-info .info-time { color: #aaa; font-size: 11.5px; margin-left: 8px; }
+    .match-pct-row { display: flex; gap: 16px; margin-bottom: 14px; }
+    .match-pct-card { background: #f8fafc; border-radius: 10px; padding: 16px 24px; text-align: center; min-width: 120px; border: 1px solid #e8e8e8; }
+    .pct-label { font-size: 12px; color: #999; margin-bottom: 6px; }
+    .pct-val { font-size: 24px; font-weight: 700; color: #1677ff; }
+    .pct-val.pending { color: #fa8c16; }
+    .match-summary { background: #f8fafc; border-radius: 10px; padding: 14px 20px; margin-bottom: 14px; font-size: 13px; color: #555; line-height: 1.8; border: 1px solid #e8e8e8; }
+    .ai-recommend-card { border: 1.5px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+    .ai-recommend-header { padding: 12px 20px; background: #fafafa; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; gap: 10px; }
+    .ai-rec-result { font-size: 13px; font-weight: 700; padding: 2px 10px; border-radius: 10px; }
+    .ai-rec-result.exclude { background: #fff2f0; color: #ff4d4f; }
+    .ai-rec-result.include { background: #f6ffed; color: #52c41a; }
+    .ai-recommend-body { padding: 16px 20px; font-size: 13px; color: #555; line-height: 1.8; }
+    .detail-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .detail-table th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #666; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+    .detail-table td { padding: 10px 14px; border-bottom: 1px solid #f5f5f5; font-size: 12.5px; vertical-align: top; }
+    .detail-table tr.striped { background: #fafbff; }
+    .match-icon-sm { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; font-weight: 700; }
+    .match-icon-sm.matched { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .match-icon-sm.unmatched { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffa39e; }
+    .match-icon-sm.pending { background: #fffbe6; color: #fa8c16; border: 1px solid #ffe58f; }
+    .match-judge-text.matched { color: #52c41a; }
+    .match-judge-text.unmatched { color: #ff4d4f; }
+    .match-judge-text.pending { color: #fa8c16; }
+    .pre-table { width: 100%; border-collapse: collapse; }
+    .pre-table th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #666; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+    .pre-table td { padding: 10px 14px; border-bottom: 1px solid #f5f5f5; font-size: 12.5px; }
+    .audit-record-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 600; display: none; justify-content: center; align-items: center; }
+    .audit-record-overlay.show { display: flex; }
+    .audit-record-modal { background: #fff; border-radius: 12px; width: 800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+    .audit-record-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: #fff; border-radius: 12px 12px 0 0; z-index: 1; }
+    .audit-record-header h3 { font-size: 16px; font-weight: 600; color: #333; }
+    .audit-record-close { font-size: 18px; color: #999; cursor: pointer; border: none; background: none; }
+    .audit-record-body { padding: 20px 24px; }
+    .audit-group { margin-bottom: 20px; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+    .audit-group-header { padding: 12px 16px; background: #fafafa; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e8e8e8; }
+    .audit-group-table { width: 100%; border-collapse: collapse; }
+    .audit-group-table th { padding: 8px 14px; font-size: 11.5px; font-weight: 600; color: #888; background: #fafafa; text-align: left; border-bottom: 1px solid #f0f0f0; }
+    .audit-group-table td { padding: 8px 14px; font-size: 12.5px; color: #333; border-bottom: 1px solid #f5f5f5; }
+    .status-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .status-tag.submitted { background: #e6f4ff; color: #1677ff; }
+    .status-tag.pending { background: #fffbe6; color: #d48806; }
+    .status-tag.approved { background: #f6ffed; color: #52c41a; }
+    .toast-container { position: fixed; top: 70px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); font-size: 13px; display: flex; align-items: center; gap: 8px; animation: toastIn 0.3s ease; }
+    .toast.success { border-left: 4px solid #52c41a; }
+    .toast.info { border-left: 4px solid #1677ff; }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    .prd-sidebar { width: 420px; background: linear-gradient(135deg,#fff7e6,#fffbe6); border-left: 2px solid #ffd591; padding: 24px 20px; overflow-y: auto; position: fixed; right: 0; top: 56px; bottom: 0; z-index: 50; }
+    .prd-sidebar::-webkit-scrollbar { width: 6px; }
+    .prd-sidebar::-webkit-scrollbar-thumb { background: #ffd591; border-radius: 3px; }
+    .prd-title { font-size: 18px; font-weight: 700; color: #d46b08; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #ffd591; }
+    .prd-section { margin-bottom: 24px; }
+    .prd-section-title { font-size: 14px; font-weight: 600; color: #ad6800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .prd-section-title::before { content: ''; width: 4px; height: 16px; background: #fa8c16; border-radius: 2px; }
+    .prd-text { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; }
+    .prd-list { list-style: none; padding-left: 0; }
+    .prd-list li { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; padding-left: 16px; position: relative; }
+    .prd-list li::before { content: '•'; position: absolute; left: 0; color: #fa8c16; font-weight: 700; }
+    .prd-highlight { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #ffe58f; }
+    /* 匹配状态提示样式 */
+    .match-status-empty {
+      text-align: center;
+      padding: 80px 40px;
+      color: #999;
+    }
+    .match-status-empty i {
+      font-size: 64px;
+      color: #d9d9d9;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .match-status-empty .status-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 12px;
+    }
+    .match-status-empty .status-desc {
+      font-size: 13px;
+      color: #999;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .match-status-empty .btn-match {
+      padding: 10px 24px;
+      background: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .match-status-empty .btn-match:hover {
+      background: #0958d9;
+    }
+    .match-status-loading {
+      text-align: center;
+      padding: 80px 40px;
+    }
+    .match-status-loading .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid #e8e8e8;
+      border-top-color: #1677ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .match-status-loading .status-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 8px;
+    }
+    .match-status-loading .status-desc {
+      font-size: 13px;
+      color: #999;
+    }
+    /* SVG连接线 */
+    .svg-connector {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    /* 详情页flex布局（左内容+右PRD） */
+    .detail-overlay.show { display: flex; }
+    .detail-main { flex: 1; overflow-y: auto; min-width: 0; }
+    .detail-prd-sidebar { width: 420px; background: linear-gradient(135deg,#fff7e6,#fffbe6); border-left: 2px solid #ffd591; padding: 24px 20px; overflow-y: auto; flex-shrink: 0; }
+    .detail-prd-sidebar::-webkit-scrollbar { width: 6px; }
+    .detail-prd-sidebar::-webkit-scrollbar-thumb { background: #ffd591; border-radius: 3px; }
+    .detail-prd-sidebar .prd-title { font-size: 18px; font-weight: 700; color: #d46b08; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #ffd591; }
+    .detail-prd-sidebar .prd-section { margin-bottom: 24px; }
+    .detail-prd-sidebar .prd-section-title { font-size: 14px; font-weight: 600; color: #ad6800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .detail-prd-sidebar .prd-section-title::before { content: ''; width: 4px; height: 16px; background: #fa8c16; border-radius: 2px; }
+    .detail-prd-sidebar .prd-text { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; }
+    .detail-prd-sidebar .prd-list { list-style: none; padding-left: 0; }
+    .detail-prd-sidebar .prd-list li { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; padding-left: 16px; position: relative; }
+    .detail-prd-sidebar .prd-list li::before { content: '•'; position: absolute; left: 0; color: #fa8c16; font-weight: 700; }
+    .detail-prd-sidebar .prd-highlight { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #ffe58f; }
+    /* 审核操作区 */
+    .detail-audit-bar { background: #fff; margin: 16px 20px; border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .detail-audit-bar .audit-label { font-size: 13px; color: #666; font-weight: 500; }
+    .detail-audit-bar .audit-result-select { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; max-width: 200px; }
+    .detail-audit-bar .audit-input { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; }
+    .detail-audit-bar .audit-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+    .detail-audit-bar .btn-audit { padding: 7px 20px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid transparent; }
+    .detail-audit-bar .btn-audit.pass { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .detail-audit-bar .btn-audit.pass:hover { background: #389e0d; }
+    .detail-audit-bar .btn-audit.reject { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .detail-audit-bar .btn-audit.reject:hover { background: #cf1322; }
+    /* 详情页打开时印章位置调整 */
+    body.detail-open .stamp-seal { right: 470px !important; }
+  </style>
+</head>
+<body>
+  <div class="top-nav">
+    <div class="nav-brand">
+      <div class="idy-letters">IDY</div>
+      <div class="idy-divider"></div>
+      <span class="brand-name">艾迪研智能预筛系统</span>
+    </div>
+    <div class="nav-menu">
+      <div class="nav-item active"><i class="fas fa-clipboard-check nav-icon"></i><span>审核列表</span></div>
+      <div class="nav-item" onclick="window.location.href='patient-list.html'">
+        <i class="fas fa-brain nav-icon"></i>
+        <span>智能预筛</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-avatar">管</div>
+      <span class="nav-username">管理员</span>
+      <span class="logout-btn">退出</span>
+    </div>
+  </div>
+  <div class="page-layout">
+    <div class="page-main" id="pageMain"></div>
+    <aside class="prd-sidebar" id="prdSidebar"></aside>
+  </div>
+  <div class="detail-overlay" id="detailOverlay"><div class="detail-main" id="detailMain"></div><aside class="detail-prd-sidebar" id="detailPrdSidebar"></aside></div>
+  <div class="audit-record-overlay" id="auditRecordOverlay"></div>
+  <div class="toast-container" id="toastContainer"></div>
+<script>
+// ==================== STATE ====================
+let auditOrg = 'hengrui';
+let auditSubTab = 'pending';
+let currentDetailRow = null;
+let detailTab = 'history';
+
+// ==================== DATA ====================
+const auditData = [
+  { id:1,  screenNo:'ZVFE', org:'hengrui', auditType:'预筛审批', patientNo:'ZVFE', gender:'女', age:69, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性HER2阴性的晚期乳腺癌III期临床试验', centerNo:'CN003', center:'哈尔滨医科大学附属第一医院', matchRate:'0.0%', submitter:'徐培凤', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching', preSubmit:true },
+  { id:2,  screenNo:'LSBA', org:'hengrui', auditType:'预筛审批', patientNo:'LSBA', gender:'男', age:72, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃癌II期临床研究', centerNo:'CN009', center:'河南科技大学第一附属医院', matchRate:'100.0%', submitter:'王佳', status:'pending', reviewStage:'预筛审批中', matchStatus:'success' },
+  { id:3,  screenNo:'BSTO', org:'hengrui', auditType:'预筛审批', patientNo:'BSTO', gender:'男', age:34, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的III期临床研究', centerNo:'CN009', center:'内蒙古自治区人民医院', matchRate:'0.0%', submitter:'张文静', status:'pending', reviewStage:'待分配', matchStatus:'none', preSubmit:true },
+  { id:4,  screenNo:'GYXJ', org:'hengrui', auditType:'预筛审批', patientNo:'GYXJ', gender:'女', age:55, planNo:'HRS-8080-301', projectName:'HRS-8080治疗HR阳性HER2阴性晚期乳腺癌III期临床试验', centerNo:'CN005', center:'复旦大学附属肿瘤医院', matchRate:'75.0%', submitter:'刘丽萍', status:'pending', reviewStage:'预筛审批中', matchStatus:'failed' },
+  { id:5,  screenNo:'MWPA', org:'hengrui', auditType:'预筛审批', patientNo:'MWPA', gender:'男', age:63, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃癌II期临床研究', centerNo:'CN012', center:'北京大学第三医院', matchRate:'50.0%', submitter:'张强', status:'pending', reviewStage:'待分配', matchStatus:'success' },
+  { id:6,  screenNo:'QHNT', org:'hengrui', auditType:'预筛审批', patientNo:'QHNT', gender:'女', age:41, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的III期临床研究', centerNo:'CN003', center:'华中科技大学同济医学院附属协和医院', matchRate:'88.0%', submitter:'陈芳', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching' },
+  { id:7,  screenNo:'UXYZ', org:'hengrui', auditType:'预筛审批', patientNo:'UXYZ', gender:'男', age:48, planNo:'HRS-8080-301', projectName:'HRS-8080治疗HR阳性HER2阴性晚期乳腺癌III期临床试验', centerNo:'CN007', center:'浙江大学医学院附属第一医院', matchRate:'33.3%', submitter:'孙磊', status:'done', reviewStage:'已完成（入组）', matchStatus:'success' },
+  { id:8,  screenNo:'ABNM', org:'kexin', auditType:'预筛审批', patientNo:'ABNM', gender:'女', age:62, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN001', center:'江苏省人民医院', matchRate:'92.0%', submitter:'王敏', status:'pending', reviewStage:'入组审批中', matchStatus:'success' },
+  { id:9,  screenNo:'CDOP', org:'kexin', auditType:'预筛审批', patientNo:'CDOP', gender:'男', age:58, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN002', center:'南京鼓楼医院', matchRate:'68.0%', submitter:'李华', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching' },
+  { id:10, screenNo:'EFQR', org:'kexin', auditType:'入组审批', patientNo:'EFQR', gender:'女', age:45, planNo:'JK-2023-005', projectName:'JK-2023用于治疗类风湿关节炎的III期临床研究', centerNo:'CN004', center:'苏州大学附属第一医院', matchRate:'100.0%', submitter:'张伟', status:'done', reviewStage:'已完成（排除）', matchStatus:'failed' },
+  { id:11, screenNo:'GHIJ', org:'yunying', auditType:'预筛审批', patientNo:'GHIJ', gender:'男', age:51, planNo:'YYEB-2024-101', projectName:'YYEB-101在晚期胃癌中的安全性及疗效研究', centerNo:'CN006', center:'复旦大学附属中山医院', matchRate:'80.0%', submitter:'赵丽', status:'pending', reviewStage:'入组审批中', matchStatus:'none' },
+  { id:12, screenNo:'KLMN', org:'yunying', auditType:'预筛审批', patientNo:'KLMN', gender:'女', age:39, planNo:'YYEB-2024-102', projectName:'YYEB-102治疗复发难治多发性骨髓瘤的研究', centerNo:'CN008', center:'上海交通大学医学院附属仁济医院', matchRate:'55.0%', submitter:'钱东', status:'done', reviewStage:'已完成（入组）', matchStatus:'success' },
+];
+
+const auditFlowData = {
+  2: { enrolling: [{ operator:'崔艺莹', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-06-08 17:00:00', duration:'—', children: [{ operator:'宋玲玲', role:'CRA专员', status:'待审批', statusClass:'pending', time:'—', duration:'—' }] }], prescreen: [] },
+  7: { enrolling: [{ operator:'崔艺莹', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-06-08 09:15:00', duration:'—', children: [{ operator:'王主任', role:'入组审批员', status:'通过', statusClass:'approved', time:'2026-06-08 09:42:33', duration:'27分33秒' }] }], prescreen: [{ operator:'李星翰', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-05-18 19:08:42', duration:'—', children: [{ operator:'赵主任', role:'预筛审批员', status:'通过', statusClass:'approved', time:'2026-05-18 22:54:53', duration:'3时46分11秒' }] }] },
+  10: { enrolling: [{ operator:'张伟', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-06-06 14:30:00', duration:'—', children: [{ operator:'陈主任', role:'入组审批员', status:'通过', statusClass:'approved', time:'2026-06-06 15:08:12', duration:'38分12秒' }] }], prescreen: [{ operator:'张伟', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-06-05 10:00:00', duration:'—', children: [{ operator:'李主任', role:'预筛审批员', status:'通过', statusClass:'approved', time:'2026-06-05 11:20:45', duration:'1时20分45秒' }] }] },
+  12: { enrolling: [], prescreen: [{ operator:'钱东', role:'CRC', status:'已提交', statusClass:'submitted', time:'2026-06-07 09:00:00', duration:'—', children: [{ operator:'周主任', role:'预筛审批员', status:'通过', statusClass:'approved', time:'2026-06-07 10:55:30', duration:'1时55分30秒' }] }] },
+};
+
+const matchDetailData = [
+  { type:'入选标准', criteria:'年龄≥18岁，性别不限', source:'患者年龄：69岁，女性', judge:'matched', judgeText:'匹配通过' },
+  { type:'入选标准', criteria:'经组织学或细胞学确诊的晚期乳腺癌', source:'病理报告（2026-05-20）：浸润性导管癌', judge:'matched', judgeText:'匹配通过' },
+  { type:'入选标准', criteria:'HR阳性（ER和/或PR阳性）且HER2阴性', source:'IHC结果：ER(95%+), PR(80%+), HER2(1+)', judge:'matched', judgeText:'匹配通过' },
+  { type:'入选标准', criteria:'既往接受过内分泌治疗后疾病进展', source:'病历记录：2026-03起使用来曲唑，2026-05评估PD', judge:'pending', judgeText:'待确认' },
+  { type:'排除标准', criteria:'既往使用过CDK4/6抑制剂', source:'用药史中未发现CDK4/6抑制剂使用记录', judge:'matched', judgeText:'匹配通过（未使用）' },
+  { type:'排除标准', criteria:'已知存在内脏危象', source:'影像学检查未见肝脏功能严重受损', judge:'matched', judgeText:'匹配通过（无内脏危象）' },
+  { type:'排除标准', criteria:'筛选期eGFR<30 mL/min/1.73m²', source:'实验室检查：eGFR=69.6 mL/min/1.73m²', judge:'matched', judgeText:'匹配通过' },
+  { type:'排除标准', criteria:'随机前90天内使用过全身性免疫抑制治疗', source:'2026年4月处方：黄芩配方颗粒等（共15剂）', judge:'unmatched', judgeText:'不匹配 - 免疫抑制中药使用' },
+];
+
+const prescreenData = [
+  { item:'姓名', value:'张某某' }, { item:'性别', value:'女' }, { item:'年龄', value:'69' },
+  { item:'诊断', value:'浸润性导管癌（右乳）' }, { item:'TNM分期', value:'T3N1M0, IIIB期' },
+  { item:'ER', value:'95% (+)' }, { item:'PR', value:'80% (+)' }, { item:'HER2', value:'1+（阴性）' },
+  { item:'Ki-67', value:'35%' }, { item:'既往用药', value:'来曲唑 2.5mg qd（2026-03起）' },
+  { item:'过敏史', value:'青霉素过敏' }, { item:'eGFR', value:'69.6 mL/min/1.73m²' },
+];
+
+// ==================== RENDER ====================
+function renderPage() {
+  const orgs = [{ key:'hengrui', label:'恒瑞医药' }, { key:'kexin', label:'江苏科信' }, { key:'yunying', label:'运营二部' }];
+  const subTabs = [{ key:'pending', label:'待审批' }, { key:'done', label:'已审批列表' }];
+  const filtered = auditData.filter(r => r.org === auditOrg && r.status === auditSubTab);
+  const displayData = filtered.map((r,i) => ({...r, displayId: i+1}));
+  document.getElementById('pageMain').innerHTML = `
+    <div class="org-tabs">${orgs.map(o=>'<div class="org-tab '+(auditOrg===o.key?'active':'')+'" onclick="setAuditOrg(\''+o.key+'\')">'+o.label+'</div>').join('')}</div>
+    <div class="sub-tabs-wrap">${subTabs.map(s=>'<div class="sub-tab '+(auditSubTab===s.key?'active':'')+'" onclick="setAuditSubTab(\''+s.key+'\')">'+s.label+'</div>').join('')}<span style="margin-left:auto;font-size:12px;color:#aaa">共 ${displayData.length} 条</span></div>
+    <div class="filter-form-wrap" style="border-radius:0 0 12px 12px">
+      <div class="filter-form-grid">
+        <div class="filter-form-item"><span class="filter-form-label">筛选号</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">患者编号</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">方案编号</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">审批类型</span><select class="filter-form-select"><option>请选择</option><option>预筛审批</option><option>入组审批</option></select></div>
+        <div class="filter-form-item"><span class="filter-form-label">中心名称</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">审批状态</span><select class="filter-form-select"><option>请选择</option><option>待审批</option><option>已通过</option><option>已拒绝</option></select></div>
+        <div class="filter-form-item"><span class="filter-form-label">待操作人</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">待审批人</span><input class="filter-form-input" placeholder="请输入"/></div>
+        <div class="filter-form-item"><span class="filter-form-label">提交日期</span><div class="filter-form-date-range"><input type="date"/><span>~</span><input type="date"/></div></div>
+        <div class="filter-form-item"><span class="filter-form-label">发送邮件</span><select class="filter-form-select"><option>请选择</option><option>是</option><option>否</option></select></div>
+        <div class="filter-form-item" style="grid-column:span 2"><span class="filter-form-label">排序</span><select class="filter-form-select"><option>请选择</option><option>提交日期</option><option>匹配率</option></select><select class="filter-form-select" style="margin-left:8px"><option>请选择</option><option>升序</option><option>降序</option></select></div>
+      </div>
+      <div class="filter-form-actions"><button class="btn-filter primary">查询</button><button class="btn-filter">重置</button><button class="btn-filter">导出</button><button class="btn-filter">患者字展示</button><button class="btn-filter">列设置</button><button class="btn-filter">高级搜索</button><span class="spacer"></span></div>
+    </div>
+    <div class="table-card" style="margin-top:16px">
+      <table class="data-table"><thead><tr>
+        <th style="width:80px">序号</th><th>筛选号</th><th>审批类型</th><th>患者编号</th><th style="width:50px">性别</th><th style="width:50px">年龄</th><th>方案编号</th><th>项目名称</th><th>中心号</th><th>中心</th><th>匹配率</th><th>提交人</th><th style="width:280px">操作</th>
+      </tr></thead><tbody>
+        ${displayData.length===0?'<tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>':displayData.map(r=>'<tr><td>'+(r.preSubmit?'<span style="display:inline-block;padding:1px 6px;background:#e6f4ff;color:#1677ff;border:1px solid #91caff;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px;white-space:nowrap;line-height:18px;">预提交</span>':'')+r.displayId+'</td><td style="color:#1677ff;font-weight:500">'+r.screenNo+'</td><td>'+r.auditType+'</td><td>'+r.patientNo+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.planNo+'</td><td><span class="proj-name-trunc">'+r.projectName+'</span></td><td>'+r.centerNo+'</td><td><span class="text-ellipsis-cell" style="max-width:180px" title="'+r.center+'">'+r.center+'</span></td><td><span class="match-rate '+(parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':'')+'">'+r.matchRate+'</span></td><td>'+r.submitter+'</td><td><span class="action-link view-btn-'+r.id+'" onclick="openDetailById('+r.id+')">查看</span><span class="action-sep">|</span><span class="action-link">抄送</span>'+(r.preSubmit?'<span class="action-sep">|</span><span class="action-link" style="color:#ff7a00" onclick="cancelPreSubmit('+r.id+')">取消预提交</span>':'')+(r.status==='pending'?'<span class="action-sep">|</span><span class="action-link" onclick="showToast(\'审批功能开发中\',\'info\')">审批</span>':'')+(r.status==='done'?'<span class="action-sep">|</span><span class="action-link" style="color:#ff4d4f">撤回审批</span>':'')+'<span class="action-sep">|</span><span class="action-link" onclick="openAuditRecord('+r.id+')">审批记录</span>'+(r.preSubmit?'<span class="action-sep">|</span><span class="action-link" style="color:#722ed1" onclick="openPreSubmitLog('+r.id+')">预提交日志</span>':'')+'<span class="action-sep">|</span><span class="action-link">邮件记录</span></td></tr>').join('')}
+      </tbody></table>
+      <div class="pagination"><span class="page-btn" style="border:none;cursor:default">共 ${displayData.length} 条</span><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">›</button></div>
+    </div>`;
+  renderPrdSidebar();
+  // 添加SVG连接线
+  setTimeout(() => drawConnectorLines(), 100);
+}
+
+// ==================== SVG CONNECTOR LINES ====================
+let svgContainer = null;
+
+function createSvgContainer() {
+  if (!svgContainer) {
+    svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgContainer.classList.add('svg-connector');
+    svgContainer.id = 'svgConnector';
+    document.body.appendChild(svgContainer);
+  }
+  return svgContainer;
+}
+
+function clearSvgLines() {
+  if (svgContainer) {
+    while (svgContainer.firstChild) {
+      svgContainer.removeChild(svgContainer.firstChild);
+    }
+  }
+}
+
+function drawConnectorLines() {
+  clearSvgLines();
+  const container = createSvgContainer();
+  
+  // 获取所有"查看"按钮
+  const viewButtons = document.querySelectorAll('[class*="view-btn-"]');
+  if (viewButtons.length === 0) return;
+  
+  // 获取PRD侧边栏的"数据与状态对应关系"标题位置（通过固定ID）
+  const prdTitle = document.getElementById('dataStatusTitle');
+  if (!prdTitle) {
+    console.log('未找到 dataStatusTitle 元素');
+    return;
+  }
+  
+  // 使用 getBoundingClientRect + scroll 获取相对于视口的绝对位置
+  const prdRect = prdTitle.getBoundingClientRect();
+  const targetX = prdRect.left - 10 + window.scrollX;
+  const targetY = prdRect.top + prdRect.height / 2 + window.scrollY;
+  
+  // 为每个"查看"按钮绘制线条
+  viewButtons.forEach((btn, index) => {
+    // 使用 getBoundingClientRect + scroll 获取相对于视口的绝对位置
+    const btnRect = btn.getBoundingClientRect();
+    const startX = btnRect.right + 5 + window.scrollX;
+    const startY = btnRect.top + btnRect.height / 2 + window.scrollY;
+    
+    // 创建贝塞尔曲线路径
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const controlX1 = startX + 100;
+    const controlX2 = targetX - 100;
+    
+    path.setAttribute('d', `M ${startX} ${startY} C ${controlX1} ${startY}, ${controlX2} ${targetY}, ${targetX} ${targetY}`);
+    path.setAttribute('stroke', '#fa8c16');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.6');
+    path.setAttribute('stroke-dasharray', '5,5');
+    
+    // 添加动画效果
+    const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+    animate.setAttribute('attributeName', 'stroke-dashoffset');
+    animate.setAttribute('from', '10');
+    animate.setAttribute('to', '0');
+    animate.setAttribute('dur', '1s');
+    animate.setAttribute('repeatCount', 'indefinite');
+    path.appendChild(animate);
+    
+    container.appendChild(path);
+    
+    // 只在第一个按钮上显示箭头
+    if (index === 0) {
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      // 箭头指向左侧（朝向标题框）
+      arrow.setAttribute('points', `${targetX+5},${targetY-5} ${targetX},${targetY} ${targetX+5},${targetY+5}`);
+      arrow.setAttribute('fill', '#fa8c16');
+      arrow.setAttribute('opacity', '0.8');
+      container.appendChild(arrow);
+    }
+  });
+}
+
+// 窗口大小改变时重绘线条
+window.addEventListener('resize', () => {
+  drawConnectorLines();
+});
+
+function setAuditOrg(org) { auditOrg = org; renderPage(); }
+function setAuditSubTab(tab) { auditSubTab = tab; renderPage(); }
+
+// ==================== TOAST ====================
+function showToast(msg, type) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'info');
+  t.innerHTML = '<i class="fas fa-'+(type==='success'?'check-circle':'info-circle')+'" style="color:'+(type==='success'?'#52c41a':'#1677ff')+'"></i>' + msg;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 2500);
+}
+
+// ==================== DETAIL VIEW ====================
+function openDetailById(id) {
+  const row = auditData.find(r => r.id === id);
+  if (!row) return;
+  currentDetailRow = row;
+  detailTab = 'history';
+  const overlay = document.getElementById('detailOverlay');
+  document.getElementById('detailMain').innerHTML = buildDetailContent(row);
+  overlay.classList.add('show');
+  document.body.classList.add('detail-open');
+  renderPrdSidebar();
+  renderDetailPrd();
+}
+function scrollToAudit() {
+  const bar = document.getElementById('auditActionBar');
+  if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function submitAudit(result) {
+  const sel = document.getElementById('auditResultSelect');
+  const comment = document.getElementById('auditCommentInput');
+  const r = sel ? sel.value : '';
+  if (!r) { showToast('请先选择审批结果','info'); return; }
+  const label = r === 'pass' ? '通过' : '拒绝';
+  showToast('审批'+label+'成功！'+(comment&&comment.value?' 意见：'+comment.value:''),'success');
+  if (currentDetailRow) currentDetailRow.status = r === 'pass' ? 'done' : 'done';
+  setTimeout(() => closeDetail(), 1500);
+}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('show'); document.body.classList.remove('detail-open'); currentDetailRow = null; renderPrdSidebar(); renderDetailPrd(); }
+function switchDetailTab(tab) {
+  detailTab = tab;
+  document.querySelectorAll('.detail-tab').forEach(el => el.classList.toggle('active', el.getAttribute('data-tab')===tab));
+  document.querySelectorAll('.detail-tab-content').forEach(el => el.classList.toggle('active', el.id==='detailTab_'+tab));
+}
+function getStageClass(s) { if(!s)return'pending'; if(s.includes('预筛'))return'pre-screen'; if(s.includes('入组')&&!s.includes('已完成'))return'enrolling'; if(s.includes('已完成（入组）'))return'completed-in'; if(s.includes('已完成（排除）'))return'completed-ex'; if(s.includes('待分配'))return'pending'; return'pending'; }
+function getStageIcon(s) { if(!s)return'⏳'; if(s.includes('预筛'))return'🔍'; if(s.includes('入组')&&!s.includes('已完成'))return'📋'; if(s.includes('已完成（入组）'))return'✅'; if(s.includes('已完成（排除）'))return'❌'; if(s.includes('待分配'))return'⏳'; return'⏳'; }
+function getStageDesc(s) { if(!s)return''; if(s.includes('待分配'))return'系统正在分配审批人，请稍候...'; if(s.includes('预筛'))return'请等待审批员完成审批'; if(s.includes('入组'))return'请等待审批员完成入组审批'; if(s.includes('已完成'))return'审批流程已结束'; return''; }
+
+// 根据匹配状态生成占位HTML（用于匹配详情/预筛表）
+function buildMatchStatusPlaceholder(status, tabName) {
+  if (status === 'success') return ''; // 匹配成功，不显示占位
+  if (status === 'matching') {
+    return `<div class="match-status-loading">
+      <div class="loading-spinner"></div>
+      <div class="status-title">正在匹配中，请稍后...</div>
+      <div class="status-desc">AI正在对${tabName}进行智能提取与分析，请耐心等待</div>
+    </div>`;
+  }
+  if (status === 'failed') {
+    return `<div class="match-status-empty">
+      <i class="fas fa-times-circle"></i>
+      <div class="status-title">匹配失败</div>
+      <div class="status-desc">若有需要，请重新匹配</div>
+      <button class="btn-match" onclick="showToast('匹配功能开发中','info')"><i class="fas fa-redo"></i> 重新匹配</button>
+    </div>`;
+  }
+  // none - 未匹配
+  return `<div class="match-status-empty">
+    <i class="fas fa-robot"></i>
+    <div class="status-title">暂无${tabName}数据</div>
+    <div class="status-desc">如果您希望用AI进行智能提取，可点击项目匹配</div>
+    <button class="btn-match" onclick="showToast('匹配功能开发中','info')"><i class="fas fa-play-circle"></i> 开始项目匹配</button>
+  </div>`;
+}
+
+function buildDetailContent(row) {
+  const title = row.screenNo+'-'+row.age+'-'+row.gender+'-'+row.centerNo+'-'+row.center+'（'+row.planNo+'）';
+  const judgeIcon = j => j==='matched'?'<span class="match-icon-sm matched">✓</span>':j==='unmatched'?'<span class="match-icon-sm unmatched">✗</span>':'<span class="match-icon-sm pending">?</span>';
+  const mr = parseFloat(row.matchRate);
+  return `
+  <div class="detail-header">
+    <button class="detail-back-btn" onclick="closeDetail()">← <span>${title}</span></button>
+    <div class="detail-header-actions">
+      <button class="btn-sm" onclick="showToast('基本信息功能开发中','info')">基本信息</button>
+      <button class="btn-sm" onclick="openAuditRecord(${row.id})">审批记录</button>${row.status==='pending'?'<button class="btn-sm" style="background:#fa8c16;border-color:#fa8c16" onclick="scrollToAudit()"><i class="fas fa-gavel"></i> 审核</button>':''}
+    </div>
+  </div>
+  <!-- 浮动印章 -->
+  <div class="stamp-seal ${getStageClass(row.reviewStage)}">
+    <div class="stamp-text">${row.reviewStage||'未知'}</div>
+  </div>
+  <div class="detail-tabs-wrap">
+    <div class="detail-tabs-nav">
+      <div class="detail-tab ${detailTab==='history'?'active':''}" data-tab="history" onclick="switchDetailTab('history')">病史与资料</div>
+      <div class="detail-tab ${detailTab==='match'?'active':''}" data-tab="match" onclick="switchDetailTab('match')">匹配详情</div>
+      <div class="detail-tab ${detailTab==='prescreen'?'active':''}" data-tab="prescreen" onclick="switchDetailTab('prescreen')">预筛表</div>
+    </div>
+    <!-- 病史与资料 -->
+    <div class="detail-tab-content ${detailTab==='history'?'active':''}" id="detailTab_history">
+      <div style="display:flex;height:calc(100vh - 200px);">
+        <!-- 左侧文件夹树 -->
+        <div style="width:240px;background:#fff;border-right:1px solid #e8e8e8;padding:16px;overflow-y:auto;">
+          <div style="margin-bottom:16px;font-size:14px;font-weight:600;color:#333;display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <i class="fas fa-folder" style="color:#faad14"></i>
+            <span>全部文件</span>
+          </div>
+          
+          <!-- 预筛阶段 -->
+          <div style="margin-bottom:8px;">
+            <div style="font-size:13px;font-weight:500;color:#555;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="this.querySelector('i').classList.toggle('fa-chevron-down');this.querySelector('i').classList.toggle('fa-chevron-right')">
+              <i class="fas fa-chevron-down" style="font-size:10px;color:#999"></i>
+              <i class="fas fa-bell" style="color:#1677ff"></i>
+              <span>预筛阶段</span>
+              <span style="margin-left:auto;font-size:11px;color:#999">(1)</span>
+            </div>
+            <div style="padding-left:20px;">
+              <div style="font-size:13px;color:#555;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;background:#f0f0ff;border-radius:4px;">
+                <i class="fas fa-folder-open" style="color:#faad14"></i>
+                <span>原始资料</span>
+                <span style="margin-left:auto;font-size:11px;color:#999">(1)</span>
+              </div>
+              <div style="font-size:13px;color:#555;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-microchip" style="color:#1677ff"></i>
+                <span>AI分类资料</span>
+                <span style="margin-left:auto;font-size:11px;color:#999">(0)</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 入组阶段 -->
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#555;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;" onclick="this.querySelector('i').classList.toggle('fa-chevron-down');this.querySelector('i').classList.toggle('fa-chevron-right')">
+              <i class="fas fa-chevron-right" style="font-size:10px;color:#999"></i>
+              <i class="fas fa-user-check" style="color:#ff4d4f"></i>
+              <span>入组阶段</span>
+              <span style="margin-left:auto;font-size:11px;color:#999">(0)</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 右侧文件列表 -->
+        <div style="flex:1;padding:20px;overflow-y:auto;">
+          <!-- 操作栏 -->
+          <div style="background:#fff;border-radius:8px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" style="width:16px;height:16px;cursor:pointer;">
+              <span style="font-size:13px;color:#555">全选</span>
+            </label>
+            <div style="width:1px;height:20px;background:#e8e8e8;"></div>
+            <span style="font-size:13px;color:#555">文件名称</span>
+            <div style="position:relative;flex:1;max-width:300px;">
+              <input type="text" placeholder="输入关键词搜索..." style="width:100%;padding:6px 12px 6px 32px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;outline:none;">
+              <i class="fas fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#999;font-size:12px;"></i>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button style="padding:6px 16px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;color:#555;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-search"></i>
+                <span>查询</span>
+              </button>
+              <button style="padding:6px 16px;border:1px solid #d9d9d9;border-radius:4px;background:#fff;color:#555;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-download"></i>
+                <span>下载</span>
+              </button>
+              <button style="padding:6px 16px;border:1px solid #1677ff;border-radius:4px;background:#1677ff;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fas fa-file-export"></i>
+                <span>批量导出</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- AI智能筛选提醒 -->
+          <div style="background:#fff1f0;border:1px solid #ffa39e;border-radius:8px;padding:16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px;">
+            <i class="fas fa-exclamation-circle" style="color:#ff4d4f;font-size:18px;margin-top:2px;"></i>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;color:#cf1322;margin-bottom:4px;">AI智能筛选提醒</div>
+              <div style="font-size:13px;color:#555;line-height:1.6;">当您关闭病史与资料页面，在本页面中新增或删除了任何文件，均会触发AI智能筛选。</div>
+            </div>
+            <i class="fas fa-info-circle" style="color:#ff4d4f;font-size:16px;cursor:pointer;"></i>
+          </div>
+          
+          <!-- 文件表格 -->
+          <div style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#fafafa;border-bottom:1px solid #e8e8e8;">
+                  <th style="width:50px;padding:12px;text-align:center;"><input type="checkbox" style="width:16px;height:16px;cursor:pointer;"></th>
+                  <th style="width:60px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">序号</th>
+                  <th style="min-width:250px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">文件名</th>
+                  <th style="width:120px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">文件类型</th>
+                  <th style="width:100px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">文件大小</th>
+                  <th style="width:120px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">脱敏状态</th>
+                  <th style="width:120px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">操作人</th>
+                  <th style="width:160px;padding:12px;text-align:left;font-size:13px;font-weight:600;color:#666;">上传时间</th>
+                  <th style="width:140px;padding:12px;text-align:center;font-size:13px;font-weight:600;color:#666;">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="padding:12px;text-align:center;"><input type="checkbox" style="width:16px;height:16px;cursor:pointer;"></td>
+                  <td style="padding:12px;font-size:13px;color:#555;">1</td>
+                  <td style="padding:12px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <i class="fas fa-file-pdf" style="color:#ff4d4f;font-size:18px;"></i>
+                      <div>
+                        <div style="font-size:13px;color:#333;font-weight:500;">YEBO.pdf</div>
+                        <div style="font-size:11px;color:#999;margin-top:2px;">2026-07-06 17:04:13 上传</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="padding:12px;">
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#fff1f0;border-radius:4px;font-size:12px;color:#cf1322;">
+                      <i class="fas fa-file-pdf" style="font-size:10px;"></i>
+                      PDF
+                    </span>
+                  </td>
+                  <td style="padding:12px;font-size:13px;color:#555;">209.56 KB</td>
+                  <td style="padding:12px;">
+                    <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:#f6ffed;border-radius:4px;font-size:12px;color:#52c41a;">
+                      <i class="fas fa-check-circle" style="font-size:10px;"></i>
+                      已脱敏
+                    </span>
+                  </td>
+                  <td style="padding:12px;font-size:13px;color:#555;">余韩英</td>
+                  <td style="padding:12px;font-size:13px;color:#999;">2026-07-06 17:04</td>
+                  <td style="padding:12px;text-align:center;">
+                    <span style="color:#1677ff;font-size:13px;cursor:pointer;margin-right:12px;">预览</span>
+                    <span style="color:#1677ff;font-size:13px;cursor:pointer;">下载</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 匹配详情 -->
+    <div class="detail-tab-content ${detailTab==='match'?'active':''}" id="detailTab_match">
+      ${row.matchStatus === 'success' ? `
+      <div class="match-meta-panel">
+        <div class="match-meta-title">匹配运行信息</div>
+        <div class="match-meta-grid">
+          <div class="match-meta-item"><span class="match-meta-label">AI 模型</span><span class="match-meta-value">—</span></div>
+          <div class="match-meta-item"><span class="match-meta-label">开始匹配时间</span><span class="match-meta-value">2026-06-08 14:16:21</span></div>
+          <div class="match-meta-item"><span class="match-meta-label">结束匹配时间</span><span class="match-meta-value">2026-06-08 14:21:16</span></div>
+          <div class="match-meta-item"><span class="match-meta-label">RAG 用时</span><span class="match-meta-value">00:07</span></div>
+          <div class="match-meta-item"><span class="match-meta-label">LLM 用时</span><span class="match-meta-value">04:21</span></div>
+          <div class="match-meta-item"><span class="match-meta-label">总用时</span><span class="match-meta-value">04:55</span></div>
+        </div>
+      </div>
+      <div class="detail-proj-info">
+        <div style="display:flex;gap:6px;font-size:13px"><span class="info-label">方案编号：</span><span class="info-value">${row.planNo}</span></div>
+        <div style="display:flex;gap:6px;font-size:13px"><span class="info-label">项目名称：</span><span class="info-value">${row.projectName}</span></div>
+        <div style="display:flex;gap:6px;font-size:13px"><span class="info-label">入排标准版本：</span><span class="info-value">入排标准（版本1）<span class="info-time">上次更新：2026-06-08 10:04:19</span></span></div>
+      </div>
+      <div class="match-pct-row">
+        <div class="match-pct-card"><div class="pct-label">匹配度</div><div class="pct-val">${row.matchRate}</div></div>
+        <div class="match-pct-card"><div class="pct-label">待定占比</div><div class="pct-val pending">4.55%</div></div>
+      </div>
+      <div class="match-summary"><div>主要入选标准4条中，3条匹配，0条不匹配，1条待定；</div><div>主要排除标准8条中，6条匹配，1条不匹配，0条待定；</div></div>
+      <div class="ai-recommend-card">
+        <div class="ai-recommend-header"><span style="font-size:13px;font-weight:600;color:#555">AI建议</span><span class="ai-rec-result ${mr>50?'include':'exclude'}">${mr>50?'入组':'待定'}</span></div>
+        <div class="ai-recommend-body">${mr>50?'该患者基本符合该项目入组条件，建议入组。':'该患者部分条件不符合，需研究者进一步评估。'}</div>
+      </div>
+      <div style="margin-top:16px">
+        <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px">匹配详情</div>
+        <div style="overflow-x:auto"><table class="detail-table"><thead><tr><th style="width:50px">序号</th><th style="width:100px">标准类型</th><th style="min-width:250px">纳排内容</th><th style="min-width:250px">源数据</th><th style="min-width:200px">AI判断</th><th style="width:140px">操作</th></tr></thead><tbody>
+          ${matchDetailData.map((r,i)=>'<tr class="'+(i%2===1?'striped':'')+'"><td>'+(i+1)+'</td><td>'+r.type+'</td><td>'+r.criteria+'</td><td>'+r.source+'</td><td><div style="display:flex;align-items:flex-start;gap:6px">'+judgeIcon(r.judge)+'<span class="match-judge-text '+r.judge+'">'+r.judgeText+'</span></div></td><td><span style="color:#1677ff;font-size:11px;cursor:pointer;margin-right:6px">病历溯源</span><span style="color:#1677ff;font-size:11px;cursor:pointer">结果修正</span></td></tr>').join('')}
+        </tbody></table></div>
+      </div>
+      ` : buildMatchStatusPlaceholder(row.matchStatus, '匹配详情')}
+    </div>
+    <!-- 预筛表 -->
+    <div class="detail-tab-content ${detailTab==='prescreen'?'active':''}" id="detailTab_prescreen">
+      ${row.matchStatus === 'success' ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span style="font-weight:600;font-size:13px;color:#555">预筛信息</span><button class="btn-sm" style="padding:5px 14px;font-size:12px;border-radius:6px;border:1px solid #1677ff;background:#1677ff;color:#fff;cursor:pointer">下载</button></div>
+      <div style="overflow-x:auto"><table class="pre-table"><thead><tr><th style="width:60px">序号</th><th style="width:200px">项目</th><th style="min-width:250px">AI提取</th><th style="width:200px">操作</th></tr></thead><tbody>
+        ${prescreenData.map((r,i)=>'<tr><td>'+(i+1)+'</td><td>'+r.item+'</td><td><div style="white-space:pre-wrap;font-size:12px;color:#555">'+r.value+'</div></td><td><span style="color:#1677ff;font-size:11px;cursor:pointer;margin-right:6px">编辑</span><span style="color:#1677ff;font-size:11px;cursor:pointer">病历溯源</span></td></tr>').join('')}
+      </tbody></table></div>
+      <div style="padding:12px 20px"><label style="font-weight:600;font-size:12px;color:#555">备注：</label><textarea disabled style="width:100%;margin-top:6px;padding:8px 12px;border:1px solid #e8e8e8;border-radius:6px;resize:vertical;min-height:80px;color:#999;background:#fafafa;font-size:12px">内容由AI生成，仅供参考，请谨慎鉴别</textarea></div>
+      ` : buildMatchStatusPlaceholder(row.matchStatus, '预筛表')}
+    </div>
+  </div>
+  ${row.status==='pending'?'':''}`;
+}
+
+// ==================== AUDIT RECORD ====================
+function openAuditRecord(id) {
+  const flow = auditFlowData[id];
+  const row = auditData.find(r => r.id === id);
+  if (!flow || !row) { showToast('暂无审批记录','info'); return; }
+  const overlay = document.getElementById('auditRecordOverlay');
+  let html = '<div class="audit-record-modal"><div class="audit-record-header"><h3>审批记录 - '+row.screenNo+'</h3><button class="audit-record-close" onclick="closeAuditRecord()"><i class="fas fa-times"></i></button></div><div class="audit-record-body">';
+  if (flow.prescreen && flow.prescreen.length > 0) html += buildAuditGroup('预筛审批', flow.prescreen);
+  if (flow.enrolling && flow.enrolling.length > 0) html += buildAuditGroup('入组审批', flow.enrolling);
+  if ((!flow.prescreen||flow.prescreen.length===0)&&(!flow.enrolling||flow.enrolling.length===0)) html += '<div style="text-align:center;padding:40px;color:#aaa">暂无审批记录</div>';
+  html += '</div></div>';
+  overlay.innerHTML = html;
+  overlay.classList.add('show');
+  overlay.onclick = function(e) { if(e.target===overlay) closeAuditRecord(); };
+}
+function closeAuditRecord() { const o=document.getElementById('auditRecordOverlay'); o.classList.remove('show'); o.innerHTML=''; }
+function buildAuditGroup(title, rows) {
+  let h = '<div class="audit-group"><div class="audit-group-header" onclick="this.classList.toggle(\'collapsed\');this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'\':\'none\'"><i class="fas fa-chevron-down"></i>'+title+'（'+rows.length+'条记录）</div><table class="audit-group-table"><thead><tr><th>操作人</th><th>角色</th><th>状态</th><th>时间</th><th>耗时</th></tr></thead><tbody>';
+  rows.forEach(r => {
+    h += '<tr><td>'+r.operator+'</td><td>'+r.role+'</td><td><span class="status-tag '+r.statusClass+'">'+r.status+'</span></td><td>'+r.time+'</td><td>'+r.duration+'</td></tr>';
+    if (r.children) r.children.forEach(c => {
+      h += '<tr style="background:#fafafa"><td style="padding-left:28px">↳ '+c.operator+'</td><td>'+c.role+'</td><td><span class="status-tag '+c.statusClass+'">'+c.status+'</span></td><td>'+c.time+'</td><td>'+c.duration+'</td></tr>';
+    });
+  });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+// ==================== PRE-SUBMIT ====================
+function cancelPreSubmit(id) {
+  const row = auditData.find(r => r.id === id);
+  if (!row) return;
+  if (confirm('确定要取消「' + row.screenNo + '」的预提交吗？\n\n取消后该数据将回到待提交状态，需要重新操作提交流程。')) {
+    row.preSubmit = false;
+    renderPage();
+    showToast('已成功取消预提交，筛选号：' + row.screenNo, 'success');
+  }
+}
+
+function openPreSubmitLog(id) {
+  const row = auditData.find(r => r.id === id);
+  if (!row) return;
+  const overlay = document.getElementById('preSubmitLogOverlay');
+  const logData = [
+    { no:1, action:'预提交审批', operator:row.submitter, role:'CRC', time:'2026-07-05 14:32:18', detail:'提交预审核申请，等待系统匹配完成后自动提交' },
+    { no:2, action:'系统确认', operator:'系统', role:'—', time:'2026-07-05 14:32:20', detail:'已接收预提交请求，进入匹配队列' },
+    { no:3, action:'匹配中', operator:'系统', role:'—', time:'2026-07-05 14:33:05', detail:'AI正在分析患者资料与纳排标准的匹配情况' },
+    { no:4, action:'等待自动提交', operator:'系统', role:'—', time:'2026-07-05 14:35:12', detail:'匹配完成，等待系统自动提交审核（当前状态）' },
+  ];
+  let html = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;">';
+  html += '<div style="background:#fff;border-radius:12px;width:720px;max-height:80vh;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.15);">';
+  // header
+  html += '<div style="padding:16px 24px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div style="font-size:16px;font-weight:600;color:#333;"><i class="fas fa-clipboard-list" style="color:#722ed1;margin-right:8px;"></i>预提交操作日志</div>';
+  html += '<span onclick="closePreSubmitLog()" style="cursor:pointer;font-size:18px;color:#999;padding:4px 8px;">&times;</span>';
+  html += '</div>';
+  // info bar
+  html += '<div style="padding:12px 24px;background:#f9f0ff;border-bottom:1px solid #d3adf7;display:flex;gap:24px;font-size:13px;color:#555;">';
+  html += '<span>筛选号：<strong style="color:#722ed1;">' + row.screenNo + '</strong></span>';
+  html += '<span>患者编号：' + row.patientNo + '</span>';
+  html += '<span>方案编号：' + row.planNo + '</span>';
+  html += '<span>预提交人：' + row.submitter + '</span>';
+  html += '</div>';
+  // log table
+  html += '<div style="padding:16px 24px;overflow-y:auto;max-height:50vh;">';
+  html += '<table style="width:100%;border-collapse:collapse;">';
+  html += '<thead><tr style="background:#fafafa;border-bottom:1px solid #e8e8e8;">';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:40px;">序号</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:100px;">操作动作</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:80px;">操作人</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:60px;">角色</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:140px;">时间</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;">操作详情</th>';
+  html += '</tr></thead><tbody>';
+  logData.forEach(l => {
+    const actionColor = l.action.includes('预提交') ? '#722ed1' : l.action.includes('匹配') ? '#1677ff' : '#52c41a';
+    html += '<tr style="border-bottom:1px solid #f5f5f5;">';
+    html += '<td style="padding:10px 12px;font-size:13px;color:#555;">' + l.no + '</td>';
+    html += '<td style="padding:10px 12px;"><span style="display:inline-block;padding:2px 8px;background:' + (l.action.includes('预提交') ? '#f9f0ff' : l.action.includes('匹配') ? '#e6f4ff' : '#f6ffed') + ';color:' + actionColor + ';border-radius:4px;font-size:12px;font-weight:500;">' + l.action + '</span></td>';
+    html += '<td style="padding:10px 12px;font-size:13px;color:#333;">' + l.operator + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#888;">' + l.role + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#999;">' + l.time + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#555;">' + l.detail + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div style="margin-top:12px;padding:10px 14px;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;font-size:12px;color:#8c6d1f;line-height:1.6;">';
+  html += '<i class="fas fa-info-circle" style="color:#faad14;margin-right:6px;"></i>预提交为隐藏状态，不影响正常审核流程。系统将在匹配完成后自动提交审核。CRC、协调员、CRA均可在系统正式提交前取消预提交。';
+  html += '</div>';
+  html += '</div>';
+  // footer
+  html += '<div style="padding:12px 24px;border-top:1px solid #f0f0f0;text-align:right;">';
+  html += '<button onclick="closePreSubmitLog()" style="padding:6px 20px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;color:#555;font-size:13px;cursor:pointer;">关闭</button>';
+  html += '</div>';
+  html += '</div></div>';
+  overlay.innerHTML = html;
+  overlay.style.display = 'block';
+}
+function closePreSubmitLog() {
+  const overlay = document.getElementById('preSubmitLogOverlay');
+  overlay.style.display = 'none';
+  overlay.innerHTML = '';
+}
+
+// ==================== PRD SIDEBAR ====================
+function renderPrdSidebar() {
+  const isDetail = currentDetailRow !== null;
+  const ms = currentDetailRow ? currentDetailRow.matchStatus : null;
+  // 构建数据状态映射表
+  const statusMap = { matching:{label:'⏳ 匹配中',color:'#1677ff',bg:'#e6f4ff'}, success:{label:'✅ 匹配成功',color:'#52c41a',bg:'#f6ffed'}, none:{label:'🔘 未匹配',color:'#8c8c8c',bg:'#fafafa'}, failed:{label:'❌ 匹配失败',color:'#ff4d4f',bg:'#fff2f0'} };
+  const statusRows = auditData.map(r => {
+    const s = statusMap[r.matchStatus];
+    const preTag = r.preSubmit ? '<span style="display:inline-block;padding:1px 5px;background:#f9f0ff;color:#722ed1;border:1px solid #d3adf7;border-radius:3px;font-size:10px;font-weight:600;margin-left:4px;">预提交</span>' : '';
+    return `<tr>
+      <td style="padding:6px 8px;font-size:12px;color:#333;border-bottom:1px solid #f0f0f0;font-weight:500">${r.screenNo}${preTag}</td>
+      <td style="padding:6px 8px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0">${r.org==='hengrui'?'恒瑞':r.org==='kexin'?'科信':'运营'}</td>
+      <td style="padding:6px 8px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0">${r.status==='pending'?'待审批':'已审批'}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #f0f0f0"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color};white-space:nowrap">${s.label}</span></td>
+      <td style="padding:6px 8px;border-bottom:1px solid #f0f0f0"><span style="font-size:11px;color:#1677ff;cursor:pointer" onclick="openDetailById(${r.id})">查看 →</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('prdSidebar').innerHTML = `
+    <h2 class="prd-title">📋 PRD - 审核列表与查看页面</h2>
+    
+    <!-- 数据与状态对应关系放在最前面，确保初始可见 -->
+     <div class="prd-section">
+      <h3 class="prd-section-title">匹配状态逻辑（重要）</h3>
+      <p class="prd-text">「匹配详情」「预筛表」2个Tab根据 <strong>matchStatus</strong> 字段显示不同内容：</p>
+      <div class="prd-highlight">
+        <p class="prd-text" style="margin-bottom:4px"><strong>✅ 匹配成功 (success)</strong></p>
+        <p class="prd-text" style="font-size:12px">显示完整数据：匹配运行信息、入排标准表格、预筛表</p>
+      </div>
+      <div class="prd-highlight">
+        <p class="prd-text" style="margin-bottom:4px"><strong>⏳ 正在匹配中 (matching)</strong></p>
+        <p class="prd-text" style="font-size:12px">三个Tab显示旋转加载动画 + "正在匹配中，请稍后..."</p>
+      </div>
+      <div class="prd-highlight">
+        <p class="prd-text" style="margin-bottom:4px"><strong>❌ 匹配失败 (failed)</strong></p>
+        <p class="prd-text" style="font-size:12px">三个Tab显示失败提示 + "重新匹配"按钮</p>
+      </div>
+      <div class="prd-highlight">
+        <p class="prd-text" style="margin-bottom:4px"><strong>🔘 未匹配 (none)</strong></p>
+        <p class="prd-text" style="font-size:12px">三个Tab显示"如果您希望用AI进行智能提取，可点击项目匹配"</p>
+      </div>
+    </div>
+    <div class="prd-section">
+      <h3 class="prd-section-title" id="dataStatusTitle">数据与状态对应关系（共12条）</h3>
+      <div style="overflow-x:auto;border:1px solid #e8e8e8;border-radius:8px;background:#fff">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:#fafafa;border-bottom:1px solid #e8e8e8">
+              <th style="padding:8px;font-size:11px;font-weight:600;color:#666;text-align:left">筛选号</th>
+              <th style="padding:8px;font-size:11px;font-weight:600;color:#666;text-align:left">机构</th>
+              <th style="padding:8px;font-size:11px;font-weight:600;color:#666;text-align:left">列表</th>
+              <th style="padding:8px;font-size:11px;font-weight:600;color:#666;text-align:left">匹配状态</th>
+              <th style="padding:8px;font-size:11px;font-weight:600;color:#666;text-align:left">操作</th>
+            </tr>
+          </thead>
+          <tbody>${statusRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+   
+
+    <!-- 预提交功能说明 -->
+    <div class="prd-section">
+      <h3 class="prd-section-title">🔖 预提交机制说明</h3>
+      <p class="prd-text">预提交是一种<strong>隐藏状态</strong>，不影响正常审核流程。用户在系统正式提交审核前，可以选择“预提交”方式。</p>
+      <div class="prd-highlight" style="border-color:#d3adf7;background:#f9f0ff;">
+        <p class="prd-text" style="margin-bottom:6px;"><strong style="color:#722ed1;">📌 预提交规则：</strong></p>
+        <ul class="prd-list" style="margin-bottom:0;">
+          <li>预提交后，序号列显示<strong>「预提交」</strong>蓝色标签</li>
+          <li>操作列显示<strong style="color:#ff7a00;">「取消预提交」</strong>按钮</li>
+          <li>CRC、协调员、CRA 均可取消预提交（只要系统尚未正式提交审核）</li>
+          <li>取消后数据回到待提交状态，需重新操作</li>
+          <li>操作列显示<strong style="color:#722ed1;">「预提交日志」</strong>按钮，可查看完整操作记录</li>
+        </ul>
+      </div>
+      <div class="prd-highlight" style="border-color:#b7eb8f;background:#f6ffed;">
+        <p class="prd-text" style="margin-bottom:4px;"><strong style="color:#389e0d;">🔄 预提交流程：</strong></p>
+        <p class="prd-text" style="font-size:12px;">用户点击预提交 → 系统记录日志 → 等待AI匹配完成 → 系统自动提交审核 → 预提交状态结束</p>
+      </div>
+      <div class="prd-highlight" style="border-color:#ffe58f;background:#fffbe6;">
+        <p class="prd-text" style="margin-bottom:4px;"><strong style="color:#d48806;">📝 后端要求：</strong></p>
+        <ul class="prd-list" style="margin-bottom:0;">
+          <li>保存预提交操作的完整日志（操作人、角色、时间、动作）</li>
+          <li>日志支持查看，包含每次操作详情</li>
+          <li>预提交状态为隐藏状态，不影响现有审核流程</li>
+        </ul>
+      </div>
+    </div>
+
+    ${isDetail ? `
+    <div class="prd-section">
+      <h3 class="prd-section-title">当前查看</h3>
+      <div class="prd-highlight" style="border-color:${ms==='success'?'#b7eb8f':ms==='matching'?'#91caff':ms==='failed'?'#ffa39e':'#d9d9d9'}">
+        <p class="prd-text" style="margin-bottom:4px">筛选号：<strong>${currentDetailRow.screenNo}</strong> | 患者：${currentDetailRow.age}岁${currentDetailRow.gender} | 方案：${currentDetailRow.planNo}</p>
+        <p class="prd-text">匹配状态：<strong style="color:${statusMap[ms].color}">${statusMap[ms].label}</strong></p>
+        <p class="prd-text" style="font-size:12px;color:#999;margin-top:4px">切换到「匹配详情」「预筛表」Tab可查看对应状态效果</p>
+      </div>
+    </div>
+    ` : `
+    <div class="prd-section">
+      <h3 class="prd-section-title">操作说明</h3>
+      <ul class="prd-list">
+        <li>点击列表中"查看"进入详情，观察三个Tab的状态变化</li>
+        <li>建议依次点击不同状态的筛选号查看效果</li>
+        <li>病史与资料Tab不受匹配状态影响，始终显示文件管理界面</li>
+      </ul>
+    </div>
+     <div class="prd-section">
+      <h3 class="prd-section-title">需要解耦的地方包括</h3>
+      <p class="prd-text" style="color:red">需要解耦的地方如下（不限于以下，具体还需要后端 再看细节）：
+        <ul>
+          <li>1. 需要上传资料后才可以进行项目匹配，才可提交审核，（上传资料之后，可以匹配，也可以提交审核）</li>
+          <li>2. 预筛通过后需要进行项目匹配才可提交审核（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
+          <li>3. 主知情审核通过后需要进行项目匹配才可提交审核（含主知情审核）（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
+          <li>4. 超管和管理员在审核中时也可以进行项目匹配，其他角色在审核中时不可重新匹配  （提交人和审核人都可进行项目匹配，点击匹配，弹出一个确认匹配框）</li>
+          <li>5. 审核阶段的展示跟流程挂钩；</li>
+          <li>6. 提交审核  查看页面 将 病史与资料提到第一个tab页面</li>
+          <li>7.APP审核页面  跳转出来 病史与资料页面，右上角 有匹配 就是匹配详情，没有匹配就是项目匹配的按钮，跟现在的病史与资料页面保持一致
+        </ul>
+            </div>
+    `}
+  `;
+}
+
+// ==================== DETAIL PRD SIDEBAR ====================
+function renderDetailPrd() {
+  const el = document.getElementById('detailPrdSidebar');
+  if (!el) return;
+  if (!currentDetailRow) { el.innerHTML = ''; return; }
+  const row = currentDetailRow;
+  const ms = row.matchStatus;
+  const statusMap = { matching:{label:'⏳ 匹配中',color:'#1677ff',bg:'#e6f4ff'}, success:{label:'✅ 匹配成功',color:'#52c41a',bg:'#f6ffed'}, none:{label:'🔘 未匹配',color:'#8c8c8c',bg:'#fafafa'}, failed:{label:'❌ 匹配失败',color:'#ff4d4f',bg:'#fff2f0'} };
+  const s = statusMap[ms] || statusMap.none;
+  const flow = auditFlowData[row.id];
+  const auditCount = flow ? ((flow.prescreen||[]).length + (flow.enrolling||[]).length) : 0;
+  el.innerHTML = `
+    <h2 class="prd-title">📋 PRD - 审核查看页面</h2>
+    <div class="prd-section">
+      <h3 class="prd-section-title">功能概述</h3>
+  
+      <ul class="prd-list">
+        <li>病史与资料 Tab 放在第一位，方便审批人首先查看患者原始资料</li>
+        <li>如果待审核，当前页面可以直接审核，点击审核按钮，审核页面跟之前保持一致</li>
+       
+      </ul>
+    </div>
+   
+  `;
+}
+
+// ==================== INIT ====================
+renderPage();
+</script>
+<div id="preSubmitLogOverlay" style="display:none;"></div>
+</body>
+</html>

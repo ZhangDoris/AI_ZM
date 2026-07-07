@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>0706-病史与资料 - 智能预筛</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    /* 顶部导航栏 */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+      height: 55px;
+    }
+    .nav-bar .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .back-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #555;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      background: transparent;
+    }
+    .back-btn:active { background: #eee; }
+    
+    /* 操作按钮区域 */
+    .action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #fff;
+      margin-top: 12px;
+    }
+    .select-all-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      color: #333;
+    }
+    .checkbox {
+      width: 20px; height: 20px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .checkbox.checked {
+      background: #165DFF;
+      border-color: #165DFF;
+    }
+    .checkbox.checked::after {
+      content: '✓';
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: #165DFF;
+      color: #fff;
+    }
+    .btn-primary:active {
+      background: #0e4fd9;
+    }
+    
+    /* 文件列表容器 */
+    .file-container {
+      margin-top: 12px;
+      padding: 0 12px;
+    }
+    
+    /* 文件夹项 */
+    .folder-item {
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .folder-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .folder-header:active {
+      background: #f9f9f9;
+    }
+    .folder-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .folder-icon {
+      font-size: 20px;
+      color: #165DFF;
+    }
+    .folder-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+    }
+    .info-icon {
+      font-size: 16px;
+      color: #165DFF;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+    .folder-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #999;
+      font-size: 14px;
+    }
+    .arrow-down {
+      font-size: 12px;
+      color: #999;
+    }
+    
+    /* 文件夹内容 */
+    .folder-content {
+      padding: 0 16px 16px;
+      display: none;
+    }
+    .folder-content.show {
+      display: block;
+    }
+    
+    /* 上传按钮组 */
+    .upload-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .upload-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      text-align: center;
+    }
+    .upload-btn-primary {
+      background: #165DFF;
+      color: #fff;
+    }
+    .upload-btn-secondary {
+      background: #165DFF;
+      color: #fff;
+    }
+    .upload-btn:active {
+      opacity: 0.8;
+    }
+    
+    /* 文件卡片 */
+    .file-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .file-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .file-checkbox {
+      margin-top: 2px;
+    }
+    .file-icon-wrapper {
+      width: 48px; height: 48px;
+      background: #ffe6e6;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-icon-wrapper.pdf {
+      background: #ffe6e6;
+      color: #ff4d4f;
+    }
+    .file-icon-wrapper i {
+      font-size: 24px;
+    }
+    .file-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .file-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+      word-break: break-all;
+      margin-bottom: 8px;
+    }
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .file-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-pdf {
+      background: #fff1f0;
+      color: #ff4d4f;
+    }
+    .tag-size {
+      background: #f5f5f5;
+      color: #666;
+    }
+    .tag-uploaded {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+    .file-details {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #999;
+      margin-top: 8px;
+    }
+    .file-details span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .divider {
+      color: #ddd;
+    }
+    
+    /* 文件操作按钮 */
+    .file-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .file-action-btn {
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .file-action-btn:active {
+      color: #165DFF;
+    }
+    
+    /* vConsole按钮 */
+    .vconsole-btn {
+      position: fixed;
+      bottom: 60px;
+      right: 16px;
+      background: #00b578;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,181,120,0.3);
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s;
+    }
+    .vconsole-btn:active {
+      transform: scale(0.95);
+    }
+    
+    /* 底部提示 */
+    .bottom-notice {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff1f0;
+      border-top: 1px solid #ffd8bf;
+      padding: 12px 16px;
+      max-width: 430px;
+      margin: 0 auto;
+    }
+    .notice-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #cf1322;
+      line-height: 1.6;
+    }
+    .notice-content strong {
+      font-weight: 600;
+    }
+    
+    /* 底部滑动面板遮罩层 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.show {
+      display: block;
+      opacity: 1;
+    }
+    
+    /* 底部滑动面板内容 */
+    .modal-content {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      max-height: 70vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1001;
+    }
+    .modal-overlay.show .modal-content {
+      transform: translateY(0);
+    }
+    
+    /* 模态框头部 */
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      position: relative;
+    }
+    .modal-header::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+    }
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+    .modal-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #999;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+    }
+    .modal-close:active {
+      background: #f5f5f5;
+    }
+    
+    /* 模态框主体 */
+    .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    
+    /* 表格样式 */
+    .version-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    .version-table th,
+    .version-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .version-table th {
+      background: #f5f7fa;
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    .version-table td {
+      font-size: 14px;
+      color: #666;
+    }
+    .version-table tr:last-child th,
+    .version-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* 下拉选择框 */
+    .select-wrapper {
+      position: relative;
+    }
+    .custom-select {
+      width: 100%;
+      padding: 10px 40px 10px 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      outline: none;
+      transition: all 0.3s;
+    }
+    .custom-select:focus {
+      border-color: #165DFF;
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+    }
+    .select-arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #999;
+      font-size: 12px;
+    }
+    
+    /* 模态框底部按钮 */
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #ddd;
+      background: #fff;
+      color: #666;
+    }
+    .modal-btn-cancel:active {
+      background: #f5f5f5;
+    }
+    .modal-btn-confirm {
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(22, 93, 255, 0.25);
+    }
+    .modal-btn-confirm:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+    }
+    .modal-btn-confirm.loading {
+      background: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    
+    /* 加载动画 */
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Toast提示 */
+    .toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      display: none;
+      text-align: center;
+      max-width: 80%;
+      animation: fadeInOut 2s ease-in-out;
+    }
+    .toast.show {
+      display: block;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    
+    /* 信息提示框 */
+    .info-banner {
+      background: #e6f7ff;
+      border: 1px solid #91d5ff;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .info-banner.show {
+      display: block;
+    }
+    .info-banner-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .info-banner-icon {
+      font-size: 18px;
+      color: #165DFF;
+      flex-shrink: 0;
+    }
+    .info-banner-text {
+      font-size: 13px;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    .empty-state i {
+      font-size: 48px;
+      color: #ddd;
+      margin-bottom: 12px;
+    }
+    .empty-state p {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 顶部导航 -->
+  <div class="nav-bar">
+    <button class="back-btn" onclick="goBack()">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="nav-title">0706-病史与资料</div>
+    <div style="width: 34px;"></div>
+  </div>
+  
+  <!-- 操作按钮栏 -->
+  <div class="action-bar">
+    <div class="select-all-wrapper" onclick="toggleSelectAll()">
+      <div class="checkbox" id="selectAllCheckbox"></div>
+      <span>全选</span>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="downloadFiles()">下载</button>
+      <button class="btn btn-primary" onclick="projectMatch()">项目匹配</button>
+    </div>
+  </div>
+  
+  <!-- 文件列表 -->
+  <div class="file-container">
+    
+    <!-- 信息提示框 -->
+    <div class="info-banner" id="infoBanner">
+      <div class="info-banner-content">
+        <i class="fas fa-info-circle info-banner-icon"></i>
+        <div class="info-banner-text">
+          <strong>温馨提示：</strong>您的审批提交和系统匹配会同时进行。等匹配结果出来后，审批员才会开始为您审批。
+        </div>
+      </div>
+    </div>
+    
+    <!-- 预筛阶段文件夹 -->
+    <div class="folder-item">
+      <div class="folder-header" onclick="toggleFolder('pre-screening')">
+        <div class="folder-left">
+          <i class="far fa-folder folder-icon"></i>
+          <span class="folder-name">预筛阶段</span>
+        </div>
+        <div class="folder-right">
+          <span>(1)</span>
+          <i class="fas fa-chevron-down arrow-down" id="arrow-pre-screening"></i>
+        </div>
+      </div>
+      
+      <div class="folder-content show" id="folder-pre-screening">
+        
+        <!-- 原始资料子文件夹 -->
+        <div class="folder-item" style="margin-bottom: 0;">
+          <div class="folder-header" onclick="toggleFolder('raw-data')">
+            <div class="folder-left">
+              <i class="far fa-folder-open folder-icon"></i>
+              <span class="folder-name">原始资料</span>
+              <i class="fas fa-info-circle info-icon" onclick="showInfo(event)"></i>
+            </div>
+            <div class="folder-right">
+              <span>(1)</span>
+              <i class="fas fa-chevron-down arrow-down" id="arrow-raw-data"></i>
+            </div>
+          </div>
+          
+          <div class="folder-content show" id="folder-raw-data">
+            
+            <!-- 上传按钮 -->
+            <div class="upload-buttons">
+              <button class="upload-btn upload-btn-primary" onclick="uploadFile()">
+                上传
+              </button>
+              <button class="upload-btn upload-btn-secondary" onclick="uploadDesensitized()">
+                已脱敏上传
+              </button>
+            </div>
+            
+            <!-- 文件列表 -->
+            <div class="file-card">
+              <div class="file-header">
+                <div class="checkbox file-checkbox" onclick="toggleFileCheck(this)"></div>
+                <div class="file-icon-wrapper pdf">
+                  <i class="far fa-file-alt"></i>
+                </div>
+                <div class="file-info">
+                  <div class="file-name">1811-305储备GJYI病理报告.pdf</div>
+                  <div class="file-meta">
+                    <span class="file-tag tag-pdf">PDF</span>
+                    <span class="file-tag tag-size">2.14 MB</span>
+                    <span class="file-tag tag-uploaded">已脱敏上传</span>
+                  </div>
+                  <div class="file-details">
+                    <span>操作人 临床协调员188</span>
+                    <span class="divider">|</span>
+                    <span>时间 2026-07-06 10:37</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="file-actions">
+                <button class="file-action-btn" onclick="downloadFile()">下载</button>
+                <button class="file-action-btn" onclick="editFile()">编辑</button>
+                <button class="file-action-btn" onclick="deleteFile()">删除</button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- 基因检测报告文件夹 -->
+        <div class="folder-item" style="margin-bottom: 0;">
+          <div class="folder-header" onclick="toggleFolder('gene-report')">
+            <div class="folder-left">
+              <i class="far fa-folder folder-icon"></i>
+              <span class="folder-name">基因检测报告</span>
+              <i class="fas fa-info-circle info-icon" onclick="showInfo(event)"></i>
+            </div>
+            <div class="folder-right">
+              <span>(0)</span>
+              <i class="fas fa-chevron-right arrow-down" id="arrow-gene-report"></i>
+            </div>
+          </div>
+          
+          <div class="folder-content" id="folder-gene-report">
+            <div class="empty-state">
+              <i class="far fa-folder-open"></i>
+              <p>暂无文件</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 审批上传附件存档文件夹 -->
+        <div class="folder-item" style="margin-bottom: 0;">
+          <div class="folder-header" onclick="toggleFolder('approval-files')">
+            <div class="folder-left">
+              <i class="far fa-folder folder-icon"></i>
+              <span class="folder-name">审批上传附件存档</span>
+              <i class="fas fa-info-circle info-icon" onclick="showInfo(event)"></i>
+            </div>
+            <div class="folder-right">
+              <span>(0)</span>
+              <i class="fas fa-chevron-right arrow-down" id="arrow-approval-files"></i>
+            </div>
+          </div>
+          
+          <div class="folder-content" id="folder-approval-files">
+            <div class="empty-state">
+              <i class="far fa-folder-open"></i>
+              <p>暂无文件</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- AI分类资料文件夹 -->
+        <div class="folder-item" style="margin-bottom: 0;">
+          <div class="folder-header" onclick="toggleFolder('ai-classification')">
+            <div class="folder-left">
+              <i class="far fa-folder folder-icon"></i>
+              <span class="folder-name">AI分类资料</span>
+              <i class="fas fa-info-circle info-icon" onclick="showInfo(event)"></i>
+            </div>
+            <div class="folder-right">
+              <span></span>
+              <i class="fas fa-chevron-right arrow-down" id="arrow-ai-classification"></i>
+            </div>
+          </div>
+          
+          <div class="folder-content" id="folder-ai-classification">
+            <div class="empty-state">
+              <i class="far fa-folder-open"></i>
+              <p>暂无文件</p>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- vConsole按钮 -->
+  <div class="vconsole-btn" onclick="openVConsole()">vConsole</div>
+  
+  <!-- Toast提示 -->
+  <div class="toast" id="toast"></div>
+  
+  <!-- 底部提示 -->
+  <div class="bottom-notice">
+    <div class="notice-content">
+      <span><strong>【重要提示】</strong>请严格遵守患者隐私保护规范，确保病历信息脱敏处理</span>
+    </div>
+  </div>
+  
+  <!-- 项目匹配弹窗 -->
+  <div class="modal-overlay" id="projectMatchModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">入排版本选择</div>
+        <button class="modal-close" onclick="closeProjectMatchModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <table class="version-table">
+          <thead>
+            <tr>
+              <th>项目编码</th>
+              <th>入排标准版本选择</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>测试入组流程</td>
+              <td>
+                <div class="select-wrapper">
+                  <select class="custom-select" id="versionSelect">
+                    <option value="V2.0">V2.0 (V2.0)</option>
+                    <option value="V1.9">V1.9 (V1.9)</option>
+                    <option value="V1.8">V1.8 (V1.8)</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="closeProjectMatchModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmProjectMatch()">确定</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 系统匹配中弹窗 -->
+  <div class="modal-overlay" id="matchingProgressModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">系统匹配中</div>
+        <button class="modal-close" onclick="closeMatchingProgress()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" style="padding: 24px 20px;">
+        <!-- 加载动画 -->
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div class="loading-spinner" style="display: flex; justify-content: center; gap: 8px; margin-bottom: 16px;">
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -1.1s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -1.0s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.9s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.8s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.7s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.6s;"></div>
+            <div class="spinner-dot" style="width: 12px; height: 12px; background: #165DFF; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.5s;"></div>
+          </div>
+          <p style="font-size: 16px; color: #333; font-weight: 500;">正在进行项目匹配，请稍候...</p>
+        </div>
+        
+        <!-- 信息提示框 -->
+        <div class="info-banner show" style="margin-bottom: 24px;">
+          <div class="info-banner-content">
+            <i class="fas fa-info-circle info-banner-icon"></i>
+            <div class="info-banner-text">
+              <strong>温馨提示：</strong>审批与匹配已解耦，您可选择：①同步提交审批（审批员可立即开始审批，无需等待匹配结果）；②等待匹配结果生成后，再手动提交审批。
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="closeMatchingProgress()">关闭</button>
+        <button class="modal-btn modal-btn-confirm" onclick="submitAuditNow()">提交审批</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // 返回上一页
+    function goBack() {
+      window.history.back();
+    }
+    
+    // 切换全选
+    let allSelected = false;
+    function toggleSelectAll() {
+      allSelected = !allSelected;
+      const checkbox = document.getElementById('selectAllCheckbox');
+      if (allSelected) {
+        checkbox.classList.add('checked');
+      } else {
+        checkbox.classList.remove('checked');
+      }
+      
+      // 更新所有文件复选框
+      const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+      fileCheckboxes.forEach(cb => {
+        if (allSelected) {
+          cb.classList.add('checked');
+        } else {
+          cb.classList.remove('checked');
+        }
+      });
+    }
+    
+    // 切换单个文件选择
+    function toggleFileCheck(element) {
+      element.classList.toggle('checked');
+      updateSelectAllState();
+    }
+    
+    // 更新全选状态
+    function updateSelectAllState() {
+      const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+      const checkedCount = document.querySelectorAll('.file-checkbox.checked').length;
+      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      
+      if (checkedCount === fileCheckboxes.length && fileCheckboxes.length > 0) {
+        selectAllCheckbox.classList.add('checked');
+        allSelected = true;
+      } else {
+        selectAllCheckbox.classList.remove('checked');
+        allSelected = false;
+      }
+    }
+    
+    // 切换文件夹展开/折叠
+    function toggleFolder(folderId) {
+      const folder = document.getElementById('folder-' + folderId);
+      const arrow = document.getElementById('arrow-' + folderId);
+      
+      if (folder.classList.contains('show')) {
+        folder.classList.remove('show');
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-right');
+      } else {
+        folder.classList.add('show');
+        arrow.classList.remove('fa-chevron-right');
+        arrow.classList.add('fa-chevron-down');
+      }
+    }
+    
+    // 显示信息
+    function showInfo(event) {
+      event.stopPropagation();
+      alert('此处显示该文件夹的说明信息');
+    }
+    
+    // 上传文件
+    function uploadFile() {
+      alert('打开文件选择器进行上传');
+    }
+    
+    // 已脱敏上传
+    function uploadDesensitized() {
+      alert('打开文件选择器进行已脱敏文件上传');
+    }
+    
+    // 下载文件
+    function downloadFile() {
+      alert('下载文件');
+    }
+    
+    // 下载选中文件
+    function downloadFiles() {
+      const selectedCount = document.querySelectorAll('.file-checkbox.checked').length;
+      if (selectedCount === 0) {
+        alert('请先选择要下载的文件');
+        return;
+      }
+      alert('下载 ' + selectedCount + ' 个文件');
+    }
+    
+    // 编辑文件
+    function editFile() {
+      alert('编辑文件信息');
+    }
+    
+    // 删除文件
+    function deleteFile() {
+      if (confirm('确定要删除此文件吗？')) {
+        alert('文件已删除');
+      }
+    }
+    
+    // 项目匹配
+    function projectMatch() {
+      alert('执行项目匹配');
+    }
+    
+    // 打开vConsole
+    function openVConsole() {
+      alert('打开vConsole调试面板');
+    }
+    
+    // 显示项目匹配弹窗
+    function projectMatch() {
+      const modal = document.getElementById('projectMatchModal');
+      modal.classList.add('show');
+      
+      // 添加点击遮罩层关闭功能
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeProjectMatchModal();
+        }
+      });
+    }
+    
+    // 关闭项目匹配弹窗
+    function closeProjectMatchModal() {
+      const modal = document.getElementById('projectMatchModal');
+      modal.classList.remove('show');
+    }
+    
+    // 确认项目匹配
+    function confirmProjectMatch() {
+      const versionSelect = document.getElementById('versionSelect');
+      const selectedVersion = versionSelect.value;
+      
+      // 关闭版本选择弹窗
+      closeProjectMatchModal();
+      
+      // 显示匹配进度弹窗（包含两个按钮选项）
+      showMatchingProgress();
+    }
+    
+    // 显示匹配进度弹窗
+    function showMatchingProgress() {
+      const modal = document.getElementById('matchingProgressModal');
+      modal.classList.add('show');
+      
+      // 添加点击遮罩层关闭功能
+      modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+          closeMatchingProgress();
+        }
+      });
+    }
+    
+    // 关闭匹配进度弹窗
+    function closeMatchingProgress() {
+      const modal = document.getElementById('matchingProgressModal');
+      modal.classList.remove('show');
+    }
+    
+    // 现在提交审批
+    function submitAuditNow() {
+      // 关闭匹配进度弹窗
+      closeMatchingProgress();
+      
+      // 显示成功提示
+      showToast('✓ 已提交审批，等待审批结果');
+    }
+    
+    // 显示Toast提示
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
