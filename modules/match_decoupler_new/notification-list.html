@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>消息通知 - 智能预筛系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f2f2f2;
+      overflow: hidden;
+    }
+
+    /* 左右分栏 */
+    .prototype-wrapper {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .interface-area {
+      width: 82%;
+      display: flex;
+      flex-direction: column;
+      background: #f2f2f2;
+      position: relative;
+      overflow: hidden;
+    }
+    .divider {
+      width: 2px;
+      background: #d9d9d9;
+      flex-shrink: 0;
+    }
+    .prd-area {
+      width: 18%;
+      background: #FFF7E6;
+      overflow-y: auto;
+      padding: 16px 12px;
+      border-left: 2px solid #FFD591;
+    }
+
+    /* 左侧界面 */
+    .chat-header {
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+    .chat-header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+    .chat-header-more {
+      font-size: 20px;
+      color: #999;
+      cursor: pointer;
+    }
+
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    /* 时间分隔 */
+    .time-divider {
+      text-align: center;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #999;
+    }
+
+    /* 消息卡片 */
+    .message-card {
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e8e8e8;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    .message-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-color: #bfbfbf;
+    }
+    .message-card.highlight {
+      border-color: #165DFF;
+      box-shadow: 0 0 0 2px rgba(22,93,255,0.15);
+    }
+    .message-card-header {
+      padding: 14px 16px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .message-card-body {
+      padding: 0 16px 12px;
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+    }
+    .message-card-body.no-title {
+      padding: 14px 16px 12px;
+    }
+    .message-card-detail {
+      border-top: 1px solid #f0f0f0;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .message-card-detail:hover {
+      background: #fafafa;
+    }
+    .message-card-detail i {
+      color: #999;
+      font-size: 12px;
+    }
+    .message-detail-content {
+      padding: 12px 16px 16px;
+      background: #fafafa;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.8;
+      display: none;
+      border-top: 1px solid #f0f0f0;
+    }
+    .message-detail-content.show {
+      display: block;
+    }
+
+    /* 新增预提交通知样式 */
+    .message-card.presubmit .message-card-header {
+      color: #D46B08;
+    }
+    .message-card.presubmit .message-card-header::before {
+      content: '\f0f3';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      margin-right: 6px;
+      color: #FAAD14;
+    }
+
+    /* 底部输入区 */
+    .chat-footer {
+      height: 180px;
+      background: #fff;
+      border-top: 1px solid #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .chat-toolbar {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .chat-toolbar i {
+      font-size: 18px;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .chat-toolbar i:hover {
+      color: #666;
+    }
+    .chat-input-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 8px 16px;
+    }
+    .chat-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #333;
+      resize: none;
+      line-height: 1.5;
+    }
+    .chat-input::placeholder {
+      color: #bfbfbf;
+    }
+    .chat-send-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding-top: 4px;
+    }
+    .chat-send-btn {
+      font-size: 13px;
+      color: #999;
+    }
+
+    /* 右侧PRD */
+    .prd-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .prd-section {
+      margin-bottom: 16px;
+    }
+    .prd-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #D46B08;
+      margin-bottom: 8px;
+      padding-left: 8px;
+      border-left: 3px solid #FAAD14;
+    }
+    .prd-text {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 6px;
+    }
+    .prd-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .prd-list li {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.7;
+      padding: 4px 0;
+      padding-left: 12px;
+      position: relative;
+    }
+    .prd-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #FAAD14;
+      font-weight: bold;
+    }
+    .prd-highlight {
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid #FFD591;
+      margin-top: 8px;
+    }
+    .prd-note {
+      background: #FFFBE6;
+      border: 1px solid #FFE58F;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    /* SVG连线 */
+    .svg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 50;
+    }
+    .connection-line {
+      fill: none;
+      stroke: #BFBFBF;
+      stroke-width: 2px;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+    .connection-line.active {
+      stroke: #165DFF;
+      stroke-width: 3px;
+    }
+    .line-label {
+      font-size: 12px;
+      fill: #165DFF;
+      font-weight: 700;
+      transition: font-size 0.3s;
+    }
+    .line-label.active {
+      font-size: 14px;
+    }
+
+    /* 右侧说明项高亮 */
+    .prd-item {
+      transition: background 0.3s, padding 0.3s;
+      border-radius: 4px;
+      cursor: default;
+    }
+    .prd-item.highlight {
+      background: rgba(22, 93, 255, 0.1);
+      padding: 2px 4px;
+    }
+
+    /* 移动端 */
+    .mobile-toggle {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .prototype-wrapper { flex-direction: column; }
+      .interface-area { width: 100%; height: 100%; }
+      .divider, .prd-area { display: none; }
+      .prd-area.mobile-show { display: block; width: 100%; height: 50%; border-left: none; border-top: 2px solid #FFD591; }
+      .interface-area.mobile-hide { display: none; }
+      .mobile-toggle {
+        display: block;
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 100;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #165DFF;
+        color: #fff;
+        border: none;
+        box-shadow: 0 4px 12px rgba(22,93,255,0.3);
+        font-size: 20px;
+        cursor: pointer;
+      }
+      .svg-overlay { display: none; }
+      .mobile-note {
+        display: block;
+        background: #FFFBE6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 12px;
+        color: #666;
+        margin-top: 8px;
+        border: 1px solid #FFD591;
+      }
+    }
+    @media (min-width: 769px) {
+      .mobile-note { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-wrapper" id="prototypeWrapper">
+    <!-- 左侧：产品界面 -->
+    <div class="interface-area" id="interfaceArea">
+      <!-- SVG连线层 -->
+      <svg class="svg-overlay" id="svgOverlay"></svg>
+
+      <!-- 顶部标题 -->
+      <div class="chat-header" id="headerArea">
+        <div class="chat-header-title">AI智能筛选系统</div>
+        <div class="chat-header-more"><i class="fas fa-ellipsis"></i></div>
+      </div>
+
+      <!-- 消息列表 -->
+      <div class="chat-body" id="chatBody">
+        <div class="time-divider">6月29日 13:56</div>
+
+        <div class="message-card presubmit" id="msgCard1" data-line="1">
+          <div class="message-card-header">匹配预提交通知</div>
+          <div class="message-card-body">
+            您预提交的<span style="color:#D46B08;font-weight:600">【PWMW】</span>患者智能匹配已完成，且已提交审核
+          </div>
+          <div class="message-card-detail" onclick="toggleDetail(1)">
+            <span>详情</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+          
+        </div>
+
+        <div class="time-divider">6月29日 14:20</div>
+
+        <div class="message-card presubmit" id="msgCard2" data-line="2">
+          <div class="message-card-header">匹配预提交通知</div>
+          <div class="message-card-body">
+            您预提交的<span style="color:#D46B08;font-weight:600">【ZWMW】</span>患者智能匹配已完成，且已提交审核，您需补充预筛表信息，请进入匹配详情补充
+          </div>
+          <div class="message-card-detail" onclick="toggleDetail(2)">
+            <span>详情</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+          
+        </div>
+
+        <div class="time-divider">6月29日 15:30</div>
+
+        <div class="message-card presubmit" id="msgCard3" data-line="3">
+          <div class="message-card-header">匹配预提交通知</div>
+          <div class="message-card-body">
+            您预提交的<span style="color:#D46B08;font-weight:600">【DWMW】</span>患者智能匹配失败，请您重新匹配后再次提交
+          </div>
+          <div class="message-card-detail" onclick="toggleDetail(3)">
+            <span>详情</span>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+         
+        </div>
+      </div>
+
+      <!-- 底部输入区 -->
+      <div class="chat-footer" id="footerArea">
+        <div class="chat-toolbar">
+          <i class="far fa-smile"></i>
+          <i class="fas fa-scissors"></i>
+          <i class="far fa-image"></i>
+          <i class="far fa-folder-open"></i>
+          <i class="fas fa-list-check"></i>
+          <i class="far fa-comment-dots"></i>
+        </div>
+        <div class="chat-input-area">
+          <textarea class="chat-input" placeholder=""></textarea>
+          <div class="chat-send-bar">
+            <span class="chat-send-btn">发送(S)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 右侧：PRD说明 -->
+    <div class="prd-area" id="prdArea">
+      <div class="prd-title"><i class="fas fa-clipboard-list"></i> PRD - 消息通知</div>
+
+
+      <div class="prd-section">
+        <div class="prd-section-title">场景</div>
+        <div class="prd-item" id="prdItem1">
+          <div class="prd-text"><strong>1. 预提交通知-匹配成功的</strong></div>
+          <div class="prd-text">您预提交的【PWMW】患者智能匹配已完成，且已提交审核，点击详情进入匹配详情</div>
+        </div>
+        <div class="prd-item" id="prdItem2" style="margin-top:10px">
+          <div class="prd-text"><strong>2. 预提交通知-匹配成功，需要补充预筛表</strong></div>
+          <div class="prd-text">您预提交的【ZWMW】患者智能匹配已完成，且已提交审核，您需补充预筛表信息，请进入匹配详情补充;点击详情进入匹配详情</div>
+        </div>
+        <div class="prd-item" id="prdItem3" style="margin-top:10px">
+          <div class="prd-text"><strong>3. 预提交通知-匹配失败</strong></div>
+          <div class="prd-text">您预提交的【DWMW】患者智能匹配失败，请您重新匹配,之前的匹配失败进入哪个页面，保持一致</div>
+        </div>
+       
+    </div>
+     <div class="prd-section">点击详情，进入的是项目匹配详情页面</div>
+  </div>
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-book" id="toggleIcon"></i>
+  </button>
+
+  <script>
+    // 详情展开/收起
+    function toggleDetail(id) {
+      const detail = document.getElementById('detail' + id);
+      const card = document.getElementById('msgCard' + id);
+      detail.classList.toggle('show');
+      card.classList.toggle('highlight');
+      // 重新计算连线（展开可能改变位置）
+      setTimeout(drawLines, 300);
+    }
+
+    // 连线计算
+    function drawLines() {
+      const svg = document.getElementById('svgOverlay');
+      const wrapper = document.getElementById('prototypeWrapper');
+      const interfaceArea = document.getElementById('interfaceArea');
+      const prdArea = document.getElementById('prdArea');
+      if (!svg || !wrapper || !interfaceArea || !prdArea) return;
+
+      svg.innerHTML = '';
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const interfaceRect = interfaceArea.getBoundingClientRect();
+      const prdRect = prdArea.getBoundingClientRect();
+
+      const connections = [
+        { from: 'msgCard1', to: 'prdItem1', label: '1' },
+        { from: 'msgCard2', to: 'prdItem2', label: '2' },
+        { from: 'msgCard3', to: 'prdItem3', label: '3' }
+      ];
+
+      connections.forEach((conn, index) => {
+        const fromEl = document.getElementById(conn.from);
+        const toEl = document.getElementById(conn.to);
+        if (!fromEl || !toEl) return;
+
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+
+        // 起点：左侧元素右侧边缘中点
+        const x1 = fromRect.right - wrapperRect.left;
+        const y1 = fromRect.top + fromRect.height / 2 - wrapperRect.top;
+
+        // 终点：右侧元素左侧边缘中点
+        const x2 = toRect.left - wrapperRect.left;
+        const y2 = toRect.top + toRect.height / 2 - wrapperRect.top;
+
+        // 贝塞尔曲线控制点
+        const cx1 = x1 + (x2 - x1) * 0.5;
+        const cy1 = y1;
+        const cx2 = x1 + (x2 - x1) * 0.5;
+        const cy2 = y2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('id', 'line-' + conn.label);
+        path.setAttribute('data-from', conn.from);
+        path.setAttribute('data-to', conn.to);
+        svg.appendChild(path);
+
+        // 标签
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY - 6);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('class', 'line-label');
+        text.setAttribute('id', 'label-' + conn.label);
+        text.textContent = conn.label;
+        svg.appendChild(text);
+      });
+
+      setupHoverEffects();
+    }
+
+    // 悬停高亮效果
+    function setupHoverEffects() {
+      const cards = document.querySelectorAll('.message-card');
+      const prdItems = document.querySelectorAll('.prd-item');
+
+      cards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+          const lineNum = card.getAttribute('data-line');
+          if (lineNum) highlightLine(lineNum, true);
+          card.classList.add('highlight');
+        });
+        card.addEventListener('mouseleave', () => {
+          const lineNum = card.getAttribute('data-line');
+          if (lineNum) highlightLine(lineNum, false);
+          if (!document.getElementById('detail' + lineNum)?.classList.contains('show')) {
+            card.classList.remove('highlight');
+          }
+        });
+      });
+
+      prdItems.forEach(item => {
+        item.addEventListener('mouseenter', () => {
+          const id = item.id;
+          const lines = document.querySelectorAll('.connection-line');
+          lines.forEach(line => {
+            if (line.getAttribute('data-to') === id) {
+              const label = line.getAttribute('id').replace('line-', '');
+              highlightLine(label, true);
+              const fromId = line.getAttribute('data-from');
+              document.getElementById(fromId)?.classList.add('highlight');
+            }
+          });
+          item.classList.add('highlight');
+        });
+        item.addEventListener('mouseleave', () => {
+          const id = item.id;
+          const lines = document.querySelectorAll('.connection-line');
+          lines.forEach(line => {
+            if (line.getAttribute('data-to') === id) {
+              const label = line.getAttribute('id').replace('line-', '');
+              highlightLine(label, false);
+              const fromId = line.getAttribute('data-from');
+              const card = document.getElementById(fromId);
+              if (card && !document.getElementById('detail' + label)?.classList.contains('show')) {
+                card.classList.remove('highlight');
+              }
+            }
+          });
+          item.classList.remove('highlight');
+        });
+      });
+    }
+
+    function highlightLine(label, active) {
+      const line = document.getElementById('line-' + label);
+      const text = document.getElementById('label-' + label);
+      if (line) line.classList.toggle('active', active);
+      if (text) text.classList.toggle('active', active);
+    }
+
+    // 移动端视图切换
+    let mobileShowPrd = false;
+    function toggleMobileView() {
+      mobileShowPrd = !mobileShowPrd;
+      const interfaceArea = document.getElementById('interfaceArea');
+      const prdArea = document.getElementById('prdArea');
+      const icon = document.getElementById('toggleIcon');
+      if (mobileShowPrd) {
+        interfaceArea.classList.add('mobile-hide');
+        prdArea.classList.add('mobile-show');
+        icon.className = 'fas fa-desktop';
+      } else {
+        interfaceArea.classList.remove('mobile-hide');
+        prdArea.classList.remove('mobile-show');
+        icon.className = 'fas fa-book';
+      }
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      drawLines();
+    });
+    window.addEventListener('resize', () => {
+      drawLines();
+    });
+  </script>
+</body>
+</html>
