@@ -374,9 +374,9 @@ let detailTab = 'history';
 
 // ==================== DATA ====================
 const auditData = [
-  { id:1,  screenNo:'ZVFE', org:'hengrui', auditType:'预筛审批', patientNo:'ZVFE', gender:'女', age:69, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性HER2阴性的晚期乳腺癌III期临床试验', centerNo:'CN003', center:'哈尔滨医科大学附属第一医院', matchRate:'0.0%', submitter:'徐培凤', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching' },
+  { id:1,  screenNo:'ZVFE', org:'hengrui', auditType:'预筛审批', patientNo:'ZVFE', gender:'女', age:69, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性HER2阴性的晚期乳腺癌III期临床试验', centerNo:'CN003', center:'哈尔滨医科大学附属第一医院', matchRate:'0.0%', submitter:'徐培凤', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching', preSubmit:true },
   { id:2,  screenNo:'LSBA', org:'hengrui', auditType:'预筛审批', patientNo:'LSBA', gender:'男', age:72, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃癌II期临床研究', centerNo:'CN009', center:'河南科技大学第一附属医院', matchRate:'100.0%', submitter:'王佳', status:'pending', reviewStage:'预筛审批中', matchStatus:'success' },
-  { id:3,  screenNo:'BSTO', org:'hengrui', auditType:'预筛审批', patientNo:'BSTO', gender:'男', age:34, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的III期临床研究', centerNo:'CN009', center:'内蒙古自治区人民医院', matchRate:'0.0%', submitter:'张文静', status:'pending', reviewStage:'待分配', matchStatus:'none' },
+  { id:3,  screenNo:'BSTO', org:'hengrui', auditType:'预筛审批', patientNo:'BSTO', gender:'男', age:34, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的III期临床研究', centerNo:'CN009', center:'内蒙古自治区人民医院', matchRate:'0.0%', submitter:'张文静', status:'pending', reviewStage:'待分配', matchStatus:'none', preSubmit:true },
   { id:4,  screenNo:'GYXJ', org:'hengrui', auditType:'预筛审批', patientNo:'GYXJ', gender:'女', age:55, planNo:'HRS-8080-301', projectName:'HRS-8080治疗HR阳性HER2阴性晚期乳腺癌III期临床试验', centerNo:'CN005', center:'复旦大学附属肿瘤医院', matchRate:'75.0%', submitter:'刘丽萍', status:'pending', reviewStage:'预筛审批中', matchStatus:'failed' },
   { id:5,  screenNo:'MWPA', org:'hengrui', auditType:'预筛审批', patientNo:'MWPA', gender:'男', age:63, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃癌II期临床研究', centerNo:'CN012', center:'北京大学第三医院', matchRate:'50.0%', submitter:'张强', status:'pending', reviewStage:'待分配', matchStatus:'success' },
   { id:6,  screenNo:'QHNT', org:'hengrui', auditType:'预筛审批', patientNo:'QHNT', gender:'女', age:41, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的III期临床研究', centerNo:'CN003', center:'华中科技大学同济医学院附属协和医院', matchRate:'88.0%', submitter:'陈芳', status:'pending', reviewStage:'预筛审批中', matchStatus:'matching' },
@@ -441,9 +441,9 @@ function renderPage() {
     </div>
     <div class="table-card" style="margin-top:16px">
       <table class="data-table"><thead><tr>
-        <th style="width:50px">序号</th><th>筛选号</th><th>审批类型</th><th>患者编号</th><th style="width:50px">性别</th><th style="width:50px">年龄</th><th>方案编号</th><th>项目名称</th><th>中心号</th><th>中心</th><th>匹配率</th><th>提交人</th><th style="width:220px">操作</th>
+        <th style="width:80px">序号</th><th>筛选号</th><th>审批类型</th><th>患者编号</th><th style="width:50px">性别</th><th style="width:50px">年龄</th><th>方案编号</th><th>项目名称</th><th>中心号</th><th>中心</th><th>匹配率</th><th>提交人</th><th style="width:280px">操作</th>
       </tr></thead><tbody>
-        ${displayData.length===0?'<tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>':displayData.map(r=>'<tr><td>'+r.displayId+'</td><td style="color:#1677ff;font-weight:500">'+r.screenNo+'</td><td>'+r.auditType+'</td><td>'+r.patientNo+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.planNo+'</td><td><span class="proj-name-trunc">'+r.projectName+'</span></td><td>'+r.centerNo+'</td><td><span class="text-ellipsis-cell" style="max-width:180px" title="'+r.center+'">'+r.center+'</span></td><td><span class="match-rate '+(parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':'')+'">'+r.matchRate+'</span></td><td>'+r.submitter+'</td><td><span class="action-link view-btn-'+r.id+'" onclick="openDetailById('+r.id+')">查看</span><span class="action-sep">|</span><span class="action-link">抄送</span>'+(r.status==='pending'?'<span class="action-sep">|</span><span class="action-link" onclick="showToast(\'审批功能开发中\',\'info\')">审批</span>':'')+(r.status==='done'?'<span class="action-sep">|</span><span class="action-link" style="color:#ff4d4f">撤回审批</span>':'')+'<span class="action-sep">|</span><span class="action-link" onclick="openAuditRecord('+r.id+')">审批记录</span><span class="action-sep">|</span><span class="action-link">邮件记录</span></td></tr>').join('')}
+        ${displayData.length===0?'<tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>':displayData.map(r=>'<tr><td>'+(r.preSubmit?'<span style="display:inline-block;padding:1px 6px;background:#e6f4ff;color:#1677ff;border:1px solid #91caff;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px;white-space:nowrap;line-height:18px;">预提交</span>':'')+r.displayId+'</td><td style="color:#1677ff;font-weight:500">'+r.screenNo+'</td><td>'+r.auditType+'</td><td>'+r.patientNo+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.planNo+'</td><td><span class="proj-name-trunc">'+r.projectName+'</span></td><td>'+r.centerNo+'</td><td><span class="text-ellipsis-cell" style="max-width:180px" title="'+r.center+'">'+r.center+'</span></td><td><span class="match-rate '+(parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':'')+'">'+r.matchRate+'</span></td><td>'+r.submitter+'</td><td><span class="action-link view-btn-'+r.id+'" onclick="openDetailById('+r.id+')">查看</span><span class="action-sep">|</span><span class="action-link">抄送</span>'+(r.preSubmit?'<span class="action-sep">|</span><span class="action-link" style="color:#ff7a00" onclick="cancelPreSubmit('+r.id+')">取消预提交</span>':'')+(r.status==='pending'?'<span class="action-sep">|</span><span class="action-link" onclick="showToast(\'审批功能开发中\',\'info\')">审批</span>':'')+(r.status==='done'?'<span class="action-sep">|</span><span class="action-link" style="color:#ff4d4f">撤回审批</span>':'')+'<span class="action-sep">|</span><span class="action-link" onclick="openAuditRecord('+r.id+')">审批记录</span>'+(r.preSubmit?'<span class="action-sep">|</span><span class="action-link" style="color:#722ed1" onclick="openPreSubmitLog('+r.id+')">预提交日志</span>':'')+'<span class="action-sep">|</span><span class="action-link">邮件记录</span></td></tr>').join('')}
       </tbody></table>
       <div class="pagination"><span class="page-btn" style="border:none;cursor:default">共 ${displayData.length} 条</span><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">›</button></div>
     </div>`;
@@ -855,6 +855,82 @@ function buildAuditGroup(title, rows) {
   return h;
 }
 
+// ==================== PRE-SUBMIT ====================
+function cancelPreSubmit(id) {
+  const row = auditData.find(r => r.id === id);
+  if (!row) return;
+  if (confirm('确定要取消「' + row.screenNo + '」的预提交吗？\n\n取消后该数据将回到待提交状态，需要重新操作提交流程。')) {
+    row.preSubmit = false;
+    renderPage();
+    showToast('已成功取消预提交，筛选号：' + row.screenNo, 'success');
+  }
+}
+
+function openPreSubmitLog(id) {
+  const row = auditData.find(r => r.id === id);
+  if (!row) return;
+  const overlay = document.getElementById('preSubmitLogOverlay');
+  const logData = [
+    { no:1, action:'预提交审批', operator:row.submitter, role:'CRC', time:'2026-07-05 14:32:18', detail:'提交预审核申请，等待系统匹配完成后自动提交' },
+    { no:2, action:'系统确认', operator:'系统', role:'—', time:'2026-07-05 14:32:20', detail:'已接收预提交请求，进入匹配队列' },
+    { no:3, action:'匹配中', operator:'系统', role:'—', time:'2026-07-05 14:33:05', detail:'AI正在分析患者资料与纳排标准的匹配情况' },
+    { no:4, action:'等待自动提交', operator:'系统', role:'—', time:'2026-07-05 14:35:12', detail:'匹配完成，等待系统自动提交审核（当前状态）' },
+  ];
+  let html = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:2000;display:flex;align-items:center;justify-content:center;">';
+  html += '<div style="background:#fff;border-radius:12px;width:720px;max-height:80vh;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.15);">';
+  // header
+  html += '<div style="padding:16px 24px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;">';
+  html += '<div style="font-size:16px;font-weight:600;color:#333;"><i class="fas fa-clipboard-list" style="color:#722ed1;margin-right:8px;"></i>预提交操作日志</div>';
+  html += '<span onclick="closePreSubmitLog()" style="cursor:pointer;font-size:18px;color:#999;padding:4px 8px;">&times;</span>';
+  html += '</div>';
+  // info bar
+  html += '<div style="padding:12px 24px;background:#f9f0ff;border-bottom:1px solid #d3adf7;display:flex;gap:24px;font-size:13px;color:#555;">';
+  html += '<span>筛选号：<strong style="color:#722ed1;">' + row.screenNo + '</strong></span>';
+  html += '<span>患者编号：' + row.patientNo + '</span>';
+  html += '<span>方案编号：' + row.planNo + '</span>';
+  html += '<span>预提交人：' + row.submitter + '</span>';
+  html += '</div>';
+  // log table
+  html += '<div style="padding:16px 24px;overflow-y:auto;max-height:50vh;">';
+  html += '<table style="width:100%;border-collapse:collapse;">';
+  html += '<thead><tr style="background:#fafafa;border-bottom:1px solid #e8e8e8;">';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:40px;">序号</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:100px;">操作动作</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:80px;">操作人</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:60px;">角色</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;width:140px;">时间</th>';
+  html += '<th style="padding:10px 12px;text-align:left;font-size:12px;font-weight:600;color:#666;">操作详情</th>';
+  html += '</tr></thead><tbody>';
+  logData.forEach(l => {
+    const actionColor = l.action.includes('预提交') ? '#722ed1' : l.action.includes('匹配') ? '#1677ff' : '#52c41a';
+    html += '<tr style="border-bottom:1px solid #f5f5f5;">';
+    html += '<td style="padding:10px 12px;font-size:13px;color:#555;">' + l.no + '</td>';
+    html += '<td style="padding:10px 12px;"><span style="display:inline-block;padding:2px 8px;background:' + (l.action.includes('预提交') ? '#f9f0ff' : l.action.includes('匹配') ? '#e6f4ff' : '#f6ffed') + ';color:' + actionColor + ';border-radius:4px;font-size:12px;font-weight:500;">' + l.action + '</span></td>';
+    html += '<td style="padding:10px 12px;font-size:13px;color:#333;">' + l.operator + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#888;">' + l.role + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#999;">' + l.time + '</td>';
+    html += '<td style="padding:10px 12px;font-size:12px;color:#555;">' + l.detail + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  html += '<div style="margin-top:12px;padding:10px 14px;background:#fffbe6;border:1px solid #ffe58f;border-radius:6px;font-size:12px;color:#8c6d1f;line-height:1.6;">';
+  html += '<i class="fas fa-info-circle" style="color:#faad14;margin-right:6px;"></i>预提交为隐藏状态，不影响正常审核流程。系统将在匹配完成后自动提交审核。CRC、协调员、CRA均可在系统正式提交前取消预提交。';
+  html += '</div>';
+  html += '</div>';
+  // footer
+  html += '<div style="padding:12px 24px;border-top:1px solid #f0f0f0;text-align:right;">';
+  html += '<button onclick="closePreSubmitLog()" style="padding:6px 20px;border:1px solid #d9d9d9;border-radius:6px;background:#fff;color:#555;font-size:13px;cursor:pointer;">关闭</button>';
+  html += '</div>';
+  html += '</div></div>';
+  overlay.innerHTML = html;
+  overlay.style.display = 'block';
+}
+function closePreSubmitLog() {
+  const overlay = document.getElementById('preSubmitLogOverlay');
+  overlay.style.display = 'none';
+  overlay.innerHTML = '';
+}
+
 // ==================== PRD SIDEBAR ====================
 function renderPrdSidebar() {
   const isDetail = currentDetailRow !== null;
@@ -863,8 +939,9 @@ function renderPrdSidebar() {
   const statusMap = { matching:{label:'⏳ 匹配中',color:'#1677ff',bg:'#e6f4ff'}, success:{label:'✅ 匹配成功',color:'#52c41a',bg:'#f6ffed'}, none:{label:'🔘 未匹配',color:'#8c8c8c',bg:'#fafafa'}, failed:{label:'❌ 匹配失败',color:'#ff4d4f',bg:'#fff2f0'} };
   const statusRows = auditData.map(r => {
     const s = statusMap[r.matchStatus];
+    const preTag = r.preSubmit ? '<span style="display:inline-block;padding:1px 5px;background:#f9f0ff;color:#722ed1;border:1px solid #d3adf7;border-radius:3px;font-size:10px;font-weight:600;margin-left:4px;">预提交</span>' : '';
     return `<tr>
-      <td style="padding:6px 8px;font-size:12px;color:#333;border-bottom:1px solid #f0f0f0;font-weight:500">${r.screenNo}</td>
+      <td style="padding:6px 8px;font-size:12px;color:#333;border-bottom:1px solid #f0f0f0;font-weight:500">${r.screenNo}${preTag}</td>
       <td style="padding:6px 8px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0">${r.org==='hengrui'?'恒瑞':r.org==='kexin'?'科信':'运营'}</td>
       <td style="padding:6px 8px;font-size:11px;color:#888;border-bottom:1px solid #f0f0f0">${r.status==='pending'?'待审批':'已审批'}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #f0f0f0"><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color};white-space:nowrap">${s.label}</span></td>
@@ -916,7 +993,33 @@ function renderPrdSidebar() {
 
    
 
-   
+    <!-- 预提交功能说明 -->
+    <div class="prd-section">
+      <h3 class="prd-section-title">🔖 预提交机制说明</h3>
+      <p class="prd-text">预提交是一种<strong>隐藏状态</strong>，不影响正常审核流程。用户在系统正式提交审核前，可以选择“预提交”方式。</p>
+      <div class="prd-highlight" style="border-color:#d3adf7;background:#f9f0ff;">
+        <p class="prd-text" style="margin-bottom:6px;"><strong style="color:#722ed1;">📌 预提交规则：</strong></p>
+        <ul class="prd-list" style="margin-bottom:0;">
+          <li>预提交后，序号列显示<strong>「预提交」</strong>蓝色标签</li>
+          <li>操作列显示<strong style="color:#ff7a00;">「取消预提交」</strong>按钮</li>
+          <li>CRC、协调员、CRA 均可取消预提交（只要系统尚未正式提交审核）</li>
+          <li>取消后数据回到待提交状态，需重新操作</li>
+          <li>操作列显示<strong style="color:#722ed1;">「预提交日志」</strong>按钮，可查看完整操作记录</li>
+        </ul>
+      </div>
+      <div class="prd-highlight" style="border-color:#b7eb8f;background:#f6ffed;">
+        <p class="prd-text" style="margin-bottom:4px;"><strong style="color:#389e0d;">🔄 预提交流程：</strong></p>
+        <p class="prd-text" style="font-size:12px;">用户点击预提交 → 系统记录日志 → 等待AI匹配完成 → 系统自动提交审核 → 预提交状态结束</p>
+      </div>
+      <div class="prd-highlight" style="border-color:#ffe58f;background:#fffbe6;">
+        <p class="prd-text" style="margin-bottom:4px;"><strong style="color:#d48806;">📝 后端要求：</strong></p>
+        <ul class="prd-list" style="margin-bottom:0;">
+          <li>保存预提交操作的完整日志（操作人、角色、时间、动作）</li>
+          <li>日志支持查看，包含每次操作详情</li>
+          <li>预提交状态为隐藏状态，不影响现有审核流程</li>
+        </ul>
+      </div>
+    </div>
 
     ${isDetail ? `
     <div class="prd-section">
@@ -982,5 +1085,6 @@ function renderDetailPrd() {
 // ==================== INIT ====================
 renderPage();
 </script>
+<div id="preSubmitLogOverlay" style="display:none;"></div>
 </body>
 </html>

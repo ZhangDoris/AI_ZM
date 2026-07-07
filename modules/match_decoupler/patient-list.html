@@ -1397,6 +1397,12 @@
       padding: 8px 24px; border-radius: 6px; font-size: 13px; font-weight: 500;
       cursor: pointer; border: 1.5px solid; transition: all 0.2s;
     }
+    .fill-btn-back {
+      background: #fff; color: #555; border-color: #d9d9d9;
+    }
+    .fill-btn-back:hover {
+      border-color: #1677ff; color: #1677ff;
+    }
     .fill-btn-cancel {
       background: #fff; color: #555; border-color: #d9d9d9;
     }
@@ -1685,7 +1691,7 @@
       </div>
       <div class="matching-footer">
         <button class="matching-btn secondary" onclick="closeMatchingModal()">暂不提交</button>
-        <button class="matching-btn primary" onclick="handleSyncSubmitAudit()">预提交审批</button>
+        <button class="matching-btn primary" onclick="handlePreSubmitAudit()">预提交审批</button>
         <button class="matching-btn primary" onclick="handleSyncSubmitAudit()">同步提交审批</button>
       </div>
     </div>
@@ -1798,6 +1804,9 @@
           <span id="fillStatusText">提取成功</span>
         </div>
         <div class="fill-buttons">
+          <button class="fill-btn fill-btn-back" onclick="backToAuditModal()">
+            <i class="fas fa-arrow-left"></i> 返回
+          </button>
           <button class="fill-btn fill-btn-smart">
             <i class="fas fa-magic"></i> 智能提取
           </button>
@@ -2531,15 +2540,28 @@
     }
 
     // 同步提交审批 - 从系统匹配中弹窗调用
-    function handleSyncSubmitAudit() {
+    // 预提交审批（匹配完成后自动提交）
+    function handlePreSubmitAudit() {
       closeMatchingModal();
-      // 打开提交审批弹窗
       const patientId = window.currentPatientId;
-     
-      
       const patient = patientData.find(p => p.id === patientId);
       if (patient) {
-        showAuditModal(patient);
+        showAuditModal(patient, 'pre'); // 传入 'pre' 标识
+        // 隐藏项目匹配按钮，显示匹配中提示
+        const matchBtn = document.getElementById('matchBtn');
+        const matchStatusText = document.getElementById('matchStatusText');
+        if (matchBtn) matchBtn.style.display = 'none';
+        if (matchStatusText) matchStatusText.style.display = '';
+      }
+    }
+
+    // 同步提交审批（立即提交）
+    function handleSyncSubmitAudit() {
+      closeMatchingModal();
+      const patientId = window.currentPatientId;
+      const patient = patientData.find(p => p.id === patientId);
+      if (patient) {
+        showAuditModal(patient, 'sync'); // 传入 'sync' 标识或默认
         // 隐藏项目匹配按钮，显示匹配中提示
         const matchBtn = document.getElementById('matchBtn');
         const matchStatusText = document.getElementById('matchStatusText');
@@ -2567,13 +2589,26 @@
     }
     
     // 显示提交审批弹窗
-    function showAuditModal(patient) {
+    function showAuditModal(patient, submitMode = 'sync') {
       const overlay = document.getElementById('auditOverlay');
       const matchStatusNotice = document.getElementById('matchStatusNotice');
       const auditPatientNo = document.getElementById('auditPatientNo');
       const auditPatientName = document.getElementById('auditPatientName');
       const auditMatchStatus = document.getElementById('auditMatchStatus');
       
+      // 根据提交模式显示不同提示
+      const noticeTitle = document.querySelector('#matchStatusNotice strong');
+      const noticeDesc = document.querySelector('#matchStatusNotice .notice-content > p');
+      
+      if (submitMode === 'pre') {
+        // 预提交模式：显示特殊提示
+        if (noticeTitle) noticeTitle.textContent = '预提交审批模式';
+        if (noticeDesc) noticeDesc.textContent = '您先预设提交审核内容，待匹配完成后，系统会自动帮您提交';
+      } else {
+        // 同步提交模式：显示默认提示
+        if (noticeTitle) noticeTitle.textContent = '当前项目未匹配/匹配失败';
+        if (noticeDesc) noticeDesc.textContent = '是否需要进行项目匹配，项目匹配仅用于AI辅助提取信息，不影响审批结果。';
+      }
 
      
       
@@ -2737,6 +2772,22 @@
     // 关闭手动填写筛选表弹窗
     function closeManualFillModal() {
       document.getElementById('manualFillOverlay').classList.remove('show');
+    }
+    
+    // 返回到提交审核页面
+    function backToAuditModal() {
+      // 关闭手动填写弹窗
+      closeManualFillModal();
+      
+      // 重新打开提交审核弹窗
+      if (window.currentAuditPatientId) {
+        const patient = patientData.find(p => p.id === window.currentAuditPatientId);
+        if (patient) {
+          showAuditModal(patient, 'sync');
+        }
+      } else {
+        showToast('未找到患者信息', 'warning');
+      }
     }
     
     // 选择等待AI匹配结果
