@@ -831,10 +831,70 @@
       margin-bottom: 24px;
     }
     .matching-info {
-      background: #e6f4ff; border-left: 3px solid #1677ff; border-radius: 8px;
-      padding: 14px 16px; font-size: 13px; color: #333; line-height: 1.7;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f4ff 100%);
+      border-radius: 12px;
+      padding: 18px 20px;
+      font-size: 13px;
+      color: #333;
+      line-height: 1.8;
+      box-shadow: 0 2px 8px rgba(22, 119, 255, 0.08);
+      position: relative;
+      overflow: hidden;
     }
-    .matching-info strong { color: #1677ff; }
+    .matching-info::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #1677ff, #4096ff);
+      border-radius: 2px 0 0 2px;
+    }
+    .matching-info-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-left: 8px;
+    }
+    .matching-info-icon {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #1677ff, #4096ff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .matching-info-title {
+      font-weight: 600;
+      color: #1677ff;
+      font-size: 14px;
+    }
+    .matching-info ul {
+      margin: 0;
+      padding-left: 28px;
+      list-style: none;
+    }
+    .matching-info li {
+      position: relative;
+      margin-bottom: 8px;
+      padding-left: 16px;
+    }
+    .matching-info li:last-child {
+      margin-bottom: 0;
+    }
+    .matching-info li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #1677ff;
+      font-weight: bold;
+    }
     .matching-footer {
       display: flex; gap: 12px; padding: 16px 20px 20px;
     }
@@ -1612,12 +1672,21 @@
         <div class="matching-text">正在进行项目匹配，请稍候...</div>
         <!-- 温馨提示 -->
         <div class="matching-info">
-          <strong>温馨提示：</strong>审批与匹配已解耦，您可选择：①同步提交审批（审批员可立即开始审批，无需等待匹配结果）；②等待匹配结果生成后，再手动提交审批。
+          <div class="matching-info-header">
+            <span class="matching-info-icon">💡</span>
+            <span class="matching-info-title">温馨提示</span>
+          </div>
+          <ul>
+            <li><strong style="color:#1677ff">同步提交审批：</strong>不用等 AI 匹配结果，审批流程马上开始。</li>
+            <li><strong style="color:#1677ff">预提交审批：</strong>先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+            <li><strong style="color:#1677ff">暂不提交：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
+          </ul>
         </div>
       </div>
       <div class="matching-footer">
-        <button class="matching-btn primary" onclick="closeMatchingModal()">关闭</button>
-        <button class="matching-btn secondary" onclick="handleSyncSubmitAudit()">同步提交审批</button>
+        <button class="matching-btn secondary" onclick="closeMatchingModal()">暂不提交</button>
+        <button class="matching-btn primary" onclick="handleSyncSubmitAudit()">预提交审批</button>
+        <button class="matching-btn primary" onclick="handleSyncSubmitAudit()">同步提交审批</button>
       </div>
     </div>
   </div>
@@ -1762,7 +1831,9 @@
         <li id="prd-step1"><strong>步骤1：</strong>用户点击"项目匹配"按钮（可选）</li>
         <li id="prd-step2"><strong>步骤2：</strong>弹出确认框询问是否开始匹配</li>
         <li id="prd-step3"><strong>步骤3：</strong>确认后显示"系统匹配中"弹窗（居中）</li>
-        <li id="prd-step4"><strong>步骤4：</strong>用户选择：关闭 / 同步提交审批</li>
+        <li id="prd-step4"><strong>步骤4：</strong>用户选择：暂不提交/预提交审批（匹配成功后，后台自动帮忙提交，如果匹配失败，自动容错三次，还是失败，企业微信发送消息 匹配失败了，但是已提交审核，若有需要，可以撤销申请） / 同步提交审批</li>
+        <li id="prd-step5"><strong style="color: red;">注意：</strong>需要保存好 三个按钮的操作日志，统计三个按钮的点击次数，用于评估用户对功能需求的评估</li>
+
       </ul>
       
       <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-b">B. 查看病史与资料：</strong></p>
