@@ -1830,22 +1830,18 @@
       <p class="prd-text"><strong id="prd-section-a">A. 通过项目匹配按钮：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
-        <li id="prd-step1"><strong style="color: red;">第一条数据是一个入排版本的样式；第二条数据是多版本的样式</strong></li>
-        <li id="prd-step1"><strong>步骤1：</strong>用户点击"项目匹配"按钮（可选）</li>
-        <li id="prd-step2"><strong>步骤2：</strong>弹出确认框询问是否开始匹配</li>
-        <li id="prd-step3"><strong>步骤3：</strong>确认后显示"系统匹配中"弹窗（居中）</li>
-        <li id="prd-step4"><strong>步骤4：</strong>用户选择：暂不提交/预提交审批（匹配成功后，后台自动帮忙提交，如果匹配失败，自动容错三次，还是失败，企业微信发送消息 匹配失败了，但是已提交审核，若有需要，可以撤销申请） </li>
+        <li id="prd-step1"><strong style="color: red;">第1条数据</strong> 点击提交审核，看到入排只有一个版本的效果</li>
+        <li><strong style="color: red;">第2条数据</strong>点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
+        <li><strong style="color: red;">第3条数据</strong>显示「预提交中」红色标签，可点击取消预提交，点击项目匹配，弹出确认框：[「PT-2026-003」匹配中，您确定继续进行项目匹配吗？] → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">第4条数据</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
+        <li><strong style="color: red;">第5条数据</strong>已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">第6条数据</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">注意：</strong>对于点击项目匹配可以预提交 ， 所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限 是所有可以提交本次数据的相关人员 </li>
         <!-- <li id="prd-step5"><strong style="color: red;">注意：</strong>需要保存好 2个按钮的操作日志，统计2个按钮的点击次数，用于评估用户对功能需求的评估</li> -->
       </ul>
       
-      <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-b">B. 查看病史与资料：</strong></p>
-      <ul class="prd-list">
-        <li><strong>前置条件：</strong>患者已上传病史与资料</li>
-        <li><strong>步骤1：</strong>用户点击操作列的"病史与资料"链接</li>
-        <li><strong>步骤2：</strong>页面切换到文件管理视图</li>
-        <li><strong>步骤3：</strong>显示左侧目录树、中间文件列表、右侧PRD说明</li>
-        <li><strong>步骤4：</strong>可进行文件查看、上传、删除等操作</li>
-      </ul>
+      <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-b">B. 查看病史与资料：逻辑与列表保持完全一致</strong></p>
+   
       
     </div>
 
@@ -2235,7 +2231,7 @@
         patientNo: 'P003',
         centerNo: 'C002',
         center: '上海交通大学医学院附属瑞金医院',
-        matchStatus: '待匹配',
+        matchStatus: '匹配中',
         patientStatus: '筛选失败',
         creator: '王五',
         preSubmit: true
@@ -2249,9 +2245,12 @@
         patientNo: 'P004',
         centerNo: 'C003',
         center: '广州医科大学附属第一医院',
-        matchStatus: '待匹配',
+        matchStatus: '已匹配',
         patientStatus: '筛选中',
-        creator: '赵六'
+        creator: '赵六',
+        hasMatchedOnce: true,
+        lastMatchSuccess: true,
+        filesChanged: false
       },
       {
         id: 5,
@@ -2262,9 +2261,26 @@
         patientNo: 'P005',
         centerNo: 'C001',
         center: '北京大学第一医院',
-        matchStatus: '待匹配',
+        matchStatus: '已匹配',
         patientStatus: '已入组',
-        creator: '钱七'
+        creator: '钱七',
+        filesChanged: false,
+        quickMatch: true
+      },
+      {
+        id: 6,
+        screenNo: 'PT-2026-006',
+        nameAbbr: 'WT',
+        age: 44,
+        gender: '男',
+        patientNo: 'P006',
+        centerNo: 'C002',
+        center: '上海交通大学医学院附属瑞金医院',
+        matchStatus: '已匹配',
+        patientStatus: '已入组',
+        creator: '孙八',
+        filesChanged: true,
+        quickMatch: true
       }
     ];
 
@@ -2405,7 +2421,15 @@
       
       // 只有"匹配中"状态才阻止点击
       if (matchStatus === '匹配中') {
-        showToast('正在匹配中，请稍后点击', 'warning');
+       showConfirm(
+          '项目匹配确认',
+          `「<strong style="color:#1677ff">${patient.screenNo}</strong>」匹配中，您确定继续进行项目匹配吗？`,
+          () => {
+            closeConfirm();
+            showToast('正在匹配，请稍后', 'info');
+          },
+          { iconType: 'info', okText: '开始匹配' }
+        );
       } else {
         // 其他状态（待匹配、匹配成功、匹配失败）直接显示匹配中弹窗
         setMatchBtnLoading(patientId, true);
@@ -2419,25 +2443,91 @@
     function showProjectMatchConfirm(patientId, matchStatus) {
       const patient = patientData.find(p => p.id === patientId);
       if (!patient) return;
+      window.currentPatientId = patientId;
+
+      // 匹配中状态不可点击
+      if (matchStatus === '匹配中') {
+        showConfirm(
+          '项目匹配确认',
+          `「<strong style="color:#1677ff">${patient.screenNo}</strong>」匹配中，您确定继续进行项目匹配吗？`,
+          () => {
+            closeConfirm();
+            showToast('正在匹配，请稍后', 'info');
+          },
+          { iconType: 'info', okText: '开始匹配' }
+        );
+        return;
+      }
 
       // 第二条数据（id=2）先显示版本选择弹窗
       if (patientId === 2) {
-        window.currentPatientId = patientId;
         showVersionSelectModal();
         return;
       }
 
+      // 第4条数据：资料未变更 → 显示重新匹配确认弹窗 → 点击项目匹配 → 显示系统匹配中弹窗
+      if (patientId === 4) {
+        showRematchConfirm(patient);
+        return;
+      }
+
+      // 第5条数据：已提交审核，资料未变更 → 显示重新匹配确认弹窗 → toast
+      if (patientId === 5) {
+        showRematchConfirm(patient);
+        return;
+      }
+
+      // 第6条数据：已提交审核，文件有变动 → 显示项目匹配确认弹窗 → toast
+      if (patientId === 6) {
+        showConfirm(
+          '项目匹配确认',
+          `您确定要对患者「<strong style="color:#1677ff">${patient.screenNo}</strong>」进行项目匹配吗？`,
+          () => {
+            closeConfirm();
+            showToast('正在匹配，请稍后', 'info');
+          },
+          { iconType: 'info', okText: '开始匹配' }
+        );
+        return;
+      }
+
+      // 默认：普通确认弹窗 → 显示系统匹配中弹窗
       showConfirm(
         '项目匹配确认',
         `您确定要对患者「<strong style="color:#1677ff">${patient.screenNo}</strong>」进行项目匹配吗？`,
         () => {
           closeConfirm();
           setMatchBtnLoading(patientId, true);
-          // 保存当前患者ID，供后续同步提交审批使用
           window.currentPatientId = patientId;
           showMatchingModal();
         },
         { iconType: 'info', okText: '开始匹配' }
+      );
+    }
+
+    // 显示重新匹配确认弹窗
+    function showRematchConfirm(patient) {
+      showConfirm(
+        '重新匹配确认',
+        `<div style="background:#FFF7E6;border:1px solid #FFD591;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#666;">
+           <i class="fas fa-info-circle" style="color:#FAAD14;margin-right:4px;"></i>
+           <strong style="color:#D46B08;">检测到您的资料未发生变更。</strong>
+         </div>
+         <div style="font-size:14px;color:#555;line-height:1.7;">是否确定要基于当前资料再次进行项目匹配？</div>
+         <div style="margin-top:8px;font-size:12px;color:#999;">患者：<strong>${patient.screenNo}</strong> | 上次匹配状态：<span style="color:#52C41A;">匹配成功</span></div>`,
+        () => {
+          closeConfirm();
+          if (patient.quickMatch) {
+            // 第5条：快速匹配，直接toast
+            showToast('正在匹配，请稍后', 'info');
+          } else {
+            // 第4条：显示系统匹配中弹窗
+            setMatchBtnLoading(patient.id, true);
+            window.currentPatientId = patient.id;
+            showMatchingModal();
+          }
+        },
+        { iconType: 'warn', okText: '项目匹配' }
       );
     }
 
@@ -2638,7 +2728,15 @@
       const patient = patientData.find(p => p.id === patientId);
       if (patient) {
         // 在提交审批弹窗内显示匹配中提示（不关闭弹窗）
-        showToast('正在匹配中，请稍后点击', 'warning');
+       showConfirm(
+          '项目匹配确认',
+          `「<strong style="color:#1677ff">${patient.screenNo}</strong>」匹配中，您确定继续进行项目匹配吗？`,
+          () => {
+            closeConfirm();
+            showToast('正在匹配，请稍后', 'info');
+          },
+          { iconType: 'info', okText: '开始匹配' }
+        );
         
         console.log('正在为患者 ' + patient.screenNo + ' 启动项目匹配...');
         // 这里可以调用实际的匹配API
@@ -3389,7 +3487,15 @@
       
       // 只有"匹配中"状态才阻止点击
       if (matchStatus === '匹配中') {
-        showToast('正在匹配中，请稍后点击', 'warning');
+       showConfirm(
+          '项目匹配确认',
+          `「<strong style="color:#1677ff">${patient.screenNo}</strong>」匹配中，您确定继续进行项目匹配吗？`,
+          () => {
+            closeConfirm();
+            showToast('正在匹配，请稍后', 'info');
+          },
+          { iconType: 'info', okText: '开始匹配' }
+        );
       } else {
         // 其他状态（待匹配、匹配成功、匹配失败）直接显示匹配中弹窗
         setMatchBtnLoadingForFiles(patientId, true);
