@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>参研中心管理 · 删除与患者转移功能原型</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* 连线元素高亮 */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.03); }
+    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.05); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    /* SVG 连线层 */
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* 侧边栏 */
+    .sidebar-menu-item { transition: all 0.2s; cursor: pointer; }
+    .sidebar-menu-item:hover { background-color: rgba(255,255,255,0.1); }
+    .sidebar-menu-item.active { background-color: rgba(255,255,255,0.15); border-left: 3px solid #fff; }
+
+    /* 表格 */
+    .data-table th { background-color: #F5F7FA; font-weight: 600; color: #333; }
+    .data-table tbody tr { transition: background-color 0.15s; }
+    .data-table tbody tr:hover { background-color: rgba(24,144,255,0.04); }
+
+    .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+
+    /* 模态框 */
+    .modal-overlay { transition: opacity 0.3s ease; }
+    .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .modal-hidden { opacity: 0; pointer-events: none; }
+    .modal-hidden .modal-content { transform: scale(0.95); opacity: 0; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 60vh; }
+      #divider { display: none; }
+      #right-panel { width: 100% !important; height: 40vh; border-top: 1px solid #e5e7eb; border-left: none; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+      .drawer-handle { display: none !important; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+
+    #right-panel {
+      transition: width 0.3s ease, min-width 0.3s ease;
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible;
+      background: #fffbeb;
+      border-left: 2px dashed #fcd34d;
+    }
+    #right-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-left: none;
+    }
+    .drawer-handle {
+      position: absolute;
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #165DFF 0%, #0E47D1 100%);
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: -2px 0 8px rgba(22,93,255,0.25);
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .drawer-handle:hover {
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -4px 0 12px rgba(22,93,255,0.35);
+    }
+    .drawer-handle i {
+      writing-mode: horizontal-tb;
+      font-size: 16px;
+    }
+    #left-panel {
+      transition: width 0.3s ease, flex-basis 0.3s ease;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn-click:active { transform: scale(0.96); }
+    .form-input:focus { border-color: #1890FF; box-shadow: 0 0 0 3px rgba(24,144,255,0.1); outline: none; }
+    .btn-primary { background: #1890FF; color: white; }
+    .btn-primary:hover { background: #40a9ff; }
+    .btn-danger { background: #FF4D4F; color: white; }
+    .btn-danger:hover { background: #ff7875; }
+    .btn-disabled { background: #BFBFBF; color: white; cursor: pointer; }
+    .btn-disabled:hover { background: #a6a6a6; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <!-- 主容器 -->
+  <div id="app" class="flex h-screen relative">
+
+    <!-- 左侧：产品界面 -->
+    <div id="left-panel" class="overflow-y-auto bg-[#F5F7FA] relative">
+
+      <!-- 顶部导航栏 -->
+      <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#5B5BD6] rounded-lg flex items-center justify-center text-white font-bold text-sm">IDY</div>
+          <h1 class="text-lg font-semibold text-gray-800">临床研究数据管理系统</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-600"><i class="fas fa-user-circle mr-1"></i> 管理员</span>
+          <button class="text-gray-500 hover:text-gray-700 btn-click"><i class="fas fa-bell"></i></button>
+        </div>
+      </header>
+
+      <div class="flex">
+        <!-- 侧边菜单 -->
+        <aside class="w-48 bg-[#5B5BD6] min-h-[calc(100vh-56px)] text-white">
+          <nav class="py-4">
+            <div class="px-4 py-2.5 flex items-center gap-3 text-white/80 cursor-pointer">
+              <i class="fas fa-chevron-left w-5 text-center"></i><span class="text-sm">返回</span>
+            </div>
+            <div class="sidebar-menu-item px-4 py-2.5 flex items-center gap-3">
+              <i class="fas fa-book-medical w-5 text-center"></i><span class="text-sm">参研专业</span>
+            </div>
+            <div class="sidebar-menu-item active px-4 py-2.5 flex items-center gap-3">
+              <i class="fas fa-hospital w-5 text-center"></i><span class="text-sm">参研中心</span>
+            </div>
+            <div class="sidebar-menu-item px-4 py-2.5 flex items-center gap-3">
+              <i class="fas fa-users w-5 text-center"></i><span class="text-sm">项目成员</span>
+            </div>
+            <div class="sidebar-menu-item px-4 py-2.5 flex items-center gap-3">
+              <i class="fas fa-folder-open w-5 text-center"></i><span class="text-sm">文件夹配置管理</span>
+            </div>
+          </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6">
+          <!-- 页面标题栏 -->
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">参研中心</h2>
+          </div>
+
+          <!-- 搜索筛选栏 -->
+          <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+            <div class="flex items-center gap-3 flex-wrap">
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">中心名称：</span>
+                <input type="text" placeholder="请输入" class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">中心号：</span>
+                <input type="text" placeholder="请输入" class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">省市：</span>
+                <select class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-32">
+                  <option>请选择</option><option>湖南省</option><option>广东省</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-600">启动状态：</span>
+                <select class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-32">
+                  <option>请选择</option><option>未启动</option><option>已启动</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按钮栏 -->
+          <div class="flex items-center gap-3 mb-4">
+            <button class="btn-primary px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click">
+              <i class="fas fa-search"></i> 查询
+            </button>
+            <button class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click hover:bg-gray-50">
+              <i class="fas fa-redo"></i> 重置
+            </button>
+            <button class="btn-primary px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click">
+              <i class="fas fa-plus"></i> 新增中心
+            </button>
+            <button class="btn-primary px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click">
+              <i class="fas fa-download"></i> 下载导入模板
+            </button>
+            <button class="btn-primary px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click">
+              <i class="fas fa-upload"></i> 导入
+            </button>
+            <button class="btn-primary px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click">
+              <i class="fas fa-file-export"></i> 导出
+            </button>
+            <button class="btn-danger px-4 py-2 rounded text-sm font-medium flex items-center gap-2 btn-click" id="batchDeleteBtn">
+              <i class="fas fa-trash-alt"></i> 删除选中（0）
+            </button>
+          </div>
+
+          <!-- 中心列表 -->
+          <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="data-table w-full text-sm">
+                <thead>
+                  <tr>
+                    <th class="px-3 py-3 text-center w-10"><input type="checkbox" class="rounded text-[#1890FF]"></th>
+                    <th class="px-3 py-3 text-center w-12">序号</th>
+                    <th class="px-3 py-3 text-left">中心名称</th>
+                    <th class="px-3 py-3 text-left">科室</th>
+                    <th class="px-3 py-3 text-left">中心号</th>
+                    <th class="px-3 py-3 text-left">PI</th>
+                    <th class="px-3 py-3 text-left">合同例数</th>
+                    <th class="px-3 py-3 text-left">省份</th>
+                    <th class="px-3 py-3 text-left">城市</th>
+                    <th class="px-3 py-3 text-left">是否组长单位</th>
+                    <th class="px-3 py-3 text-left">中心状态</th>
+                    <th class="px-3 py-3 text-center">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="px-3 py-3 text-center"><input type="checkbox" class="rounded text-[#1890FF]"></td>
+                    <td class="px-3 py-3 text-center">1</td>
+                    <td class="px-3 py-3">中南大学湘雅二医院</td>
+                    <td class="px-3 py-3">心血管内科</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">0</td>
+                    <td class="px-3 py-3">湖南省</td>
+                    <td class="px-3 py-3">长沙市</td>
+                    <td class="px-3 py-3">否</td>
+                    <td class="px-3 py-3"><span class="text-[#999]">未启动</span></td>
+                    <td class="px-3 py-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button class="text-[#1890FF] hover:text-[#40a9ff] text-sm font-medium btn-click">编辑</button>
+                        <!-- 连线1：可删除按钮 -->
+                        <div class="proto-element inline-block" data-proto-id="1">
+                          <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="alert('病例数为0，可直接删除该中心')">
+                            <i class="fas fa-trash-alt mr-1"></i>删除（0）
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-3 py-3 text-center"><input type="checkbox" class="rounded text-[#1890FF]"></td>
+                    <td class="px-3 py-3 text-center">1</td>
+                    <td class="px-3 py-3">中南大学湘雅二医院</td>
+                    <td class="px-3 py-3">心血管内科</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">0</td>
+                    <td class="px-3 py-3">湖南省</td>
+                    <td class="px-3 py-3">长沙市</td>
+                    <td class="px-3 py-3">否</td>
+                    <td class="px-3 py-3"><span class="text-[#999]">未启动</span></td>
+                    <td class="px-3 py-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button class="text-[#1890FF] hover:text-[#40a9ff] text-sm font-medium btn-click">编辑</button>
+                        <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="alert('病例数为0，可直接删除该中心')">
+                          <i class="fas fa-trash-alt mr-1"></i>删除（0）
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-3 py-3 text-center"><input type="checkbox" class="rounded text-[#1890FF]"></td>
+                    <td class="px-3 py-3 text-center">2</td>
+                    <td class="px-3 py-3">中南大学湘雅三医院</td>
+                    <td class="px-3 py-3">心血管内科</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">3</td>
+                    <td class="px-3 py-3">湖南省</td>
+                    <td class="px-3 py-3">长沙市</td>
+                    <td class="px-3 py-3">否</td>
+                    <td class="px-3 py-3"><span class="text-[#999]">未启动</span></td>
+                    <td class="px-3 py-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button class="text-[#1890FF] hover:text-[#40a9ff] text-sm font-medium btn-click">编辑</button>
+                        <!-- 连线2：置灰删除按钮 -->
+                        <div class="proto-element inline-block" data-proto-id="2">
+                          <button class="btn-disabled px-3 py-1 rounded text-xs font-medium btn-click" onclick="openPatientList('中南大学湘雅三医院', 3)">
+                            <i class="fas fa-trash-alt mr-1"></i>删除（3）
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-3 py-3 text-center"><input type="checkbox" class="rounded text-[#1890FF]"></td>
+                    <td class="px-3 py-3 text-center">3</td>
+                    <td class="px-3 py-3">中南大学湘雅医院</td>
+                    <td class="px-3 py-3">心血管内科</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">5</td>
+                    <td class="px-3 py-3">湖南省</td>
+                    <td class="px-3 py-3">长沙市</td>
+                    <td class="px-3 py-3">否</td>
+                    <td class="px-3 py-3"><span class="text-[#999]">未启动</span></td>
+                    <td class="px-3 py-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button class="text-[#1890FF] hover:text-[#40a9ff] text-sm font-medium btn-click">编辑</button>
+                        <button class="btn-disabled px-3 py-1 rounded text-xs font-medium btn-click" onclick="openPatientList('中南大学湘雅医院', 5)">
+                          <i class="fas fa-trash-alt mr-1"></i>删除（5）
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="px-3 py-3 text-center"><input type="checkbox" class="rounded text-[#1890FF]"></td>
+                    <td class="px-3 py-3 text-center">4</td>
+                    <td class="px-3 py-3">中南大学湘雅三医院</td>
+                    <td class="px-3 py-3">心血管内科</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">-</td>
+                    <td class="px-3 py-3">0</td>
+                    <td class="px-3 py-3">湖南省</td>
+                    <td class="px-3 py-3">长沙市</td>
+                    <td class="px-3 py-3">否</td>
+                    <td class="px-3 py-3"><span class="text-[#999]">未启动</span></td>
+                    <td class="px-3 py-3 text-center">
+                      <div class="flex items-center justify-center gap-2">
+                        <button class="text-[#1890FF] hover:text-[#40a9ff] text-sm font-medium btn-click">编辑</button>
+                        <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="alert('病例数为0，可直接删除该中心')">
+                          <i class="fas fa-trash-alt mr-1"></i>删除（0）
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flex items-center justify-end px-4 py-3 border-t border-gray-200 gap-3">
+              <span class="text-sm text-gray-500">共 4 条</span>
+              <select class="form-input border border-gray-300 rounded px-2 py-1 text-sm">
+                <option>10条/页</option>
+              </select>
+              <div class="flex items-center gap-1">
+                <button class="px-2 py-1 border border-gray-300 rounded text-sm text-gray-400"><i class="fas fa-chevron-left"></i></button>
+                <button class="px-3 py-1 bg-[#1890FF] text-white rounded text-sm">1</button>
+                <button class="px-2 py-1 border border-gray-300 rounded text-sm text-gray-400"><i class="fas fa-chevron-right"></i></button>
+              </div>
+              <span class="text-sm text-gray-500">前往 <input type="text" value="1" class="form-input border border-gray-300 rounded px-2 py-1 text-sm w-10 text-center"> 页</span>
+            </div>
+          </div>
+
+          <!-- 说明卡片区 -->
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <!-- 连线5：外院转入标记说明 -->
+            <div class="proto-element bg-white rounded-lg border border-gray-200 p-4" data-proto-id="5">
+              <h3 class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-info-circle text-[#1890FF] mr-1"></i>外院转入标记</h3>
+              <div class="space-y-2">
+                <div><span class="tag bg-[#FFF2F0] text-[#FF4D4F]">外院转入（中心删除）</span></div>
+                <div><span class="tag bg-[#FFF2F0] text-[#FF4D4F]">外院转入（变更就诊医院）</span></div>
+                <p class="text-xs text-gray-500 mt-2">作为患者列表单独列，默认不显示；转移完成后在目标中心展示；同时在审核记录中新增：该患者由 *** 中心转移到本中心（中心删除/变更就诊医院）。</p>
+              </div>
+            </div>
+            <!-- 删除按钮规则说明（无连线，已用表格按钮展示） -->
+            <div class="bg-white rounded-lg border border-gray-200 p-4">
+              <h3 class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-info-circle text-[#1890FF] mr-1"></i>删除按钮规则说明</h3>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="btn-primary px-2 py-1 rounded text-xs">删除（0）</span>
+                  <span class="text-xs text-gray-600">病例数为 0，可直接删除</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="btn-disabled px-2 py-1 rounded text-xs">删除（3）</span>
+                  <span class="text-xs text-gray-600">病例数不为 0，置灰但可点击，点击后展示患者清单</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 转移流程说明卡片区 -->
+          <div class="grid grid-cols-2 gap-4 mt-4">
+            <!-- 连线3：转移确认入口 -->
+            <div class="proto-element bg-white rounded-lg border border-gray-200 p-4" data-proto-id="3">
+              <h3 class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-exchange-alt text-[#1890FF] mr-1"></i>转移确认入口</h3>
+              <p class="text-xs text-gray-500 mb-3">患者清单弹窗中提供「全部患者转移」按钮和单条「转移」按钮，点击后进入转移确认。</p>
+              <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="openPatientList('中南大学湘雅三医院', 3)">
+                <i class="fas fa-exchange-alt mr-1"></i>全部患者转移
+              </button>
+            </div>
+            <!-- 连线4：审核中转移提示 -->
+            <div class="proto-element bg-white rounded-lg border border-gray-200 p-4" data-proto-id="4">
+              <h3 class="text-sm font-bold text-gray-800 mb-3"><i class="fas fa-exclamation-triangle text-[#FA8C16] mr-1"></i>审核中转移提示</h3>
+              <div class="bg-[#FFF7E6] border border-[#FFD591] rounded-lg p-2 mb-2">
+                <p class="text-xs text-[#FA8C16]">该患者当前状态为「审核中」，转移后对应审核人员会发生变动，请确认后续审核人员。</p>
+              </div>
+              <p class="text-xs text-gray-500">未提交/通过状态的患者可直接转移，无需此提示。</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+
+    <!-- 分隔线 -->
+    <div id="divider" class="w-px bg-gray-300"></div>
+
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[25%] lg:w-[22%]">
+      <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()" title="收起/展开说明面板">
+        <i class="fas fa-chevron-right" id="drawerIcon"></i>
+        <span>PRD</span>
+      </button>
+      <div class="p-4 overflow-y-auto" style="max-height: 100vh;">
+        <!-- 原型说明标识 -->
+        <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">Prototype</span>
+            <span class="text-xs font-semibold text-amber-800">原型说明</span>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            以下内容为删除按钮增强与患者转移功能的界面说明，悬停左侧对应区域可高亮连线。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200">
+          <i class="fas fa-map-signs text-amber-600"></i>
+          <h2 class="text-sm font-bold text-amber-900">功能说明</h2>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 说明 1 -->
+          <div class="proto-desc p-3" data-proto-id="1">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">删除按钮状态规则</h3>
+                <p class="text-xs text-gray-500 mt-1">删除按钮增加病例数显示「删除（n）」。n 为 0 时按钮为蓝色可点击，可直接删除；n 不为 0 时置灰但可点击，点击后弹出该中心下的所有患者清单。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 2 -->
+          <div class="proto-desc p-3" data-proto-id="2">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">患者清单弹窗</h3>
+                <p class="text-xs text-gray-500 mt-1">展示该中心下的所有患者列表，包含患者状态（未提交、审核中、通过等）。顶部提供「全部患者转移」入口，每行提供单行「转移」入口。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 3 -->
+          <div class="proto-desc p-3" data-proto-id="3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">转移确认弹窗</h3>
+                <p class="text-xs text-gray-500 mt-1">转移时需选择目标中心、转移原因（中心删除/变更就诊医院）并填写备注。未提交/通过患者可直接转移；审核中患者转移需确认审核人员变动。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 4 -->
+          <div class="proto-desc p-3" data-proto-id="4">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">审核中转移提示</h3>
+                <p class="text-xs text-gray-500 mt-1">当待转移患者中存在「审核中」状态时，弹窗顶部显示橙色提示：该患者当前状态为「审核中」，转移后对应审核人员会发生变动，请确认后续审核人员。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 5 -->
+          <div class="proto-desc p-3" data-proto-id="5">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">5</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">外院转入标记</h3>
+                <p class="text-xs text-gray-500 mt-1">转移完成后，目标中心患者列表中该患者显示「外院转入（中心删除/变更就诊医院）」标记。作为患者列表单独列，默认不显示，可在列设置中开启。同时在审核记录中新增一条转移记录。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+
+  <!-- ========== 模态框：患者清单 ========== -->
+  <div id="patientListModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-6xl mx-4 overflow-hidden" style="max-height: 85vh; overflow-y: auto;">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div class="flex items-center gap-4">
+          <h3 class="text-lg font-semibold text-gray-800">患者清单</h3>
+          <span class="text-sm text-gray-500" id="patientListCenterName">中南大学湘雅三医院 · 共 3 位患者</span>
+        </div>
+        <button onclick="closeModal('patientListModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      
+      <!-- 搜索筛选栏 -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center gap-3 flex-wrap">
+          <input type="text" placeholder="请输入姓名缩写" class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-48">
+          <select class="form-input border border-gray-300 rounded px-3 py-1.5 text-sm w-40">
+            <option>患者状态</option>
+            <option>未提交</option>
+            <option>审核中</option>
+            <option>通过</option>
+            <option>预筛沟通</option>
+          </select>
+          <button class="btn-primary px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 btn-click">
+            <i class="fas fa-search"></i> 查询
+          </button>
+          <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 btn-click hover:bg-gray-50">
+            <i class="fas fa-redo"></i> 重置
+          </button>
+          <!-- 全部患者转移按钮 -->
+          <div class="inline-block">
+            <button class="btn-primary px-4 py-1.5 rounded text-sm font-medium flex items-center gap-2 btn-click" onclick="openBatchTransferModal()">
+              <i class="fas fa-exchange-alt"></i> 全部患者转移
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 患者列表 -->
+      <div class="px-6 py-4">
+        <div class="overflow-x-auto rounded-lg border border-gray-200">
+          <table class="data-table w-full text-sm">
+            <thead>
+              <tr>
+                <th class="px-3 py-3 text-center w-12">序号</th>
+                <th class="px-3 py-3 text-left">姓名缩写</th>
+                <th class="px-3 py-3 text-left">年龄</th>
+                <th class="px-3 py-3 text-left">性别</th>
+                <th class="px-3 py-3 text-left">领域</th>
+                <th class="px-3 py-3 text-left">参研中心</th>
+                <th class="px-3 py-3 text-left">筛选号</th>
+                <th class="px-3 py-3 text-left">创建时间</th>
+                <th class="px-3 py-3 text-left">创建人</th>
+                <th class="px-3 py-3 text-left">创建人角色</th>
+                <th class="px-3 py-3 text-left">患者状态</th>
+                <th class="px-3 py-3 text-left">是否外推</th>
+                <th class="px-3 py-3 text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="px-3 py-3 text-center">1</td>
+                <td class="px-3 py-3">ABCD</td>
+                <td class="px-3 py-3">59</td>
+                <td class="px-3 py-3">女</td>
+                <td class="px-3 py-3">乳腺癌</td>
+                <td class="px-3 py-3">新疆医科大学附属肿瘤医院</td>
+                <td class="px-3 py-3">--</td>
+                <td class="px-3 py-3">2026-04-17 12:51:20</td>
+                <td class="px-3 py-3">张三</td>
+                <td class="px-3 py-3">临床协调员</td>
+                <td class="px-3 py-3"><span class="text-[#333]">未提交</span></td>
+                <td class="px-3 py-3">否</td>
+                <td class="px-3 py-3 text-center">
+                  <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="openSingleTransferModal('ABCD', '未提交')">
+                    <i class="fas fa-exchange-alt mr-1"></i>转移
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-3 py-3 text-center">2</td>
+                <td class="px-3 py-3">GLIN</td>
+                <td class="px-3 py-3">59</td>
+                <td class="px-3 py-3">女</td>
+                <td class="px-3 py-3">乳腺癌</td>
+                <td class="px-3 py-3">新疆医科大学附属肿瘤医院</td>
+                <td class="px-3 py-3">--</td>
+                <td class="px-3 py-3">2026-02-05 14:00:59</td>
+                <td class="px-3 py-3">李四</td>
+                <td class="px-3 py-3">临床协调员</td>
+                <td class="px-3 py-3"><span class="text-[#FA8C16] font-medium">审核中</span></td>
+                <td class="px-3 py-3">否</td>
+                <td class="px-3 py-3 text-center">
+                  <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="openSingleTransferModal('GLIN', '审核中')">
+                    <i class="fas fa-exchange-alt mr-1"></i>转移
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td class="px-3 py-3 text-center">3</td>
+                <td class="px-3 py-3">WUCH</td>
+                <td class="px-3 py-3">71</td>
+                <td class="px-3 py-3">女</td>
+                <td class="px-3 py-3">乳腺癌</td>
+                <td class="px-3 py-3">新疆医科大学附属肿瘤医院</td>
+                <td class="px-3 py-3">--</td>
+                <td class="px-3 py-3">2026-02-05 14:00:07</td>
+                <td class="px-3 py-3">王五</td>
+                <td class="px-3 py-3">临床协调员</td>
+                <td class="px-3 py-3"><span class="text-[#52C41A] font-medium">通过</span></td>
+                <td class="px-3 py-3">否</td>
+                <td class="px-3 py-3 text-center">
+                  <button class="btn-primary px-3 py-1 rounded text-xs font-medium btn-click" onclick="openSingleTransferModal('WUCH', '通过')">
+                    <i class="fas fa-exchange-alt mr-1"></i>转移
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('patientListModal')" class="px-5 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-medium btn-click hover:bg-gray-50">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：单个患者转移确认 ========== -->
+  <div id="singleTransferModal" class="modal-overlay modal-hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">患者转移确认</h3>
+        <button onclick="closeModal('singleTransferModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="px-6 py-5 space-y-4">
+        <!-- 审核中提示 -->
+        <div id="singleAuditWarning" class="hidden">
+          <div class="bg-[#FFF7E6] border border-[#FFD591] rounded-lg p-3 mb-4">
+            <div class="flex items-start gap-2">
+              <i class="fas fa-exclamation-circle text-[#FA8C16] mt-0.5"></i>
+              <p class="text-sm text-[#FA8C16]">该患者当前状态为「审核中」，转移后对应审核人员会发生变动，请确认后续审核人员。</p>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">目标中心 <span class="text-red-500">*</span></label>
+          <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option>请选择目标中心</option>
+            <option>中南大学湘雅二医院</option>
+            <option>中南大学湘雅医院</option>
+            <option>广东省人民医院</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">转移原因</label>
+          <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option>请选择：中心删除 / 变更就诊医院</option>
+            <option>中心删除</option>
+            <option>变更就诊医院</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">备注</label>
+          <textarea rows="3" placeholder="请输入转移备注信息" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('singleTransferModal')" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-medium btn-click hover:bg-gray-50">取消</button>
+        <button onclick="closeModal('singleTransferModal'); showTransferSuccess()" class="px-4 py-2 btn-primary text-sm rounded-lg font-medium btn-click">确认转移</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：批量患者转移确认 ========== -->
+  <div id="batchTransferModal" class="modal-overlay modal-hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">全部患者转移确认</h3>
+        <button onclick="closeModal('batchTransferModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div class="px-6 py-5 space-y-4">
+        <!-- 批量提示 -->
+        <div class="bg-[#F0F5FF] border border-[#ADC6FF] rounded-lg p-3">
+          <p class="text-sm text-[#1890FF]">即将转移 <span id="batchCount" class="font-bold">3</span> 位患者到目标中心</p>
+          <p class="text-sm text-[#FA8C16] mt-1">其中 <span id="batchAuditCount" class="font-bold">1</span> 位处于「审核中」，转移后审核人员将发生变动</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">目标中心 <span class="text-red-500">*</span></label>
+          <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option>请选择目标中心</option>
+            <option>中南大学湘雅二医院</option>
+            <option>中南大学湘雅医院</option>
+            <option>广东省人民医院</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">转移原因</label>
+          <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option>请选择：中心删除 / 变更就诊医院</option>
+            <option>中心删除</option>
+            <option>变更就诊医院</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('batchTransferModal')" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg font-medium btn-click hover:bg-gray-50">取消</button>
+        <button onclick="closeModal('batchTransferModal'); closeModal('patientListModal'); showTransferSuccess()" class="px-4 py-2 btn-primary text-sm rounded-lg font-medium btn-click">确认转移</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成功提示 Toast -->
+  <div id="successToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[80] hidden">
+    <div class="bg-[#52C41A] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
+      <i class="fas fa-check-circle"></i>
+      <span class="text-sm font-medium">转移成功，目标中心患者列表已显示「外院转入」标记</span>
+    </div>
+  </div>
+
+  <script>
+    // ========== 连线绘制 ==========
+    const svg = document.getElementById('connections');
+    const connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+
+      if (rightPanelCollapsed) return;
+
+      const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(leftEl => {
+        const protoId = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${protoId}"]`);
+        if (!rightEl) return;
+
+        const leftRect = leftEl.getBoundingClientRect();
+        const rightRect = rightEl.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        const x1 = leftRect.right - svgRect.left;
+        const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        const x2 = rightRect.left - svgRect.left;
+        const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        const cp1x = x1 + (x2 - x1) * 0.5;
+        const cp1y = y1;
+        const cp2x = x1 + (x2 - x1) * 0.5;
+        const cp2y = y2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        svg.appendChild(path);
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX);
+        bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('class', 'connection-label');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId, path, leftEl, rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      const conn = connections.find(c => c.protoId === protoId);
+      if (!conn) return;
+      if (active) {
+        conn.path.classList.add('active');
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.classList.remove('active');
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // ========== 模态框 ==========
+    function openModal(id) { document.getElementById(id).classList.remove('modal-hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('modal-hidden'); }
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('modal-hidden'); });
+    });
+
+    // ========== 患者清单 ==========
+    function openPatientList(centerName, count) {
+      document.getElementById('patientListCenterName').textContent = `${centerName} · 共 ${count} 位患者`;
+      document.getElementById('batchCount').textContent = count;
+      openModal('patientListModal');
+    }
+
+    // ========== 转移弹窗 ==========
+    function openSingleTransferModal(patientName, status) {
+      const warning = document.getElementById('singleAuditWarning');
+      if (status === '审核中') {
+        warning.classList.remove('hidden');
+      } else {
+        warning.classList.add('hidden');
+      }
+      openModal('singleTransferModal');
+    }
+
+    function openBatchTransferModal() {
+      openModal('batchTransferModal');
+    }
+
+    function showTransferSuccess() {
+      const toast = document.getElementById('successToast');
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+    }
+
+    // ========== 移动端切换 ==========
+    let mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      const leftPanel = document.getElementById('left-panel');
+      const rightPanel = document.getElementById('right-panel');
+      const btn = document.getElementById('mobileToggle');
+      if (mobileShowDesc) {
+        leftPanel.style.display = 'none'; rightPanel.style.height = '100vh'; btn.innerHTML = '<i class="fas fa-desktop"></i>';
+      } else {
+        leftPanel.style.display = ''; rightPanel.style.height = ''; btn.innerHTML = '<i class="fas fa-info"></i>';
+      }
+    }
+
+    // ========== 右侧面板抽屉 ==========
+    let rightPanelCollapsed = false;
+    function toggleRightPanel() {
+      rightPanelCollapsed = !rightPanelCollapsed;
+      const panel = document.getElementById('right-panel');
+      const icon = document.getElementById('drawerIcon');
+      const divider = document.getElementById('divider');
+      if (rightPanelCollapsed) {
+        panel.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        divider.style.display = 'none';
+      } else {
+        panel.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        divider.style.display = '';
+      }
+      setTimeout(drawConnections, 320);
+    }
+
+    // ========== 初始化 ==========
+    function init() { drawConnections(); bindHoverEvents(); }
+    document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { init(); }, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+    document.getElementById('right-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+  </script>
+</body>
+</html>

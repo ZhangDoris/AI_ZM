@@ -998,6 +998,99 @@
       color: #52c41a;
       border: 1px solid #b7eb8f;
     }
+
+    /* ===== PRD Sidebar ===== */
+    .page-wrapper {
+      display: flex;
+      min-height: calc(100vh - 56px);
+    }
+    .main-content {
+      flex: 1;
+      max-width: calc(100% - 420px);
+      overflow-x: hidden;
+      padding: 16px;
+    }
+    .prd-sidebar {
+      width: 420px;
+      background: linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);
+      border-left: 2px solid #ffd591;
+      padding: 24px 20px;
+      overflow-y: auto;
+      position: fixed;
+      right: 0;
+      top: 56px;
+      bottom: 0;
+      z-index: 50;
+    }
+    .prd-sidebar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .prd-sidebar::-webkit-scrollbar-thumb {
+      background: #ffd591;
+      border-radius: 3px;
+    }
+    .audit-record-modal .prd-sidebar {
+      position: static;
+      width: 380px;
+      flex-shrink: 0;
+      top: auto;
+      bottom: auto;
+      right: auto;
+      border-left: 2px solid #ffd591;
+      max-height: 80vh;
+    }
+    .prd-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #d46b08;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #ffd591;
+    }
+    .prd-section {
+      margin-bottom: 24px;
+    }
+    .prd-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ad6800;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .prd-section-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: #fa8c16;
+      border-radius: 2px;
+    }
+    .prd-text {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 8px;
+    }
+    .prd-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    .prd-list li {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 8px;
+      padding-left: 16px;
+      position: relative;
+    }
+    .prd-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #fa8c16;
+      font-weight: bold;
+    }
     .edit-tag-orange {
       background: #fff7e6;
       color: #fa8c16;
@@ -5514,7 +5607,8 @@ function buildAuditRecordContent(row) {
   };
 
   return `
-  <div class="audit-record-modal" onclick="event.stopPropagation()">
+  <div class="audit-record-modal" onclick="event.stopPropagation()" style="display:flex;gap:0;max-width:1200px;width:95%">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
     <div class="audit-record-modal-header">
       <span class="audit-record-modal-title">${title}</span>
       <button class="audit-record-modal-close" onclick="closeAuditRecord()">&times;</button>
@@ -5529,6 +5623,8 @@ function buildAuditRecordContent(row) {
       </div>
       ` : ''}
     </div>
+    </div>
+    ${getPrdSidebarHtml()}
   </div>
   `;
 }
@@ -5657,6 +5753,57 @@ function buildTimeline(row) {
     </div>`;
 }
 
+// PRD侧边栏HTML（非推荐流程标注说明）
+function getPrdSidebarHtml() {
+  return `
+  <div class="prd-sidebar">
+    <h3 class="prd-title">📋 非推荐流程标注说明</h3>
+    <div class="prd-section">
+      <h3 class="prd-section-title">功能概述</h3>
+      <p class="prd-text">在审批过程中，如果用户选择了非推荐的审批流程，系统会在本次审批的所有环节中标注该变更，以提醒相关人员注意。</p>
+    </div>
+    <div class="prd-section">
+      <h3 class="prd-section-title">标注规则</h3>
+      <ul class="prd-list">
+        <li><strong>触发条件：</strong>用户在提交审批时，未选择系统推荐的默认流程，而是手动选择了其他流程</li>
+        <li><strong>标注范围：</strong>从本次审批开始，到本次审批结束的所有节点（比如场景1.  流程模板未变，该走预筛审核了，但是他选择了 主知情审核，那主知情审核结束之前都显示了；场景2.流程模板变了，不管第一步走了该模板推荐的第一个审批流还是第2个审批流，第一次走这个完整的模板都需要显示，比如第一次走了 主知情，那主知情审核的所有流程都显示，走完第一个之后如果审核通过了，后面按照正常推荐走了，就不显示了，没有按照正常推荐，就继续显示新的）</li>
+        <li><strong>标注内容：</strong>显示红色警告框，提示"非正常流程"，并说明原因</li>
+        <li><strong>标注消失：</strong>本次审批完成后，如果后续审批按照推荐流程执行，则不再显示标注</li>
+      </ul>
+    </div>
+    <div class="prd-section">
+      <h3 class="prd-section-title">标注示例</h3>
+      <div style="background:#fff2f0;border-left:4px solid #ff4d4f;padding:12px;border-radius:4px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="background:#ff4d4f;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;">非正常流程</span>
+          <span style="font-size:12px;color:#ff4d4f;font-weight:500;">提示：若需要走正常流程，请驳回重新提交审批</span>
+        </div>
+        <div style="font-size:12px;color:#666;line-height:1.8">
+          <strong style="color:#ff4d4f;">原因：</strong>填写的原因
+        </div>
+      </div>
+    </div>
+    <div class="prd-section">
+      <h3 class="prd-section-title">开发要点</h3>
+      <ul class="prd-list">
+        <li>① 在审批页面顶部添加红色警告框，包含"非正常流程"标签和提示信息</li>
+        <li>② 警告框中显示选择非推荐流程的具体原因（由用户在提交时填写或系统自动生成）</li>
+        <li>③ 在审批记录列表中，每条记录都需要检查是否属于非推荐流程，如果是则显示标注</li>
+        <li>④ 标注只在当前审批周期内有效，下次审批如果选择推荐流程则不显示</li>
+        <li>⑤ 需要在数据库中添加字段记录本次审批是否使用了非推荐流程及原因</li>
+      </ul>
+    </div>
+    <div class="prd-section">
+      <h3 class="prd-section-title">数据字段</h3>
+      <ul class="prd-list">
+        <li><strong>isRecommendedFlow:</strong> 布尔值，表示是否使用推荐流程（true=是，false=否）</li>
+        <li><strong>nonRecommendedReason:</strong> 字符串，记录选择非推荐流程的原因</li>
+        <li><strong>approvalCycleId:</strong> 审批周期ID，用于判断标注是否在当前周期内</li>
+      </ul>
+    </div>
+  </div>`;
+}
+
 function buildDetailContent(row) {
   const title = `${row.screenNo}-${row.age}-${row.gender}-${row.centerNo}-${row.center}（${row.planNo}）`;
   const judgeIcon = (j) => {
@@ -5666,6 +5813,8 @@ function buildDetailContent(row) {
   };
 
   return `
+  <div class="page-wrapper">
+  <div class="main-content">
   <!-- Header -->
   <div class="detail-header">
     <button class="detail-back-btn" onclick="closeDetail()">← <span>${title}</span></button>
@@ -5880,6 +6029,9 @@ function buildDetailContent(row) {
         </div>
       </div>
     </div>
+  </div>
+  </div>
+  ${getPrdSidebarHtml()}
   </div>
   `;
 }
@@ -6362,6 +6514,8 @@ function buildAuditContent() {
   const displayData = filtered.map((r,i) => ({...r, displayId: i+1}));
 
   return `
+  <div class="page-wrapper">
+  <div class="main-content">
     <!-- Org-level Tabs -->
     <div class="org-tabs">
       ${orgs.map(o => `
@@ -6526,6 +6680,7 @@ function buildAuditContent() {
         <button class="page-btn">›</button>
       </div>
     </div>
+  </div>
   `;
 }
 
@@ -7807,7 +7962,49 @@ function renderAuditRecordContent(patientNo) {
     html = '<div style="text-align:center;padding:40px;color:#999">暂无审批记录</div>';
   }
   
-  container.innerHTML = html;
+  // 添加PRD侧边栏
+  const prdSidebar = `
+  <div class="prd-sidebar" style="position:static;width:380px;flex-shrink:0;border-left:2px solid #ffd591;max-height:80vh;overflow-y:auto;background:linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);padding:24px 20px">
+    <h3 style="font-size:18px;font-weight:700;color:#d46b08;margin:0 0 20px 0;padding-bottom:12px;border-bottom:2px solid #ffd591">📋 非推荐流程标注说明</h3>
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 功能概述</h3>
+      <p style="font-size:13px;color:#666;line-height:1.8;margin:0">在审批过程中，如果用户选择了非推荐的审批流程，系统会在本次审批的所有环节中标注该变更，以提醒相关人员注意。</p>
+    </div>
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 标注规则</h3>
+      <ul style="font-size:13px;color:#666;line-height:1.8;margin:0;padding-left:20px">
+        <li><strong>触发条件：</strong>用户在提交审批时，未选择系统推荐的默认流程，而是手动选择了其他流程</li>
+        <li><strong>标注范围：</strong>从本次审批开始，到本次审批结束的所有节点（包括待审批、已审批、审批记录等）</li>
+        <li><strong>标注内容：</strong>显示红色警告框，提示"非正常流程"，并说明原因</li>
+        <li><strong>标注消失：</strong>本次审批完成后，如果后续审批按照推荐流程执行，则不再显示标注</li>
+      </ul>
+    </div>
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 标注示例</h3>
+      <div style="background:#fff2f0;border-left:4px solid #ff4d4f;padding:12px;border-radius:4px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="background:#ff4d4f;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;">非正常流程</span>
+          <span style="font-size:12px;color:#ff4d4f;font-weight:500;">提示：若需要走正常流程，请驳回重新提交审批</span>
+        </div>
+        <div style="font-size:12px;color:#666;line-height:1.8">
+          <strong style="color:#ff4d4f;">原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 开发要点</h3>
+      <ul style="font-size:13px;color:#666;line-height:1.8;margin:0;padding-left:20px">
+        <li>① 在审批页面顶部添加红色警告框，包含"非正常流程"标签和提示信息</li>
+        <li>② 警告框中显示选择非推荐流程的具体原因（由用户在提交时填写或系统自动生成）</li>
+        <li>③ 在审批记录列表中，每条记录都需要检查是否属于非推荐流程，如果是则显示标注</li>
+        <li>④ 标注只在当前审批周期内有效，下次审批如果选择推荐流程则不显示</li>
+        <li>⑤ 需要在数据库中添加字段记录本次审批是否使用了非推荐流程及原因</li>
+      </ul>
+    </div>
+    
+  </div>`;
+  
+  container.innerHTML = `<div style="display:flex;gap:0;max-width:100%;height:100%"><div style="flex:1;min-width:0;overflow-y:auto;padding-right:16px">${html}</div>${prdSidebar}</div>`;
 }
 
 // 切换审批记录区域展开/收起
@@ -8223,16 +8420,16 @@ function buildAdminContent(sub) {
 
 // ==================== 审批流设置 ====================
 let _workflowData = [
-  { ver:'v2.5.0', name:'HRS-1780-301 项目审批流', type:'预筛审批', status:'published', creator:'张管理', updater:'张管理', time:'2026-06-22 10:30', isDefault:true },
-  { ver:'v2.4.0', name:'肿瘤项目通用审批流', type:'预筛审批', status:'published', creator:'张管理', updater:'李明', time:'2026-06-18 14:20', isDefault:false },
-  { ver:'v2.3.0', name:'非肿瘤项目通用审批流', type:'预筛审批', status:'published', creator:'李明', updater:'李明', time:'2026-06-15 09:15', isDefault:false },
-  { ver:'v2.2.0', name:'快速审批流模板', type:'主知情审批',  status:'draft', creator:'张管理', updater:'张管理', time:'2026-06-08 11:00', isDefault:false },
-  { ver:'v2.0.0', name:'默认标准审批流', type:'入组审批',  status:'published', creator:'系统', updater:'系统', time:'2026-05-20 08:00', isDefault:false },
-  { ver:'v1.5.0', name:'HRS-1580-105 项目审批流', type:'导入审批', status:'cancelled', creator:'张管理', updater:'李明', time:'2026-05-15 10:30', isDefault:false },
-  { ver:'v1.4.0', name:'早期版本-肿瘤审批流', type:'预筛审批', status:'cancelled', creator:'李明', updater:'李明', time:'2026-05-10 09:00', isDefault:false },
-  { ver:'v1.3.0', name:'早期版本-非肿瘤审批流', type:'预筛审批', status:'cancelled', creator:'张管理', updater:'张管理', time:'2026-05-05 15:20', isDefault:false },
-  { ver:'v1.2.0', name:'首次发布版审批流', type:'入组审批',  status:'cancelled', creator:'系统', updater:'张管理', time:'2026-04-20 10:00', isDefault:false },
-  { ver:'v1.0.0', name:'初始版审批流', type:'入组审批',  status:'cancelled', creator:'系统', updater:'系统', time:'2026-04-15 08:00', isDefault:false },
+  { ver:'v2.5.0', name:'标准预筛审批流程V2.5', type:'预筛审批', status:'published', creator:'张管理', updater:'张管理', time:'2026-06-22 10:30', isDefault:true },
+  { ver:'v2.4.0', name:'标准预筛审批流程V2.4', type:'预筛审批', status:'published', creator:'张管理', updater:'李明', time:'2026-06-18 14:20', isDefault:false },
+  { ver:'v2.3.0', name:'标准预筛审批流程V2.3', type:'预筛审批', status:'published', creator:'李明', updater:'李明', time:'2026-06-15 09:15', isDefault:false },
+  { ver:'v2.2.0', name:'主知情审批流程V2.2', type:'主知情审批', status:'draft', creator:'张管理', updater:'张管理', time:'2026-06-08 11:00', isDefault:false },
+  { ver:'v2.0.0', name:'入组审批流程V2.0', type:'入组审批', status:'published', creator:'系统', updater:'系统', time:'2026-05-20 08:00', isDefault:false },
+  { ver:'v1.5.0', name:'导入审批流程V1.5', type:'导入审批', status:'cancelled', creator:'张管理', updater:'李明', time:'2026-05-15 10:30', isDefault:false },
+  { ver:'v1.4.0', name:'标准预筛审批流程V1.4', type:'预筛审批', status:'cancelled', creator:'李明', updater:'李明', time:'2026-05-10 09:00', isDefault:false },
+  { ver:'v1.3.0', name:'标准预筛审批流程V1.3', type:'预筛审批', status:'cancelled', creator:'张管理', updater:'张管理', time:'2026-05-05 15:20', isDefault:false },
+  { ver:'v1.2.0', name:'入组审批流程V1.2', type:'入组审批', status:'cancelled', creator:'系统', updater:'张管理', time:'2026-04-20 10:00', isDefault:false },
+  { ver:'v1.0.0', name:'入组审批流程V1.0', type:'入组审批', status:'cancelled', creator:'系统', updater:'系统', time:'2026-04-15 08:00', isDefault:false },
 ];
 
 function buildAdminWorkflow() {
@@ -8293,7 +8490,7 @@ function buildAdminWorkflow() {
             <th style="width:50px">序号</th>
             <th style="width:110px">版本号</th>
             <th style="width:110px">审批类型</th>
-            <th style="width:100px">状态</th>
+            <th style="width:90px">状态</th>
             <th style="width:90px">创建人</th>
             <th style="width:90px">更新人</th>
             <th style="width:140px">更新时间</th>
@@ -8312,6 +8509,14 @@ function buildAdminWorkflow() {
           <button class="page-btn" onclick="alert('切换到第2页')"><i class="fa-solid fa-angle-right"></i></button>
           <button class="page-btn" onclick="alert('切换到最后一页')"><i class="fa-solid fa-angles-right"></i></button>
         </div>
+      </div>
+      <!-- 审批类型颜色标识 -->
+      <div style="display:flex;align-items:center;gap:20px;padding:12px 16px;border-top:1px solid #f0f0f0;background:#fafafa;border-radius:0 0 8px 8px;">
+        <span style="font-size:12px;color:#888;font-weight:500;">审批类型标识：</span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e6f4ff;border:1px solid #91caff;"></span>预筛审批 <span style="color:#999;font-size:11px;">(蓝色)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fff7e6;border:1px solid #ffd591;"></span>主知情审批 <span style="color:#999;font-size:11px;">(橙色)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e6fffb;border:1px solid #87e8de;"></span>导入审批 <span style="color:#999;font-size:11px;">(青色)</span></span>
+        <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#555;"><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f6ffed;border:1px solid #b7eb8f;"></span>入组审批 <span style="color:#999;font-size:11px;">(绿色)</span></span>
       </div>
     </div>
     <!-- 新建/编辑弹窗 -->
@@ -8418,9 +8623,8 @@ function buildAdminWorkflow() {
 function renderWorkflowRows(filters) {
   let rows = _workflowData;
   if(filters) {
-    const {name,ver,type,stage,status} = filters;
-    if(name) rows = rows.filter(d => d.name.toLowerCase().includes(name.toLowerCase()));
-    if(ver) rows = rows.filter(d => d.ver.toLowerCase().includes(ver.toLowerCase()));
+    const {ver,type,stage,status} = filters;
+      if(ver) rows = rows.filter(d => d.ver.toLowerCase().includes(ver.toLowerCase()));
     if(type) rows = rows.filter(d => d.type === type);
     if(stage) rows = rows.filter(d => d.stage === stage);
     if(status) rows = rows.filter(d => d.status === status);
@@ -8428,14 +8632,14 @@ function renderWorkflowRows(filters) {
   const typeTag = {'预筛审批':'<span class="tag tag-blue">预筛审批</span>','主知情审批':'<span class="tag tag-orange">主知情审批</span>','导入审批':'<span class="tag tag-teal">导入审批</span>','入组审批':'<span class="tag tag-green">入组审批</span>'};
   return rows.map((d,i) => {
     const st = {published:'<span class="tag tag-green">● 已发布</span>',draft:'<span class="tag tag-yellow">● 草稿</span>',cancelled:'<span class="tag tag-gray">● 取消发布</span>'};
-    const escName = d.name.replace(/'/g,"\\'");
+    const escName = d.type.replace(/'/g,"\\'");
     const acts = ['<a href="javascript:void(0)" onclick="viewWorkflowDetail(\''+d.ver+'\',\''+escName+'\')" class="table-action">流程设置</a>'];
     if(d.status==='draft') acts.push('<a href="javascript:void(0)" onclick="editWorkflow(\''+d.ver+'\')" class="table-action">编辑</a>');
     acts.push('<a href="javascript:void(0)" onclick="copyWorkflow(\''+d.ver+'\')" class="table-action">复制</a>');
     if(d.status==='published') acts.push('<a href="javascript:void(0)" onclick="unpublishWorkflow(\''+d.ver+'\')" class="table-action table-action-warn">取消发布</a>');
     acts.push(d.isDefault ? '<span class="tag tag-blue" style=\"font-size:11px\">默认</span>' : '<a href="javascript:void(0)" onclick="setDefaultWorkflow(\''+d.ver+'\')" class="table-action">设为默认</a>');
     if(d.status!=='published') acts.push('<a href="javascript:void(0)" onclick="deleteWorkflow(\''+d.ver+'\')" class="table-action table-action-danger">删除</a>');
-    return '<tr><td>'+(i+1)+'</td><td><strong>'+d.ver+'</strong></td><td>'+d.name+'</td><td>'+(typeTag[d.type]||d.type)+'</td><td>'+st[d.status]+'</td><td>'+d.creator+'</td><td>'+d.updater+'</td><td>'+d.time+'</td><td style="white-space:nowrap">'+acts.join(' <span style="color:#e0e0e0">|</span> ')+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td><strong>'+d.ver+'</strong></td><td>'+(typeTag[d.type]||d.type)+'</td><td>'+st[d.status]+'</td><td>'+d.creator+'</td><td>'+d.updater+'</td><td>'+d.time+'</td><td style="white-space:nowrap">'+acts.join(' <span style="color:#e0e0e0">|</span> ')+'</td></tr>';
   }).join('');
 }
 function filterWorkflowTable() {
@@ -9005,7 +9209,7 @@ function viewFlowTemplateDetail(id) {
     html += '<td style="text-align:center;font-weight:600;color:#1677ff">'+(i+1)+'</td>';
     html += '<td style="text-align:center"><span class="edit-tag '+(typeTag[f.auditType]||'')+'">'+f.auditType+'</span></td>';
     html += '<td style="text-align:center"><strong>'+f.workflowVer+'</strong></td>';
-    html += '<td style="text-align:center">'+f.workflowName+'</td>';
+   
     html += '<td style="text-align:center">'+wfStatus+'</td>';
     html += '</tr>';
   });
