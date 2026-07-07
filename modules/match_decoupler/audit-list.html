@@ -297,6 +297,44 @@
       font-size: 13px;
       color: #999;
     }
+    /* SVG连接线 */
+    .svg-connector {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    /* 详情页flex布局（左内容+右PRD） */
+    .detail-overlay.show { display: flex; }
+    .detail-main { flex: 1; overflow-y: auto; min-width: 0; }
+    .detail-prd-sidebar { width: 420px; background: linear-gradient(135deg,#fff7e6,#fffbe6); border-left: 2px solid #ffd591; padding: 24px 20px; overflow-y: auto; flex-shrink: 0; }
+    .detail-prd-sidebar::-webkit-scrollbar { width: 6px; }
+    .detail-prd-sidebar::-webkit-scrollbar-thumb { background: #ffd591; border-radius: 3px; }
+    .detail-prd-sidebar .prd-title { font-size: 18px; font-weight: 700; color: #d46b08; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #ffd591; }
+    .detail-prd-sidebar .prd-section { margin-bottom: 24px; }
+    .detail-prd-sidebar .prd-section-title { font-size: 14px; font-weight: 600; color: #ad6800; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .detail-prd-sidebar .prd-section-title::before { content: ''; width: 4px; height: 16px; background: #fa8c16; border-radius: 2px; }
+    .detail-prd-sidebar .prd-text { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; }
+    .detail-prd-sidebar .prd-list { list-style: none; padding-left: 0; }
+    .detail-prd-sidebar .prd-list li { font-size: 13px; color: #555; line-height: 1.8; margin-bottom: 8px; padding-left: 16px; position: relative; }
+    .detail-prd-sidebar .prd-list li::before { content: '•'; position: absolute; left: 0; color: #fa8c16; font-weight: 700; }
+    .detail-prd-sidebar .prd-highlight { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; border: 1px solid #ffe58f; }
+    /* 审核操作区 */
+    .detail-audit-bar { background: #fff; margin: 16px 20px; border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .detail-audit-bar .audit-label { font-size: 13px; color: #666; font-weight: 500; }
+    .detail-audit-bar .audit-result-select { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; max-width: 200px; }
+    .detail-audit-bar .audit-input { flex: 1; padding: 7px 11px; border: 1.5px solid #e8e8e8; border-radius: 6px; font-size: 13px; outline: none; }
+    .detail-audit-bar .audit-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+    .detail-audit-bar .btn-audit { padding: 7px 20px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1px solid transparent; }
+    .detail-audit-bar .btn-audit.pass { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .detail-audit-bar .btn-audit.pass:hover { background: #389e0d; }
+    .detail-audit-bar .btn-audit.reject { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .detail-audit-bar .btn-audit.reject:hover { background: #cf1322; }
+    /* 详情页打开时印章位置调整 */
+    body.detail-open .stamp-seal { right: 470px !important; }
   </style>
 </head>
 <body>
@@ -324,7 +362,7 @@
     <div class="page-main" id="pageMain"></div>
     <aside class="prd-sidebar" id="prdSidebar"></aside>
   </div>
-  <div class="detail-overlay" id="detailOverlay"></div>
+  <div class="detail-overlay" id="detailOverlay"><div class="detail-main" id="detailMain"></div><aside class="detail-prd-sidebar" id="detailPrdSidebar"></aside></div>
   <div class="audit-record-overlay" id="auditRecordOverlay"></div>
   <div class="toast-container" id="toastContainer"></div>
 <script>
@@ -405,12 +443,102 @@ function renderPage() {
       <table class="data-table"><thead><tr>
         <th style="width:50px">序号</th><th>筛选号</th><th>审批类型</th><th>患者编号</th><th style="width:50px">性别</th><th style="width:50px">年龄</th><th>方案编号</th><th>项目名称</th><th>中心号</th><th>中心</th><th>匹配率</th><th>提交人</th><th style="width:220px">操作</th>
       </tr></thead><tbody>
-        ${displayData.length===0?'<tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>':displayData.map(r=>'<tr><td>'+r.displayId+'</td><td style="color:#1677ff;font-weight:500">'+r.screenNo+'</td><td>'+r.auditType+'</td><td>'+r.patientNo+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.planNo+'</td><td><span class="proj-name-trunc">'+r.projectName+'</span></td><td>'+r.centerNo+'</td><td><span class="text-ellipsis-cell" style="max-width:180px" title="'+r.center+'">'+r.center+'</span></td><td><span class="match-rate '+(parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':'')+'">'+r.matchRate+'</span></td><td>'+r.submitter+'</td><td><span class="action-link" onclick="openDetailById('+r.id+')">查看</span><span class="action-sep">|</span><span class="action-link">抄送</span>'+(r.status==='pending'?'<span class="action-sep">|</span><span class="action-link" onclick="showToast(\'审批功能开发中\',\'info\')">审批</span>':'')+(r.status==='done'?'<span class="action-sep">|</span><span class="action-link" style="color:#ff4d4f">撤回审批</span>':'')+'<span class="action-sep">|</span><span class="action-link" onclick="openAuditRecord('+r.id+')">审批记录</span><span class="action-sep">|</span><span class="action-link">邮件记录</span></td></tr>').join('')}
+        ${displayData.length===0?'<tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>':displayData.map(r=>'<tr><td>'+r.displayId+'</td><td style="color:#1677ff;font-weight:500">'+r.screenNo+'</td><td>'+r.auditType+'</td><td>'+r.patientNo+'</td><td>'+r.gender+'</td><td>'+r.age+'</td><td>'+r.planNo+'</td><td><span class="proj-name-trunc">'+r.projectName+'</span></td><td>'+r.centerNo+'</td><td><span class="text-ellipsis-cell" style="max-width:180px" title="'+r.center+'">'+r.center+'</span></td><td><span class="match-rate '+(parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':'')+'">'+r.matchRate+'</span></td><td>'+r.submitter+'</td><td><span class="action-link view-btn-'+r.id+'" onclick="openDetailById('+r.id+')">查看</span><span class="action-sep">|</span><span class="action-link">抄送</span>'+(r.status==='pending'?'<span class="action-sep">|</span><span class="action-link" onclick="showToast(\'审批功能开发中\',\'info\')">审批</span>':'')+(r.status==='done'?'<span class="action-sep">|</span><span class="action-link" style="color:#ff4d4f">撤回审批</span>':'')+'<span class="action-sep">|</span><span class="action-link" onclick="openAuditRecord('+r.id+')">审批记录</span><span class="action-sep">|</span><span class="action-link">邮件记录</span></td></tr>').join('')}
       </tbody></table>
       <div class="pagination"><span class="page-btn" style="border:none;cursor:default">共 ${displayData.length} 条</span><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">›</button></div>
     </div>`;
   renderPrdSidebar();
+  // 添加SVG连接线
+  setTimeout(() => drawConnectorLines(), 100);
 }
+
+// ==================== SVG CONNECTOR LINES ====================
+let svgContainer = null;
+
+function createSvgContainer() {
+  if (!svgContainer) {
+    svgContainer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgContainer.classList.add('svg-connector');
+    svgContainer.id = 'svgConnector';
+    document.body.appendChild(svgContainer);
+  }
+  return svgContainer;
+}
+
+function clearSvgLines() {
+  if (svgContainer) {
+    while (svgContainer.firstChild) {
+      svgContainer.removeChild(svgContainer.firstChild);
+    }
+  }
+}
+
+function drawConnectorLines() {
+  clearSvgLines();
+  const container = createSvgContainer();
+  
+  // 获取所有"查看"按钮
+  const viewButtons = document.querySelectorAll('[class*="view-btn-"]');
+  if (viewButtons.length === 0) return;
+  
+  // 获取PRD侧边栏的"数据与状态对应关系"标题位置（通过固定ID）
+  const prdTitle = document.getElementById('dataStatusTitle');
+  if (!prdTitle) {
+    console.log('未找到 dataStatusTitle 元素');
+    return;
+  }
+  
+  // 使用 getBoundingClientRect + scroll 获取相对于视口的绝对位置
+  const prdRect = prdTitle.getBoundingClientRect();
+  const targetX = prdRect.left - 10 + window.scrollX;
+  const targetY = prdRect.top + prdRect.height / 2 + window.scrollY;
+  
+  // 为每个"查看"按钮绘制线条
+  viewButtons.forEach((btn, index) => {
+    // 使用 getBoundingClientRect + scroll 获取相对于视口的绝对位置
+    const btnRect = btn.getBoundingClientRect();
+    const startX = btnRect.right + 5 + window.scrollX;
+    const startY = btnRect.top + btnRect.height / 2 + window.scrollY;
+    
+    // 创建贝塞尔曲线路径
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const controlX1 = startX + 100;
+    const controlX2 = targetX - 100;
+    
+    path.setAttribute('d', `M ${startX} ${startY} C ${controlX1} ${startY}, ${controlX2} ${targetY}, ${targetX} ${targetY}`);
+    path.setAttribute('stroke', '#fa8c16');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('opacity', '0.6');
+    path.setAttribute('stroke-dasharray', '5,5');
+    
+    // 添加动画效果
+    const animate = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+    animate.setAttribute('attributeName', 'stroke-dashoffset');
+    animate.setAttribute('from', '10');
+    animate.setAttribute('to', '0');
+    animate.setAttribute('dur', '1s');
+    animate.setAttribute('repeatCount', 'indefinite');
+    path.appendChild(animate);
+    
+    container.appendChild(path);
+    
+    // 只在第一个按钮上显示箭头
+    if (index === 0) {
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      // 箭头指向左侧（朝向标题框）
+      arrow.setAttribute('points', `${targetX+5},${targetY-5} ${targetX},${targetY} ${targetX+5},${targetY+5}`);
+      arrow.setAttribute('fill', '#fa8c16');
+      arrow.setAttribute('opacity', '0.8');
+      container.appendChild(arrow);
+    }
+  });
+}
+
+// 窗口大小改变时重绘线条
+window.addEventListener('resize', () => {
+  drawConnectorLines();
+});
 
 function setAuditOrg(org) { auditOrg = org; renderPage(); }
 function setAuditSubTab(tab) { auditSubTab = tab; renderPage(); }
@@ -432,11 +560,27 @@ function openDetailById(id) {
   currentDetailRow = row;
   detailTab = 'history';
   const overlay = document.getElementById('detailOverlay');
-  overlay.innerHTML = buildDetailContent(row);
+  document.getElementById('detailMain').innerHTML = buildDetailContent(row);
   overlay.classList.add('show');
+  document.body.classList.add('detail-open');
   renderPrdSidebar();
+  renderDetailPrd();
 }
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('show'); currentDetailRow = null; renderPrdSidebar(); }
+function scrollToAudit() {
+  const bar = document.getElementById('auditActionBar');
+  if (bar) bar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function submitAudit(result) {
+  const sel = document.getElementById('auditResultSelect');
+  const comment = document.getElementById('auditCommentInput');
+  const r = sel ? sel.value : '';
+  if (!r) { showToast('请先选择审批结果','info'); return; }
+  const label = r === 'pass' ? '通过' : '拒绝';
+  showToast('审批'+label+'成功！'+(comment&&comment.value?' 意见：'+comment.value:''),'success');
+  if (currentDetailRow) currentDetailRow.status = r === 'pass' ? 'done' : 'done';
+  setTimeout(() => closeDetail(), 1500);
+}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('show'); document.body.classList.remove('detail-open'); currentDetailRow = null; renderPrdSidebar(); renderDetailPrd(); }
 function switchDetailTab(tab) {
   detailTab = tab;
   document.querySelectorAll('.detail-tab').forEach(el => el.classList.toggle('active', el.getAttribute('data-tab')===tab));
@@ -446,7 +590,7 @@ function getStageClass(s) { if(!s)return'pending'; if(s.includes('预筛'))retur
 function getStageIcon(s) { if(!s)return'⏳'; if(s.includes('预筛'))return'🔍'; if(s.includes('入组')&&!s.includes('已完成'))return'📋'; if(s.includes('已完成（入组）'))return'✅'; if(s.includes('已完成（排除）'))return'❌'; if(s.includes('待分配'))return'⏳'; return'⏳'; }
 function getStageDesc(s) { if(!s)return''; if(s.includes('待分配'))return'系统正在分配审批人，请稍候...'; if(s.includes('预筛'))return'请等待审批员完成审批'; if(s.includes('入组'))return'请等待审批员完成入组审批'; if(s.includes('已完成'))return'审批流程已结束'; return''; }
 
-// 根据匹配状态生成占位HTML（用于匹配详情/预筛表/思考链）
+// 根据匹配状态生成占位HTML（用于匹配详情/预筛表）
 function buildMatchStatusPlaceholder(status, tabName) {
   if (status === 'success') return ''; // 匹配成功，不显示占位
   if (status === 'matching') {
@@ -482,7 +626,7 @@ function buildDetailContent(row) {
     <button class="detail-back-btn" onclick="closeDetail()">← <span>${title}</span></button>
     <div class="detail-header-actions">
       <button class="btn-sm" onclick="showToast('基本信息功能开发中','info')">基本信息</button>
-      <button class="btn-sm" onclick="openAuditRecord(${row.id})">审批记录</button>
+      <button class="btn-sm" onclick="openAuditRecord(${row.id})">审批记录</button>${row.status==='pending'?'<button class="btn-sm" style="background:#fa8c16;border-color:#fa8c16" onclick="scrollToAudit()"><i class="fas fa-gavel"></i> 审核</button>':''}
     </div>
   </div>
   <!-- 浮动印章 -->
@@ -494,7 +638,6 @@ function buildDetailContent(row) {
       <div class="detail-tab ${detailTab==='history'?'active':''}" data-tab="history" onclick="switchDetailTab('history')">病史与资料</div>
       <div class="detail-tab ${detailTab==='match'?'active':''}" data-tab="match" onclick="switchDetailTab('match')">匹配详情</div>
       <div class="detail-tab ${detailTab==='prescreen'?'active':''}" data-tab="prescreen" onclick="switchDetailTab('prescreen')">预筛表</div>
-      <div class="detail-tab ${detailTab==='thinkchain'?'active':''}" data-tab="thinkchain" onclick="switchDetailTab('thinkchain')">思考链</div>
     </div>
     <!-- 病史与资料 -->
     <div class="detail-tab-content ${detailTab==='history'?'active':''}" id="detailTab_history">
@@ -680,13 +823,8 @@ function buildDetailContent(row) {
       <div style="padding:12px 20px"><label style="font-weight:600;font-size:12px;color:#555">备注：</label><textarea disabled style="width:100%;margin-top:6px;padding:8px 12px;border:1px solid #e8e8e8;border-radius:6px;resize:vertical;min-height:80px;color:#999;background:#fafafa;font-size:12px">内容由AI生成，仅供参考，请谨慎鉴别</textarea></div>
       ` : buildMatchStatusPlaceholder(row.matchStatus, '预筛表')}
     </div>
-    <!-- 思考链 -->
-    <div class="detail-tab-content ${detailTab==='thinkchain'?'active':''}" id="detailTab_thinkchain">
-      ${row.matchStatus === 'success' ? `
-      <div style="text-align:center;padding:60px 20px;color:#aaa"><i class="fas fa-brain" style="font-size:40px;color:#d9d9d9;margin-bottom:16px;display:block"></i><div style="font-size:14px;color:#555;margin-bottom:8px">思考链分析</div><div style="font-size:12px">AI思考链分析过程将在此处展示</div></div>
-      ` : buildMatchStatusPlaceholder(row.matchStatus, '思考链')}
-    </div>
-  </div>`;
+  </div>
+  ${row.status==='pending'?'':''}`;
 }
 
 // ==================== AUDIT RECORD ====================
@@ -736,26 +874,14 @@ function renderPrdSidebar() {
 
   document.getElementById('prdSidebar').innerHTML = `
     <h2 class="prd-title">📋 PRD - 审核列表与查看页面</h2>
-    <div class="prd-section">
-      <h3 class="prd-section-title">需要解耦的地方包括</h3>
-      <p class="prd-text" style="color:red">需要解耦的地方如下（不限于以下，具体还需要后端 再看细节）：
-        <ul>
-          <li>1. 需要上传资料后才可以进行项目匹配，才可提交审核，（上传资料之后，可以匹配，也可以提交审核）</li>
-          <li>2. 预筛通过后需要进行项目匹配才可提交审核（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
-          <li>3. 主知情审核通过后需要进行项目匹配才可提交审核（含主知情审核）（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
-          <li>4. 超管和管理员在审核中时也可以进行项目匹配，其他角色在审核中时不可重新匹配  （提交人和审核人都可进行项目匹配，点击匹配，弹出一个确认匹配框）</li>
-          <li>5. 审核阶段的展示跟流程挂钩；</li>
-          <li>6. 提交审核  查看页面 将 病史与资料提到第一个tab页面</li>
-          <li>7.APP审核页面  跳转出来 病史与资料页面，右上角 有匹配 就是匹配详情，没有匹配就是项目匹配的按钮，跟现在的病史与资料页面保持一致
-        </ul>
-            </div>
-
-    <div class="prd-section">
+    
+    <!-- 数据与状态对应关系放在最前面，确保初始可见 -->
+     <div class="prd-section">
       <h3 class="prd-section-title">匹配状态逻辑（重要）</h3>
-      <p class="prd-text">「匹配详情」「预筛表」「思考链」三个Tab根据 <strong>matchStatus</strong> 字段显示不同内容：</p>
+      <p class="prd-text">「匹配详情」「预筛表」2个Tab根据 <strong>matchStatus</strong> 字段显示不同内容：</p>
       <div class="prd-highlight">
         <p class="prd-text" style="margin-bottom:4px"><strong>✅ 匹配成功 (success)</strong></p>
-        <p class="prd-text" style="font-size:12px">显示完整数据：匹配运行信息、入排标准表格、预筛表、思考链</p>
+        <p class="prd-text" style="font-size:12px">显示完整数据：匹配运行信息、入排标准表格、预筛表</p>
       </div>
       <div class="prd-highlight">
         <p class="prd-text" style="margin-bottom:4px"><strong>⏳ 正在匹配中 (matching)</strong></p>
@@ -770,9 +896,8 @@ function renderPrdSidebar() {
         <p class="prd-text" style="font-size:12px">三个Tab显示"如果您希望用AI进行智能提取，可点击项目匹配"</p>
       </div>
     </div>
-
     <div class="prd-section">
-      <h3 class="prd-section-title">数据与状态对应关系（共12条）</h3>
+      <h3 class="prd-section-title" id="dataStatusTitle">数据与状态对应关系（共12条）</h3>
       <div style="overflow-x:auto;border:1px solid #e8e8e8;border-radius:8px;background:#fff">
         <table style="width:100%;border-collapse:collapse">
           <thead>
@@ -789,13 +914,17 @@ function renderPrdSidebar() {
       </div>
     </div>
 
+   
+
+   
+
     ${isDetail ? `
     <div class="prd-section">
       <h3 class="prd-section-title">当前查看</h3>
       <div class="prd-highlight" style="border-color:${ms==='success'?'#b7eb8f':ms==='matching'?'#91caff':ms==='failed'?'#ffa39e':'#d9d9d9'}">
         <p class="prd-text" style="margin-bottom:4px">筛选号：<strong>${currentDetailRow.screenNo}</strong> | 患者：${currentDetailRow.age}岁${currentDetailRow.gender} | 方案：${currentDetailRow.planNo}</p>
         <p class="prd-text">匹配状态：<strong style="color:${statusMap[ms].color}">${statusMap[ms].label}</strong></p>
-        <p class="prd-text" style="font-size:12px;color:#999;margin-top:4px">切换到「匹配详情」「预筛表」「思考链」Tab可查看对应状态效果</p>
+        <p class="prd-text" style="font-size:12px;color:#999;margin-top:4px">切换到「匹配详情」「预筛表」Tab可查看对应状态效果</p>
       </div>
     </div>
     ` : `
@@ -807,7 +936,46 @@ function renderPrdSidebar() {
         <li>病史与资料Tab不受匹配状态影响，始终显示文件管理界面</li>
       </ul>
     </div>
+     <div class="prd-section">
+      <h3 class="prd-section-title">需要解耦的地方包括</h3>
+      <p class="prd-text" style="color:red">需要解耦的地方如下（不限于以下，具体还需要后端 再看细节）：
+        <ul>
+          <li>1. 需要上传资料后才可以进行项目匹配，才可提交审核，（上传资料之后，可以匹配，也可以提交审核）</li>
+          <li>2. 预筛通过后需要进行项目匹配才可提交审核（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
+          <li>3. 主知情审核通过后需要进行项目匹配才可提交审核（含主知情审核）（匹配和提交审核分开，匹配时匹配，审核是审核）</li>
+          <li>4. 超管和管理员在审核中时也可以进行项目匹配，其他角色在审核中时不可重新匹配  （提交人和审核人都可进行项目匹配，点击匹配，弹出一个确认匹配框）</li>
+          <li>5. 审核阶段的展示跟流程挂钩；</li>
+          <li>6. 提交审核  查看页面 将 病史与资料提到第一个tab页面</li>
+          <li>7.APP审核页面  跳转出来 病史与资料页面，右上角 有匹配 就是匹配详情，没有匹配就是项目匹配的按钮，跟现在的病史与资料页面保持一致
+        </ul>
+            </div>
     `}
+  `;
+}
+
+// ==================== DETAIL PRD SIDEBAR ====================
+function renderDetailPrd() {
+  const el = document.getElementById('detailPrdSidebar');
+  if (!el) return;
+  if (!currentDetailRow) { el.innerHTML = ''; return; }
+  const row = currentDetailRow;
+  const ms = row.matchStatus;
+  const statusMap = { matching:{label:'⏳ 匹配中',color:'#1677ff',bg:'#e6f4ff'}, success:{label:'✅ 匹配成功',color:'#52c41a',bg:'#f6ffed'}, none:{label:'🔘 未匹配',color:'#8c8c8c',bg:'#fafafa'}, failed:{label:'❌ 匹配失败',color:'#ff4d4f',bg:'#fff2f0'} };
+  const s = statusMap[ms] || statusMap.none;
+  const flow = auditFlowData[row.id];
+  const auditCount = flow ? ((flow.prescreen||[]).length + (flow.enrolling||[]).length) : 0;
+  el.innerHTML = `
+    <h2 class="prd-title">📋 PRD - 审核查看页面</h2>
+    <div class="prd-section">
+      <h3 class="prd-section-title">功能概述</h3>
+  
+      <ul class="prd-list">
+        <li>病史与资料 Tab 放在第一位，方便审批人首先查看患者原始资料</li>
+        <li>如果待审核，当前页面可以直接审核，点击审核按钮，审核页面跟之前保持一致</li>
+       
+      </ul>
+    </div>
+   
   `;
 }
 
