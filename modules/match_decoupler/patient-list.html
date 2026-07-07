@@ -30,11 +30,11 @@
     }
     .main-content {
       flex: 1;
-      max-width: calc(100% - 420px);
+      max-width: calc(100% - 320px);
       overflow-x: hidden;
     }
     .prd-sidebar {
-      width: 360px;
+      width: 315px;
       background: linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);
       border-left: 2px solid #ffd591;
       padding: 24px 16px;
@@ -1593,7 +1593,7 @@
     <div class="prd-section">
       <h3 class="prd-section-title">交互流程</h3>
       
-      <p class="prd-text"><strong>A. 通过项目匹配按钮：</strong></p>
+      <p class="prd-text"><strong id="prd-section-a">A. 通过项目匹配按钮：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
         <li id="prd-step1"><strong>步骤1：</strong>用户点击"项目匹配"按钮（可选）</li>
@@ -1602,7 +1602,16 @@
         <li id="prd-step4"><strong>步骤4：</strong>用户选择：关闭 / 同步提交审批</li>
       </ul>
       
-      <p class="prd-text" style="margin-top:16px;"><strong>B. 直接提交审批：</strong></p>
+      <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-b">B. 查看病史与资料：</strong></p>
+      <ul class="prd-list">
+        <li><strong>前置条件：</strong>患者已上传病史与资料</li>
+        <li><strong>步骤1：</strong>用户点击操作列的"病史与资料"链接</li>
+        <li><strong>步骤2：</strong>页面切换到文件管理视图</li>
+        <li><strong>步骤3：</strong>显示左侧目录树、中间文件列表、右侧PRD说明</li>
+        <li><strong>步骤4：</strong>可进行文件查看、上传、删除等操作</li>
+      </ul>
+      
+      <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-c">C. 直接提交审批：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
         <li id="prd-stepB1"><strong>步骤1：</strong>用户点击操作列的"提交审批"按钮</li>
@@ -2092,7 +2101,7 @@
           <td class="col-sticky-right-2">
             <div class="action-links">
               <a href="javascript:void(0)">编辑</a><span>|</span>
-              <a href="javascript:void(0)" onclick="switchToFilesView(${p.id})">病史与资料</a><span>|</span>
+              <a href="javascript:void(0)" class="history-files-btn" onclick="switchToFilesView(${p.id})">病史与资料</a><span>|</span>
               <a href="match-detail-new.html?id=${p.id}&screenNo=${encodeURIComponent(p.screenNo)}&age=${p.age}&gender=${encodeURIComponent(p.gender)}&centerNo=${p.centerNo}&center=${encodeURIComponent(p.center)}">匹配详情</a><span>|</span>
               <a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})">提交审批</a><span>|</span>
               <a href="javascript:void(0)" onclick="viewAuditRecord('${p.patientNo}')">审批记录</a><span>|</span>
@@ -2862,8 +2871,15 @@
             <li id="files-prd-step3"><strong>步骤3：</strong>确认后显示"系统匹配中"弹窗（居中）</li>
             <li id="files-prd-step4"><strong>步骤4：</strong>用户选择：关闭 / 同步提交审批</li>
           </ul>
-          
-          <p class="prd-text" style="margin-top:16px;"><strong>B. 直接提交审批：</strong></p>
+           <p class="prd-text"><strong>B. “病史与资料”页面的“项目匹配”按钮：</strong></p>
+          <ul class="prd-list">
+            <li><strong>前置条件：</strong>患者已上传病史与资料</li>
+            <li id="files-prd-step1"><strong>步骤1：</strong>用户点击"项目匹配"按钮（可选）</li>
+            <li id="files-prd-step2"><strong>步骤2：</strong>弹出确认框询问是否开始匹配</li>
+            <li id="files-prd-step3"><strong>步骤3：</strong>确认后显示"系统匹配中"弹窗（居中）</li>
+            <li id="files-prd-step4"><strong>步骤4：</strong>用户选择：关闭 / 同步提交审批</li>
+          </ul>
+          <p class="prd-text" style="margin-top:16px;"><strong>C. 直接提交审批：</strong></p>
           <ul class="prd-list">
             <li><strong>前置条件：</strong>患者已上传病史与资料</li>
             <li id="files-prd-stepB1"><strong>步骤1：</strong>用户点击操作列的"提交审批"按钮</li>
@@ -3125,18 +3141,25 @@
       // 保留箭头marker定义
       svg.innerHTML = '<defs><marker id="connectorArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#fa8c16" /></marker></defs>';
 
-      // 连线1: 表格中"项目匹配"按钮 → PRD侧边栏"一、项目匹配状态提示"
+      // 连线1: 表格中“项目匹配”按钮 → PRD侧边栏“A. 通过项目匹配按钮：”
       const firstMatchBtn = document.querySelector('.project-match-btn');
-      const prdSection1 = document.querySelector('.prd-section:nth-child(2) .prd-section-title');
-      if (firstMatchBtn && prdSection1) {
-        drawConnectorLine(svg, firstMatchBtn, prdSection1, '1');
+      const prdSectionA = document.getElementById('prd-section-a');
+      if (firstMatchBtn && prdSectionA) {
+        drawConnectorLine(svg, firstMatchBtn, prdSectionA, 'A');
       }
-
-      // 连线2: 表格中"提交审批"按钮 → PRD侧边栏"三、预筛表必填项校验"
+      
+      // 连线2: 表格中“病史与资料”链接 → PRD侧边栏“B. 查看病史与资料：”
+      const historyFilesBtn = document.querySelector('.history-files-btn');
+      const prdSectionB = document.getElementById('prd-section-b');
+      if (historyFilesBtn && prdSectionB) {
+        drawConnectorLine(svg, historyFilesBtn, prdSectionB, 'B');
+      }
+      
+      // 连线3: 表格中“提交审批”按钮 → PRD侧边栏“C. 直接提交审批：”
       const submitAuditBtn = document.querySelector('.submit-audit-btn');
-      const prdSection3 = document.querySelector('.prd-section:nth-child(4) .prd-section-title');
-      if (submitAuditBtn && prdSection3) {
-        drawConnectorLine(svg, submitAuditBtn, prdSection3, '2');
+      const prdSectionC = document.getElementById('prd-section-c');
+      if (submitAuditBtn && prdSectionC) {
+        drawConnectorLine(svg, submitAuditBtn, prdSectionC, 'C');
       }
     }
 
