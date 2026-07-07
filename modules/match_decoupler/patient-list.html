@@ -668,6 +668,125 @@
     .confirm-btn.primary { background: #1677ff; color: #fff; border-color: #1677ff; }
     .confirm-btn.primary:hover { background: #4096ff; border-color: #4096ff; }
 
+    /* 入排版本选择弹窗 */
+    .version-select-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 8500; display: none; align-items: center; justify-content: center;
+    }
+    .version-select-overlay.show { display: flex; }
+    .version-select-modal {
+      width: 100%; max-width: 520px; background: #fff; border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15); animation: confirmIn 0.25s ease;
+      overflow: hidden;
+    }
+    .version-select-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0; position: relative;
+    }
+    .version-select-header::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+    }
+    .version-select-title { font-size: 17px; font-weight: 600; color: #333; }
+    .version-select-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 14px; transition: all 0.2s;
+    }
+    .version-select-close:hover { background: #f5f5f5; color: #333; }
+    .version-select-body { padding: 20px; }
+    
+    /* 表格样式 */
+    .version-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    .version-table th,
+    .version-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .version-table th {
+      background: #f5f7fa;
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    .version-table td {
+      font-size: 14px;
+      color: #666;
+    }
+    .version-table tr:last-child th,
+    .version-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    /* 下拉选择框 */
+    .select-wrapper {
+      position: relative;
+    }
+    .custom-select {
+      width: 100%;
+      padding: 10px 40px 10px 12px;
+      border: 1px solid #e8e8e8;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #333;
+      background: #fff;
+      cursor: pointer;
+      appearance: none;
+      outline: none;
+      transition: all 0.3s;
+    }
+    .custom-select:focus {
+      border-color: #1677ff;
+      box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+    }
+    .select-arrow {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #999;
+      font-size: 12px;
+    }
+    
+    .version-select-footer {
+      display: flex; gap: 12px; padding: 16px 20px; border-top: 1px solid #f0f0f0;
+    }
+    .version-btn {
+      flex: 1; padding: 12px; border-radius: 20px; font-size: 15px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s; border: 1px solid #ddd;
+      background: #fff; color: #666;
+    }
+    .version-btn-cancel:active {
+      background: #f5f5f5;
+    }
+    .version-btn-confirm {
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      color: #fff; border: none;
+      box-shadow: 0 4px 12px rgba(22, 93, 255, 0.25);
+    }
+    .version-btn-confirm:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+    }
+    .version-btn-confirm.loading {
+      background: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
     /* 系统匹配中弹窗 */
     .matching-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -1436,6 +1555,49 @@
     </div>
   </div>
 
+  <!-- 入排版本选择弹窗 -->
+  <div class="version-select-overlay" id="versionSelectOverlay">
+    <div class="version-select-modal">
+      <div class="version-select-header">
+        <div class="version-select-title">入排版本选择</div>
+        <button class="version-select-close" onclick="closeVersionSelectModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="version-select-body">
+        <table class="version-table">
+          <thead>
+            <tr>
+              <th>项目编码</th>
+              <th>入排标准版本选择</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>测试入组流程</td>
+              <td>
+                <div class="select-wrapper">
+                  <select class="custom-select" id="versionSelect">
+                    <option value="V2.0">V2.0 (V2.0)</option>
+                    <option value="V1.9">V1.9 (V1.9)</option>
+                    <option value="V1.8">V1.8 (V1.8)</option>
+                  </select>
+                  <i class="fas fa-chevron-down select-arrow"></i>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="version-select-footer">
+        <button class="version-btn version-btn-cancel" onclick="closeVersionSelectModal()">取消</button>
+        <button class="version-btn version-btn-confirm" onclick="confirmVersionSelect()">确定</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 系统匹配中弹窗 -->
   <div class="matching-overlay" id="matchingOverlay">
     <div class="matching-panel">
@@ -1596,6 +1758,7 @@
       <p class="prd-text"><strong id="prd-section-a">A. 通过项目匹配按钮：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
+        <li id="prd-step1"><strong style="color: red;">第一条数据是一个入排版本的样式；第二条数据是多版本的样式</strong></li>
         <li id="prd-step1"><strong>步骤1：</strong>用户点击"项目匹配"按钮（可选）</li>
         <li id="prd-step2"><strong>步骤2：</strong>弹出确认框询问是否开始匹配</li>
         <li id="prd-step3"><strong>步骤3：</strong>确认后显示"系统匹配中"弹窗（居中）</li>
@@ -2190,10 +2353,17 @@
     }
 
     // 显示项目匹配确认框
-    function showProjectMatchConfirm(patientId) {
+    function showProjectMatchConfirm(patientId, matchStatus) {
       const patient = patientData.find(p => p.id === patientId);
       if (!patient) return;
-      
+
+      // 第二条数据（id=2）先显示版本选择弹窗
+      if (patientId === 2) {
+        window.currentPatientId = patientId;
+        showVersionSelectModal();
+        return;
+      }
+
       showConfirm(
         '项目匹配确认',
         `您确定要对患者「<strong style="color:#1677ff">${patient.screenNo}</strong>」进行项目匹配吗？`,
@@ -2206,6 +2376,28 @@
         },
         { iconType: 'info', okText: '开始匹配' }
       );
+    }
+
+    // 显示版本选择弹窗
+    function showVersionSelectModal() {
+      document.getElementById('versionSelectOverlay').classList.add('show');
+    }
+
+    // 关闭版本选择弹窗
+    function closeVersionSelectModal() {
+      document.getElementById('versionSelectOverlay').classList.remove('show');
+    }
+
+    // 确认版本选择
+    function confirmVersionSelect() {
+      const versionSelect = document.getElementById('versionSelect');
+      const selectedVersion = versionSelect.value;
+      closeVersionSelectModal();
+      const patientId = window.currentPatientId;
+      if (patientId) {
+        setMatchBtnLoading(patientId, true);
+      }
+      showMatchingModal();
     }
 
     // 设置项目匹配按钮为加载中状态
