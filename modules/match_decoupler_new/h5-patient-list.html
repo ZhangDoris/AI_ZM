@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>患者列表 - 智能预筛</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      color: #333;
+    }
+    /* 顶部导航栏 */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid #eee;
+      height: 55px;
+      box-sizing: border-box;
+    }
+    .nav-bar .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .nav-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #555;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-btn:active { background: #eee; }
+    .nav-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 600;
+    }
+    /* Tab切换 */
+    .tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 55px;
+      z-index: 99;
+      height: 46px;
+      box-sizing: border-box;
+    }
+    .tab-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 15px;
+      color: #888;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-item.active {
+      color: #165DFF;
+      font-weight: 600;
+    }
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 3px;
+      background: #165DFF;
+      border-radius: 2px;
+    }
+    .tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      background: #F53F3F;
+      color: #fff;
+      font-size: 11px;
+      padding: 0 5px;
+      margin-left: 4px;
+      font-weight: 500;
+    }
+    /* 搜索框 */
+    .search-bar {
+      padding: 10px 0;
+      background: #fff;
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 8px 12px;
+      gap: 8px;
+    }
+    .search-input-wrap i {
+      color: #999;
+      font-size: 14px;
+    }
+    .search-input-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 14px;
+      color: #333;
+    }
+    .search-input-wrap input::placeholder { color: #bbb; }
+    /* 筛选区 */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      background: #fff;
+    }
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #555;
+      background: #f5f5f5;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .filter-chip:active { background: #e8e8e8; }
+    .filter-chip i { font-size: 10px; color: #999; }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      cursor: pointer;
+      margin-left: auto;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .add-btn:active { opacity: 0.85; }
+    /* 患者卡片 */
+    .patient-card {
+      background: #fff;
+      margin: 4px;
+      border-radius: 0px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .patient-info { display: flex; flex-direction: column; gap: 2px; }
+    .patient-name {
+      font-size: 16px; font-weight: 600; color: #1a1a1a;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .patient-meta {
+      font-size: 12px; color: #999;
+      display: flex; gap: 8px;
+    }
+    .card-header-right {
+      display: flex; gap: 6px;
+    }
+    .icon-btn {
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: #999;
+      font-size: 14px;
+      cursor: pointer;
+      background: #f5f5f5;
+      transition: all 0.2s;
+    }
+    .icon-btn:active { background: #e0e0e0; color: #333; }
+    /* 状态标签 */
+    .status-tags {
+      display: flex; gap: 6px;
+      padding: 10px 16px;
+      flex-wrap: wrap;
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tag-matched { background: #E8F5E9; color: #2E7D32; }
+    .tag-matching { background: #E6F7FF; color: #1890FF; }
+    .tag-unmatched { background: #FFF3E0; color: #E65100; }
+    .tag-unsubmit { background: #F3E5F5; color: #7B1FA2; }
+    .tag-submitted { background: #E3F2FD; color: #1565C0; }
+    .tag-presubmit {
+      background: #FFF1F0; color: #CF1322; border: 1px solid #FFA39E;
+      display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+    .tag-presubmit i { font-size: 10px; }
+    /* 中心与操作人信息 */
+    .card-info-row {
+      display: flex; align-items: center;
+      padding: 6px 16px;
+      gap: 20px;
+      font-size: 13px; color: #666;
+    }
+    .card-info-row i { color: #999; font-size: 12px; width: 16px; text-align: center; }
+    .card-info-row span { display: flex; align-items: center; gap: 4px; }
+    /* 操作按钮组 */
+    .action-btns {
+      display: flex; gap: 8px;
+      padding: 10px 16px;
+      border-top: 1px solid #f5f5f5;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+    }
+    .btn-primary:active { opacity: 0.85; }
+    .btn-outline {
+      background: #fff;
+      color: #165DFF;
+      border: 1px solid #165DFF;
+    }
+    .btn-outline:active { background: #f0f5ff; }
+    .btn-ghost {
+      background: #f5f5f5;
+      color: #555;
+    }
+    .btn-ghost:active { background: #e8e8e8; }
+    /* 病史与资料 可展开区 */
+    .expand-section {
+      border-top: 1px solid #f5f5f5;
+    }
+    .expand-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 13px; color: #666;
+      user-select: none;
+    }
+    .expand-header-left {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .expand-header i.fa-chevron-down {
+      transition: transform 0.25s ease;
+      font-size: 12px; color: #999;
+    }
+    .expand-header.expanded i.fa-chevron-down {
+      transform: rotate(180deg);
+    }
+    .expand-body {
+      display: none;
+      padding: 0 16px 14px;
+    }
+    .expand-body.show { display: block; }
+    .history-item {
+      display: flex; justify-content: space-between;
+      padding: 6px 0;
+      font-size: 13px; color: #555;
+      border-bottom: 1px dashed #f0f0f0;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .hi-label { color: #999; }
+    .data-tag-row {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;
+    }
+    .data-tag {
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #E8F5FE;
+      color: #1976D2;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .data-tag i { font-size: 11px; }
+    .data-tag:active { background: #BBDEFB; }
+    /* 底部占位 */
+    .bottom-spacer { height: 20px; }
+
+    /* 弹窗(Toast) */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #fff;
+      padding: 10px 24px; border-radius: 8px;
+      font-size: 14px; z-index: 999;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+
+    /* 中心选择器面板 */
+    .center-panel {
+      display: none;
+      position: fixed; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 200;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      animation: slideUp 0.25s ease;
+    }
+    .center-panel.show { display: block; }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100%); }
+      to { transform: translateX(-50%) translateY(0); }
+    }
+    .panel-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 199;
+    }
+    .panel-overlay.show { display: block; }
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      font-size: 16px; font-weight: 600;
+    }
+    .panel-close {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; background: #f5f5f5;
+      font-size: 16px; color: #999; cursor: pointer;
+    }
+    .panel-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .panel-item:active { background: #f9f9f9; }
+    .panel-item.active { color: #165DFF; }
+    .panel-item.active::after {
+      content: '\f00c';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      font-size: 14px;
+    }
+    /* 中心搜索框 */
+    .center-search-wrap {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+    }
+    .center-search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #333;
+      background: #f9f9f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 12px center;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .center-search-input:focus {
+      border-color: #165DFF;
+      background-color: #fff;
+    }
+    .center-search-input::placeholder { color: #bbb; }
+
+    /* 提交审批弹窗 - H5手机端底部弹出 */
+    .audit-modal {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 300;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+      animation: slideUp 0.3s ease;
+      overflow-y: auto;
+      max-height: 85vh;
+    }
+    .audit-modal.show { display: block; }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100%); }
+      to { transform: translateX(-50%) translateY(0); }
+    }
+    .audit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    .audit-header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+    .audit-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f5f5f5;
+      font-size: 16px;
+      color: #999;
+      cursor: pointer;
+    }
+    .audit-close:active { background: #e8e8e8; }
+    .audit-form {
+      padding: 20px 16px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .form-label .required {
+      color: #F53F3F;
+      margin-right: 4px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      background: #f9f9f9;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: #165DFF;
+      background: #fff;
+    }
+    .form-input::placeholder { color: #bbb; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .form-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      background: #f9f9f9;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-textarea:focus {
+      border-color: #165DFF;
+      background: #fff;
+    }
+    .form-textarea::placeholder { color: #bbb; }
+    /* 非标准流程提示区 */
+    .non-standard-warn {
+      display: none;
+      margin-top: 10px;
+      background: #FFF7E6;
+      border: 1px solid #FFD591;
+      border-radius: 8px;
+      padding: 12px;
+      animation: fadeIn 0.25s ease;
+    }
+    .non-standard-warn.show { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .warn-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #D46B08;
+      margin-bottom: 8px;
+    }
+    .warn-header i { font-size: 14px; }
+    .warn-textarea {
+      width: 100%;
+      min-height: 60px;
+      padding: 10px;
+      border: 1px solid #FFD591;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #333;
+      background: #fff;
+      outline: none;
+      resize: vertical;
+      font-family: inherit;
+    }
+    .warn-textarea:focus { border-color: #FA8C16; }
+    .warn-textarea::placeholder { color: #bbb; }
+    .audit-footer {
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid #eee;
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+    }
+    .audit-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .audit-btn:active { opacity: 0.85; }
+    .audit-btn-cancel {
+      background: #f5f5f5;
+      color: #666;
+      border: 1px solid #ddd;
+    }
+    .audit-btn-submit {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+    }
+
+    /* 项目匹配确认弹窗 / 系统匹配中弹窗 */
+    .match-confirm-modal,
+    .matching-progress-modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      width: 86%; max-width: 340px;
+      background: #fff;
+      border-radius: 16px;
+      z-index: 250;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+      animation: modalPop 0.25s ease forwards;
+      overflow: hidden;
+    }
+    .match-confirm-modal.show,
+    .matching-progress-modal.show { display: block; }
+    @keyframes modalPop {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    .confirm-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 20px 20px 12px;
+    }
+    .confirm-header i {
+      width: 36px; height: 36px;
+      background: #E8F4FF; color: #165DFF;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .confirm-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .confirm-body {
+      padding: 0 20px 20px;
+      font-size: 15px; color: #555; line-height: 1.6;
+    }
+    .confirm-body strong { color: #165DFF; }
+    .confirm-footer,
+    .progress-footer {
+      display: flex; gap: 12px;
+      padding: 0 20px 20px;
+    }
+    .confirm-btn,
+    .progress-btn {
+      flex: 1;
+      padding: 11px 0;
+      border-radius: 8px;
+      font-size: 15px; font-weight: 500;
+      cursor: pointer; border: none;
+      transition: opacity 0.2s;
+    }
+    .confirm-btn { background: #fff; color: #666; border: 1px solid #ddd; }
+    .confirm-btn.primary {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff; border: none;
+    }
+    .confirm-btn.primary:active, .progress-btn.primary:active { opacity: 0.85; }
+
+    /* 入排版本选择弹窗 */
+    .version-select-modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      width: 90%; max-width: 380px;
+      background: #fff;
+      border-radius: 16px;
+      z-index: 250;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+      animation: modalPop 0.25s ease forwards;
+      overflow: hidden;
+    }
+    .version-select-modal.show { display: block; }
+    .version-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .version-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .version-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 16px; cursor: pointer;
+      background: #f5f5f5; border: none;
+    }
+    .version-body { padding: 16px 20px; }
+    .version-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .version-table th {
+      background: #f5f7fa; color: #666; font-weight: 500;
+      padding: 10px 12px; text-align: left; border-bottom: 1px solid #e8e8e8;
+    }
+    .version-table td {
+      padding: 12px; border-bottom: 1px solid #f0f0f0;
+      color: #333; vertical-align: middle;
+    }
+    .version-select-wrap {
+      position: relative;
+    }
+    .version-select-wrap select {
+      appearance: none; -webkit-appearance: none;
+      width: 100%; padding: 8px 28px 8px 10px;
+      border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; color: #333; background: #fff;
+      cursor: pointer;
+    }
+    .version-select-wrap::after {
+      content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      color: #999; font-size: 12px; pointer-events: none;
+    }
+    .version-footer {
+      display: flex; gap: 12px; padding: 0 20px 20px;
+    }
+    .version-btn {
+      flex: 1; padding: 11px 0; border-radius: 20px;
+      font-size: 15px; font-weight: 500; cursor: pointer; border: none;
+      transition: opacity 0.2s;
+    }
+    .version-btn.cancel { background: #fff; color: #666; border: 1px solid #ddd; }
+    .version-btn.confirm {
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      color: #fff;
+    }
+    .version-btn.confirm:active { opacity: 0.85; }
+
+    /* 重新匹配确认弹窗（资料未变更） */
+    .rematch-confirm-modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.96);
+      width: 86%; max-width: 340px;
+      background: #fff;
+      border-radius: 16px;
+      z-index: 250;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.22);
+      animation: modalPop 0.25s ease forwards;
+      overflow: hidden;
+    }
+    .rematch-confirm-modal.show { display: block; }
+    .rematch-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 20px 20px 12px;
+    }
+    .rematch-header i {
+      width: 36px; height: 36px;
+      background: #FFF1F0; color: #FF4D4F;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .rematch-title { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .rematch-body {
+      padding: 0 20px 20px;
+      font-size: 14px; color: #555; line-height: 1.7;
+    }
+    .rematch-info-box {
+      background: #FFF7E6;
+      border: 1px solid #FFD591;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #666;
+    }
+    .rematch-info-box strong { color: #D46B08; }
+    .rematch-footer {
+      display: flex; gap: 12px; padding: 0 20px 20px;
+    }
+    .rematch-btn {
+      flex: 1; padding: 11px 0; border-radius: 8px;
+      font-size: 15px; font-weight: 500; cursor: pointer; border: none;
+      transition: opacity 0.2s;
+    }
+    .rematch-btn.cancel { background: #fff; color: #666; border: 1px solid #ddd; }
+    .rematch-btn.confirm {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+    }
+    .progress-header {
+      padding: 20px;
+      font-size: 18px; font-weight: 600; color: #1a1a1a;
+    }
+    .progress-body { padding: 0 20px 20px; }
+    .spinner-wrap { text-align: center; margin-bottom: 24px; }
+    .spinner-wrap i { font-size: 36px; color: #165DFF; margin-bottom: 12px; }
+    .spinner-wrap p { font-size: 15px; color: #333; font-weight: 500; }
+    .tips-box {
+      background: #E8F4FF;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px; color: #555; line-height: 1.6;
+    }
+    .tips-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 14px; font-weight: 600; color: #165DFF;
+      margin-bottom: 8px;
+    }
+    .tips-box ul { padding-left: 16px; margin: 0; }
+    .tips-box li { margin-bottom: 6px; }
+    .tips-box strong { color: #165DFF; }
+    .progress-btn.secondary {
+      background: #fff; color: #666;
+      border: 1px solid #ddd; border-radius: 20px;
+    }
+    .progress-btn.primary {
+      background: linear-gradient(135deg, #165DFF 0%, #36CFFF 100%);
+      color: #fff; border-radius: 20px;
+    }
+
+    /* 智能推荐卡片 */
+    .smart-recommend-card {
+      margin-top: 12px;
+      background: linear-gradient(135deg, #E8F4FF 0%, #F0F7FF 100%);
+      border: 1px solid #B3D8FF;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .recommend-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .recommend-header i {
+      font-size: 14px;
+    }
+    .recommend-body {
+      padding: 12px;
+    }
+    .recommend-text {
+      font-size: 13px;
+      color: #555;
+      margin: 0 0 10px 0;
+      line-height: 1.5;
+    }
+    .audit-chain {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed #B3D8FF;
+      flex-wrap: wrap;
+    }
+    .chain-label {
+      font-size: 12px;
+      color: #888;
+      font-weight: 500;
+    }
+    .chain-item {
+      font-size: 13px;
+      color: #165DFF;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #165DFF;
+    }
+    .chain-item.chain-active {
+      background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
+      color: #fff;
+      border-color: #165DFF;
+    }
+    .chain-arrow {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+    }
+
+    /* 需求说明面板 — 右侧抽屉 */
+    .prd-drawer {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      width: 20vw;
+      min-width: 300px;
+      max-width: 480px;
+      height: calc(100vh - 56px);
+      background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+      z-index: 60;
+      transform: translateX(100%);
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #e8e8e8;
+    }
+    .prd-drawer.expanded {
+      transform: translateX(0);
+    }
+    .prd-drawer-handle {
+      position: absolute;
+      left: -56px;
+      top: 160px;
+      width: 56px;
+      height: 140px;
+      background: linear-gradient(180deg, #1677ff 0%, #0958d9 100%);
+      color: #fff;
+      border-radius: 10px 0 0 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: -4px 0 22px rgba(22,119,255,0.45);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 61;
+    }
+    .prd-drawer-handle::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: #fff;
+      opacity: 0.3;
+      border-radius: 10px 0 0 10px;
+    }
+    .prd-drawer-handle:hover {
+      width: 64px;
+      left: -64px;
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -6px 0 30px rgba(22,119,255,0.65);
+    }
+    .prd-drawer-handle:active {
+      background: linear-gradient(180deg, #0958d9 0%, #0047b3 100%);
+      box-shadow: -2px 0 12px rgba(22,119,255,0.4);
+      transition: all 0.08s;
+    }
+    .prd-drawer-handle .handle-text {
+      writing-mode: vertical-rl;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 6px;
+    }
+    .prd-drawer-handle .handle-icon {
+      font-size: 18px;
+    }
+    .prd-drawer-handle .handle-hint {
+      position: absolute;
+      right: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .prd-drawer-handle:hover .handle-hint {
+      opacity: 1;
+    }
+    /* 抽屉展开时把手隐藏 */
+    .prd-drawer.expanded .prd-drawer-handle {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    .prd-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .prd-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1677ff;
+      flex-shrink: 0;
+      margin: 0 20px;
+      padding-top: 16px;
+    }
+    .prd-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1677ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prd-panel-close {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: #f5f5f5;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .prd-panel-close:hover {
+      background: #ff4d4f;
+      color: white;
+    }
+    /* 手机端 */
+    @media (max-width: 768px) {
+      .prd-drawer {
+        width: 85vw;
+        min-width: unset;
+        max-width: unset;
+      }
+    }
+    .prd-section {
+      margin-bottom: 16px;
+    }
+    .prd-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      border-left: 3px solid #1677ff;
+    }
+    .prd-section-content {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.8;
+      padding-left: 13px;
+    }
+    .prd-section-content ul {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+    .prd-section-content ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    .prd-section-content li {
+      margin-bottom: 4px;
+    }
+    .prd-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .prd-badge-admin {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+    .prd-badge-core {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+    .prd-badge-data {
+      background: #f0f5ff;
+      color: #1677ff;
+      border: 1px solid #91caff;
+    }
+
+  </style>
+</head>
+<body>
+    <div>
+
+
+
+
+
+ 
+  <!-- 顶部导航栏 -->
+  <div class="nav-bar">
+    <div class="nav-btn" onclick="history.back()"><i class="fas fa-chevron-left"></i></div>
+    <span class="nav-title">患者列表</span>
+    <div class="nav-avatar">我</div>
+  </div>
+
+  <!-- Tab切换 -->
+  <div class="tab-bar">
+    <div class="tab-item" onclick="switchTab('pending')">
+      待操作<span class="tab-badge">10</span>
+    </div>
+    <div class="tab-item active" onclick="switchTab('all')">患者列表</div>
+  </div>
+
+  <!-- 搜索+筛选区（sticky） -->
+  <div style="position:sticky;top:101px;z-index:98;background:#fff;padding:0 16px;">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="请输入搜索关键词" oninput="filterPatients()">
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="filter-chip" onclick="showCenterPanel()">
+        <span id="selectedCenter">全部中心</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="add-btn" onclick="toastMsg('新增患者功能')">
+        <i class="fas fa-plus"></i> 新增患者
+      </div>
+    </div>
+  </div>
+
+  <!-- 患者列表容器 -->
+  <div id="patientList"></div>
+  <div class="bottom-spacer"></div>
+
+  <!-- 中心选择面板 -->
+  <div class="panel-overlay" id="panelOverlay" onclick="closeAllModals()"></div>
+  <div class="center-panel" id="centerPanel">
+    <div class="panel-header">
+      <span>选择中心</span>
+      <div class="panel-close" onclick="hideCenterPanel()"><i class="fas fa-times"></i></div>
+    </div>
+    <!-- 联想搜索框 -->
+    <div class="center-search-wrap">
+      <input type="text" class="center-search-input" id="centerSearchInput" placeholder="搜索中心名称..." oninput="filterCenters()">
+    </div>
+    <div id="centerList">
+      <div class="panel-item active" onclick="selectCenter('全部中心', this)">全部中心</div>
+      <div class="panel-item" onclick="selectCenter('北京协和医院', this)">北京协和医院</div>
+      <div class="panel-item" onclick="selectCenter('上海瑞金医院', this)">上海瑞金医院</div>
+      <div class="panel-item" onclick="selectCenter('广州中山医院', this)">广州中山医院</div>
+      <div class="panel-item" onclick="selectCenter('华西医院', this)">华西医院</div>
+      <div class="panel-item" onclick="selectCenter('武汉同济医院', this)">武汉同济医院</div>
+    </div>
+    <div style="height: 30px;"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- 提交审批弹窗 - H5手机端底部弹出 -->
+  <div class="audit-modal" id="auditModal">
+    <div class="audit-header">
+      <span class="audit-header-title">提交审批</span>
+      <div class="audit-close" onclick="closeAuditModal()"><i class="fas fa-times"></i></div>
+    </div>
+     
+    <div class="audit-form">
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>方案编码：</label>
+        <input type="text" class="form-input" placeholder="测试入组流程" readonly>
+      </div>
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>参研中心：</label>
+        <select class="form-select" id="auditCenter">
+          <option value="">请选择参研中心</option>
+          <option value="江苏省肿瘤医院">江苏省肿瘤医院</option>
+          <option value="北京协和医院">北京协和医院</option>
+          <option value="上海瑞金医院">上海瑞金医院</option>
+        </select>
+      </div>
+     
+      <div class="form-group">
+        <label class="form-label"><span class="required">*</span>审批人：</label>
+        <select class="form-select" id="auditor">
+          <option value="">请选择审批人</option>
+          <option value="赵立花">赵立花</option>
+          <option value="王医生">王医生</option>
+          <option value="陈医生">陈医生</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">重点关注：<a style="color: #2E7D32;">引用</a></label>
+        
+      </div>
+      <div class="form-group">
+        <label class="form-label">备注：</label>
+        <textarea class="form-textarea" placeholder="请输入备注"></textarea>
+      </div>
+    </div>
+    <div class="audit-footer">
+      <button class="audit-btn audit-btn-cancel" onclick="closeAuditModal()">取消</button>
+      <button class="audit-btn audit-btn-submit" onclick="submitAudit()">确定</button>
+    </div>
+  </div>
+
+  <!-- 项目匹配确认弹窗 -->
+  <div class="match-confirm-modal" id="matchConfirmModal">
+    <div class="confirm-header">
+      <i class="fas fa-info"></i>
+      <span class="confirm-title">项目匹配确认</span>
+    </div>
+    <div class="confirm-body">
+      您确定要对患者「<strong id="confirmPatientCode">PT-2026-001</strong>」进行项目匹配吗？
+    </div>
+    <div class="confirm-footer">
+      <button class="confirm-btn" onclick="closeMatchConfirm()">取消</button>
+      <button class="confirm-btn primary" onclick="startMatching()">开始匹配</button>
+    </div>
+  </div>
+
+  <!-- 入排版本选择弹窗 -->
+  <div class="version-select-modal" id="versionSelectModal">
+    <div class="version-header">
+      <span class="version-title">入排版本选择</span>
+      <button class="version-close" onclick="closeVersionSelect()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="version-body">
+      <table class="version-table">
+        <thead>
+          <tr>
+            <th>项目编码</th>
+            <th>入排标准版本选择</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>测试入组流程</td>
+            <td>
+              <div class="version-select-wrap">
+                <select id="versionSelect">
+                  <option value="V2.0">V2.0 (V2.0)</option>
+                  <option value="V1.5">V1.5 (V1.5)</option>
+                  <option value="V1.0">V1.0 (V1.0)</option>
+                </select>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="version-footer">
+      <button class="version-btn cancel" onclick="closeVersionSelect()">取消</button>
+      <button class="version-btn confirm" onclick="confirmVersionSelect()">确定</button>
+    </div>
+  </div>
+
+  <!-- 重新匹配确认弹窗（资料未变更） -->
+  <div class="rematch-confirm-modal" id="rematchConfirmModal">
+    <div class="rematch-header">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span class="rematch-title">重新匹配确认</span>
+    </div>
+    <div class="rematch-body">
+      <div class="rematch-info-box">
+        <i class="fas fa-info-circle" style="color:#FAAD14;margin-right:4px;"></i>
+        <strong>检测到您的资料未发生变更。</strong>
+      </div>
+      <div>是否确定要基于当前资料再次进行项目匹配？</div>
+      <div style="margin-top:8px;font-size:12px;color:#999;">患者：<strong id="rematchPatientCode">PT-2026-001</strong> | 上次匹配状态：<span style="color:#52C41A;">匹配成功</span></div>
+    </div>
+    <div class="rematch-footer">
+      <button class="rematch-btn cancel" onclick="closeRematchConfirm()">取消</button>
+      <button class="rematch-btn confirm" onclick="confirmRematch()">项目匹配</button>
+    </div>
+  </div>
+
+  <!-- 系统匹配中弹窗 -->
+  <div class="matching-progress-modal" id="matchingProgressModal">
+    <div class="progress-header">系统匹配中</div>
+    <div class="progress-body">
+      <div class="spinner-wrap">
+        <i class="fas fa-spinner fa-spin" style="font-size:36px;color:#165DFF;margin-bottom:12px;"></i>
+        <p>正在进行项目匹配，请稍候...</p>
+      </div>
+      <div class="tips-box">
+        <div class="tips-title"><i class="fas fa-lightbulb"></i> 温馨提示</div>
+        <ul>
+          <li><strong>预提交审批：</strong>先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+          <li><strong>暂不提交：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="progress-footer">
+      <button class="progress-btn secondary" onclick="closeMatchingProgress()">暂不提交</button>
+      <button class="progress-btn primary" onclick="preSubmitAudit()">预提交审批</button>
+    </div>
+  </div>
+</div>
+<!-- PRD Drawer -->
+<div class="prd-drawer" id="prdDrawer">
+  <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="展开需求说明面板">
+    <span class="handle-hint">点击查看PRD</span>
+    <span class="handle-icon"><i class="fa-solid fa-chevron-left"></i></span>
+    <span class="handle-text">P R D</span>
+  </button>
+  <div class="prd-drawer-body" id="prdPanel"></div>
+</div>
+  <script>
+    // 病患数据
+    const patients = [
+      {
+        id: 1, name: 'ZWMS', gender: '男', age: 52, abbr: 'ZWMS',
+        matchStatus: 'matched', submitStatus: 'unsubmit',
+        center: '北京协和医院', operator: '李医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        histories: [
+          { label: '既往史', value: '高血压10年，2型糖尿病5年' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '青霉素过敏' },
+        ],
+        files: ['入院记录', '病理报告', 'CT影像', '基因检测']
+      },
+      {
+        id: 2, name: 'HGKD', gender: '女', age: 48, abbr: 'HGKD',
+        matchStatus: 'unmatched', submitStatus: 'unsubmit',
+        center: '上海瑞金医院', operator: '王医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        hasMultiVersions: true,
+        histories: [
+          { label: '既往史', value: '无特殊' },
+          { label: '手术史', value: '2024-06 左乳切除术' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '超声影像']
+      },
+      {
+        id: 3, name: 'MXKT', gender: '男', age: 65, abbr: 'MXKT',
+        matchStatus: 'matching', submitStatus: 'presubmit',
+        center: '北京协和医院', operator: '李医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        histories: [
+          { label: '既往史', value: '冠心病3年，高脂血症2年' },
+          { label: '手术史', value: '2024-03 胃大部切除术' },
+          { label: '过敏史', value: '磺胺类过敏' },
+        ],
+        files: ['入院记录', '病理报告', 'CT影像', '心电图', '出院小结']
+      },
+      {
+        id: 4, name: 'RFNE', gender: '女', age: 38, abbr: 'RFNE',
+        matchStatus: 'matched', submitStatus: 'unsubmit',
+        center: '广州中山医院', operator: '陈医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        hasMatchedOnce: true,
+        lastMatchSuccess: true,
+        filesChanged: false,
+        histories: [
+          { label: '既往史', value: '无特殊' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '无' },
+          { label: '孕产史', value: 'G2P1，剖宫产1次' },
+        ],
+        files: ['入院记录', '病理报告', 'MRI影像']
+      },
+      {
+        id: 5, name: 'PWCD', gender: '男', age: 59, abbr: 'PWCD',
+        matchStatus: 'matched', submitStatus: 'submitted',
+        center: '华西医院', operator: '赵医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        filesChanged: false,
+        quickMatch: true,
+        histories: [
+          { label: '既往史', value: '脂肪肝' },
+          { label: '手术史', value: '2024-01 结肠切除术' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '肠镜报告', '肿瘤标志物']
+      },
+      {
+        id: 6, name: 'QJSL', gender: '男', age: 44, abbr: 'QJSL',
+        matchStatus: 'matched', submitStatus: 'submitted',
+        center: '武汉同济医院', operator: '孙医生',
+        diagnosis: 'SHR-2019-nCoV-001',
+        filesChanged: true,
+        quickMatch: true,
+        histories: [
+          { label: '既往史', value: '乙肝病史15年' },
+          { label: '手术史', value: '无' },
+          { label: '过敏史', value: '无' },
+        ],
+        files: ['入院记录', '病理报告', '增强CT', '肝功能报告']
+      },
+    ];
+
+    let activeTab = 'all';
+    let selectedCenter = '全部中心';
+    let searchKeyword = '';
+
+    // 渲染患者卡片
+    function renderCards(data) {
+      const container = document.getElementById('patientList');
+      if (data.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px">暂无数据</div>';
+        return;
+      }
+      container.innerHTML = data.map(p => {
+        const matchedTag = p.matchStatus === 'matched'
+          ? '<span class="status-tag tag-matched"><i class="fas fa-check-circle"></i> 匹配完成</span>'
+          : p.matchStatus === 'matching'
+          ? '<span class="status-tag tag-matching"><i class="fas fa-spinner fa-pulse"></i> 匹配中</span>'
+          : '<span class="status-tag tag-unmatched"><i class="fas fa-exclamation-circle"></i> 未匹配</span>';
+        const submitTag = p.submitStatus === 'submitted'
+          ? '<span class="status-tag tag-submitted">已提交</span>'
+          : p.submitStatus === 'presubmit'
+          ? '<span class="status-tag tag-presubmit" onclick="cancelPreSubmit(event, ' + p.id + ')">预提交中 <i class="fas fa-times-circle"></i></span>'
+          : '<span class="status-tag tag-unsubmit">未提交</span>';
+
+        // 病史与资料展开区
+        const historiesHTML = p.histories.map(h =>
+          '<div class="history-item">' +
+            '<span class="hi-label">' + h.label + '</span>' +
+            '<span>' + h.value + '</span>' +
+          '</div>'
+        ).join('');
+
+        const filesHTML = p.files.map(f =>
+          '<span class="data-tag" onclick="event.stopPropagation();toastMsg(\'查看: ' + f + '\')">' +
+            '<i class="fas fa-file-alt"></i> ' + f +
+          '</span>'
+        ).join('');
+        const patientCode = p.screenNo || ('PT-2026-00' + p.id);
+
+        return '<div class="patient-card">' +
+          '<div class="card-header">' +
+            '<div class="card-header-left">' +
+              '<div class="patient-info">' +
+                '<div class="patient-name">' +
+                  p.name +
+                  '<span style="font-size:12px;font-weight:400;color:#999">' + p.gender + ' · ' + p.age + '岁</span>' +
+                '</div>' +
+                '<div class="patient-meta">' +
+                  '<span>' + p.diagnosis + '</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="card-header-right">' +
+              '<div class="icon-btn" onclick="toastMsg(\'编辑患者信息\')"><i class="fas fa-edit"></i></div>' +
+              '<div class="icon-btn" onclick="toastMsg(\'删除患者\')"><i class="fas fa-trash-alt"></i></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="status-tags">' + matchedTag + submitTag + '</div>' +
+          '<div class="card-info-row">' +
+            '<span><i class="fas fa-hospital"></i> ' + p.center + '</span>' +
+            '<span><i class="fas fa-user-md"></i> 待操作人：' + p.operator + '</span>' +
+          '</div>' +
+          '<div class="action-btns">' +
+            (p.matchStatus === 'matching'
+              ? '<button class="action-btn btn-primary" style="opacity:0.5;pointer-events:none;">项目匹配</button>'
+              : '<button class="action-btn btn-primary" onclick="handleProjectMatch(' + p.id + ', \'' + patientCode + '\')">项目匹配</button>') +
+            '<button class="action-btn btn-outline" onclick="toastMsg(\'审批记录 - ' + p.name + '\')">审批记录</button>' +
+            '<button class="action-btn btn-ghost" onclick="toastMsg(\'匹配详情 - ' + p.name + '\')">匹配详情</button>' +
+          '</div>' +
+          '<div class="expand-section">' +
+            '<div class="expand-header" onclick="goToPatientFiles(\'' + patientCode + '\',\'' + p.name + '\')">' +
+              '<div class="expand-header-left"><i class="fas fa-file-medical-alt"></i> 病史与资料 (' + p.files.length + ')</div>' +
+              '<i class="fas fa-chevron-right" style="font-size:12px;color:#999;"></i>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+
+    }
+
+    // 展开/收起 病史与资料
+    function toggleExpand(id) {
+      const body = document.getElementById('expandBody-' + id);
+      const card = body.closest('.patient-card');
+      const header = card.querySelector('.expand-header');
+      body.classList.toggle('show');
+      header.classList.toggle('expanded');
+    }
+
+    // 跳转到病史与资料页面
+    function goToPatientFiles(patientCode, patientName) {
+      window.location.href = 'patient-files.html?code=' + encodeURIComponent(patientCode) + '&name=' + encodeURIComponent(patientName);
+    }
+
+    // Tab切换
+    function switchTab(type) {
+      activeTab = type;
+      document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+      event.target.closest('.tab-item').classList.add('active');
+      filterPatients();
+    }
+
+    // 筛选患者
+    function filterPatients() {
+      const keyword = (document.querySelector('.search-input-wrap input') || {}).value || '';
+      searchKeyword = keyword.toLowerCase();
+
+      let filtered = patients;
+
+      // 按Tab过滤
+      if (activeTab === 'pending') {
+        filtered = filtered.filter(p => p.submitStatus === 'unsubmit' || p.submitStatus === 'presubmit');
+      }
+
+      // 按中心过滤
+      if (selectedCenter !== '全部中心') {
+        filtered = filtered.filter(p => p.center === selectedCenter);
+      }
+
+      // 按关键词过滤
+      if (searchKeyword) {
+        filtered = filtered.filter(p =>
+          p.name.toLowerCase().includes(searchKeyword) ||
+          p.diagnosis.toLowerCase().includes(searchKeyword) ||
+          p.center.toLowerCase().includes(searchKeyword) ||
+          p.id.toString().includes(searchKeyword)
+        );
+      }
+
+      renderCards(filtered);
+    }
+
+    // 中心选择面板
+    function showCenterPanel() {
+      document.getElementById('centerPanel').classList.add('show');
+      document.getElementById('panelOverlay').classList.add('show');
+    }
+    function hideCenterPanel() {
+      document.getElementById('centerPanel').classList.remove('show');
+      document.getElementById('panelOverlay').classList.remove('show');
+    }
+    function selectCenter(name, el) {
+      selectedCenter = name;
+      document.getElementById('selectedCenter').textContent = name;
+      document.querySelectorAll('.panel-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      hideCenterPanel();
+      filterPatients();
+    }
+
+    // 中心联想搜索过滤
+    function filterCenters() {
+      const keyword = document.getElementById('centerSearchInput').value.toLowerCase().trim();
+      const centerItems = document.querySelectorAll('#centerList .panel-item');
+      
+      centerItems.forEach(item => {
+        const centerName = item.textContent.toLowerCase();
+        if (keyword === '' || centerName.includes(keyword)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    // Toast提示
+    function toastMsg(msg, duration) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), duration || 1500);
+    }
+
+    let currentMatchPatient = null;
+
+    // 统一处理项目匹配按钮点击
+    function handleProjectMatch(patientId, patientCode) {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+      currentMatchPatient = { id: patientId, name: patient.name, code: patientCode };
+
+      if (patient.hasMultiVersions) {
+        // 第2条数据：多版本 → 显示入排版本选择弹窗
+        document.getElementById('versionSelectModal').classList.add('show');
+        document.getElementById('panelOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+      } else if (patient.hasMatchedOnce && patient.lastMatchSuccess && !patient.filesChanged) {
+        // 第4条数据：资料未变更 → 显示重新匹配确认弹窗
+        document.getElementById('rematchPatientCode').textContent = patientCode;
+        document.getElementById('rematchConfirmModal').classList.add('show');
+        document.getElementById('panelOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+      } else if (patient.submitStatus === 'submitted' && !patient.filesChanged) {
+        // 第5条数据：已提交审核，资料未变更 → 重新匹配确认弹窗（快速匹配）
+        document.getElementById('rematchPatientCode').textContent = patientCode;
+        document.getElementById('rematchConfirmModal').classList.add('show');
+        document.getElementById('panelOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+      } else if (patient.submitStatus === 'submitted' && patient.filesChanged) {
+        // 第6条数据：已提交审核，文件有变动 → 项目匹配确认弹窗（快速匹配）
+        openMatchConfirm(patient.name, patientCode);
+      } else {
+        // 其他数据：默认确认弹窗
+        openMatchConfirm(patient.name, patientCode);
+      }
+    }
+
+    // 取消预提交
+    function cancelPreSubmit(event, patientId) {
+      event.stopPropagation();
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+      showConfirmDialog('取消预提交', '确定要取消患者「' + patient.name + '」的预提交吗？', function() {
+        patient.submitStatus = 'unsubmit';
+        filterPatients();
+        toastMsg('已取消预提交');
+      });
+    }
+
+    // 通用确认对话框
+    function showConfirmDialog(title, message, onConfirm) {
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML = '<div style="background:#fff;border-radius:16px;width:86%;max-width:340px;overflow:hidden;animation:modalPop 0.25s ease forwards;">' +
+        '<div class="confirm-header" style="padding:20px 20px 12px;"><i class="fas fa-question-circle" style="width:36px;height:36px;background:#E8F4FF;color:#165DFF;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;"></i><span class="confirm-title" style="font-size:18px;font-weight:600;color:#1a1a1a;">' + title + '</span></div>' +
+        '<div class="confirm-body" style="padding:0 20px 20px;font-size:15px;color:#555;line-height:1.6;">' + message + '</div>' +
+        '<div class="confirm-footer" style="display:flex;gap:12px;padding:0 20px 20px;">' +
+        '<button class="confirm-btn" style="flex:1;padding:11px 0;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;border:1px solid #ddd;background:#fff;color:#666;" onclick="this.closest(\'.confirm-dialog-overlay\').remove();">取消</button>' +
+        '<button class="confirm-btn primary" style="flex:1;padding:11px 0;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;border:none;background:linear-gradient(135deg,#165DFF 0%,#4080FF 100%);color:#fff;" onclick="this.closest(\'.confirm-dialog-overlay\').remove();">确定</button>' +
+        '</div></div>';
+      overlay.firstElementChild.querySelector('.confirm-btn.primary').onclick = function() {
+        overlay.remove();
+        if (onConfirm) onConfirm();
+      };
+      overlay.firstElementChild.querySelector('.confirm-btn').onclick = function() {
+        overlay.remove();
+      };
+      overlay.className = 'confirm-dialog-overlay';
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 项目匹配确认弹窗
+    function openMatchConfirm(patientName, patientCode) {
+      currentMatchPatient = { ...currentMatchPatient, name: patientName, code: patientCode };
+      document.getElementById('confirmPatientCode').textContent = patientCode || patientName;
+      document.getElementById('matchConfirmModal').classList.add('show');
+      document.getElementById('panelOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMatchConfirm() {
+      document.getElementById('matchConfirmModal').classList.remove('show');
+      if (!isAnyModalOpen()) hidePanelOverlay();
+      document.body.style.overflow = '';
+    }
+    function startMatching() {
+      document.getElementById('matchConfirmModal').classList.remove('show');
+
+      if (currentMatchPatient && patients.find(p => p.id === currentMatchPatient.id).quickMatch) {
+
+        if (!isAnyModalOpen()) hidePanelOverlay();
+        document.body.style.overflow = '';
+        toastMsg('正在匹配，请稍后');
+        return;
+      }
+      document.getElementById('matchingProgressModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMatchingProgress() {
+      document.getElementById('matchingProgressModal').classList.remove('show');
+      if (!isAnyModalOpen()) hidePanelOverlay();
+      document.body.style.overflow = '';
+    }
+    function preSubmitAudit() {
+      document.getElementById('matchingProgressModal').classList.remove('show');
+      openAuditModal(currentMatchPatient ? currentMatchPatient.name : '');
+    }
+
+    // 入排版本选择弹窗
+    function closeVersionSelect() {
+      document.getElementById('versionSelectModal').classList.remove('show');
+      if (!isAnyModalOpen()) hidePanelOverlay();
+      document.body.style.overflow = '';
+    }
+    function confirmVersionSelect() {
+      closeVersionSelect();
+      document.getElementById('matchingProgressModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // 重新匹配确认弹窗
+    function closeRematchConfirm() {
+      document.getElementById('rematchConfirmModal').classList.remove('show');
+      if (!isAnyModalOpen()) hidePanelOverlay();
+      document.body.style.overflow = '';
+    }
+    function confirmRematch() {
+      closeRematchConfirm();
+      if (currentMatchPatient && patients.find(p => p.id === currentMatchPatient.id).quickMatch) {
+        toastMsg('正在匹配，请稍后', 3000);
+        return;
+      }
+      document.getElementById('matchingProgressModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+
+    // 提交审批弹窗 - H5手机端
+    function openAuditModal(patientName) {
+      document.getElementById('auditModal').classList.add('show');
+      document.getElementById('panelOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeAuditModal() {
+      document.getElementById('auditModal').classList.remove('show');
+      document.getElementById('panelOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    function isAnyModalOpen() {
+      return document.getElementById('centerPanel').classList.contains('show') ||
+             document.getElementById('auditModal').classList.contains('show') ||
+             document.getElementById('matchConfirmModal').classList.contains('show') ||
+             document.getElementById('matchingProgressModal').classList.contains('show') ||
+             document.getElementById('versionSelectModal').classList.contains('show') ||
+             document.getElementById('rematchConfirmModal').classList.contains('show');
+    }
+    function hidePanelOverlay() {
+      document.getElementById('panelOverlay').classList.remove('show');
+    }
+    function closeAllModals() {
+      document.getElementById('centerPanel').classList.remove('show');
+      document.getElementById('auditModal').classList.remove('show');
+      document.getElementById('matchConfirmModal').classList.remove('show');
+      document.getElementById('matchingProgressModal').classList.remove('show');
+      document.getElementById('versionSelectModal').classList.remove('show');
+      document.getElementById('rematchConfirmModal').classList.remove('show');
+      document.getElementById('panelOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    // 推荐流程
+    const RECOMMENDED_PROCESS = '预筛审批';
+
+    // 审批流程切换 — 非标准流程提示
+    function onProcessChange() {
+      const val = document.getElementById('auditProcess').value;
+      const warn = document.getElementById('nonStandardWarn');
+      if (val && val !== RECOMMENDED_PROCESS) {
+        warn.classList.add('show');
+      } else {
+        warn.classList.remove('show');
+        document.getElementById('nonStandardReason').value = '';
+      }
+    }
+
+    function submitAudit() {
+      const center = document.getElementById('auditCenter').value;
+      const auditor = document.getElementById('auditor').value;
+      if (!center || !auditor) {
+        toastMsg('请填写必填项');
+        return;
+      }
+      toastMsg('匹配中，匹配完成后系统将自动帮您提交审批');
+      closeAuditModal();
+    }
+
+    // 初始渲染
+    filterPatients();
+    updatePRDPanel('audit');
+
+// ==================== PRD 需求说明面板 ====================
+function updatePRDPanel(mod, sub) {
+  const prdPanel = document.getElementById('prdPanel');
+  if (!prdPanel) return;
+  
+  // 定义各模块的需求说明
+  const prdData = {
+    'audit': {
+      title: '患者列表',
+      sections: [
+        {
+          title: '★ 本次修改：针对于点击项目匹配可以预提交/项目匹配误触发操作；病史与资料页面的逻辑与列表保持一致',
+          content:`<ul style="color:red">
+            <li><strong>第1条数据ZWMS</strong> 点击提交审核，看到入排只有一个版本的效果</li>
+            <li><strong>第2条数据HGKD</strong> 点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
+            <li><strong>第3条数据MXKT</strong> 显示「预提交中」红色标签，可点击取消预提交</li>
+            <li><strong>第4条数据RFNE</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
+            <li><strong>第5条数据PWCD</strong> 已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+            <li><strong>第6条数据QJSL</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>  
+            <li><strong>注意：</strong>对于点击项目匹配可以预提交 ，  所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限  是所有可以提交本次数据的相关人员</li>
+            <ul>`
+              }
+        
+        
+      ]
+    },
+  }
+// 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
+  const subKey = sub ? mod + '-' + sub : null;
+  const prd = prdData[subKey] || prdData[mod];
+  if (!prd) {
+    collapsePRDDrawer();
+    return;
+  }
+  
+  let html = `
+    <div class="prd-panel-header">
+      <div class="prd-panel-title">📋 ${prd.title}</div>
+      <button class="prd-panel-close" onclick="collapsePRDDrawer()" title="折叠抽屉">✕</button>
+    </div>
+  `;
+  
+  prd.sections.forEach(section => {
+    html += `
+      <div class="prd-section">
+        <div class="prd-section-title">${section.title}</div>
+        <div class="prd-section-content">${section.content}</div>
+      </div>
+    `;
+  });
+  
+  prdPanel.innerHTML = html;
+  expandPRDDrawer();
+}
+    
+/* 折叠 PRD 抽屉 */
+function collapsePRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (drawer) drawer.classList.remove('expanded');
+}
+
+/* 展开 PRD 抽屉 */
+function expandPRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (drawer) drawer.classList.add('expanded');
+}
+
+/* 切换 PRD 抽屉 展开/折叠 */
+function togglePRDDrawer() {
+  const drawer = document.getElementById('prdDrawer');
+  if (!drawer) return;
+  if (drawer.classList.contains('expanded')) {
+    drawer.classList.remove('expanded');
+  } else {
+    drawer.classList.add('expanded');
+  }
+}
+
+/* 兼容旧调用 */
+function closePRDPanel() { collapsePRDDrawer(); }
+
+  </script>
+
+</body>
+</html>
