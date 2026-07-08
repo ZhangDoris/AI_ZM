@@ -1527,6 +1527,67 @@
       background: linear-gradient(135deg, #4096ff, #69b1ff);
       box-shadow: 0 6px 16px rgba(22,119,255,0.4);
     }
+
+    /* ===== 流程图放大查看 ===== */
+    .flowchart-zoom-hint {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 6px;
+      background: #e6f4ff; color: #1677ff;
+      font-size: 12px; cursor: pointer;
+      border: 1px solid #91caff;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+    .flowchart-zoom-hint:hover {
+      background: #1677ff; color: #fff;
+      border-color: #1677ff;
+    }
+    .flowchart-zoom-hint i { font-size: 14px; }
+
+    /* 全屏遮罩 */
+    .flowchart-overlay {
+      display: none; position: fixed;
+      inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.7);
+      animation: overlayFadeIn 0.25s ease;
+    }
+    .flowchart-overlay.active { display: flex; align-items: center; justify-content: center; }
+    @keyframes overlayFadeIn { from { opacity:0; } to { opacity:1; } }
+
+    /* 全屏弹窗 */
+    .flowchart-overlay-modal {
+      position: relative; width: 95vw; height: 93vh;
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 50px 20px 20px 20px;
+      animation: modalZoomIn 0.3s ease;
+      overflow: auto;
+    }
+    @keyframes modalZoomIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+    .flowchart-overlay-close {
+      position: absolute; top: 12px; right: 16px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: #f5f5f5; border: none; cursor: pointer;
+      font-size: 20px; color: #666;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; line-height: 1;
+    }
+    .flowchart-overlay-close:hover {
+      background: #ff4d4f; color: #fff;
+    }
+
+    .flowchart-overlay-svg {
+      width: 100%; height: auto; min-height: 100%;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 768px) {
+      .flowchart-overlay-modal {
+        width: 100vw; height: 100vh;
+        border-radius: 0; padding: 50px 10px 10px 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1983,7 +2044,27 @@
         <li>  已经预提交的按钮，在序号上显示预提交状态，然后操作列有取消提交，提交成功，就不显示这个状态和按钮了， 只要系统还没有协助提交，就存在这俩状态，如果系统提交成功，就不显示了 </li>
         </ul>
        
-      <p class="prd-text"><strong style="color: red;">注意：匹配成功后，系统自动提交，如果匹配失败了（注意三次容错机制），就需要通知再次点击项目匹配，才可以进行提交审核了，让把之前的预提交过程再做一遍，不过内容都需要回显</strong></p>
+      <p class="prd-text"><strong style="color: red;">注意：</strong><ul>
+        <li>匹配成功后，系统自动提交，如果匹配失败了（注意三次容错机制），就需要通知再次点击项目匹配，才可以进行提交审核了,让把之前的预提交过程再做一遍</li>
+        <li>取消预提交/匹配失败再设置预提交，不过内容都需要回显</li>      
+        </ul>
+
+      <!-- 按钮交互说明 -->
+      <p class="prd-text" style="margin-top:14px;"><strong style="color:#1677ff;">📌 操作列按钮显示规则：</strong></p>
+      <ul class="prd-list" style="background:#f0f5ff; border:1px solid #adc6ff; border-radius:8px; padding:12px 16px;">
+        <li><strong>① 预提交中</strong>（匹配中/已匹配）→ 显示「<span style="color:#ff7a00;">取消预提交</span>」按钮，<span style="color:#ff4d4f;">不显示</span>提交审核</li>
+        <li><strong>② 匹配中 + 未预提交</strong> → 显示「<span style="color:#fa8c16;">预提交</span>」按钮，<span style="color:#ff4d4f;">不显示</span>提交审核</li>
+        <li><strong>③ 匹配完成 + 未预提交</strong> → 显示「<span style="color:#1677ff;">提交审核</span>」按钮，不显示预提交</li>
+        <li><strong>④ 待匹配</strong>（未发起匹配）→ 显示「提交审核」按钮</li>
+        <li><strong>⑤ 预提交中状态标注</strong> → 序号列显示「预提交中」红底标签（参考第3条数据效果）</li>
+      </ul>
+
+      <!-- 本周/下周安排 -->
+      <p class="prd-text" style="margin-top:14px;"><strong style="color:#d46b08;">⏰ 排期说明：</strong></p>
+      <ul class="prd-list" style="background:#fff7e6; border:1px solid #ffd591; border-radius:8px; padding:12px 16px;">
+        <li>✅ <strong>本周做：</strong>第1-2-3-7条数据交互效果、项目匹配+预提交流程、按钮动态显示</li>
+        <li>❌ <strong>本周先不做,下周做：</strong>三次容错机制、筛选表必填项校验、第4-5-6条数据效果</li>
+      </ul>
     </div>
 
     <!-- 交互流程 -->
@@ -1993,13 +2074,13 @@
       <p class="prd-text"><strong id="prd-section-a">A. 通过项目匹配按钮：</strong></p>
       <ul class="prd-list">
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
-        <li id="prd-step1"><strong style="color: red;">第1条数据</strong> 点击提交审核，看到入排只有一个版本的效果</li>
-        <li><strong style="color: red;">第2条数据</strong>点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
-        <li><strong style="color: red;">第3条数据</strong>状态为「匹配中」，无预提交 → 操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
-        <li><strong style="color: red;">第4条数据</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
-        <li><strong style="color: red;">第5条数据</strong>已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
-        <li><strong style="color: red;">第6条数据</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
-        <li><strong style="color: red;">第7条数据</strong> 主知情审核/需要填写预筛号和知情时间的 → 点击项目匹配 → 「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致 → 点击提交审核，弹出编辑页面，需要填写患者知情时间和筛选号</li>
+        <li id="prd-step1"><strong style="color: red;">第1条数据(本周)</strong> 点击提交审核，看到入排只有一个版本的效果</li>
+        <li><strong style="color: red;">第2条数据(本周)</strong>点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
+        <li><strong style="color: red;">第3条数据(本周)</strong>状态为「匹配中」，无预提交 → 操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
+        <li><strong style="color: red;">第4条数据(下周)</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
+        <li><strong style="color: red;">第5条数据(下周)</strong>已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">第6条数据(下周)</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">第7条数据(本周)</strong> 主知情审核/需要填写预筛号和知情时间的 → 点击项目匹配 → 「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致 → 点击提交审核，弹出编辑页面，需要填写患者知情时间和筛选号</li>
 
         <li><strong style="color: red;">注意：</strong>对于点击项目匹配可以预提交 ， 所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限 是所有可以提交本次数据的相关人员 </li>
         <!-- <li id="prd-step5"><strong style="color: red;">注意：</strong>需要保存好 2个按钮的操作日志，统计2个按钮的点击次数，用于评估用户对功能需求的评估</li> -->
@@ -2010,52 +2091,15 @@
       
     </div>
 
-    <!-- 业务逻辑 -->
-    <div class="prd-section">
-      <h3 class="prd-section-title">业务逻辑</h3>
-      
-      <div class="prd-highlight">
-        <p class="prd-text"><strong>场景1：等待匹配结果后提交</strong></p>
-        <ul class="prd-list">
-          <li>点击"待匹配出结果后提交"按钮</li>
-          <li>关闭弹窗，等待后端匹配完成</li>
-          <li>保持现有系统逻辑不变</li>
-        </ul>
-      </div>
-
-      <div class="prd-highlight">
-        <p class="prd-text"><strong>场景2：同步提交审批</strong></p>
-        <p class="prd-text">匹配和提交审批同步执行，<strong>将审批和匹配完全分开，不再绑定</strong>，即使没有匹配出来，也可以正常走审批流程。</p>
-        <p class="prd-text" style="margin-top:8px;">匹配状态分为以下情况：</p>
-        
-        <p class="prd-text" style="margin-top:8px;"><strong>① 匹配成功：</strong></p>
-        <ul class="prd-list">
-          <li>正常查看匹配详情</li>
-        </ul>
-        
-        <p class="prd-text" style="margin-top:8px;"><strong> 匹配失败或超时（20分钟无结果）：</strong></p>
-        <ul class="prd-list">
-          <li><strong>触发条件：</strong>匹配接口返回失败 OR 等待20分钟后仍未收到匹配结果</li>
-          <li><strong>后端容错机制：</strong>自动重试3次匹配任务</li>
-        </ul>
-        
-        <p class="prd-text" style="padding-left:16px; margin-top:4px;"><strong>a. 重试成功：</strong></p>
-        <ul class="prd-list">
-          <li>同①，正常查看匹配详情</li>
-        </ul>
-        
-        <p class="prd-text" style="padding-left:16px; margin-top:4px;"><strong>b. 重试仍失败：</strong></p>
-        <ul class="prd-list">
-          <li>企业微信通知提交人："匹配失败/超时，请再次点击匹配"</li>
-          <li>提交人和审批人都可以继续点击"项目匹配"重新触发</li>
-        </ul>
-      </div>
-    </div>
+   
 
     <!-- SVG流程图 - 患者全流程 -->
     <div class="prd-section">
       <h3 class="prd-section-title">患者预筛全流程图</h3>
-      <div class="prd-flowchart">
+      <span class="flowchart-zoom-hint" onclick="openFlowchartZoom()">
+        <i class="fa-solid fa-magnifying-glass-plus"></i> 点击放大查看
+      </span>
+      <div class="prd-flowchart" onclick="openFlowchartZoom()" style="cursor:pointer;">
         <svg class="flowchart-svg" viewBox="0 0 480 1200" xmlns="http://www.w3.org/2000/svg" style="min-height:1200px;">
           <defs>
             <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
@@ -2098,7 +2142,7 @@
 
           <!-- ③ 项目匹配 - 红色高亮框 -->
           <rect x="150" y="145" width="180" height="36" rx="6" fill="#fff1f0" stroke="#ff4d4f" stroke-width="2.5" filter="url(#shadow)"/>
-          <text x="240" y="167" text-anchor="middle" font-size="11" fill="#cf1322" font-weight="bold">③ 项目匹配+预提交设置</text>
+          <text x="240" y="167" text-anchor="middle" font-size="11" fill="#cf1322" font-weight="bold">③ 项目匹配+预提交设置（本次修改）</text>
 
         
           <!-- 匹配分支 -->
@@ -2115,7 +2159,7 @@
           <line x1="247" y1="198" x2="350" y2="198" stroke="#ff4d4f" stroke-width="2"/>
           <line x1="350" y1="198" x2="350" y2="218" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
           <rect x="280" y="218" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="235" text-anchor="middle" font-size="10" fill="#333">✗ 失败/超时 → 重试3次</text>
+          <text x="350" y="235" text-anchor="middle" font-size="10" fill="#333">✗ 失败/超时 → 重试3次（下周）</text>
 
           <!-- 失败路径回指③ -->
           <line x1="350" y1="244" x2="350" y2="165" stroke="#ff4d4f" stroke-width="1.5" stroke-dasharray="5,3"/>
@@ -2132,14 +2176,14 @@
 
           <!-- ⑤ 提交成功 - 绿色大框 -->
           <rect x="140" y="330" width="200" height="34" rx="7" fill="#52c41a" stroke="#389e0d" stroke-width="2" filter="url(#shadow)"/>
-          <text x="240" y="352" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">⑤ 提交成功</text>
+          <text x="240" y="352" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">⑤ 系统自动提交成功（本次修改）</text>
 
           <!-- ⑤ → ⑥ -->
           <line x1="240" y1="364" x2="240" y2="384" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
           <!-- ⑥ 校验预筛表必填项 -->
           <rect x="140" y="384" width="200" height="30" rx="6" fill="#fff" stroke="#fa8c16" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="403" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑥ 校验预筛表必填项</text>
+          <text x="240" y="403" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑥ 校验预筛表必填项（下周）</text>
 
           <!-- 校验分支 -->
           <circle cx="240" cy="430" r="7" fill="#fa8c16" stroke="#ad6800" stroke-width="1.5"/>
@@ -2149,17 +2193,17 @@
           <line x1="233" y1="430" x2="130" y2="430" stroke="#52c41a" stroke-width="2"/>
           <line x1="130" y1="430" x2="130" y2="454" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
           <rect x="55" y="454" width="150" height="26" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
-          <text x="130" y="471" text-anchor="middle" font-size="10" fill="#333">✓ 校验通过</text>
+          <text x="130" y="471" text-anchor="middle" font-size="10" fill="#333">✓ 校验通过（下周）</text>
 
           <!-- 右：校验失败 → 企微提醒 -->
           <line x1="247" y1="430" x2="350" y2="430" stroke="#ff4d4f" stroke-width="2"/>
           <line x1="350" y1="430" x2="350" y2="454" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
           <rect x="280" y="454" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="471" text-anchor="middle" font-size="10" fill="#d4380d">✗ 校验失败</text>
+          <text x="350" y="471" text-anchor="middle" font-size="10" fill="#d4380d">✗ 校验失败（下周）</text>
 
           <line x1="350" y1="480" x2="350" y2="500" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
           <rect x="280" y="500" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="517" text-anchor="middle" font-size="10" fill="#d4380d">发企业微信提醒</text>
+          <text x="350" y="517" text-anchor="middle" font-size="10" fill="#d4380d">发企业微信提醒（下周）</text>
 
           <!-- ===== 阶段四：预筛审核 ===== -->
           <rect x="5" y="540" width="470" height="100" rx="8" fill="#f9f0ff" stroke="#d3adf7" stroke-width="1" stroke-dasharray="4,2"/>
@@ -2195,17 +2239,17 @@
           <line x1="240" y1="746" x2="240" y2="764" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
           <rect x="155" y="764" width="170" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
-          <text x="240" y="781" text-anchor="middle" font-size="10" fill="#333">8b. 设置预提交审批</text>
+          <text x="240" y="781" text-anchor="middle" font-size="10" fill="#333">8b. 设置预提交审批（本次修改）</text>
 
           <line x1="240" y1="790" x2="240" y2="808" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
           <rect x="140" y="808" width="200" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
-          <text x="240" y="825" text-anchor="middle" font-size="10" fill="#333">8c. 填写主知情时间 &amp; 预筛号</text>
+          <text x="240" y="825" text-anchor="middle" font-size="10" fill="#333">8c. 填写主知情时间 &amp; 预筛号（本次修改）</text>
 
           <line x1="240" y1="834" x2="240" y2="852" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
 
           <rect x="145" y="852" width="190" height="28" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
-          <text x="240" y="865" text-anchor="middle" font-size="10" fill="#389e0d" font-weight="500">✓ 匹配成功，提交主知情</text>
+          <text x="240" y="865" text-anchor="middle" font-size="10" fill="#389e0d" font-weight="500">✓ 匹配成功，提交主知情（本次修改）</text>
           <text x="240" y="877" text-anchor="middle" font-size="9" fill="#888">（系统自动提交）</text>
 
           <!-- ===== 阶段六：后续审核 ===== -->
@@ -2319,6 +2363,25 @@
             <label class="section-label">备注</label>
             <textarea class="audit-textarea" placeholder="请输入备注" rows="3" id="auditRemark"></textarea>
           </div>
+
+          <!-- 主知情审核专用：筛选号 & 知情时间（仅第7条数据显示） -->
+          <div class="audit-section" id="mainConsentFields" style="display:none;">
+            <div style="background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px; padding: 16px; margin-bottom: 4px;">
+              <div style="font-size: 13px; font-weight: 600; color: #d46b08; margin-bottom: 12px;">
+                <i class="fa-solid fa-circle-info"></i> 主知情审核 — 请填写以下信息
+              </div>
+              <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 180px;">
+                  <label style="display:block; font-size:13px; font-weight:500; color:#333; margin-bottom:6px;">筛选号 <span style="color:#ff4d4f;">*</span></label>
+                  <input type="text" class="audit-input" id="auditScreenNo" placeholder="请输入筛选号" style="width:100%;" />
+                </div>
+                <div style="flex: 1; min-width: 180px;">
+                  <label style="display:block; font-size:13px; font-weight:500; color:#333; margin-bottom:6px;">知情时间 <span style="color:#ff4d4f;">*</span></label>
+                  <input type="date" class="audit-input" id="auditInformedTime" value="2026-06-22" style="width:100%;" />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="audit-footer" style="border-top: 1px solid #f0f0f0; padding: 16px 20px 20px;">
           <button class="audit-btn audit-btn-cancel" onclick="closeAuditModal()">取消</button>
@@ -2334,7 +2397,8 @@
         <div class="audit-prd-section">
           <h3 class="audit-prd-section-title">一、项目匹配状态提示</h3>
           <p class="audit-prd-text"><strong>触发条件：</strong>预提交时,匹配中，打开弹窗后顶部显示蓝色提示区域。</p>
-         
+          <p class="audit-prd-text" style="color: red;"><strong>如果预筛的时候，需要填写 预筛号和知情时间，在当前页面可以直接填写了</strong></p>
+
         </div>
 
         
@@ -2509,8 +2573,7 @@
               <a href="javascript:void(0)">编辑</a><span>|</span>
               <a href="javascript:void(0)" class="history-files-btn" onclick="switchToFilesView(${p.id})">病史与资料</a><span>|</span>
               <a href="match-detail-new.html?id=${p.id}&screenNo=${encodeURIComponent(p.screenNo)}&age=${p.age}&gender=${encodeURIComponent(p.gender)}&centerNo=${p.centerNo}&center=${encodeURIComponent(p.center)}">匹配详情</a><span>|</span>
-              ${p.matchStatus === '匹配中' && !p.preSubmit ? `<a href="javascript:void(0)" style="color:#fa8c16" onclick="handleDirectPreSubmit(${p.id})"><i class="fas fa-paper-plane"></i> 预提交</a><span>|</span>` : ''}
-              <a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})">提交审批</a>${p.preSubmit ? `<span>|</span><a href="javascript:void(0)" style="color:#ff7a00" onclick="cancelPreSubmit(${p.id})">取消预提交</a>` : ''}<span>|</span>
+              ${p.preSubmit ? `<a href="javascript:void(0)" style="color:#ff7a00" onclick="cancelPreSubmit(${p.id})"><i class="fas fa-undo"></i> 取消预提交</a><span>|</span>` : (p.matchStatus === '匹配中' ? `<a href="javascript:void(0)" style="color:#fa8c16" onclick="handleDirectPreSubmit(${p.id})"><i class="fas fa-paper-plane"></i> 预提交</a><span>|</span>` : `<a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})"><i class="fas fa-paper-plane"></i> 提交审批</a><span>|</span>`)}
               <a href="javascript:void(0)" onclick="viewAuditRecord('${p.patientNo}')">审批记录</a><span>|</span>
               <a href="javascript:void(0)">邮件记录</a>
             </div>
@@ -2839,6 +2902,17 @@
           patient.preSubmit = false;
           renderPatients();
           showToast('已成功取消预提交，筛选号：' + patient.screenNo, 'success');
+
+          // 演示用：如果仍在匹配中，2秒后模拟匹配完成→自动显示"提交审核"
+          if (patient.matchStatus === '匹配中') {
+            showToast('项目仍在匹配中，当前显示「预提交」按钮', 'info', 2000);
+            // 模拟匹配完成
+            setTimeout(() => {
+              patient.matchStatus = '已匹配';
+              renderPatients();
+              showToast('项目匹配已完成，现在可以「提交审核」了', 'success', 3000);
+            }, 3500);
+          }
         },
         { okText: '确定取消', iconType: 'warn' }
       );
@@ -2896,7 +2970,19 @@
       
       // 保存当前患者ID用于后续操作
       window.currentAuditPatientId = patient.id;
-      
+
+      // 第7条数据：显示筛选号和知情时间字段
+      const mainConsentFields = document.getElementById('mainConsentFields');
+      if (mainConsentFields) {
+        if (patient.id === 7) {
+          mainConsentFields.style.display = 'block';
+          // 预填已有数据
+          document.getElementById('auditScreenNo').value = patient.screenNo || '';
+        } else {
+          mainConsentFields.style.display = 'none';
+        }
+      }
+
       // 显示弹窗
       overlay.classList.add('show');
     }
@@ -2977,11 +3063,26 @@
       
       closeAuditModal();
       
-      // 第7条数据主知情审核流程：提交审批后弹出编辑患者弹窗（填写知情时间和筛选号）
-      if (window.isMainInformedFlow && patientId === 7) {
+      // 第7条数据主知情审核流程：直接在弹窗填写筛选号和知情时间，不再跳编辑页面
+      if (patientId === 7) {
         window.isMainInformedFlow = false; // 重置标志
-        showEditPatientModal(patient);
-        return;
+
+        const screenNo = document.getElementById('auditScreenNo').value.trim();
+        const informedTime = document.getElementById('auditInformedTime').value;
+
+        if (!screenNo) {
+          showToast('请输入筛选号', 'warning');
+          return;
+        }
+        if (!informedTime) {
+          showToast('请选择知情时间', 'warning');
+          return;
+        }
+
+        // 更新患者数据
+        patient.screenNo = screenNo;
+        patient.informedTime = informedTime;
+        renderPatients();
       }
       
       // 执行提交审批
@@ -3900,6 +4001,51 @@ function filterReviewerSuggestions() {
   dropdown.classList.add('open');
   updateReviewerInputStyle(false);
 }
+  </script>
+
+  <!-- 流程图全屏查看遮罩 -->
+  <div class="flowchart-overlay" id="flowchartOverlay" onclick="closeFlowchartZoom(event)">
+    <div class="flowchart-overlay-modal" onclick="event.stopPropagation()">
+      <button class="flowchart-overlay-close" onclick="closeFlowchartZoom()" title="关闭放大视图">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <div id="flowchartZoomContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    // 流程图点击放大
+    function openFlowchartZoom() {
+      var overlay = document.getElementById('flowchartOverlay');
+      var container = document.getElementById('flowchartZoomContainer');
+      // 克隆第一个流程图SVG
+      var svg = document.querySelector('.flowchart-svg');
+      if (svg) {
+        var clone = svg.cloneNode(true);
+        clone.classList.add('flowchart-overlay-svg');
+        clone.style.width = '100%';
+        clone.style.height = 'auto';
+        clone.removeAttribute('style');
+        container.innerHTML = '';
+        container.appendChild(clone);
+      }
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeFlowchartZoom(e) {
+      if (e && e.target !== document.getElementById('flowchartOverlay')) return;
+      document.getElementById('flowchartOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // ESC 关闭
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.getElementById('flowchartOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
   </script>
 </body>
 </html>

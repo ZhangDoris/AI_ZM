@@ -625,6 +625,47 @@
       50% { opacity: 0.4; transform: scale(0.8); }
     }
 
+    /* 主知情审核阶段温馨提示 */
+    .main-informed-tip {
+      display: none;
+      background: #FFFBE6;
+      border: 1px solid #FFD591;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.7;
+      animation: fadeIn 0.25s ease;
+    }
+    .main-informed-tip.show { display: block; }
+    .main-informed-tip i {
+      color: #FAAD14;
+      margin-right: 6px;
+    }
+    .main-informed-tip strong {
+      color: #F53F3F;
+      font-weight: 600;
+    }
+    .form-group.highlight-required {
+      background: #FFF0F0;
+      border: 1px solid #FFCCC7;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 0 -4px 16px;
+    }
+    .form-group.highlight-required .form-label {
+      color: #F53F3F;
+      font-weight: 600;
+    }
+    .form-group.highlight-required .form-input {
+      background: #fff;
+      border-color: #FFCCC7;
+    }
+    .form-group.highlight-required .form-input:focus {
+      border-color: #F53F3F;
+    }
+
     .audit-footer {
       display: flex;
       gap: 12px;
@@ -1196,6 +1237,7 @@
       <div class="panel-item" onclick="selectCenter('广州中山医院', this)">广州中山医院</div>
       <div class="panel-item" onclick="selectCenter('华西医院', this)">华西医院</div>
       <div class="panel-item" onclick="selectCenter('武汉同济医院', this)">武汉同济医院</div>
+      <div class="panel-item" onclick="selectCenter('江苏省省级机关医院', this)">江苏省省级机关医院</div>
     </div>
     <div style="height: 30px;"></div>
   </div>
@@ -1218,34 +1260,49 @@
         <div class="match-progress show" id="matchProgressTag"><span class="breathing-dot"></span> 项目匹配中，您可继续设置预提交审批内容</div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label"><span class="required">*</span>方案编码：</label>
-        <input type="text" class="form-input" placeholder="测试入组流程" readonly>
-      </div>
-      <div class="form-group">
-        <label class="form-label"><span class="required">*</span>参研中心：</label>
-        <select class="form-select" id="auditCenter">
-          <option value="">请选择参研中心</option>
-          <option value="江苏省肿瘤医院">江苏省肿瘤医院</option>
-          <option value="北京协和医院">北京协和医院</option>
-          <option value="上海瑞金医院">上海瑞金医院</option>
-        </select>
-      </div>
      
-      <div class="form-group">
-        <label class="form-label"><span class="required">*</span>审批人：</label>
-        <select class="form-select" id="auditor">
-          <option value="">请选择审批人</option>
-          <option value="赵立花">赵立花</option>
-          <option value="王医生">王医生</option>
-          <option value="陈医生">陈医生</option>
-        </select>
+
+      <!-- 标准审核字段（非主知情患者展示） -->
+      <div id="standardAuditFields">
+        <div class="form-group">
+          <label class="form-label"><span class="required">*</span>方案编码：</label>
+          <input type="text" class="form-input" id="auditProjectCode" placeholder="测试入组流程" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label"><span class="required">*</span>参研中心：</label>
+          <select class="form-select" id="auditCenter">
+            <option value="">请选择参研中心</option>
+            <option value="江苏省肿瘤医院">江苏省肿瘤医院</option>
+            <option value="北京协和医院">北京协和医院</option>
+            <option value="上海瑞金医院">上海瑞金医院</option>
+            <option value="江苏省省级机关医院">江苏省省级机关医院</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><span class="required">*</span>审批人：</label>
+          <select class="form-select" id="auditor">
+            <option value="">请选择审批人</option>
+            <option value="赵立花">赵立花</option>
+            <option value="王医生">王医生</option>
+            <option value="陈医生">陈医生</option>
+            <option value="张医生">张医生</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">重点关注：<a style="color: #2E7D32;">引用</a></label>
+
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">重点关注：<a style="color: #2E7D32;">引用</a></label>
-        
+      <div class="form-group highlight-required" id="informedDateGroup">
+        <label class="form-label"><span class="required">*</span>知情时间：</label>
+        <input type="date" class="form-input" id="informedDate">
       </div>
-      <div class="form-group">
+      <div class="form-group highlight-required" id="screenNoGroup">
+        <label class="form-label"><span class="required">*</span>筛选号：</label>
+        <input type="text" class="form-input" id="screenNo" placeholder="请输入筛选号">
+      </div>
+      <div class="form-group" id="remarkGroup">
         <label class="form-label">备注：</label>
         <textarea class="form-textarea" placeholder="请输入备注"></textarea>
       </div>
@@ -1429,18 +1486,20 @@
         files: ['入院记录', '病理报告', '肠镜报告', '肿瘤标志物']
       },
       {
-        id: 6, name: 'QJSL', gender: '男', age: 44, abbr: 'QJSL',
-        matchStatus: 'matched', submitStatus: 'submitted',
-        center: '武汉同济医院', operator: '孙医生',
-        diagnosis: 'SHR-2019-nCoV-001',
-        filesChanged: true,
-        quickMatch: true,
+        id: 7, name: 'LJ', gender: '女', age: 57, abbr: 'LJ',
+        matchStatus: 'unmatched', submitStatus: 'unsubmit',
+        center: '江苏省省级机关医院', operator: '张医生',
+        diagnosis: '0610',
+        diseaseArea: '消化肿瘤',
+        centerCode: 'C001',
+        informedDate: '2026-06-22',
+        needMainInformedAudit: true,
         histories: [
-          { label: '既往史', value: '乙肝病史15年' },
+          { label: '既往史', value: '无特殊' },
           { label: '手术史', value: '无' },
           { label: '过敏史', value: '无' },
         ],
-        files: ['入院记录', '病理报告', '增强CT', '肝功能报告']
+        files: ['入院记录', '病理报告', 'CT影像']
       },
     ];
 
@@ -1648,6 +1707,9 @@
       } else if (patient.submitStatus === 'submitted' && patient.filesChanged) {
         // 第6条数据：已提交审核，文件有变动 → 项目匹配确认弹窗（快速匹配）
         openMatchConfirm(patient.name, patientCode);
+      } else if (patient.needMainInformedAudit) {
+        // 第7条数据：主知情审核阶段 → 项目匹配确认 → 系统匹配中 → 预提交审批 → 提交审核（含筛选号/知情时间）
+        openMatchConfirm(patient.name, patientCode);
       } else {
         // 其他数据：默认确认弹窗
         openMatchConfirm(patient.name, patientCode);
@@ -1670,6 +1732,7 @@
     function handleDirectPreSubmit(patientId) {
       const patient = patients.find(p => p.id === patientId);
       if (!patient) return;
+      currentMatchPatient = { id: patientId, name: patient.name, code: patient.screenNo || ('PT-2026-00' + patient.id) };
       patient.submitStatus = 'presubmit';
       filterPatients();
       openAuditModal(patient.name);
@@ -1771,13 +1834,53 @@
       document.getElementById('panelOverlay').classList.add('show');
       document.body.style.overflow = 'hidden';
       resetMatchStatusTip();
-      document.getElementById('matchStatusTip').classList.add('show');
+      // 根据当前患者是否处于主知情审核阶段，回显并控制字段显隐
+      const patient = currentMatchPatient ? patients.find(p => p.id === currentMatchPatient.id) : null;
+      const mainInformedTip = document.getElementById('mainInformedTip');
+      const matchStatusTip = document.getElementById('matchStatusTip');
+      const standardAuditFields = document.getElementById('standardAuditFields');
+      const informedDateGroup = document.getElementById('informedDateGroup');
+      const screenNoGroup = document.getElementById('screenNoGroup');
+      const remarkGroup = document.getElementById('remarkGroup');
+      const informedDate = document.getElementById('informedDate');
+      const screenNo = document.getElementById('screenNo');
+      const auditProjectCode = document.getElementById('auditProjectCode');
+      const auditCenter = document.getElementById('auditCenter');
+      if (patient && patient.needMainInformedAudit) {
+        // 第7条数据：主知情审核阶段，完整表单 + 额外增加筛选号/知情时间
+        document.getElementById('matchStatusTip').classList.add('show');
+        mainInformedTip.classList.add('show');
+        standardAuditFields.style.display = '';
+        remarkGroup.style.display = '';
+        informedDateGroup.style.display = 'block';
+        screenNoGroup.style.display = 'block';
+        informedDate.value = patient.informedDate || '';
+        screenNo.value = patient.screenNo || '';
+        auditProjectCode.value = patient.diagnosis || '';
+        auditCenter.value = patient.center || '';
+        document.getElementById('auditor').value = '';
+      } else {
+        // 其他患者：保持原有完整表单
+        document.getElementById('matchStatusTip').classList.add('show');
+        mainInformedTip.classList.remove('show');
+        standardAuditFields.style.display = '';
+        remarkGroup.style.display = '';
+        informedDateGroup.style.display = 'none';
+        screenNoGroup.style.display = 'none';
+        informedDate.value = '';
+        screenNo.value = '';
+        auditProjectCode.value = '测试入组流程';
+        auditCenter.value = '';
+        document.getElementById('auditor').value = '';
+      }
     }
     function resetMatchStatusTip() {
       const tip = document.getElementById('matchStatusTip');
       const progress = document.getElementById('matchProgressTag');
+      const mainInformedTip = document.getElementById('mainInformedTip');
       if (!tip || !progress) return;
       tip.classList.remove('show');
+      if (mainInformedTip) mainInformedTip.classList.remove('show');
     }
     function startMatchInAudit() {
       toastMsg('已开始项目匹配，您可继续提交审批');
@@ -1825,11 +1928,32 @@
     }
 
     function submitAudit() {
+      // 先校验通用必填项：参研中心和审批人
       const center = document.getElementById('auditCenter').value;
       const auditor = document.getElementById('auditor').value;
       if (!center || !auditor) {
         toastMsg('请填写必填项');
         return;
+      }
+      // 第7条数据主知情审核阶段：额外校验筛选号和知情时间
+      const mainInformedTip = document.getElementById('mainInformedTip');
+      if (mainInformedTip && mainInformedTip.classList.contains('show')) {
+        const informedDate = document.getElementById('informedDate').value;
+        const screenNo = document.getElementById('screenNo').value.trim();
+        if (!informedDate) {
+          toastMsg('请填写知情时间');
+          return;
+        }
+        if (!screenNo) {
+          toastMsg('请填写筛选号');
+          return;
+        }
+        const patient = currentMatchPatient ? patients.find(p => p.id === currentMatchPatient.id) : null;
+        if (patient) {
+          patient.informedDate = informedDate;
+          patient.screenNo = screenNo;
+          patient.submitStatus = 'presubmit';
+        }
       }
       toastMsg('匹配中，匹配完成后系统将自动帮您提交审批');
       closeAuditModal();
@@ -1849,22 +1973,7 @@ function updatePRDPanel(mod, sub) {
     'audit': {
       title: '患者列表',
       sections: [
-        {
-          title: '一、预提交审批模式提示',
-          content: `<p class="audit-prd-text"><strong>触发条件：</strong>只要点击预提交弹出的审核页面，顶部均显示蓝色提示区域。</p>
-            <p class="audit-prd-text"><strong>提示内容：</strong></p>
-            <ul class="prd-list">
-              <li>标题：预提交审批模式</li>
-              <li>说明：您先预设提交审核内容，待匹配完成后，系统会自动帮您提交。</li>
-              <li>状态标签：项目匹配中，您可继续设置预提交审批内容（橙色呼吸灯效果）</li>
-            </ul>
-            <p class="audit-prd-text"><strong>关键规则：</strong></p>
-            <ul class="prd-list">
-              <li>匹配与审批<strong>完全解耦</strong></li>
-              <li>无需等待匹配完成即可继续填写并提交</li>
-              <li>所有预提交入口进入的审核弹窗均统一展示该提示</li>
-            </ul>`
-        },
+        
         {
           title: '★ 本次修改(<strong style="color: red;">每条数据的点击效果备注 在PRD说明下面，注意下滑</strong>)：针对于点击项目匹配可以预提交/项目匹配误触发操作；病史与资料页面的逻辑与列表保持一致',
           content:` <div class="prd-section">
@@ -1874,19 +1983,31 @@ function updatePRDPanel(mod, sub) {
         <li>匹配中，未提交的，也不在预提交中的，可以预提交</li>
         <li>  已经预提交的按钮，在序号上显示预提交状态，然后操作列有取消提交，提交成功，就不显示这个状态和按钮了， 只要系统还没有协助提交，就存在这俩状态，如果系统提交成功，就不显示了 </li>
         </ul>
+         <!-- 按钮交互说明 -->
+      <p class="prd-text" style="margin-top:14px;"><strong style="color:#1677ff;">📌 操作列按钮显示规则：</strong></p>
+      <ul class="prd-list" style="background:#f0f5ff; border:1px solid #adc6ff; border-radius:8px; padding:12px 16px;">
+        <li><strong>第1条数据(本周)ZWMS</strong> 点击提交审核，看到入排只有一个版本的效果</li>
+            <li><strong>第2条数据(本周)HGKD</strong> 点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
+            <li><strong>第3条数据(本周)MXKT</strong> 状态为「匹配中」，无预提交 → 项目匹配按钮置灰不可点击，操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
+            <li><strong>第4条数据(下周)RFNE</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
+            <li><strong>第5条数据(下周)PWCD</strong> 已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+            <li><strong>第6条数据(下周)QJSL</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+            <li><strong>第7条数据(本周)LJ</strong> 主知情审核阶段 → 点击项目匹配 → 弹出「项目匹配确认」弹窗 → 点击开始匹配 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 弹出提交审核弹窗（顶部显示主知情审核阶段提示，需填写<strong>知情时间</strong>和<strong>筛选号</strong>）→ 点击确定 → toast「匹配中，匹配完成后系统将自动帮您提交审批」</li>
+            </ul>
+
+      <!-- 本周/下周安排 -->
+      <p class="prd-text" style="margin-top:14px;"><strong style="color:#d46b08;">⏰ 排期说明：</strong></p>
+      <ul class="prd-list" style="background:#fff7e6; border:1px solid #ffd591; border-radius:8px; padding:12px 16px;">
+        <li>✅ <strong>本周做：</strong>第1-2-3-7条数据交互效果、项目匹配+预提交流程、按钮动态显示</li>
+        <li>❌ <strong>本周先不做,下周做：</strong>三次容错机制、筛选表必填项校验、第4-5-6条数据效果</li>
+      </ul>
       <p class="prd-text"><strong style="color: red;">注意：匹配成功后，系统自动提交，如果匹配失败了（注意三次容错机制），就需要通知再次点击项目匹配，才可以进行提交审核了，让把之前的预提交过程再做一遍，不过内容都需要回显</strong></p>
          <p class="prd-text"><strong>注意：</strong>对于点击项目匹配可以预提交 ，  所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限  是所有可以提交本次数据的相关人员</p>
       </div>
-    <ul style="color:#165dff">
-            
-            <li><strong>第1条数据ZWMS</strong> 点击提交审核，看到入排只有一个版本的效果</li>
-            <li><strong>第2条数据HGKD</strong> 点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
-            <li><strong>第3条数据MXKT</strong> 状态为「匹配中」，无预提交 → 项目匹配按钮置灰不可点击，操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
-            <li><strong>第4条数据RFNE</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
-            <li><strong>第5条数据PWCD</strong> 已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
-            <li><strong>第6条数据QJSL</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>  
-            <ul>`
+ `
               }
+        ,
+       
         
         
       ]
