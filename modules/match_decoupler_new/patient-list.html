@@ -421,6 +421,7 @@
     .status-tag.enrolled { background: #f6ffed; color: #52c41a; }
     .status-tag.failed { background: #fff2f0; color: #ff4d4f; }
     .status-tag.screening { background: #e6f4ff; color: #1677ff; }
+    .status-tag.main-consent { background: linear-gradient(135deg,#fff7e6 0%,#fffbe6 100%); color: #d46b08; font-weight:600; border:1px solid #ffd591; }
 
     /* 操作链接 */
     .action-links {
@@ -1421,6 +1422,72 @@
     .fill-btn-download:hover {
       background: #4096ff; border-color: #4096ff;
     }
+
+    /* 编辑患者弹窗（主知情审核） */
+    .edit-patient-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 10005; display: none; align-items: center; justify-content: center;
+    }
+    .edit-patient-overlay.show { display: flex; }
+    .edit-patient-modal {
+      width: 100%; max-width: 560px; background: #fff; border-radius: 10px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18); animation: confirmIn 0.25s ease;
+      overflow: hidden;
+    }
+    .edit-patient-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid #f0f0f0;
+    }
+    .edit-patient-title {
+      font-size: 17px; font-weight: 600; color: #1a1a1a; margin: 0;
+    }
+    .edit-patient-close {
+      width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #999; transition: all 0.2s; background: transparent; font-size: 14px;
+    }
+    .edit-patient-close:hover { background: #f5f5f5; color: #333; }
+    .edit-patient-body { padding: 20px 28px 12px; }
+    .ep-form-row {
+      display: flex; align-items: center; margin-bottom: 14px;
+    }
+    .ep-form-label {
+      width: 90px; flex-shrink: 0; font-size: 13px; font-weight: 500; color: #333;
+      text-align: right; padding-right: 10px; position: relative;
+    }
+    .ep-form-label.required::after { content: ' *'; color: #ff4d4f; }
+    .ep-form-input {
+      flex: 1; height: 34px; padding: 0 11px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;
+      box-sizing: border-box; min-width: 0;
+    }
+    .ep-form-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .ep-form-select {
+      flex: 1; height: 34px; padding: 0 8px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;
+      background: #fff; cursor: pointer; box-sizing: border-box;
+    }
+    .ep-form-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .ep-highlight-box {
+      margin: 14px 0; padding: 12px 14px; background: linear-gradient(135deg,#fffbe6 0%,#fff7e6 100%);
+      border: 1.5px solid #ffd591; border-radius: 8px;
+    }
+    .ep-highlight-title {
+      font-size: 13px; font-weight: 600; color: #d46b08; display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+    }
+    .ep-highlight-text { font-size: 13px; color:#666; line-height: 1.6; }
+    /* 知情时间和筛选号高亮框 */
+    .ep-key-fields {
+      border: 2px solid #ff4d4f !important;
+      background: #fff1f0 !important;
+      padding: 2px 0;
+    }
+    .ep-radio-group { display: flex; gap: 20px; align-items: center; }
+    .ep-radio-item { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; }
+    .ep-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 24px; border-top: 1px solid #f0f0f0;
+    }
     .reviewer-hint {
       margin-top: 6px; font-size: 12px; color: #999;
       display: flex; align-items: center; gap: 4px;
@@ -1813,6 +1880,96 @@
     </div>
   </div>
 
+  <!-- 编辑患者弹窗（主知情审核 - 填写知情时间和筛选号） -->
+  <div class="edit-patient-overlay" id="editPatientOverlay">
+    <div class="edit-patient-modal">
+      <div class="edit-patient-header">
+        <h3 class="edit-patient-title">编辑患者</h3>
+        <button class="edit-patient-close" onclick="closeEditPatientModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="edit-patient-body">
+        <!-- 提示框 -->
+        <div class="ep-highlight-box">
+          <div class="ep-highlight-title">
+            <i class="fas fa-lightbulb" style="color:#fa8c16;"></i> 温馨提示
+          </div>
+          <div class="ep-highlight-text">
+            当前处于<strong style="color:#1677ff;">「主知情审核」</strong>阶段，请预先填写<strong style="color:#ff4d4f;">知情时间</strong>和<strong style="color:#ff4d4f;">筛选号</strong>，匹配成功后系统将自动提交主知情审核。
+          </div>
+        </div>
+
+        <!-- 表单字段 -->
+        <div class="ep-form-row">
+          <label class="ep-form-label required">姓名缩写：</label>
+          <input type="text" class="ep-form-input" value="" placeholder="测试审批上传附件" readonly style="background:#f5f5f5;color:#999;" id="epNameAbbr"/>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label">年龄：</label>
+          <input type="text" class="ep-form-input" value="" id="epAge"/>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label">性别：</label>
+          <select class="ep-form-select" id="epGender">
+            <option value="男">男性</option>
+            <option value="女">女性</option>
+          </select>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label required">疾病领域：</label>
+          <select class="ep-form-select" id="epDiseaseArea">
+            <option value="">请选择</option>
+            <option value="消化肿瘤" selected>消化肿瘤</option>
+            <option value="呼吸系统疾病">呼吸系统疾病</option>
+            <option value="心血管疾病">心血管疾病</option>
+          </select>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label">方案编码：</label>
+          <input type="text" class="ep-form-input" value="0610" readonly style="background:#f5f5f5;" id="epPlanCode"/>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label">参研中心：</label>
+          <select class="ep-form-select" id="epCenter">
+            <option value="">请选择</option>
+            <option value="88 - 江苏省省级机关医院 - 1" selected>88 - 江苏省省级机关医院 - 1</option>
+            <option value="C001 - 北京大学第一医院">C001 - 北京大学第一医院</option>
+          </select>
+        </div>
+        <div class="ep-form-row">
+          <label class="ep-form-label">中心号：</label>
+          <input type="text" class="ep-form-input" value="88" id="epCenterNo"/>
+        </div>
+
+        <!-- 关键字段：知情时间 & 筛选号（红色高亮框） -->
+        <div class="ep-key-fields" style="margin:14px 0;padding:12px 16px;border-radius:8px;">
+          <div class="ep-form-row" style="margin-bottom:10px;">
+            <label class="ep-form-label required" style="color:#cf1322;font-weight:600;">知情时间：</label>
+            <input type="date" class="ep-form-input" id="epInformedTime" value="2026-06-22" style="border-color:#ff7875;"/>
+          </div>
+          <div class="ep-form-row" style="margin-bottom:0;">
+            <label class="ep-form-label required" style="color:#cf1322;font-weight:600;">筛选号：</label>
+            <input type="text" class="ep-form-input" id="epScreenNo" placeholder="请输入筛选号" style="border-color:#ff7875;"/>
+          </div>
+        </div>
+
+        <!-- 是否筛败 -->
+        <div class="ep-form-row">
+          <label class="ep-form-label">是否筛败：</label>
+          <div class="ep-radio-group">
+            <label class="ep-radio-item"><input type="radio" name="epScreenFail" value="是"/> 是</label>
+            <label class="ep-radio-item"><input type="radio" name="epScreenFail" value="否" checked/> 否</label>
+          </div>
+        </div>
+      </div>
+      <div class="ep-footer">
+        <button class="btn btn-default" onclick="closeEditPatientModal()" style="padding:6px 20px;">取消</button>
+        <button class="btn btn-primary" onclick="saveEditPatient()" style="padding:6px 24px;"><i class="fas fa-check"></i> 保存</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PRD侧边栏 -->
   <aside class="prd-sidebar">
     <h2 class="prd-title">📋 PRD - 项目匹配功能</h2>
@@ -1838,10 +1995,12 @@
         <li><strong>前置条件：</strong>患者已上传病史与资料</li>
         <li id="prd-step1"><strong style="color: red;">第1条数据</strong> 点击提交审核，看到入排只有一个版本的效果</li>
         <li><strong style="color: red;">第2条数据</strong>点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
-        <li><strong style="color: red;">第3条数据</strong>状态为「匹配中」，无预提交 → 项目匹配按钮置灰不可点击，操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
+        <li><strong style="color: red;">第3条数据</strong>状态为「匹配中」，无预提交 → 操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
         <li><strong style="color: red;">第4条数据</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
         <li><strong style="color: red;">第5条数据</strong>已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
         <li><strong style="color: red;">第6条数据</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
+        <li><strong style="color: red;">第7条数据</strong> 主知情审核/需要填写预筛号和知情时间的 → 点击项目匹配 → 「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致 → 点击提交审核，弹出编辑页面，需要填写患者知情时间和筛选号</li>
+
         <li><strong style="color: red;">注意：</strong>对于点击项目匹配可以预提交 ， 所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限 是所有可以提交本次数据的相关人员 </li>
         <!-- <li id="prd-step5"><strong style="color: red;">注意：</strong>需要保存好 2个按钮的操作日志，统计2个按钮的点击次数，用于评估用户对功能需求的评估</li> -->
       </ul>
@@ -1893,133 +2052,204 @@
       </div>
     </div>
 
-    <!-- SVG流程图 -->
+    <!-- SVG流程图 - 患者全流程 -->
     <div class="prd-section">
-      <h3 class="prd-section-title">项目匹配流程图</h3>
+      <h3 class="prd-section-title">患者预筛全流程图</h3>
       <div class="prd-flowchart">
-        <svg class="flowchart-svg" viewBox="0 0 520 720" xmlns="http://www.w3.org/2000/svg">
-          <!-- 样式定义 -->
+        <svg class="flowchart-svg" viewBox="0 0 480 1260" xmlns="http://www.w3.org/2000/svg" style="min-height:1260px;">
           <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill="#fa8c16" />
+            <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#fa8c16" />
             </marker>
+            <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#52c41a" />
+            </marker>
+            <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#ff4d4f" />
+            </marker>
+            <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#1677ff" />
+            </marker>
+            <!-- 投影阴影 -->
+            <filter id="shadow" x="-10%" y="-5%" width="120%" height="130%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.1"/>
+            </filter>
           </defs>
 
-          <!-- 开始节点 -->
-          <rect x="140" y="10" width="100" height="30" rx="15" ry="15" fill="#1677ff" stroke="#0958d9" stroke-width="2"/>
-          <text x="190" y="30" text-anchor="middle" font-size="12" fill="white" font-weight="bold">开始</text>
+          <!-- ===== 阶段一：患者创建 ===== -->
+          <rect x="5" y="8" width="470" height="112" rx="8" fill="#f6ffed" stroke="#b7eb8f" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="26" font-size="10" fill="#52c41a" font-weight="bold">阶段一：患者创建</text>
 
-          <!-- 箭头1 -->
-          <line x1="190" y1="40" x2="190" y2="70" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- ① 新增患者 -->
+          <rect x="155" y="38" width="170" height="34" rx="17" fill="#1677ff" stroke="#0958d9" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="60" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">① 新增患者</text>
 
-          <!-- 点击项目匹配 -->
-          <rect x="110" y="70" width="160" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="190" y="92" text-anchor="middle" font-size="11" fill="#333">点击"项目匹配"按钮</text>
+          <line x1="240" y1="72" x2="240" y2="90" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 箭头2 -->
-          <line x1="190" y1="105" x2="190" y2="135" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- ② 上传病史与资料 -->
+          <rect x="145" y="90" width="190" height="30" rx="6" fill="#fff" stroke="#1677ff" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="109" text-anchor="middle" font-size="11" fill="#333" font-weight="500">② 上传病史与资料</text>
 
-          <!-- 确认框 -->
-          <rect x="110" y="135" width="160" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="190" y="157" text-anchor="middle" font-size="11" fill="#333">弹出确认框</text>
+          <!-- ===== 阶段二：项目匹配与预提交 ===== -->
+          <rect x="5" y="128" width="470" height="178" rx="8" fill="#e6f4ff" stroke="#91caff" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="146" font-size="10" fill="#1677ff" font-weight="bold">阶段二：项目匹配与预提交</text>
 
-          <!-- 箭头3 -->
-          <line x1="190" y1="170" x2="190" y2="200" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <line x1="240" y1="120" x2="240" y2="148" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 用户确认 -->
-          <rect x="110" y="200" width="160" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="190" y="222" text-anchor="middle" font-size="11" fill="#333">用户点击"开始匹配"</text>
+          <!-- ③ 项目匹配 -->
+          <rect x="155" y="148" width="170" height="30" rx="6" fill="#fff" stroke="#fa8c16" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="167" text-anchor="middle" font-size="11" fill="#333" font-weight="500">③ 项目匹配（AI匹配）</text>
 
-          <!-- 箭头4 -->
-          <line x1="190" y1="235" x2="190" y2="265" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- 匹配分支 -->
+          <circle cx="240" cy="198" r="7" fill="#fa8c16" stroke="#ad6800" stroke-width="1.5"/>
+          <line x1="240" y1="178" x2="240" y2="191" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 系统匹配中弹窗 -->
-          <rect x="90" y="265" width="200" height="40" rx="6" ry="6" fill="#e6f4ff" stroke="#1677ff" stroke-width="2"/>
-          <text x="190" y="287" text-anchor="middle" font-size="11" fill="#333">显示"系统匹配中"弹窗</text>
+          <!-- 左分支：匹配成功 -->
+          <line x1="233" y1="198" x2="130" y2="198" stroke="#52c41a" stroke-width="2"/>
+          <line x1="130" y1="198" x2="130" y2="218" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+          <rect x="55" y="218" width="150" height="26" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
+          <text x="130" y="235" text-anchor="middle" font-size="10" fill="#333">✓ 匹配成功 → 查看详情</text>
 
-          <!-- 分支点 -->
-          <circle cx="190" cy="325" r="8" fill="#fa8c16" stroke="#ad6800" stroke-width="2"/>
-          <line x1="190" y1="305" x2="190" y2="317" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- 右分支：匹配失败 -->
+          <line x1="247" y1="198" x2="350" y2="198" stroke="#ff4d4f" stroke-width="2"/>
+          <line x1="350" y1="198" x2="350" y2="218" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
+          <rect x="280" y="218" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
+          <text x="350" y="235" text-anchor="middle" font-size="10" fill="#333">✗ 失败/超时 → 重试3次</text>
 
-          <!-- 左分支：等待结果 -->
-          <line x1="182" y1="325" x2="80" y2="325" stroke="#fa8c16" stroke-width="2"/>
-          <line x1="80" y1="325" x2="80" y2="355" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="20" y="355" width="120" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="80" y="377" text-anchor="middle" font-size="10" fill="#333">等待结果后提交</text>
+          <!-- 失败路径汇入预提交 -->
+          <line x1="350" y1="244" x2="350" y2="260" stroke="#fa8c16" stroke-width="1.5"/>
+          <line x1="350" y1="260" x2="240" y2="260" stroke="#fa8c16" stroke-width="1.5"/>
+          <line x1="240" y1="260" x2="240" y2="276" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 右分支：同步提交 -->
-          <line x1="198" y1="325" x2="300" y2="325" stroke="#fa8c16" stroke-width="2"/>
-          <line x1="300" y1="325" x2="300" y2="355" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="240" y="355" width="120" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="300" y="377" text-anchor="middle" font-size="10" fill="#333">同步提交审批</text>
+          <!-- 成功路径也汇入预提交 -->
+          <line x1="130" y1="244" x2="130" y2="260" stroke="#fa8c16" stroke-width="1.5"/>
+          <line x1="130" y1="260" x2="240" y2="260" stroke="#fa8c16" stroke-width="1.5"/>
 
-          <!-- 同步提交分支判断 -->
-          <circle cx="300" cy="415" r="8" fill="#fa8c16" stroke="#ad6800" stroke-width="2"/>
-          <line x1="300" y1="390" x2="300" y2="407" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- ④ 预提交 -->
+          <rect x="155" y="278" width="170" height="28" rx="6" fill="#fff" stroke="#fa8c16" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="296" text-anchor="middle" font-size="11" fill="#333" font-weight="500">④ 预提交审批</text>
 
-          <!-- 匹配成功路径 -->
-          <line x1="292" y1="415" x2="180" y2="415" stroke="#52c41a" stroke-width="2"/>
-          <text x="240" y="410" font-size="9" fill="#52c41a">成功</text>
-          <line x1="180" y1="415" x2="180" y2="445" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="120" y="445" width="120" height="35" rx="6" ry="6" fill="#f6ffed" stroke="#52c41a" stroke-width="2"/>
-          <text x="180" y="467" text-anchor="middle" font-size="10" fill="#333">匹配成功</text>
+          <!-- ===== 阶段三：筛选表校验 ===== -->
+          <rect x="5" y="314" width="470" height="182" rx="8" fill="#fffbe6" stroke="#ffe58f" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="332" font-size="10" fill="#d48806" font-weight="bold">阶段三：筛选表校验与提交</text>
 
-          <!-- 正常查看匹配详情 -->
-          <line x1="180" y1="480" x2="180" y2="510" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="100" y="510" width="160" height="35" rx="6" ry="6" fill="#f6ffed" stroke="#52c41a" stroke-width="2"/>
-          <text x="180" y="532" text-anchor="middle" font-size="10" fill="#333">正常查看匹配详情</text>
+          <line x1="240" y1="306" x2="240" y2="330" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 审批人可审批（同步提交成功路径）-->
-          <line x1="180" y1="545" x2="180" y2="575" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="100" y="575" width="160" height="35" rx="6" ry="6" fill="#e6f4ff" stroke="#1677ff" stroke-width="2"/>
-          <text x="180" y="592" text-anchor="middle" font-size="10" fill="#333">审批人可开始审批</text>
-          <text x="180" y="605" text-anchor="middle" font-size="9" fill="#333">(无需等待匹配结果)</text>
+          <!-- ⑤ 校验筛选表 -->
+          <rect x="145" y="330" width="190" height="30" rx="6" fill="#fff" stroke="#fa8c16" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="349" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑤ 校验筛选表必填项</text>
 
-          <!-- 匹配失败或超时路径 -->
-          <line x1="308" y1="415" x2="380" y2="415" stroke="#ff4d4f" stroke-width="2"/>
-          <text x="340" y="410" font-size="9" fill="#ff4d4f">失败/超时</text>
-          <line x1="380" y1="415" x2="380" y2="445" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="300" y="445" width="160" height="35" rx="6" ry="6" fill="#fff2f0" stroke="#ff4d4f" stroke-width="2"/>
-          <text x="380" y="462" text-anchor="middle" font-size="9" fill="#333">匹配失败 OR</text>
-          <text x="380" y="475" text-anchor="middle" font-size="9" fill="#333">20分钟无结果</text>
+          <!-- 校验分支 -->
+          <circle cx="240" cy="378" r="7" fill="#fa8c16" stroke="#ad6800" stroke-width="1.5"/>
+          <line x1="240" y1="360" x2="240" y2="371" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
-          <!-- 自动重试 -->
-          <line x1="380" y1="480" x2="380" y2="510" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="320" y="510" width="120" height="35" rx="6" ry="6" fill="#fff2f0" stroke="#ff4d4f" stroke-width="2"/>
-          <text x="380" y="532" text-anchor="middle" font-size="10" fill="#333">自动重试3次</text>
+          <!-- 左：必填完整 -->
+          <line x1="233" y1="378" x2="130" y2="378" stroke="#52c41a" stroke-width="2"/>
+          <line x1="130" y1="378" x2="130" y2="402" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+          <rect x="55" y="400" width="150" height="26" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
+          <text x="130" y="417" text-anchor="middle" font-size="10" fill="#333">✓ 必填项完整</text>
 
-          <!-- 重试分支 -->
-          <circle cx="380" cy="570" r="8" fill="#fa8c16" stroke="#ad6800" stroke-width="2"/>
-          <line x1="380" y1="545" x2="380" y2="562" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
+          <!-- 右：有未填项 -->
+          <line x1="247" y1="378" x2="350" y2="378" stroke="#ff4d4f" stroke-width="2"/>
+          <line x1="350" y1="378" x2="350" y2="402" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
+          <rect x="280" y="400" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
+          <text x="350" y="417" text-anchor="middle" font-size="10" fill="#333">✗ 有必填项未填</text>
 
-          <!-- 重试成功 -->
-          <line x1="372" y1="570" x2="260" y2="570" stroke="#52c41a" stroke-width="2"/>
-          <line x1="260" y1="570" x2="260" y2="540" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <text x="310" y="565" font-size="9" fill="#52c41a" font-weight="bold">成功→同上</text>
+          <line x1="350" y1="426" x2="350" y2="446" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
+          <rect x="280" y="446" width="140" height="28" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
+          <text x="350" y="459" text-anchor="middle" font-size="10" fill="#d4380d">发企业微信提示补充</text>
+          <text x="350" y="471" text-anchor="middle" font-size="9" fill="#999">（手动填写 / 等待AI）</text>
 
-          <!-- 重试失败 -->
-          <line x1="388" y1="570" x2="420" y2="570" stroke="#ff4d4f" stroke-width="2"/>
-          <line x1="420" y1="570" x2="420" y2="600" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="360" y="600" width="120" height="40" rx="6" ry="6" fill="#fff2f0" stroke="#ff4d4f" stroke-width="2"/>
-          <text x="420" y="617" text-anchor="middle" font-size="9" fill="#333">企微通知：匹配失败</text>
-          <text x="420" y="630" text-anchor="middle" font-size="9" fill="#333">提交人/审批人均可</text>
+          <!-- 未填项处理完汇回 -->
+          <line x1="350" y1="474" x2="350" y2="490" stroke="#fa8c16" stroke-width="1.5"/>
+          <line x1="350" y1="490" x2="240" y2="490" stroke="#fa8c16" stroke-width="1.5"/>
+          <line x1="240" y1="490" x2="240" y2="508" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
+          <text x="295" y="495" font-size="8" fill="#999">补充完成后</text>
 
-          <!-- 提交人和审批人均可继续点击匹配 -->
-          <line x1="420" y1="640" x2="420" y2="670" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowhead)"/>
-          <rect x="360" y="670" width="120" height="35" rx="6" ry="6" fill="#fff" stroke="#fa8c16" stroke-width="2"/>
-          <text x="420" y="685" text-anchor="middle" font-size="9" fill="#333">提交人/审批人</text>
-          <text x="420" y="697" text-anchor="middle" font-size="9" fill="#333">可继续点击项目匹配</text>
+          <!-- ⑥ 提交成功 -->
+          <rect x="150" y="430" width="180" height="30" rx="6" fill="#52c41a" stroke="#389e0d" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="449" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑥ 校验通过 → 提交成功</text>
+
+          <!-- ===== 阶段四：预筛审核 ===== -->
+          <rect x="5" y="504" width="470" height="86" rx="8" fill="#f9f0ff" stroke="#d3adf7" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="522" font-size="10" fill="#722ed1" font-weight="bold">阶段四：预筛审核</text>
+
+          <line x1="240" y1="460" x2="240" y2="522" stroke="#1677ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+          <!-- ⑦ 预筛审核 -->
+          <rect x="155" y="524" width="170" height="30" rx="6" fill="#fff" stroke="#722ed1" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="543" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑦ 预筛审核</text>
+
+          <line x1="240" y1="554" x2="240" y2="572" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+          <text x="255" y="567" font-size="9" fill="#52c41a">通过</text>
+
+          <!-- ===== 阶段五：主知情审核 ===== -->
+          <rect x="5" y="598" width="470" height="250" rx="8" fill="#fff7e6" stroke="#ffd591" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="616" font-size="10" fill="#d46b08" font-weight="bold">阶段五：主知情审核</text>
+
+          <!-- ⑧ 主知情审核标题 -->
+          <rect x="145" y="622" width="190" height="28" rx="6" fill="#fa8c16" stroke="#d46b08" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="640" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑧ 主知情审核</text>
+
+          <!-- 主知情内部流程 -->
+          <line x1="240" y1="650" x2="240" y2="670" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+          <rect x="155" y="670" width="170" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
+          <text x="240" y="687" text-anchor="middle" font-size="10" fill="#333">8a. 项目匹配</text>
+
+          <line x1="240" y1="696" x2="240" y2="714" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+          <rect x="155" y="714" width="170" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
+          <text x="240" y="731" text-anchor="middle" font-size="10" fill="#333">8b. 设置预提交审批</text>
+
+          <line x1="240" y1="740" x2="240" y2="758" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+          <rect x="140" y="758" width="200" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
+          <text x="240" y="775" text-anchor="middle" font-size="10" fill="#333">8c. 填写主知情时间 &amp; 预筛号</text>
+
+          <line x1="240" y1="784" x2="240" y2="802" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+          <rect x="145" y="802" width="190" height="28" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
+          <text x="240" y="815" text-anchor="middle" font-size="10" fill="#389e0d" font-weight="500">✓ 匹配成功，提交主知情</text>
+          <text x="240" y="827" text-anchor="middle" font-size="9" fill="#888">（系统自动提交）</text>
+
+          <!-- ===== 阶段六：后续审核 ===== -->
+          <rect x="5" y="856" width="470" height="110" rx="8" fill="#fafafa" stroke="#d9d9d9" stroke-width="1" stroke-dasharray="4,2"/>
+          <text x="15" y="874" font-size="10" fill="#8c8c8c" font-weight="bold">阶段六：后续审核（以此类推）</text>
+
+          <line x1="240" y1="830" x2="240" y2="878" stroke="#1677ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+          <rect x="155" y="880" width="170" height="30" rx="6" fill="#1677ff" stroke="#0958d9" stroke-width="1.5" filter="url(#shadow)"/>
+          <text x="240" y="899" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑨ 入组审核</text>
+
+          <line x1="240" y1="910" x2="240" y2="930" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+          <rect x="155" y="930" width="170" height="28" rx="6" fill="#fff" stroke="#999" stroke-width="1.5"/>
+          <text x="240" y="948" text-anchor="middle" font-size="10" fill="#666">… 后续审核流程 …</text>
+
+          <!-- 右侧图例 -->
+          <rect x="350" y="970" width="120" height="92" rx="6" fill="#fff" stroke="#d9d9d9" stroke-width="1"/>
+          <text x="410" y="988" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">图例</text>
+          <line x1="365" y1="1000" x2="390" y2="1000" stroke="#1677ff" stroke-width="2"/>
+          <text x="395" y="1002" font-size="9" fill="#666">主流程  </text>
+          <text x="440" y="1002" font-size="9" fill="#666">→</text>
+          <line x1="365" y1="1016" x2="390" y2="1016" stroke="#52c41a" stroke-width="2"/>
+          <text x="395" y="1018" font-size="9" fill="#666">通过/成功</text>
+          <line x1="365" y1="1032" x2="390" y2="1032" stroke="#ff4d4f" stroke-width="2"/>
+          <text x="395" y="1034" font-size="9" fill="#666">失败/拒绝</text>
+          <line x1="365" y1="1048" x2="390" y2="1048" stroke="#fa8c16" stroke-width="2"/>
+          <text x="395" y="1050" font-size="9" fill="#666">分支/回退</text>
+
+          <!-- 底部：关键说明 -->
+          <text x="15" y="988" font-size="9" fill="#999">关键说明：</text>
+          <text x="15" y="1003" font-size="9" fill="#999">1. 项目匹配与审批已解耦，匹配中也可提交审批</text>
+          <text x="15" y="1018" font-size="9" fill="#999">2. 匹配失败自动重试3次，仍失败则企微通知重新匹配</text>
+          <text x="15" y="1033" font-size="9" fill="#999">3. 筛选表必填项校验不通过时，通知补充后再提交</text>
+          <text x="15" y="1048" font-size="9" fill="#999">4. 主知情、入组等后续环节沿用相同匹配与提交流程</text>
 
           <!-- 结束节点 -->
-          <rect x="140" y="670" width="100" height="30" rx="15" ry="15" fill="#52c41a" stroke="#389e0d" stroke-width="2"/>
-          <text x="190" y="690" text-anchor="middle" font-size="12" fill="white" font-weight="bold">结束</text>
-          <line x1="180" y1="610" x2="180" y2="670" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowhead)"/>
-
-          <!-- B. 直接提交审批路径 - 从PRD侧边栏指向左侧表格中的提交审批按钮 -->
-          <!-- 起点：PRD侧边栏中的"步骤1：用户点击操作列的'提交审批'按钮"文本位置 -->
-          <!-- 终点：左侧表格第一行的"提交审批"按钮（大约在x=-200, y=200的位置） -->
-          <path d="M 20 650 C -50 650, -150 400, -200 200" stroke="#fa8c16" stroke-width="2" fill="none" stroke-dasharray="5,5" marker-end="url(#arrowhead)" opacity="0.7"/>
-          <text x="-80" y="420" font-size="10" fill="#fa8c16" font-weight="bold" transform="rotate(-45, -80, 420)">B. 直接提交审批</text>
+          <rect x="190" y="1100" width="100" height="28" rx="14" fill="#52c41a" stroke="#389e0d" stroke-width="1.5"/>
+          <text x="240" y="1119" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">流程结束</text>
         </svg>
       </div>
     </div>
@@ -2206,6 +2436,20 @@
         creator: '孙八',
         filesChanged: true,
         quickMatch: true
+      },
+      {
+        id: 7,
+        screenNo: 'PT-2026-007',
+        nameAbbr: 'LJ',
+        age: 57,
+        gender: '女',
+        patientNo: 'P007',
+        centerNo: 'C001',
+        center: '北京大学第一医院',
+        matchStatus: '待匹配',
+        patientStatus: '主知情审核',
+        creator: '李九',
+        isMainInformedConsent: true
       }
     ];
 
@@ -2258,7 +2502,7 @@
           <td>${p.centerNo}</td>
           <td>${p.center}</td>
           <td><span class="match-tag ${p.matchStatus==='已匹配'?'matched':'pending'}">${p.matchStatus}</span></td>
-          <td><span class="status-tag ${p.patientStatus==='已入组'?'enrolled':p.patientStatus==='筛选失败'?'failed':'screening'}">${p.patientStatus}</span></td>
+          <td><span class="status-tag ${p.patientStatus==='已入组'?'enrolled':p.patientStatus==='筛选失败'?'failed':p.patientStatus==='主知情审核'?'main-consent':'screening'}">${p.patientStatus}</span></td>
           <td>${p.creator}</td>
           <td class="col-sticky-right-1">
             <a href="javascript:void(0)" class="project-match-btn" data-patient-id="${p.id}" onclick="showProjectMatchConfirm(${p.id}, '${p.matchStatus}')">
@@ -2414,6 +2658,14 @@
           },
           { iconType: 'info', okText: '开始匹配' }
         );
+        return;
+      }
+
+      // 第7条数据：主知情审核/需要填写预筛号和知情时间 → 版本选择 → 匹配中 → 预提交 → 提交审核 → 编辑患者弹窗
+      if (patientId === 7) {
+        // 标记为第7条数据流程（用于后续链式弹窗）
+        window.isMainInformedFlow = true;
+        showVersionSelectModal();
         return;
       }
 
@@ -2728,8 +2980,16 @@
       const patient = patientData.find(p => p.id === patientId);
       if (!patient) return;
       
-      // 执行提交审批
       closeAuditModal();
+      
+      // 第7条数据主知情审核流程：提交审批后弹出编辑患者弹窗（填写知情时间和筛选号）
+      if (window.isMainInformedFlow && patientId === 7) {
+        window.isMainInformedFlow = false; // 重置标志
+        showEditPatientModal(patient);
+        return;
+      }
+      
+      // 执行提交审批
       doSubmitAudit(patient);
     }
     
@@ -2807,6 +3067,49 @@
     // 关闭手动填写筛选表弹窗
     function closeManualFillModal() {
       document.getElementById('manualFillOverlay').classList.remove('show');
+    }
+    
+    // ===== 编辑患者弹窗（主知情审核 - 填写知情时间和筛选号）=====
+    // 打开编辑患者弹窗
+    function showEditPatientModal(patient) {
+      const overlay = document.getElementById('editPatientOverlay');
+      // 填充患者数据
+      document.getElementById('epNameAbbr').value = patient.nameAbbr || '';
+      document.getElementById('epAge').value = patient.age || '';
+      document.getElementById('epGender').value = patient.gender || '男';
+      document.getElementById('epCenterNo').value = patient.centerNo || '';
+      document.getElementById('epScreenNo').value = ''; // 筛选号需要用户填写
+      overlay.classList.add('show');
+    }
+
+    // 关闭编辑患者弹窗
+    function closeEditPatientModal() {
+      document.getElementById('editPatientOverlay').classList.remove('show');
+    }
+
+    // 保存编辑患者
+    function saveEditPatient() {
+      const informedTime = document.getElementById('epInformedTime').value;
+      const screenNo = document.getElementById('epScreenNo').value;
+
+      if (!informedTime) {
+        showToast('请选择知情时间', 'warning');
+        return;
+      }
+      if (!screenNo.trim()) {
+        showToast('请输入筛选号', 'warning');
+        return;
+      }
+
+      closeEditPatientModal();
+      showToast(`匹配中，匹配完成后系统将自动帮您提交审批`, 'success');
+
+      // 更新第7条数据的筛选号
+      const patient = patientData.find(p => p.id === 7);
+      if (patient) {
+        patient.screenNo = screenNo.trim();
+        renderPatients();
+      }
     }
     
     // 返回到提交审核页面

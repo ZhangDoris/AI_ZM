@@ -6978,8 +6978,7 @@ function buildScPatientListContent() {
             <div>⑤ 在当前页面 把项目编码带出来显示。</div>
             <div>⑥ 点击提交审批按钮，对这个页面进行了修改。</div>
             <div>⑦ 点击审批记录按钮，对这个页面进行了修改。</div>
-            <div>⑧ 沟通艾特的页面加一个默认是否艾特提交人。</div>
-            <div>⑨ 审批列表的审批记录和审批页面也需要同步修改审批记录的显示内容和沟通页面。</div>
+            <div>⑧ 审批列表的审批记录和审批页面也需要同步修改审批记录的显示内容和沟通页面。</div>
             </div>
         </div>
     <!-- 项目信息摘要 -->
@@ -7688,28 +7687,32 @@ function showProjectMatchConfirm(patientId) {
   // 获取患者信息
   const patient = findPatientById(patientId);
   if (!patient) return;
-  
-  // 创建确认弹窗
+
+  // 避免重复打开
+  closeProjectMatchConfirm();
+
+  // 创建确认弹窗（使用与项目一致的 .modal-panel 结构）
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.id = 'projectMatchConfirmModal';
   overlay.innerHTML = `
-    <div class="modal-box" style="width:450px">
-      <div class="modal-title">
-        <span>🔍 项目匹配确认</span>
-        <span class="modal-close" onclick="closeProjectMatchConfirm()">×</span>
+    <div class="modal-panel" style="width:460px;max-height:80vh">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-magnifying-glass" style="color:#1677ff;margin-right:8px"></i>项目匹配确认</h3>
+        <button class="modal-close" onclick="closeProjectMatchConfirm()">×</button>
       </div>
-      <div style="margin-bottom:20px;font-size:13px;color:#666;line-height:1.8">
-        <p style="margin-bottom:12px">您确定要进行项目匹配吗？</p>
-      
+      <div class="modal-body" style="font-size:14px;color:#4e5969;line-height:1.8">
+        <p>确定要为患者 <strong style="color:#1d2129">${patient.name || ''}</strong>（筛选号：<strong style="color:#1677ff">${patient.screenNo || ''}</strong>）执行项目匹配吗？</p>
+        <p style="margin-top:8px;color:#86909c;font-size:13px">匹配完成后可在「匹配详情」中查看入排标准的逐条判断结果。</p>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:12px">
+      <div class="modal-footer">
         <button class="btn btn-default" onclick="closeProjectMatchConfirm()">取消</button>
         <button class="btn btn-primary" onclick="confirmProjectMatch(${patientId})">确认匹配</button>
       </div>
     </div>
   `;
   document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
 }
 
 // 关闭项目匹配确认框
@@ -7717,12 +7720,14 @@ function closeProjectMatchConfirm() {
   const modal = document.getElementById('projectMatchConfirmModal');
   if (modal) {
     modal.remove();
+    document.body.style.overflow = '';
   }
 }
 
 // 确认执行项目匹配
 function confirmProjectMatch(patientId) {
-  
+  closeProjectMatchConfirm();
+  showWechatToast('已开始项目匹配，请稍后查看结果');
 }
 
 // 根据ID查找患者
