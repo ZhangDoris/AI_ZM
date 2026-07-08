@@ -6218,7 +6218,7 @@ function updatePRDPanel(mod, sub) {
           title: '★本次修改',
           content: `<ul>
             <li><strong>返回按钮</strong>：← 返回项目列表</li>
-            <li><strong>患者编号</strong>：患者提交审批的时候，后台自动生成一个患者编号：'项目方案编号+ PT+中心号+4位流水号'，页面显示的时候 显示“PT+中心号+4位流水号”</li>
+            <li><strong>患者编号</strong>：患者提交审批的时候，后台自动生成一个患者编号：'项目方案编号+ PT+中心号+4位流水号'，页面显示的时候 显示"PT+中心号+4位流水号"</li>
             <li><strong>提交审批</strong>：患者可以自己选择审批流程</li>
           </ul>`
         },
@@ -6347,6 +6347,40 @@ function updatePRDPanel(mod, sub) {
                 <li>停用模板后项目无法选用，是否确认停用？</li>
               </ul>
             </li>
+          </ul>`
+        }
+      ]
+    },
+
+    'project-center-center-list': {
+      title: '参研中心 - 审批流程设置',
+      sections: [
+        {
+          title: '【1】功能说明',
+          content: '<span class="prd-badge prd-badge-core">本次修改</span><br/>参研中心列表操作列新增「审批流程设置」入口，用于为单个中心配置独立的审批流程模板。设置后，该中心的患者提交审批时将使用配置模板对应的审批流程。'
+        },
+        {
+          title: '【2】审批流程设置弹窗',
+          content: `<ul>
+            <li><strong>审批模板</strong>：必填，下拉选项来源于「项目编辑 - 审批模板配置」中已引用/生效的流程模板</li>
+            <li><strong>默认选中</strong>：项目设置主流程模板（即项目编辑中标记为主流程的模板）</li>
+            <li><strong>选择其他模板的原因</strong>：当切换为非主流程模板时，可选填使用原因；主流程模板时隐藏或置空</li>
+            <li><strong>未配置模板</strong>：若项目未引用任何流程模板，弹窗需给出提示，引导用户先去项目编辑中配置</li>
+          </ul>`
+        },
+        {
+          title: '【3】演示场景（列表三条数据）',
+          content: `<ul>
+            <li><strong>数据① test医院1231</strong>：模拟项目未引用可用审批模板<br/>→ 弹窗展示 ⚠️ "当前项目未引用可用的审批模板"引导前往项目编辑</li>
+            <li><strong>数据② 南京市第一医院</strong>：有流程模板，保存强制成功<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，保存后 toast 提示「流程模板设置成功，本中心以后主流程已更改」</li>
+            <li><strong>数据③ 江苏省人民医院</strong>：有流程模板，保存强制失败<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，保存后弹窗错误提示「流程模板设置失败，请重试」</li>
+          </ul>`
+        },
+        {
+          title: '【4】保存反馈',
+          content: `<ul>
+            <li><strong>成功</strong>：showToast 提示「流程模板设置成功，本中心以后主流程已更改」</li>
+            <li><strong>失败</strong>：alert 弹窗错误提示「流程模板设置失败，请重试」</li>
           </ul>`
         }
       ]
@@ -6605,7 +6639,7 @@ function buildAuditContent() {
             <div>② 审批：待审批页面</div>
 
             <div>③ 撤回审批：（按钮上需要加一个提示）当这条数据还没有下一个动作的时候，本人撤回审批，但是一旦进入了 下一个流程节点了，不包括审批沟通，就不能撤回，也不显示这个按钮了</div>
-            <div>④ 操作列和查询条件加“患者编号”，待审批页面和已审批列表都需要修改,导出和预筛表导出的时候也需要加患者编号</div>
+            <div>④ 操作列和查询条件加"患者编号"，待审批页面和已审批列表都需要修改,导出和预筛表导出的时候也需要加患者编号</div>
 
             </div>
         </div>
@@ -6902,7 +6936,7 @@ function buildScPatientListContent() {
           <div style="font-size:12px;color:#333;line-height:1.9">
             <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
             <div>① 加了返回项目列表的返回按钮</div>
-            <div>② 项目匹配单独一列修改出来，固定到右侧，点击【项目匹配】，判断如果在匹配中，给一个提示 “正在匹配中，请稍后点击”，如果没有在匹配中，出现一个确认匹配的确认框，分别点击第一条数据和第三条数据</div>
+            <div>② 项目匹配单独一列修改出来，固定到右侧，点击【项目匹配】，判断如果在匹配中，给一个提示 "正在匹配中，请稍后点击"，如果没有在匹配中，出现一个确认匹配的确认框，分别点击第一条数据和第三条数据</div>
             <div>③ 每个患者自动生成一个患者编号，提交审批的时候生成，生成规则：项目编号-PT-中心号-4位流水号，页面显示：PT-中心号-4位流水号；如果中心号为空：生成规则：项目编号-PT-XX-4位流水号,页面显示：PT-XX-4位流水号</div>
             <div>④ 患者编号还需要处理 历史数据，导出和预筛表导出的时候也需要加患者编号</div>
             <div>⑤ 在当前页面 把项目编码带出来显示。</div>
@@ -7280,10 +7314,10 @@ function buildMatchDetailContent(p) {
               排除原因如下:
               <div style="margin-top:12px">
                 <div class="md-reason-item" data-index="1.">
-                  病历显示患者正在接受来曲唑内分泌治疗（最近1线），但2026-06-02盆腔MRI报告提示骨转移范围较前（2025-11-07）增大，表明疾病进展；进展时间距离当前时间（2026-06-05）仅3天，不满足“最近1线内分泌治疗需在6个月内未发生疾病进展”的要求。【入选标准5】<span class="md-locate-link">定位</span>
+                  病历显示患者正在接受来曲唑内分泌治疗（最近1线），但2026-06-02盆腔MRI报告提示骨转移范围较前（2025-11-07）增大，表明疾病进展；进展时间距离当前时间（2026-06-05）仅3天，不满足"最近1线内分泌治疗需在6个月内未发生疾病进展"的要求。【入选标准5】<span class="md-locate-link">定位</span>
                 </div>
                 <div class="md-reason-item" data-index="2.">
-                  患者于2026年6月2日（首次用药拟开始时间2026年6月5日前3天）仍在接受芳香酶抑制剂（来曲唑）内分泌治疗，符合排除标准中“首次用药前2周内接受过内分泌治疗”的条件。【排除标准3】<span class="md-locate-link">定位</span>
+                  患者于2026年6月2日（首次用药拟开始时间2026年6月5日前3天）仍在接受芳香酶抑制剂（来曲唑）内分泌治疗，符合排除标准中"首次用药前2周内接受过内分泌治疗"的条件。【排除标准3】<span class="md-locate-link">定位</span>
                 </div>
               </div>
               <br>
@@ -7432,7 +7466,7 @@ const mdTcResultsByType = {
 是否直接评为高危：否
 
 【第三步：10年ASCVD发病风险评估前置数据】
-高血压确诊状态：未确诊（病历“现病史”提及“伴血压升高”，但无具体数值，也无“高血压病”诊断）
+高血压确诊状态：未确诊（病历"现病史"提及"伴血压升高"，但无具体数值，也无"高血压病"诊断）
 危险因素1（吸烟史）：无记录
 危险因素2（HDL-C<1.0）：否（HDL-C=1.09）
 危险因素3（年龄女≥55岁）：否（54岁）
@@ -7442,7 +7476,7 @@ TC值：4.08 mmol/L
 LDL-C值：1.81 mmol/L
 
 【风险判定逻辑匹配结果】
-匹配场景：无高血压，0个危险因素，未落入任何中危/高危组合，属于“其余未提及场景”
+匹配场景：无高血压，0个危险因素，未落入任何中危/高危组合，属于"其余未提及场景"
 最终评级：低危（<5%）`
     },
     {
@@ -8472,7 +8506,7 @@ function buildAdminWorkflow() {
             <div>②「查看」按钮更名为【流程设置】，但是页面的内容还是用现在系统的功能，不用跟随原型修改。</div>
             <div>③「删除」已发布的，不能删除。</div>
             <div>④ 审批类型删除"送检审批"</div>
-            <div>⑤ 隐藏“同步至项目”按钮和“同步记录”按钮功能</div>
+            <div>⑤ 隐藏"同步至项目"按钮和"同步记录"按钮功能</div>
           </div>
         </div>
       <div class="toolbar">
@@ -9257,6 +9291,23 @@ const projectCentersData = {
 function enterProjectCenter(projectCode) {
   console.log('进入项目:', projectCode);
   _currentProjectCode = projectCode;
+  
+  // 若项目尚未配置审批模板，则使用默认启用的流程模板初始化，
+  // 所有流程默认生效，并标记第一个模板的首个流程为主流程
+  if(!window._projectApprovalTemplates || window._projectApprovalTemplates.length === 0) {
+    const enabled = (_flowTemplateData || []).filter(t => t.status === 'enabled');
+    if(enabled.length > 0) {
+      window._projectApprovalTemplates = enabled.map((t, idx) => {
+        const tpl = JSON.parse(JSON.stringify(t));
+        (tpl.flows || []).forEach(f => { f.isActive = true; });
+        if(idx === 0 && tpl.flows && tpl.flows.length > 0) {
+          tpl.flows[0].isMainFlow = true;
+        }
+        return tpl;
+      });
+    }
+  }
+  
   switchModule('project-center', 'center-list');
 }
 
@@ -9455,6 +9506,60 @@ function deleteCenter(centerName) {
 function setCenterApprovalFlow(centerName, centerNo) {
   console.log('设置审批流程:', centerName, centerNo);
   
+  // 演示场景控制（按参研中心列表数据顺序）：
+  // 第一条数据 test医院1231    -> 场景1：项目未引用可用审批模板
+  // 第二条数据 南京市第一医院  -> 场景2：有模板，保存成功
+  // 第三条数据 江苏省人民医院  -> 场景3：有模板，保存失败
+  const demoScenario = centerName === 'test医院1231' ? 'no-template' :
+                       centerName === '南京市第一医院' ? 'success' :
+                       centerName === '江苏省人民医院' ? 'failure' : 'auto';
+  
+  // 获取项目已引用的审批模板（已生效的模板）
+  const templates = window._projectApprovalTemplates || [];
+  const enabledTemplates = templates.filter(t => {
+    const flows = t.flows || [];
+    return flows.some(f => f.isActive);
+  });
+  
+  // 如果没有可用的审批模板，或第一条数据演示「未引用模板」场景，提示先前往项目编辑配置
+  if(enabledTemplates.length === 0 || demoScenario === 'no-template') {
+    const noDataHtml = `
+      <div class="modal-overlay" id="centerApprovalModal" style="display:flex;z-index:9999">
+        <div class="modal-panel" style="width:480px;max-height:80vh">
+          <div class="modal-header">
+            <h3><i class="fas fa-cog" style="color:#1677ff;margin-right:8px"></i>审批流程设置【${centerName}】</h3>
+            <button class="modal-close-btn" onclick="closeCenterApprovalModal()">×</button>
+          </div>
+          <div class="modal-body" style="padding:32px 24px;text-align:center">
+            <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+            <div style="font-size:15px;color:#666;font-weight:500;margin-bottom:8px">当前项目未引用可用的审批模板</div>
+            <div style="font-size:13px;color:#999;line-height:1.6">请先在「项目编辑 - 审批模板配置」中引用并生效流程模板，<br/>再为参研中心设置审批流程。</div>
+          </div>
+          <div class="modal-footer" style="padding:16px 20px;border-top:1px solid #f0f0f0;display:flex;justify-content:flex-end;gap:12px">
+            <button class="btn btn-default" onclick="closeCenterApprovalModal()">关闭</button>
+            <button class="btn btn-primary" onclick="closeCenterApprovalModal();switchModule('admin','project-edit')">前往项目编辑</button>
+          </div>
+        </div>
+      </div>
+    `;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = noDataHtml;
+    document.body.appendChild(tempDiv.firstElementChild);
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+  
+  // 默认选中项目设置主流程模板（包含 isMainFlow 的模板），否则取第一个已生效模板
+  const mainFlowTemplate = enabledTemplates.find(t => (t.flows || []).some(f => f.isMainFlow)) || enabledTemplates[0];
+  
+  // 生成下拉选项
+  const optionsHtml = enabledTemplates.map((t, idx) => {
+    const isMain = (t.flows || []).some(f => f.isMainFlow);
+    const label = t.name + (isMain ? '（项目设置主流程）' : '');
+    const selected = t.id === mainFlowTemplate.id ? 'selected' : '';
+    return `<option value="${t.id}" data-ismain="${isMain}" ${selected}>${label}</option>`;
+  }).join('');
+  
   // 创建审批流程设置弹窗
   const modalHtml = `
     <div class="modal-overlay" id="centerApprovalModal" style="display:flex;z-index:9999">
@@ -9470,16 +9575,16 @@ function setCenterApprovalFlow(centerName, centerNo) {
             <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px">⚙️ 审批流程配置</div>
             <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px">
               <div style="margin-bottom:16px">
-                <label style="display:block;font-size:13px;color:#555;margin-bottom:8px;font-weight:500">选择审批模板：</label>
-                <select class="filter-select" style="width:100%;height:36px;font-size:13px">
-                  <option value="default" selected>常规模板（主流程）</option>
-                  <option value="tumor">三级审批模板</option>
-                  <option value="cardio">快审模板</option>
+                <label style="display:block;font-size:13px;color:#555;margin-bottom:8px;font-weight:500">
+                  选择审批模板：<span style="color:#ff4d4f">*</span>
+                </label>
+                <select id="centerApprovalTemplate" class="filter-select" style="width:100%;height:36px;font-size:13px" onchange="onCenterApprovalTemplateChange()">
+                  ${optionsHtml}
                 </select>
-              </div> 
-              <div>
-                <label style="display:block;font-size:13px;color:#555;margin-bottom:8px;font-weight:500">特殊配置说明：</label>
-                <textarea class="filter-input" placeholder="请输入特殊配置说明（选填）" style="width:100%;min-height:80px;resize:vertical;font-size:13px;padding:8px;border:1px solid #d9d9d9;border-radius:6px"></textarea>
+              </div>
+              <div id="centerApprovalReasonWrap" style="display:none">
+                <label style="display:block;font-size:13px;color:#555;margin-bottom:8px;font-weight:500">选择其他模板的原因：</label>
+                <textarea id="centerApprovalReason" class="filter-input" placeholder="请说明选择其他模板的原因（选填）" style="width:100%;min-height:80px;resize:vertical;font-size:13px;padding:8px;border:1px solid #d9d9d9;border-radius:6px"></textarea>
               </div>
             </div>
           </div>
@@ -9488,8 +9593,8 @@ function setCenterApprovalFlow(centerName, centerNo) {
             <span style="font-size:16px;color:#faad14;flex-shrink:0;margin-top:2px">💡</span>
             <div style="font-size:13px;color:#8c8c8c;line-height:1.6">
               <div><strong>提示：</strong></div>
-              <div>• 审批流程设置后，该中心的患者提交审批时将使用配置的审批流程</div>
-              <div>• 如果未设置审批流程，将使用项目默认的主审批流程</div>
+              <div>• 审批流程设置后，该中心的患者提交审批时将使用配置的审批模板</div>
+              <div>• 默认选中项目设置主流程模板；选择其他模板时建议填写原因</div>
             </div>
           </div>
         </div>
@@ -9506,6 +9611,9 @@ function setCenterApprovalFlow(centerName, centerNo) {
   tempDiv.innerHTML = modalHtml;
   document.body.appendChild(tempDiv.firstElementChild);
   document.body.style.overflow = 'hidden';
+  
+  // 初始化原因输入框显示状态
+  setTimeout(() => onCenterApprovalTemplateChange(), 0);
 }
 
 // 关闭审批流程设置弹窗
@@ -9517,11 +9625,68 @@ function closeCenterApprovalModal() {
   }
 }
 
+// 审批模板下拉切换：非主流程时显示原因输入框
+function onCenterApprovalTemplateChange() {
+  const select = document.getElementById('centerApprovalTemplate');
+  const reasonWrap = document.getElementById('centerApprovalReasonWrap');
+  if(!select || !reasonWrap) return;
+  
+  const selectedOption = select.options[select.selectedIndex];
+  const isMain = selectedOption.getAttribute('data-ismain') === 'true';
+  
+  if(isMain) {
+    reasonWrap.style.display = 'none';
+    const reason = document.getElementById('centerApprovalReason');
+    if(reason) reason.value = '';
+  } else {
+    reasonWrap.style.display = 'block';
+  }
+}
+
 // 保存中心审批流程设置
 function saveCenterApprovalFlow(centerName, centerNo) {
   console.log('保存审批流程设置:', centerName, centerNo);
-  alert('✅ 审批流程设置已保存！\n\n中心：' + centerName + '\n中心号：' + (centerNo||'未设置'));
-  closeCenterApprovalPage();
+  
+  const select = document.getElementById('centerApprovalTemplate');
+  if(!select) {
+    alert('流程模板设置失败，请重试');
+    return;
+  }
+  
+  const templateId = select.value;
+  if(!templateId) {
+    alert('请选择审批模板');
+    return;
+  }
+  
+  const selectedOption = select.options[select.selectedIndex];
+  const isMain = selectedOption.getAttribute('data-ismain') === 'true';
+  const reason = document.getElementById('centerApprovalReason')?.value || '';
+  
+  // 演示场景控制：第二条数据强制成功，第三条数据强制失败，其他随机
+  const demoScenario = centerName === '南京市第一医院' ? 'success' :
+                       centerName === '江苏省人民医院' ? 'failure' : 'auto';
+  let success;
+  if(demoScenario === 'success') success = true;
+  else if(demoScenario === 'failure') success = false;
+  else success = Math.random() > 0.1;
+  
+  if(success) {
+    // 存储中心的审批模板设置（内存中，用于演示）
+    if(!window._centerApprovalFlows) window._centerApprovalFlows = {};
+    window._centerApprovalFlows[centerName] = {
+      templateId: templateId,
+      templateName: selectedOption.textContent.replace('（项目设置主流程）', ''),
+      isMain: isMain,
+      reason: reason,
+      updateTime: new Date().toLocaleString()
+    };
+    
+    closeCenterApprovalModal();
+    showWechatToast('流程模板设置成功，本中心以后主流程已更改');
+  } else {
+    alert('流程模板设置失败，请重试');
+  }
 }
 
 function buildAdminProjects() {

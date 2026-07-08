@@ -566,6 +566,65 @@
     }
     .warn-textarea:focus { border-color: #FA8C16; }
     .warn-textarea::placeholder { color: #bbb; }
+
+    /* 项目匹配状态提示 */
+    .match-status-tip {
+      display: none;
+      background: #E8F4FF;
+      border: 1px solid #B3D8FF;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.25s ease;
+    }
+    .match-status-tip.show { display: block; }
+    .match-status-tip .tip-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #165DFF;
+      margin-bottom: 8px;
+    }
+    .match-status-tip .tip-title i {
+      width: 22px; height: 22px;
+      background: #165DFF;
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .match-status-tip .tip-desc {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .match-status-tip .match-progress {
+
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #FAAD14;
+      background: #FFFBE6;
+      color: #FAAD14;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .match-status-tip .match-progress.show { display: inline-flex; }
+    .breathing-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #FAAD14;
+      animation: breathe 1.5s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
     .audit-footer {
       display: flex;
       gap: 12px;
@@ -1152,6 +1211,13 @@
     </div>
      
     <div class="audit-form">
+      <!-- 项目匹配状态提示 -->
+      <div class="match-status-tip" id="matchStatusTip">
+        <div class="tip-title"><i class="fas fa-info"></i> 预提交审批模式</div>
+        <div class="tip-desc">您先预设提交审核内容，待匹配完成后，系统会自动帮您提交。</div>
+        <div class="match-progress show" id="matchProgressTag"><span class="breathing-dot"></span> 项目匹配中，您可继续设置预提交审批内容</div>
+      </div>
+
       <div class="form-group">
         <label class="form-label"><span class="required">*</span>方案编码：</label>
         <input type="text" class="form-input" placeholder="测试入组流程" readonly>
@@ -1666,6 +1732,7 @@
     }
     function preSubmitAudit() {
       document.getElementById('matchingProgressModal').classList.remove('show');
+      const patient = currentMatchPatient ? patients.find(p => p.id === currentMatchPatient.id) : null;
       openAuditModal(currentMatchPatient ? currentMatchPatient.name : '');
     }
 
@@ -1703,11 +1770,23 @@
       document.getElementById('auditModal').classList.add('show');
       document.getElementById('panelOverlay').classList.add('show');
       document.body.style.overflow = 'hidden';
+      resetMatchStatusTip();
+      document.getElementById('matchStatusTip').classList.add('show');
+    }
+    function resetMatchStatusTip() {
+      const tip = document.getElementById('matchStatusTip');
+      const progress = document.getElementById('matchProgressTag');
+      if (!tip || !progress) return;
+      tip.classList.remove('show');
+    }
+    function startMatchInAudit() {
+      toastMsg('已开始项目匹配，您可继续提交审批');
     }
     function closeAuditModal() {
       document.getElementById('auditModal').classList.remove('show');
       document.getElementById('panelOverlay').classList.remove('show');
       document.body.style.overflow = '';
+      resetMatchStatusTip();
     }
     function isAnyModalOpen() {
       return document.getElementById('centerPanel').classList.contains('show') ||
@@ -1770,6 +1849,22 @@ function updatePRDPanel(mod, sub) {
     'audit': {
       title: '患者列表',
       sections: [
+        {
+          title: '一、预提交审批模式提示',
+          content: `<p class="audit-prd-text"><strong>触发条件：</strong>只要点击预提交弹出的审核页面，顶部均显示蓝色提示区域。</p>
+            <p class="audit-prd-text"><strong>提示内容：</strong></p>
+            <ul class="prd-list">
+              <li>标题：预提交审批模式</li>
+              <li>说明：您先预设提交审核内容，待匹配完成后，系统会自动帮您提交。</li>
+              <li>状态标签：项目匹配中，您可继续设置预提交审批内容（橙色呼吸灯效果）</li>
+            </ul>
+            <p class="audit-prd-text"><strong>关键规则：</strong></p>
+            <ul class="prd-list">
+              <li>匹配与审批<strong>完全解耦</strong></li>
+              <li>无需等待匹配完成即可继续填写并提交</li>
+              <li>所有预提交入口进入的审核弹窗均统一展示该提示</li>
+            </ul>`
+        },
         {
           title: '★ 本次修改(<strong style="color: red;">每条数据的点击效果备注 在PRD说明下面，注意下滑</strong>)：针对于点击项目匹配可以预提交/项目匹配误触发操作；病史与资料页面的逻辑与列表保持一致',
           content:` <div class="prd-section">
