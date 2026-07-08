@@ -6169,7 +6169,12 @@ function switchModule(mod, sub) {
   
   // 更新 PRD 需求说明面板
   const prdMod = (mod === 'ai' && window._scCurrentProject) ? 'ai-patient' : mod;
-  updatePRDPanel(prdMod, sub || (mod === 'admin' ? 'projects' : undefined));
+  // 对于 admin 模块，project-new / project-edit 的 PRD 应映射到 admin-projects
+  let prdSub = sub || (mod === 'admin' ? 'projects' : undefined);
+  if (mod === 'admin' && (sub === 'project-new' || sub === 'project-edit')) {
+    prdSub = 'projects';
+  }
+  updatePRDPanel(prdMod, prdSub);
 }
 
 // ==================== PRD 需求说明面板 ====================
@@ -6253,27 +6258,57 @@ function updatePRDPanel(mod, sub) {
             <li><strong>功能定位</strong>：项目管理设置，包含新建项目和编辑项目页面</li>
             <li><strong>修改摘要</strong>：
               <ul style="margin-top:6px">
-                <li><strong style="color:#1677ff">引用已有模板</strong>：从已有审批流模板中选择，预览流程后引用到本项目</li>
-               
+                <li><strong style="color:#1677ff">审批模板配置</strong>：项目中引用流程模板，设置主流程，管理模板生效/停用时间，没有默认的流程了，让每次都选择</li>
               </ul>
             </li>
           </ul>`
         },
         {
-          title: '编辑项目页面模块',
+          title: '【1】引用流程模板',
           content: `<ul>
-             <li><strong>✅ 审批模板配置</strong>：<span class="prd-badge prd-badge-core">核心修改</span>
+             <li><strong>入口</strong>：项目编辑 / 新建页面 → 审批模板配置 → 点击「<i class="fa-solid fa-link"></i> 引用模板」按钮</li>
+             <li><strong>弹窗内容</strong>：列出<strong>流程模板管理中所有已启用的模板</strong>（状态为「已启用」的模板），每条模板可展开查看其下所有审批流程节点</li>
+             <li><strong>查看流程详情</strong>：点击模板行的「查看审批流程」可跳转到对应的审批流设置页面，查看该流程的完整节点配置（使用原有流程查看功能）</li>
+             <li><strong>勾选逻辑</strong>：支持勾选多个模板（多选），模板行可勾选/取消勾选；子节点不可单独勾选，仅跟随父级模板</li>
+             <li><strong>筛选能力</strong>：弹窗顶部支持按模板名称筛选，帮助快速定位目标模板</li>
+             <li><strong>操作按钮</strong>：
+               <ul style="margin-top:4px">
+                 <li><strong>引用</strong>：将选中的模板引入项目，模板状态保持「未生效」，需手动点击「生效」激活</li>
+                 <li><strong>引用并生效</strong>：将选中的模板引入项目，同时批量设置为「生效」状态，并记录生效开始时间</li>
+               </ul>
+            </li>
+          </ul>`
+        },
+        {
+          title: '【2】主流程设置（核心规则）',
+          content: `<ul>
+            <li><strong>规则</strong>：每个项目<strong style="color:#F53F3F">必须设置一个主流程</strong>，且<strong style="color:#F53F3F">主流程有且只有一个</strong></li>
+            <li><strong>设置入口</strong>：审批模板配置列表 → 模板行操作列 → 点击「主流程设置」</li>
+            <li><strong>操作流程</strong>：选择一个已生效的流程节点作为主流程；如果当前模板已存在主流程，弹窗提示「主流程只能有一个」，确认后将主流程切换为新选流程</li>
+            <li><strong>校验时机</strong>：
               <ul style="margin-top:4px">
-                <li><strong>引用模板</strong>：从已有审批流模板中选择，预览流程后引用到本项目</li>
-                <li>每条模板可独立设置<strong>生效/未生效</strong>状态</li>
+                <li><strong>保存/上架</strong>：点击「保存」/「上架」按钮时校验，若项目无主流程，提示「必须设置一个主流程才能上架」</li>
+                <li><strong>保存并上架</strong>：点击「保存并上架」按钮时校验，若项目无主流程，提示「必须设置一个主流程才能上架」</li>
               </ul>
             </li>
-             </ul>`
+            <li><strong>视觉标识</strong>：主流程在列表中显示 <span class="edit-tag edit-tag-purple">★ 主流程</span> 紫色标签</li>
+          </ul>`
         },
-       
-       
-       
-       
+        {
+          title: '【3】模板生效/停用与时间记录',
+          content: `<ul>
+            <li><strong>生效操作</strong>：点击模板行的「生效」按钮，该模板下所有流程节点全部设为生效，<strong>记录生效开始时间</strong>（当前时间）。若列表存在其他生效中的流程，则提醒主流程应当调整</li>
+            <li><strong>停用操作</strong>：点击模板行的「停用」按钮，该模板下所有流程节点全部设为停用，<strong>记录生效结束时间</strong>（当前时间）</li>
+            <li><strong>单个流程控制</strong>：展开模板后，每个流程节点行也可通过「编辑」按钮独立控制是否生效，影响该流程节点的生效状态但不影响同级其他节点</li>
+            <li><strong>列表展示</strong>：
+              <ul style="margin-top:4px">
+                <li>模板行：显示整体生效状态（生效 / 未生效）</li>
+                <li>流程节点行：显示各自生效状态（● 生效中 / ● 未生效）</li>
+                <li>生效开始时间 / 生效结束时间：记录模板级别最早生效时间和最后停用时间</li>
+              </ul>
+            </li>
+          </ul>`
+        }
       ]
     },
     'admin': {
@@ -6306,8 +6341,9 @@ function updatePRDPanel(mod, sub) {
         {
           title: '【3】核心交互逻辑',
           content: `<ul>
-            <li><strong>正常流程</strong>：用户提前配置预审审批、主知情审批、导入审批、入组审批等各类基础审批流；点击新增流程模板，填写模板名称、模板描述，绑定已配置的基础审批流完成模板组装，最后启用模板即可投入使用。</li>
-            <li><strong>按钮状态</strong>：列表操作栏默认展示查看详情、编辑、启用、停用、删除按钮。模板为停用/未启用状态时，支持查看、编辑、删除操作；模板启用后，锁定编辑、删除权限，仅保留查看详情权限。</li>
+            <li><strong>正常流程</strong>：用户提前配置预审审批、主知情审批、导入审批、入组审批等各类基础审批流；点击新增流程模板，填写模板名称、模板描述、<strong>选择模板状态（编辑中/启用/停用）</strong>，绑定已配置的基础审批流完成模板组装，保存后按选择状态生效。</li>
+            <li><strong>模板状态</strong>：新增/编辑弹窗在「模板描述」下方提供单选按钮，状态可选「编辑中」「启用」「停用」。新建时默认选中「编辑中」；编辑时回显当前状态。</li>
+            <li><strong>按钮状态</strong>：列表操作栏默认展示查看详情、编辑、启用、停用、删除按钮。模板为编辑中/停用状态时，支持查看、编辑、删除操作；模板启用后，锁定编辑、删除权限，仅保留查看详情权限。</li>
             <li><strong>输入限制</strong>：模板名称、模板描述为常规文本输入，按需设置必填规则，无特殊字符限制。</li>
           </ul>`
         },
@@ -6322,7 +6358,7 @@ function updatePRDPanel(mod, sub) {
           title: '【5】接口逻辑（后端）',
           content: `<ul>
             <li><strong>调用接口</strong>：模板查询、新增、编辑、删除、启用、停用接口</li>
-            <li><strong>关键入参</strong>：模板名称、模板描述、绑定的审批流ID、模板状态（启用/停用）、模板ID</li>
+            <li><strong>关键入参</strong>：模板名称、模板描述、绑定的审批流ID、模板状态（编辑中/启用/停用）、模板ID</li>
             <li><strong>返回处理</strong>：空数据、null、0、异常返回处理方式</li>
           </ul>`
         },
@@ -6372,15 +6408,15 @@ function updatePRDPanel(mod, sub) {
           title: '【3】演示场景（列表三条数据）',
           content: `<ul>
             <li><strong>数据① test医院1231</strong>：模拟项目未引用可用审批模板<br/>→ 弹窗展示 ⚠️ "当前项目未引用可用的审批模板"引导前往项目编辑</li>
-            <li><strong>数据② 南京市第一医院</strong>：有流程模板，保存强制成功<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，保存后 toast 提示「流程模板设置成功，本中心以后主流程已更改」</li>
-            <li><strong>数据③ 江苏省人民医院</strong>：有流程模板，保存强制失败<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，保存后弹窗错误提示「流程模板设置失败，请重试」</li>
+            <li><strong>数据② 南京市第一医院</strong>：有流程模板，保存强制成功<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，切换模板，可以选择填写 特殊配置的原因，保存后 提示「流程模板设置成功，本中心以后主流程已更改」</li>
+            <li><strong>数据③ 江苏省人民医院</strong>：有流程模板，保存强制失败<br/>→ 弹窗默认选中「常规模板（项目设置主流程）」，切换模板，可以选择填写 特殊配置的原因，保存后弹窗错误提示「流程模板设置失败，请重试」</li>
           </ul>`
         },
         {
           title: '【4】保存反馈',
           content: `<ul>
             <li><strong>成功</strong>：showToast 提示「流程模板设置成功，本中心以后主流程已更改」</li>
-            <li><strong>失败</strong>：alert 弹窗错误提示「流程模板设置失败，请重试」</li>
+            <li><strong>失败</strong>：showToast(error) 红色错误提示「✕ 流程模板设置失败，请重试」</li>
           </ul>`
         }
       ]
@@ -8870,7 +8906,7 @@ let _flowTemplateData = [
     { auditType:'主知情审批', workflowVer:'v2.2.0', workflowName:'V2审批' },
     { auditType:'入组审批', workflowVer:'v2.0.0', workflowName:'入组审批' }
   ]},
-  { id:3, name:'快速审批模板', status:'disabled', creator:'李明', createTime:'2026-06-15 09:00', flows:[
+  { id:3, name:'快速审批模板', status:'editing', creator:'李明', createTime:'2026-06-15 09:00', flows:[
     { auditType:'入组审批', workflowVer:'v2.3.0', workflowName:'入组审批' }
   ]},
 ];
@@ -8890,6 +8926,7 @@ function buildFlowTemplateManagement() {
           <label class="form-lbl">状态：</label>
           <select class="filter-select" id="ftStatusFilter" style="width:120px" onchange="filterFlowTemplateTable()">
             <option value="">全部</option>
+            <option value="editing">编辑中</option>
             <option value="enabled">已启用</option>
             <option value="disabled">已停用</option>
           </select>
@@ -8954,6 +8991,20 @@ function buildFlowTemplateManagement() {
           <div class="form-group"><label class="form-label">模板名称 <span class="required">*</span></label><input type="text" class="form-input" id="ftName" placeholder="请输入模板名称，如：常规模板、肿瘤类模板"/></div>
           <div class="form-group"><label class="form-label">模板描述</label><textarea class="form-input" id="ftDesc" placeholder="请输入模板描述" style="height:60px;resize:vertical"></textarea></div>
           <div class="form-group">
+            <label class="form-label">模板状态</label>
+            <div style="display:flex;gap:24px;align-items:center;padding:4px 0">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#333">
+                <input type="radio" name="ftStatus" value="editing" checked style="cursor:pointer"> 编辑中
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#333">
+                <input type="radio" name="ftStatus" value="enabled" style="cursor:pointer"> 启用
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:#333">
+                <input type="radio" name="ftStatus" value="disabled" style="cursor:pointer"> 停用
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
             <label class="form-label">流程配置 <span class="required">*</span></label>
             <div style="font-size:12px;color:#999;margin-bottom:8px">流程配置的顺序很重要，项目审批将按照配置的顺序执行</div>
              <div style="font-size:12px;color:#999;margin-bottom:8px"><strong>提示：可以自定义审批名称，若不需要自定义，选择了审批流程之后，自动将审批类型带入审批名称中</strong></div>
@@ -8978,7 +9029,7 @@ function buildFlowTemplateManagement() {
 function renderFlowTemplateRows(data) {
   const typeTag = {'预筛审批':'<span class="edit-tag edit-tag-blue">预筛审批</span>','主知情审批':'<span class="edit-tag edit-tag-orange">主知情审批</span>','导入审批':'<span class="edit-tag edit-tag-teal">导入审批</span>','入组审批':'<span class="edit-tag edit-tag-green">入组审批</span>'};
   return data.map((d,i) => {
-    const statusBadge = d.status === 'enabled' ? '<span class="badge badge-success">● 已启用</span>' : '<span class="badge badge-gray">● 已停用</span>';
+    const statusBadge = d.status === 'enabled' ? '<span class="badge badge-success">● 已启用</span>' : d.status === 'editing' ? '<span class="badge badge-warning">● 编辑中</span>' : '<span class="badge badge-gray">● 已停用</span>';
     // 将标签用容器包裹，支持自动换行
     const flowTypes = '<div style="display:flex;flex-wrap:wrap;gap:4px">'+d.flows.map(f => typeTag[f.auditType] || f.auditType).join('')+'</div>';
     const acts = [
@@ -9022,11 +9073,17 @@ function openFlowTemplateForm(templateId) {
     document.getElementById('ftName').value = d.name;
     document.getElementById('ftDesc').value = d.desc;
     _ftFlowItems = JSON.parse(JSON.stringify(d.flows));
+    // 回显模板状态
+    const statusVal = d.status || 'editing';
+    const radio = document.querySelector('input[name="ftStatus"][value="'+statusVal+'"]');
+    if(radio) radio.checked = true;
   } else {
     title.textContent = '新建流程模板';
     document.getElementById('ftName').value = '';
     document.getElementById('ftDesc').value = '';
     _ftFlowItems = [];
+    const radio = document.querySelector('input[name="ftStatus"][value="editing"]');
+    if(radio) radio.checked = true;
   }
   renderFlowTemplateFormItems();
   modal.style.display = 'flex';
@@ -9122,6 +9179,12 @@ function viewFlowDetail(idx) {
 function saveFlowTemplate() {
   const name = document.getElementById('ftName')?.value?.trim();
   const desc = document.getElementById('ftDesc')?.value?.trim() || '';
+  // 读取选中的模板状态
+  const statusRadios = document.getElementsByName('ftStatus');
+  let status = 'editing';
+  for(let i=0; i<statusRadios.length; i++) {
+    if(statusRadios[i].checked) { status = statusRadios[i].value; break; }
+  }
   if(!name) { alert('请输入模板名称'); return; }
   if(_ftFlowItems.length === 0) { alert('请至少添加一个审批流程'); return; }
   // 检查是否每个流程都填写了审批类型并选择了审批流
@@ -9136,6 +9199,7 @@ function saveFlowTemplate() {
     if(d) {
       d.name = name;
       d.desc = desc;
+      d.status = status;
       d.flows = JSON.parse(JSON.stringify(_ftFlowItems));
     }
     alert('模板已更新！');
@@ -9145,7 +9209,7 @@ function saveFlowTemplate() {
       id: _flowTemplateNextId++,
       name: name,
       desc: desc,
-      status: 'enabled',
+      status: status,
       creator: '当前用户',
       createTime: new Date().toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
       flows: JSON.parse(JSON.stringify(_ftFlowItems))
@@ -9197,7 +9261,7 @@ function viewFlowTemplateDetail(id) {
   let html = '<div style="margin-bottom:24px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid #f0f0f0">';
   html += '<h3 style="margin:0;font-size:16px;font-weight:500;color:#262626">'+d.name+'</h3>';
-  html += (d.status==='enabled'?'<span class="badge badge-success" style="font-size:12px;padding:4px 8px">● 已启用</span>':'<span class="badge badge-gray" style="font-size:12px;padding:4px 8px">● 已停用</span>');
+  html += (d.status==='enabled'?'<span class="badge badge-success" style="font-size:12px;padding:4px 8px">● 已启用</span>':d.status==='editing'?'<span class="badge badge-warning" style="font-size:12px;padding:4px 8px">● 编辑中</span>':'<span class="badge badge-gray" style="font-size:12px;padding:4px 8px">● 已停用</span>');
   html += '</div>';
   
   // 使用类似 Ant Design Description 组件的布局
@@ -9649,7 +9713,7 @@ function saveCenterApprovalFlow(centerName, centerNo) {
   
   const select = document.getElementById('centerApprovalTemplate');
   if(!select) {
-    alert('流程模板设置失败，请重试');
+    showWechatToast('流程模板设置失败，请重试', 'error');
     return;
   }
   
@@ -9685,7 +9749,7 @@ function saveCenterApprovalFlow(centerName, centerNo) {
     closeCenterApprovalModal();
     showWechatToast('流程模板设置成功，本中心以后主流程已更改');
   } else {
-    alert('流程模板设置失败，请重试');
+    showWechatToast('流程模板设置失败，请重试', 'error');
   }
 }
 
@@ -14947,18 +15011,28 @@ function quickEditImprovements(pid) {
   }, 300);
 }
 
-function showWechatToast(msg) {
+function showWechatToast(msg, type) {
   let toast = document.getElementById('wcToast');
   if(!toast) {
     toast = document.createElement('div');
     toast.id = 'wcToast';
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;z-index:99999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:13px;z-index:99999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap';
     document.body.appendChild(toast);
   }
-  toast.textContent = msg;
+  if(type === 'error') {
+    toast.style.background = '#FFF1F0';
+    toast.style.color = '#F53F3F';
+    toast.style.border = '1px solid #FFCCC7';
+    toast.textContent = '✕ ' + msg;
+  } else {
+    toast.style.background = 'rgba(0,0,0,0.75)';
+    toast.style.color = '#fff';
+    toast.style.border = 'none';
+    toast.textContent = msg;
+  }
   toast.style.opacity = '1';
   clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 1800);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
 }
 
 // ==================== 编辑项目页面 ====================
@@ -14971,6 +15045,16 @@ let activeCriteriaVersion = 'v2.0';
 
 function buildAdminProjectEdit(isNew) {
   const pageTitle = isNew ? '新建项目' : '编辑项目';
+
+  // 新建项目演示：预填已引用但未设主流程的模板，方便测试「保存并上架」校验效果
+  if(isNew) {
+    const enabledTemplates = _flowTemplateData.filter(t => t.status === 'enabled');
+    _projectApprovalTemplates = enabledTemplates.map(t => {
+      const tpl = JSON.parse(JSON.stringify(t));
+      (tpl.flows || []).forEach(f => { f.isActive = false; });
+      return tpl;
+    });
+  }
   
   return `
     <div class="edit-project-page">
@@ -16603,12 +16687,85 @@ function confirmRefTemplate() {
   showWechatToast('已引用 '+names.length+' 个流程模板（共'+flowCount+'条审批流程）：'+names.join('、'));
 }
 
+function hasMainFlow() {
+  const templates = window._projectApprovalTemplates || [];
+  for(let i=0; i<templates.length; i++) {
+    const flows = templates[i].flows || [];
+    for(let j=0; j<flows.length; j++) {
+      if(flows[j].isMainFlow) return true;
+    }
+  }
+  return false;
+}
+
 function saveProject() {
   showWechatToast('项目保存成功！');
 }
 
 function saveAndPublish() {
+  if(!hasMainFlow()) {
+    // 弹出警告弹窗，提示必须设置主流程
+    showMainFlowRequiredModal();
+    return;
+  }
   showWechatToast('项目已保存并上架！');
+}
+
+// 主流程校验失败弹窗
+function showMainFlowRequiredModal() {
+  // 先移除已存在的弹窗
+  const exist = document.getElementById('mainFlowRequiredModal');
+  if(exist) exist.remove();
+
+  const modalHtml = `
+    <div class="modal-overlay" id="mainFlowRequiredModal" style="display:flex;z-index:99999" onclick="if(event.target===this)closeMainFlowRequiredModal()">
+      <div class="modal-panel" style="width:440px;max-height:80vh;animation:fadeInDown 0.3s ease">
+        <div class="modal-header">
+          <h3 style="color:#F53F3F;display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-circle-exclamation" style="font-size:20px"></i> 上架校验失败
+          </h3>
+          <button class="modal-close-btn" onclick="closeMainFlowRequiredModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding:32px 24px;text-align:center">
+          <div style="font-size:56px;margin-bottom:20px">⚠️</div>
+          <div style="font-size:16px;color:#333;font-weight:600;margin-bottom:12px">必须设置一个主流程</div>
+          <div style="font-size:13px;color:#999;line-height:1.8;margin-bottom:8px">
+            每个项目<strong style="color:#F53F3F">必须有且只有一个主流程</strong>，<br/>
+            请在「审批模板配置」中点击流程行的<br/>
+            <strong style="color:#1677ff">「主流程设置」</strong>按钮进行设置后再上架。
+          </div>
+          <div style="margin-top:20px;padding:12px 16px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;text-align:left;font-size:12px;color:#8c8c8c;line-height:1.8">
+            <strong>💡 操作指引：</strong><br/>
+            1. 展开已生效的审批模板<br/>
+            2. 点击目标流程行的「主流程设置」按钮<br/>
+            3. 确认后该流程将标记为 ★ 主流程
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid #f0f0f0;padding:16px 20px;display:flex;justify-content:center;gap:12px">
+          <button class="btn btn-default" onclick="closeMainFlowRequiredModal()">取消</button>
+          <button class="btn btn-primary" onclick="closeMainFlowRequiredModal()" style="background:#1677ff">
+            <i class="fa-solid fa-check"></i> 知道了
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = modalHtml;
+  document.body.appendChild(tempDiv.firstElementChild);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMainFlowRequiredModal() {
+  const modal = document.getElementById('mainFlowRequiredModal');
+  if(modal) {
+    modal.style.opacity = '0';
+    modal.style.transition = 'opacity 0.2s';
+    setTimeout(() => {
+      modal.remove();
+      document.body.style.overflow = '';
+    }, 200);
+  }
 }
 
 // 关闭引用模板弹窗的点击外部事件
