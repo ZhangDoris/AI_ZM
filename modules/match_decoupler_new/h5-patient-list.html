@@ -277,6 +277,11 @@
       color: #555;
     }
     .btn-ghost:active { background: #e8e8e8; }
+    .btn-presubmit {
+      background: linear-gradient(135deg, #fa8c16 0%, #ffa940 100%);
+      color: #fff;
+    }
+    .btn-presubmit:active { opacity: 0.85; }
     /* 病史与资料 可展开区 */
     .expand-section {
       border-top: 1px solid #f5f5f5;
@@ -1317,7 +1322,7 @@
       },
       {
         id: 3, name: 'MXKT', gender: '男', age: 65, abbr: 'MXKT',
-        matchStatus: 'matching', submitStatus: 'presubmit',
+        matchStatus: 'matching', submitStatus: 'unsubmit',
         center: '北京协和医院', operator: '李医生',
         diagnosis: 'SHR-2019-nCoV-001',
         histories: [
@@ -1435,7 +1440,9 @@
             '<span><i class="fas fa-user-md"></i> 待操作人：' + p.operator + '</span>' +
           '</div>' +
           '<div class="action-btns">' +
-            (p.matchStatus === 'matching'
+            (p.matchStatus === 'matching' && p.submitStatus !== 'presubmit'
+              ? '<button class="action-btn btn-primary" style="opacity:0.5;pointer-events:none;">项目匹配</button><button class="action-btn btn-presubmit" onclick="handleDirectPreSubmit(' + p.id + ')"><i class="fas fa-paper-plane"></i> 预提交</button>'
+              : p.matchStatus === 'matching'
               ? '<button class="action-btn btn-primary" style="opacity:0.5;pointer-events:none;">项目匹配</button>'
               : '<button class="action-btn btn-primary" onclick="handleProjectMatch(' + p.id + ', \'' + patientCode + '\')">项目匹配</button>') +
             '<button class="action-btn btn-outline" onclick="toastMsg(\'审批记录 - ' + p.name + '\')">审批记录</button>' +
@@ -1591,6 +1598,16 @@
         filterPatients();
         toastMsg('已取消预提交');
       });
+    }
+
+    // 匹配中患者直接预提交（从操作列点击）
+    function handleDirectPreSubmit(patientId) {
+      const patient = patients.find(p => p.id === patientId);
+      if (!patient) return;
+      patient.submitStatus = 'presubmit';
+      filterPatients();
+      openAuditModal(patient.name);
+      toastMsg('预提交成功，筛选号：' + (patient.screenNo || ('PT-2026-00' + patient.id)));
     }
 
     // 通用确认对话框
@@ -1757,7 +1774,11 @@ function updatePRDPanel(mod, sub) {
           title: '★ 本次修改(<strong style="color: red;">每条数据的点击效果备注 在PRD说明下面，注意下滑</strong>)：针对于点击项目匹配可以预提交/项目匹配误触发操作；病史与资料页面的逻辑与列表保持一致',
           content:` <div class="prd-section">
       <h3 class="prd-section-title">修改摘要</h3>
-      <p class="prd-text"><strong style="color: red;">注意：点击了项目匹配之后可以直接预提交审批，预提交审核的按钮。已经预提交的按钮，在序号上显示预提交状态，然后操作列有取消提交，提交成功，就不显示这个状态和按钮了， 只要系统还没有协助提交，就存在这俩状态，如果系统提交成功，就不显示了</strong></p>
+      <p class="prd-text"><strong style="color: red;">注意：</strong></p>
+        <ul class="prd-list"><li>点击了项目匹配之后可以直接预提交审批，预提交审核的按钮。</li>
+        <li>匹配中，未提交的，也不在预提交中的，可以预提交</li>
+        <li>  已经预提交的按钮，在序号上显示预提交状态，然后操作列有取消提交，提交成功，就不显示这个状态和按钮了， 只要系统还没有协助提交，就存在这俩状态，如果系统提交成功，就不显示了 </li>
+        </ul>
       <p class="prd-text"><strong style="color: red;">注意：匹配成功后，系统自动提交，如果匹配失败了（注意三次容错机制），就需要通知再次点击项目匹配，才可以进行提交审核了，让把之前的预提交过程再做一遍，不过内容都需要回显</strong></p>
          <p class="prd-text"><strong>注意：</strong>对于点击项目匹配可以预提交 ，  所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限  是所有可以提交本次数据的相关人员</p>
       </div>
@@ -1765,7 +1786,7 @@ function updatePRDPanel(mod, sub) {
             
             <li><strong>第1条数据ZWMS</strong> 点击提交审核，看到入排只有一个版本的效果</li>
             <li><strong>第2条数据HGKD</strong> 点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
-            <li><strong>第3条数据MXKT</strong> 显示「预提交中」红色标签，可点击取消预提交</li>
+            <li><strong>第3条数据MXKT</strong> 状态为「匹配中」，无预提交 → 项目匹配按钮置灰不可点击，操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
             <li><strong>第4条数据RFNE</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
             <li><strong>第5条数据PWCD</strong> 已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
             <li><strong>第6条数据QJSL</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>  
