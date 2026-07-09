@@ -1692,6 +1692,9 @@
         document.getElementById('versionSelectModal').classList.add('show');
         document.getElementById('panelOverlay').classList.add('show');
         document.body.style.overflow = 'hidden';
+      } else if (patient.needMainInformedAudit) {
+        // 第7条数据：主知情审核阶段 → 项目匹配确认 → 系统匹配中 → 预提交审批 → 提交审核（含筛选号/知情时间）
+        openMatchConfirm(patient.name, patientCode);
       } else if (patient.hasMatchedOnce && patient.lastMatchSuccess && !patient.filesChanged) {
         // 第4条数据：资料未变更 → 显示重新匹配确认弹窗
         document.getElementById('rematchPatientCode').textContent = patientCode;
@@ -1706,9 +1709,6 @@
         document.body.style.overflow = 'hidden';
       } else if (patient.submitStatus === 'submitted' && patient.filesChanged) {
         // 第6条数据：已提交审核，文件有变动 → 项目匹配确认弹窗（快速匹配）
-        openMatchConfirm(patient.name, patientCode);
-      } else if (patient.needMainInformedAudit) {
-        // 第7条数据：主知情审核阶段 → 项目匹配确认 → 系统匹配中 → 预提交审批 → 提交审核（含筛选号/知情时间）
         openMatchConfirm(patient.name, patientCode);
       } else {
         // 其他数据：默认确认弹窗
