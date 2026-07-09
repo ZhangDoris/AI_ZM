@@ -5035,6 +5035,99 @@
     .flow-form-field label { width:80px; text-align:right; font-size:13px; color:#666; flex-shrink:0; }
     .flow-form-field .field-val { font-size:13px; color:#333; flex:1; padding:8px 12px; background:#fafbfc; border-radius:6px; border:1px solid #f0f0f0; }
 
+  /* ===== 流程图放大弹窗 ===== */
+    .flow-zoom-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 10000;
+      overflow-y: auto;
+      padding: 20px;
+      animation: flowFadeIn 0.25s ease;
+    }
+    .flow-zoom-overlay.show {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .flow-zoom-container {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      max-width: 880px;
+      width: 100%;
+      margin: 40px auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      animation: flowZoomIn 0.3s ease;
+    }
+    .flow-zoom-close {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.4);
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 10001;
+      line-height: 1;
+    }
+    .flow-zoom-close:hover {
+      background: rgba(255,255,255,0.35);
+      transform: scale(1.1);
+      border-color: #fff;
+    }
+    .flow-zoomable {
+      cursor: pointer;
+      position: relative;
+      border: 1px dashed #d9d9d9;
+      border-radius: 8px;
+      padding: 6px;
+      transition: all 0.25s;
+    }
+    .flow-zoomable:hover {
+      border-color: #1677ff;
+      box-shadow: 0 2px 16px rgba(22,119,255,0.18);
+    }
+    .flow-zoom-hint {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(22,119,255,0.88);
+      color: #fff;
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      z-index: 1;
+      white-space: nowrap;
+    }
+    .flow-zoomable:hover .flow-zoom-hint {
+      opacity: 1;
+    }
+    @keyframes flowFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes flowZoomIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @media (max-width:768px) {
+      .flow-zoom-container { max-width:96vw; padding:16px; margin:20px auto; }
+      .flow-zoom-overlay { padding:10px; }
+    }
+
   </style>
 </head>
 <body>
@@ -6304,9 +6397,10 @@ function updatePRDPanel(mod, sub) {
         },
         {
           title: '默认审核流程示意图（预筛→主知情→入组）',
-          content: `<div style="margin-top:4px;font-size:12px;line-height:1.5;color:#333;">
+          content: `<div class="flow-zoomable" onclick="openFlowZoom()" title="点击放大查看审核流程"><span class="flow-zoom-hint">🔍 点击放大</span>
+            <div style="margin-top:4px;font-size:12px;line-height:1.5;color:#333;">
             <div style="background:linear-gradient(135deg,#e6f4ff,#bae0ff);border-left:3px solid #1677ff;padding:6px 10px;border-radius:4px;margin-bottom:10px;font-size:11px;color:#1677ff;">
-              <strong>流程总览：</strong>本次测试：预筛→主知情（跨过去）→入组
+              <strong>流程总览（流程只能往前走，不能回退，除了撤销审核的动作之外）：</strong>本次测试：预筛→主知情（跨过去）→入组
             </div>
             <!-- 阶段一：患者录入 -->
             <div style="display:flex;align-items:stretch;margin-bottom:8px;">
@@ -6407,6 +6501,7 @@ function updatePRDPanel(mod, sub) {
                 <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#ff4d4f;display:inline-block;"></span> 流程判断</span>
               </div>
             </div>
+          </div>
           </div>`
         }
       ]
@@ -17804,6 +17899,51 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// ==================== 流程图放大功能 ====================
+function openFlowZoom() {
+  const overlay = document.getElementById('flowZoomOverlay');
+  const container = document.getElementById('flowZoomContent');
+  if (!overlay || !container) return;
+  
+  // 从PRD面板克隆流程图内容
+  const prdPanel = document.getElementById('prdPanel');
+  if (!prdPanel) return;
+  
+  const flowSection = prdPanel.querySelector('.flow-zoomable');
+  if (!flowSection) return;
+  
+  // 克隆内容并放大字体
+  const cloned = flowSection.cloneNode(true);
+  cloned.style.cssText = 'font-size:14px;line-height:1.7;cursor:default;border:none;padding:4px;';
+  // 移除放大提示
+  const hint = cloned.querySelector('.flow-zoom-hint');
+  if (hint) hint.remove();
+  
+  container.innerHTML = '';
+  container.appendChild(cloned);
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFlowZoom(event) {
+  const overlay = document.getElementById('flowZoomOverlay');
+  if (!overlay) return;
+  // 点击遮罩层关闭（非内容区）
+  if (event && event.target !== overlay) return;
+  overlay.classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+// ESC关闭
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('flowZoomOverlay');
+    if (overlay && overlay.classList.contains('show')) {
+      closeFlowZoom();
+    }
+  }
+});
+
 </script>
 
 <!-- 审批记录弹窗 -->
@@ -17952,6 +18092,12 @@ document.addEventListener('DOMContentLoaded', function() {
       <button class="btn btn-success" onclick="approveAudit()">通过</button>
     </div>
   </div>
+</div>
+
+<!-- 流程图放大弹窗 -->
+<div class="flow-zoom-overlay" id="flowZoomOverlay" onclick="closeFlowZoom(event)">
+  <button class="flow-zoom-close" onclick="closeFlowZoom()" title="关闭（ESC）">✕</button>
+  <div class="flow-zoom-container" id="flowZoomContent"></div>
 </div>
 
 </body>
