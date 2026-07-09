@@ -610,6 +610,77 @@
     .empty-state p {
       font-size: 14px;
     }
+
+    /* 确认弹窗（居中） */
+    .confirm-dialog-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); z-index: 1200;
+      display: none; align-items: center; justify-content: center;
+    }
+    .confirm-dialog-overlay.show { display: flex; }
+    .confirm-dialog-box {
+      background: #fff; border-radius: 16px; width: 86%; max-width: 340px;
+      overflow: hidden; animation: popIn 0.25s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .confirm-dialog-header {
+      padding: 20px 24px 12px; display: flex; align-items: center; gap: 10px;
+    }
+    .confirm-dialog-title {
+      font-size: 18px; font-weight: 600; color: #1a1a1a;
+    }
+    .confirm-dialog-body {
+      padding: 0 24px 20px; font-size: 15px; color: #555; line-height: 1.6;
+    }
+    .confirm-dialog-footer {
+      display: flex; gap: 12px; padding: 0 20px 20px;
+    }
+
+    /* 匹配中按钮样式 */
+    .btn-primary.matching {
+      background: #a0c4ff; color: #fff; pointer-events: none; cursor: not-allowed;
+    }
+    .btn-presubmit {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: #FF8C00;
+      color: #fff;
+      transition: all 0.2s;
+    }
+    .btn-presubmit:active { background: #e07800; }
+    .btn-spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.6s linear infinite; 
+      margin-right: 4px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 提交审批表单 */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 14px; font-weight: 500; color: #333; margin-bottom: 6px; }
+    .form-label .required { color: #ff4d4f; }
+    .form-input {
+      width: 100%; padding: 10px 12px; border: 1px solid #e8e8e8;
+      border-radius: 8px; font-size: 14px; color: #333; background: #fff; outline: none;
+      box-sizing: border-box; transition: border-color 0.2s;
+    }
+    .form-input:focus { border-color: #165DFF; }
+    .form-input.readonly { background: #f5f5f5; color: #999; }
+    .form-textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #e8e8e8;
+      border-radius: 8px; font-size: 14px; color: #333; resize: vertical;
+      outline: none; box-sizing: border-box; transition: border-color 0.2s;
+    }
+    .form-textarea:focus { border-color: #165DFF; }
   </style>
 </head>
 <body>
@@ -628,9 +699,9 @@
       <div class="checkbox" id="selectAllCheckbox"></div>
       <span>全选</span>
     </div>
-    <div class="action-buttons">
+    <div class="action-buttons" id="actionButtons">
       <button class="btn btn-primary" onclick="downloadFiles()">下载</button>
-      <button class="btn btn-primary" onclick="projectMatch()">项目匹配</button>
+      <span id="matchBtnContainer"></span>
     </div>
   </div>
   
@@ -848,7 +919,7 @@
   </div>
   
   <!-- 系统匹配中弹窗 -->
-  <div class="modal-overlay" id="matchingProgressModal">
+  <div class="modal-overlay" id="matchingProgressModal" onclick="if(event.target===this)closeMatchingProgress()">
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-title">系统匹配中</div>
@@ -888,221 +959,402 @@
       </div>
       
       <div class="modal-footer">
-        <button class="modal-btn modal-btn-cancel" onclick="closeMatchingProgress()">关闭</button>
-        <button class="modal-btn modal-btn-confirm" onclick="submitAuditNow()">预提交审批</button>
+        <button class="modal-btn modal-btn-cancel" onclick="closeMatchingProgress()">暂不提交</button>
+        <button class="modal-btn modal-btn-confirm" onclick="preSubmitAudit()">预提交审批</button>
       </div>
     </div>
   </div>
-  
+
+  <!-- 通用确认弹窗 -->
+  <div class="confirm-dialog-overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
+    <div class="confirm-dialog-box">
+      <div class="confirm-dialog-header">
+        <span class="confirm-dialog-title" id="confirmTitle">确认</span>
+      </div>
+      <div class="confirm-dialog-body" id="confirmBody"></div>
+      <div class="confirm-dialog-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="closeConfirm()">取消</button>
+        <button class="modal-btn modal-btn-confirm" id="confirmOkBtn">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重新匹配确认弹窗 -->
+  <div class="confirm-dialog-overlay" id="rematchOverlay" onclick="if(event.target===this)closeRematchConfirm()">
+    <div class="confirm-dialog-box">
+      <div class="confirm-dialog-header">
+        <span class="confirm-dialog-title">⚠️ 重新匹配确认</span>
+      </div>
+      <div class="confirm-dialog-body">
+        <div class="info-banner show" style="margin-bottom:12px">
+          <div class="info-banner-content">
+            <i class="fas fa-info-circle info-banner-icon"></i>
+            <div class="info-banner-text">
+              <strong style="color:#D46B08;">检测到您的资料未发生变更。</strong>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:14px;color:#555;line-height:1.7;">是否确定要基于当前资料再次进行项目匹配？</div>
+        <div style="margin-top:8px;font-size:12px;color:#999;" id="rematchPatientInfo"></div>
+      </div>
+      <div class="confirm-dialog-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="closeRematchConfirm()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmRematch()">项目匹配</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提交审批弹窗（简化H5版） -->
+  <div class="modal-overlay" id="auditModalOverlay" onclick="if(event.target===this)closeAuditModal()">
+    <div class="modal-content" id="auditModalContent">
+      <div class="modal-header">
+        <div class="modal-title">提交审批</div>
+        <button class="modal-close" onclick="closeAuditModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- 主知情审核提示 -->
+        <div class="info-banner" id="mainInformedBanner">
+          <div class="info-banner-content">
+            <i class="fas fa-circle-info info-banner-icon"></i>
+            <div class="info-banner-text">
+              <strong>主知情审核阶段</strong> — 请填写筛选号和知情时间
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">方案编码</label>
+          <input type="text" class="form-input readonly" value="1918-302" readonly />
+        </div>
+        <div class="form-group">
+          <label class="form-label required">参研中心</label>
+          <input type="text" class="form-input" value="测试B" readonly style="background:#f5f5f5" />
+        </div>
+        <div class="form-group" id="screenNoGroup" style="display:none">
+          <label class="form-label required">筛选号</label>
+          <input type="text" class="form-input" id="auditScreenNo" placeholder="请输入筛选号" value="" />
+        </div>
+        <div class="form-group" id="informedDateGroup" style="display:none">
+          <label class="form-label required">知情时间</label>
+          <input type="date" class="form-input" id="auditInformedDate" value="" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">审批人 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="auditReviewer" placeholder="输入姓名模糊搜索审批人" value="张三" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">备注</label>
+          <textarea class="form-textarea" id="auditRemark" placeholder="请输入备注" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="closeAuditModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmSubmitAudit()">提交审批</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <script>
-    // 返回上一页
-    function goBack() {
-      window.history.back();
+    // ===== 患者状态数据（根据URL参数模拟不同场景） =====
+    // 从 h5-patient-list 跳转时会携带 code 和 name 参数
+    // 根据患者编码模拟不同的匹配场景
+    var patientCode = (new URLSearchParams(window.location.search)).get('code') || 'PT-2026-001';
+    var patientName = (new URLSearchParams(window.location.search)).get('name') || '王小明';
+    var patientId = 1; // 默认为第1条数据
+
+    // 根据患者编码设置不同场景
+    if (patientCode.indexOf('002') > -1) patientId = 2; // 第2条：多版本 → 版本选择
+    else if (patientCode.indexOf('003') > -1) patientId = 3; // 第3条：匹配中 → 预提交
+    else if (patientCode.indexOf('004') > -1) patientId = 4; // 第4条：资料未变更 → 重新匹配确认
+    else if (patientCode.indexOf('005') > -1) patientId = 5; // 第5条：已提交审核，资料未变更
+    else if (patientCode.indexOf('006') > -1) patientId = 6; // 第6条：已提交审核，文件有变动
+    else if (patientCode.indexOf('007') > -1) patientId = 7; // 第7条：主知情审核
+    else if (patientCode.indexOf('HGKD') > -1) patientId = 2;
+    else if (patientCode.indexOf('MXKT') > -1) patientId = 3;
+    else if (patientCode.indexOf('RFNE') > -1) patientId = 4;
+    else if (patientCode.indexOf('PWCD') > -1) patientId = 5;
+    else if (patientCode.indexOf('QJSL') > -1) patientId = 6;
+    else if (patientCode.indexOf('LJ') > -1) patientId = 7;
+
+    // 患者场景配置
+    function getPatientScenario() {
+      var id = patientId;
+      var scenarios = {
+        1: { hasMultiVersions: false, matchStatus: 'unmatched', submitStatus: 'unsubmit', quickMatch: false },
+        2: { hasMultiVersions: true, matchStatus: 'unmatched', submitStatus: 'unsubmit' },
+        3: { matchStatus: 'matching', submitStatus: 'unsubmit', canPreSubmit: true },
+        4: { hasMatchedOnce: true, lastMatchSuccess: true, filesChanged: false, matchStatus: 'matched', submitStatus: 'unsubmit' },
+        5: { submitStatus: 'submitted', filesChanged: false, quickMatch: true, matchStatus: 'matched' },
+        6: { submitStatus: 'submitted', filesChanged: true, quickMatch: true, matchStatus: 'unmatched' },
+        7: { needMainInformedAudit: true, matchStatus: 'matched', submitStatus: 'unsubmit', informedDate: '2026-06-22', screenNo: 'SC-007' }
+      };
+      return scenarios[id] || scenarios[1];
     }
-    
-    // 切换全选
+
+    // ===== 动态渲染项目匹配按钮（与列表逻辑保持一致） =====
+    function renderMatchButtons() {
+      var sc = getPatientScenario();
+      var container = document.getElementById('matchBtnContainer');
+      if (!container) return;
+      if (sc.matchStatus === 'matching' && sc.submitStatus !== 'presubmit') {
+        // 匹配中 + 未预提交：按钮置灰 + 显示预提交按钮
+        container.innerHTML = '<button class="btn btn-primary matching" disabled>项目匹配</button>' +
+          '<button class="btn-presubmit" onclick="handleDirectPreSubmit()" style="margin-left:8px;"><i class="fas fa-paper-plane"></i> 预提交</button>';
+      } else if (sc.matchStatus === 'matching') {
+        // 匹配中 + 已预提交：按钮置灰
+        container.innerHTML = '<button class="btn btn-primary matching" disabled>项目匹配</button>';
+      } else {
+        // 其他状态：正常可点击按钮
+        container.innerHTML = '<button class="btn btn-primary" onclick="projectMatch()">项目匹配</button>';
+      }
+    }
+
+    // ===== 返回列表页 =====
+    function goBack() {
+      // 如果是从 patient-list 跳转过来的（有history），则返回上一页
+      if (document.referrer && document.referrer.indexOf('h5-patient-list') > -1) {
+        window.history.back();
+      } else {
+        window.location.href = 'h5-patient-list.html';
+      }
+    }
+
+    // ===== 全选/文件操作 =====
     let allSelected = false;
     function toggleSelectAll() {
       allSelected = !allSelected;
       const checkbox = document.getElementById('selectAllCheckbox');
-      if (allSelected) {
-        checkbox.classList.add('checked');
-      } else {
-        checkbox.classList.remove('checked');
-      }
-      
-      // 更新所有文件复选框
-      const fileCheckboxes = document.querySelectorAll('.file-checkbox');
-      fileCheckboxes.forEach(cb => {
-        if (allSelected) {
-          cb.classList.add('checked');
-        } else {
-          cb.classList.remove('checked');
-        }
+      if (allSelected) { checkbox.classList.add('checked'); } else { checkbox.classList.remove('checked'); }
+      document.querySelectorAll('.file-checkbox').forEach(cb => {
+        if (allSelected) { cb.classList.add('checked'); } else { cb.classList.remove('checked'); }
       });
     }
-    
-    // 切换单个文件选择
-    function toggleFileCheck(element) {
-      element.classList.toggle('checked');
-      updateSelectAllState();
-    }
-    
-    // 更新全选状态
+    function toggleFileCheck(element) { element.classList.toggle('checked'); updateSelectAllState(); }
     function updateSelectAllState() {
       const fileCheckboxes = document.querySelectorAll('.file-checkbox');
       const checkedCount = document.querySelectorAll('.file-checkbox.checked').length;
-      const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-      
-      if (checkedCount === fileCheckboxes.length && fileCheckboxes.length > 0) {
-        selectAllCheckbox.classList.add('checked');
-        allSelected = true;
-      } else {
-        selectAllCheckbox.classList.remove('checked');
-        allSelected = false;
-      }
+      const selAll = document.getElementById('selectAllCheckbox');
+      if (checkedCount === fileCheckboxes.length && fileCheckboxes.length > 0) { selAll.classList.add('checked'); allSelected = true; }
+      else { selAll.classList.remove('checked'); allSelected = false; }
     }
-    
-    // 切换文件夹展开/折叠
     function toggleFolder(folderId) {
       const folder = document.getElementById('folder-' + folderId);
       const arrow = document.getElementById('arrow-' + folderId);
-      
       if (folder.classList.contains('show')) {
         folder.classList.remove('show');
-        arrow.classList.remove('fa-chevron-down');
-        arrow.classList.add('fa-chevron-right');
+        arrow.classList.remove('fa-chevron-down'); arrow.classList.add('fa-chevron-right');
       } else {
         folder.classList.add('show');
-        arrow.classList.remove('fa-chevron-right');
-        arrow.classList.add('fa-chevron-down');
+        arrow.classList.remove('fa-chevron-right'); arrow.classList.add('fa-chevron-down');
       }
     }
-    
-    // 显示信息
-    function showInfo(event) {
-      event.stopPropagation();
-      alert('此处显示该文件夹的说明信息');
-    }
-    
-    // 上传文件
-    function uploadFile() {
-      alert('打开文件选择器进行上传');
-    }
-    
-    // 已脱敏上传
-    function uploadDesensitized() {
-      alert('打开文件选择器进行已脱敏文件上传');
-    }
-    
-    // 下载文件
-    function downloadFile() {
-      alert('下载文件');
-    }
-    
-    // 下载选中文件
+    function showInfo(event) { event.stopPropagation(); alert('此处显示该文件夹的说明信息'); }
+    function uploadFile() { alert('打开文件选择器进行上传'); }
+    function uploadDesensitized() { alert('打开文件选择器进行已脱敏文件上传'); }
+    function downloadFile() { alert('下载文件'); }
     function downloadFiles() {
       const selectedCount = document.querySelectorAll('.file-checkbox.checked').length;
-      if (selectedCount === 0) {
-        alert('请先选择要下载的文件');
-        return;
-      }
+      if (selectedCount === 0) { alert('请先选择要下载的文件'); return; }
       alert('下载 ' + selectedCount + ' 个文件');
     }
-    
-    // 编辑文件
-    function editFile() {
-      alert('编辑文件信息');
-    }
-    
-    // 删除文件
-    function deleteFile() {
-      if (confirm('确定要删除此文件吗？')) {
-        alert('文件已删除');
-      }
-    }
-    
-    // 下载文件
-    function downloadFile() {
-      alert('下载文件');
-    }
-    
-    // 下载选中文件
-    function downloadFiles() {
-      const selectedCount = document.querySelectorAll('.file-checkbox.checked').length;
-      if (selectedCount === 0) {
-        alert('请先选择要下载的文件');
-        return;
-      }
-      alert('下载 ' + selectedCount + ' 个文件');
-    }
-    
-    // 编辑文件
-    function editFile() {
-      alert('编辑文件信息');
-    }
-    
-    // 删除文件
-    function deleteFile() {
-      if (confirm('确定要删除此文件吗？')) {
-        alert('文件已删除');
-      }
-    }
-    
-    // 打开vConsole
-    function openVConsole() {
-      alert('打开vConsole调试面板');
-    }
-    
-    // 显示项目匹配弹窗
-    function projectMatch() {
-      const modal = document.getElementById('projectMatchModal');
-      modal.classList.add('show');
-      
-      // 添加点击遮罩层关闭功能
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          closeProjectMatchModal();
-        }
-      });
-    }
-    
-    // 关闭项目匹配弹窗
-    function closeProjectMatchModal() {
-      const modal = document.getElementById('projectMatchModal');
-      modal.classList.remove('show');
-    }
-    
-    // 确认项目匹配
-    function confirmProjectMatch() {
-      const versionSelect = document.getElementById('versionSelect');
-      const selectedVersion = versionSelect.value;
-      
-      // 关闭版本选择弹窗
-      closeProjectMatchModal();
-      
-      // 显示匹配进度弹窗（包含两个按钮选项）
-      showMatchingProgress();
-    }
-    
-    // 显示匹配进度弹窗
-    function showMatchingProgress() {
-      const modal = document.getElementById('matchingProgressModal');
-      modal.classList.add('show');
-      
-      // 添加点击遮罩层关闭功能
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          closeMatchingProgress();
-        }
-      });
-    }
-    
-    // 关闭匹配进度弹窗
-    function closeMatchingProgress() {
-      const modal = document.getElementById('matchingProgressModal');
-      modal.classList.remove('show');
-    }
-    
-    // 现在提交审批
-    function submitAuditNow() {
-      // 关闭匹配进度弹窗
-      closeMatchingProgress();
-      
-      // 显示成功提示
-      showToast('✓ 已提交审批，等待审批结果');
-    }
-    
-    // 显示Toast提示
+    function editFile() { alert('编辑文件信息'); }
+    function deleteFile() { if (confirm('确定要删除此文件吗？')) { alert('文件已删除'); } }
+    function openVConsole() { alert('打开vConsole调试面板'); }
+
+    // ===== Toast提示 =====
     function showToast(message) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.classList.add('show');
-      
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2000);
+      setTimeout(function() { toast.classList.remove('show'); }, 2000);
     }
+
+    // ===== 确认弹窗（通用） =====
+    function showConfirm(title, body) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmBody').innerHTML = body;
+      document.getElementById('confirmOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // ===== 项目匹配确认弹窗（与列表 openMatchConfirm 一致） =====
+    function openMatchConfirm() {
+      document.getElementById('confirmTitle').textContent = '项目匹配确认';
+      document.getElementById('confirmBody').innerHTML = '您确定要对患者「<strong style="color:#1677ff">' + patientCode + '</strong>」进行项目匹配吗？';
+      document.getElementById('confirmOkBtn').textContent = '开始匹配';
+      document.getElementById('confirmOkBtn').onclick = startMatching;
+      document.getElementById('confirmOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMatchConfirm() {
+      closeConfirm();
+    }
+    function startMatching() {
+      closeConfirm();
+      var sc = getPatientScenario();
+      if (sc.quickMatch) {
+        showToast('正在匹配，请稍后');
+        return;
+      }
+      setMatchBtnLoading(true);
+      showMatchingProgress();
+    }
+
+    // ===== 重新匹配确认弹窗 =====
+    function showRematchConfirm() {
+      var sc = getPatientScenario();
+      document.getElementById('rematchPatientInfo').textContent = '患者：' + patientCode + ' | 上次匹配状态：匹配成功';
+      document.getElementById('rematchOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeRematchConfirm() {
+      document.getElementById('rematchOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    function confirmRematch() {
+      closeRematchConfirm();
+      var sc = getPatientScenario();
+      if (sc.quickMatch) {
+        showToast('正在匹配，请稍后');
+      } else {
+        setMatchBtnLoading(true);
+        showMatchingProgress();
+      }
+    }
+
+    // ===== 版本选择弹窗 =====
+    function showVersionSelect() {
+      document.getElementById('projectMatchModal').classList.add('show');
+    }
+    function closeVersionSelectModal() {
+      document.getElementById('projectMatchModal').classList.remove('show');
+    }
+    function confirmVersionSelect() {
+      closeVersionSelectModal();
+      setMatchBtnLoading(true);
+      showMatchingProgress();
+    }
+
+    // ===== 匹配进度弹窗 =====
+    function showMatchingProgress() {
+      document.getElementById('matchingProgressModal').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMatchingProgress() {
+      document.getElementById('matchingProgressModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // ===== 匹配按钮loading状态 =====
+    function setMatchBtnLoading(loading) {
+      var container = document.getElementById('matchBtnContainer');
+      if (!container) return;
+      if (loading) {
+        container.innerHTML = '<button class="btn btn-primary matching" disabled><span class="btn-spinner"></span> 正在匹配中</button>';
+      } else {
+        renderMatchButtons();
+      }
+    }
+
+    // ===== 核心：处理项目匹配点击（与列表 handleProjectMatch 逻辑一致） =====
+    function projectMatch() {
+      var sc = getPatientScenario();
+      console.log('项目匹配 - 场景ID:', patientId, '场景:', sc);
+
+      // 场景2：多版本 → 入排版本选择弹窗
+      if (sc.hasMultiVersions) {
+        showVersionSelect();
+        return;
+      }
+
+      // 场景4：资料未变更 → 重新匹配确认弹窗
+      if (sc.hasMatchedOnce && sc.lastMatchSuccess && !sc.filesChanged) {
+        showRematchConfirm();
+        return;
+      }
+
+      // 场景5：已提交审核，资料未变更 → 重新匹配确认（快速匹配）
+      if (sc.submitStatus === 'submitted' && !sc.filesChanged && sc.quickMatch) {
+        showRematchConfirm();
+        return;
+      }
+
+      // 场景6：已提交审核，文件有变动 → 确认弹窗（快速匹配）
+      if (sc.submitStatus === 'submitted' && sc.filesChanged && sc.quickMatch) {
+        openMatchConfirm();
+        return;
+      }
+
+      // 场景7：主知情审核阶段 → 匹配中→预提交→提交审核（含筛选号/知情时间）
+      if (sc.needMainInformedAudit) {
+        openMatchConfirm();
+        return;
+      }
+
+      // 默认：普通确认 → 匹配中弹窗
+      openMatchConfirm();
+    }
+
+    // ===== 匹配中患者直接预提交（与列表 handleDirectPreSubmit 一致） =====
+    function handleDirectPreSubmit() {
+      var sc = getPatientScenario();
+      // 设置预提交状态
+      patientId = 3; // 确认场景3数据
+      // 打开提交审核弹窗
+      openAuditModal();
+      showToast('预提交成功，筛选号：' + patientCode);
+    }
+
+    // ===== 预提交审批 =====
+    function preSubmitAudit() {
+      closeMatchingProgress();
+      openAuditModal();
+      showToast('正在同步提交审批...');
+    }
+
+    // ===== 提交审批弹窗 =====
+    function openAuditModal() {
+      var sc = getPatientScenario();
+      var overlay = document.getElementById('auditModalOverlay');
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+      // 场景7：主知情审核，显示筛选号和知情时间
+      if (sc.needMainInformedAudit) {
+        document.getElementById('mainInformedBanner').classList.add('show');
+        document.getElementById('screenNoGroup').style.display = 'block';
+        document.getElementById('informedDateGroup').style.display = 'block';
+        document.getElementById('auditScreenNo').value = sc.screenNo || '';
+        document.getElementById('auditInformedDate').value = sc.informedDate || '';
+      } else {
+        document.getElementById('mainInformedBanner').classList.remove('show');
+        document.getElementById('screenNoGroup').style.display = 'none';
+        document.getElementById('informedDateGroup').style.display = 'none';
+      }
+    }
+    function closeAuditModal() {
+      document.getElementById('auditModalOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    function confirmSubmitAudit() {
+      var sc = getPatientScenario();
+      closeAuditModal();
+      if (sc.needMainInformedAudit) {
+        showToast('匹配中，匹配完成后系统将自动帮您提交审批');
+      } else {
+        showToast('已提交审批，等待审批结果');
+      }
+    }
+
+    // ===== 页面初始化 =====
+    renderMatchButtons();
+
   </script>
 </body>
 </html>
