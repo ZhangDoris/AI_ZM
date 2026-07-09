@@ -546,6 +546,117 @@
         max-width: unset;
       }
     }
+    /* 审核提醒配置抽屉 */
+    .reminder-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100001;
+      display: none;
+      align-items: flex-start;
+      justify-content: flex-end;
+    }
+    .reminder-drawer-overlay.open { display: flex; }
+    .reminder-drawer {
+      width: 420px;
+      max-width: 95vw;
+      height: 100vh;
+      background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .reminder-drawer-overlay.open .reminder-drawer {
+      transform: translateX(0);
+    }
+    .reminder-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .reminder-drawer-header h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      margin: 0;
+    }
+    .reminder-drawer-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #f5f5f5;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .reminder-drawer-close:hover {
+      background: #ff4d4f;
+      color: white;
+    }
+    .reminder-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .reminder-section {
+      margin-bottom: 24px;
+    }
+    .reminder-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .reminder-checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 16px;
+    }
+    .reminder-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #595959;
+      cursor: pointer;
+      padding: 6px 0;
+    }
+    .reminder-checkbox-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #165DFF;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .reminder-checkbox-item.checked {
+      color: #165DFF;
+      font-weight: 500;
+    }
+    .reminder-drawer-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-shrink: 0;
+      background: #fff;
+    }
+    @media (max-width: 768px) {
+      .reminder-drawer { width: 100vw; max-width: 100vw; }
+    }
     .prd-section {
       margin-bottom: 16px;
     }
@@ -6298,7 +6409,8 @@ function updatePRDPanel(mod, sub) {
           title: '【3】模板生效/停用与时间记录',
           content: `<ul>
             <li><strong>生效操作</strong>：点击模板行的「生效」按钮，该模板下所有流程节点全部设为生效，<strong>记录生效开始时间</strong>（当前时间）。若列表存在其他生效中的流程，则提醒主流程应当调整</li>
-            <li><strong>停用操作</strong>：点击模板行的「停用」按钮，该模板下所有流程节点全部设为停用，<strong>记录生效结束时间</strong>（当前时间）</li>
+            <li><strong>停用操作</strong>：点击模板行的「停用」按钮，该模板下所有流程节点全部设为停用，<strong>记录生效结束时间</strong>（当前时间）。只有这个模板没有正在用的时候才可以，还有正在进行的流程就不可以解除生效</li>
+           <li><strong>删除操作：</dtrong>如果有模板 原来已经被用了，现在没有人再用了，那就不能删除，只能让取消生效，要不然 就找不到留痕了</li>
             <li><strong>单个流程控制</strong>：展开模板后，每个流程节点行也可通过「编辑」按钮独立控制是否生效，影响该流程节点的生效状态但不影响同级其他节点</li>
             <li><strong>列表展示</strong>：
               <ul style="margin-top:4px">
@@ -9664,6 +9776,7 @@ function setCenterApprovalFlow(centerName, centerNo) {
               <div><strong>提示：</strong></div>
               <div>• 审批流程设置后，该中心的患者提交审批时将使用配置的审批模板</div>
               <div>• 默认选中项目设置主流程模板；选择其他模板时建议填写原因</div>
+              <div>• 切换模板仅对新患者生效。正在进行的流程不受影响，待原流程结束后，您可重新选择模板。</div>
             </div>
           </div>
         </div>
@@ -15278,6 +15391,74 @@ function buildAdminProjectEdit(isNew) {
         </div>
       </div>
 
+      <!-- 审核提醒配置抽屉（右侧滑出） -->
+      <div class="reminder-drawer-overlay" id="auditReminderDrawerOverlay" onclick="if(event.target===this)closeAuditReminderDrawer()">
+        <div class="reminder-drawer">
+          <div class="reminder-drawer-header">
+            <h3>审核提醒配置</h3>
+            <button class="reminder-drawer-close" onclick="closeAuditReminderDrawer()">✕</button>
+          </div>
+          <div class="reminder-drawer-body" id="auditReminderDrawerBody">
+            <!-- 发起审核提醒角色 -->
+            <div class="reminder-section">
+              <div class="reminder-section-title">发起审核提醒角色</div>
+              <div class="reminder-checkbox-group">
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 下一审核人</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心医学</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRA</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRC</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心协调专员</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中央项目管理</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> PM</label>
+              </div>
+            </div>
+            <!-- 子节点审核通过提醒角色 -->
+            <div class="reminder-section">
+              <div class="reminder-section-title">子节点审核通过提醒角色</div>
+              <div class="reminder-checkbox-group">
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 下一审核人</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心医学</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRA</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRC</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心协调专员</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中央项目管理</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> PM</label>
+              </div>
+            </div>
+            <!-- 审核驳回/筛败提醒角色 -->
+            <div class="reminder-section">
+              <div class="reminder-section-title">审核驳回/筛败提醒角色</div>
+              <div class="reminder-checkbox-group">
+                <label class="reminder-checkbox-item"><input type="checkbox"> 下一审核人</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心医学</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 中心CRA</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRC</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 中心协调专员</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中央项目管理</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> PM</label>
+              </div>
+            </div>
+            <!-- 终审通过提醒角色 -->
+            <div class="reminder-section">
+              <div class="reminder-section-title">终审通过提醒角色</div>
+              <div class="reminder-checkbox-group">
+                <label class="reminder-checkbox-item"><input type="checkbox"> 下一审核人</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心医学</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 中心CRA</label>
+                <label class="reminder-checkbox-item"><input type="checkbox"> 中心CRC</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 中心协调专员</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> PM</label>
+                <label class="reminder-checkbox-item checked"><input type="checkbox" checked> 中央项目管理</label>
+              </div>
+            </div>
+          </div>
+          <div class="reminder-drawer-footer">
+            <button class="btn btn-cancel" onclick="closeAuditReminderDrawer()">取消</button>
+            <button class="btn btn-primary" onclick="saveAuditReminderConfig()">保存</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 项目管理：新建模板弹窗（含Tab） -->
       <div class="modal-overlay" id="projectNewTemplateModal" style="display:none">
         <div class="modal-panel" style="width:720px;max-height:90vh">
@@ -16111,6 +16292,7 @@ function renderProjectApprovalRows() {
       const isMainFlowTag = flow.isMainFlow ? '<span class="edit-tag edit-tag-purple" style="margin-left:8px">★ 主流程</span>' : '';
       const acts = [
         '<span class="action-link process" onclick="viewProjectApprovalProcess('+template.id+','+flowIdx+')">查看审批流程</span>',
+        '<span class="action-link" onclick="openAuditReminderDrawer()">提醒设置</span>',
         '<span class="action-link danger" onclick="deleteProjectApprovalFlow('+template.id+','+flowIdx+')">删除</span>'
       ];
       html += '<tr data-parent-template="'+escapedName+'" style="background:#fff">';
@@ -17475,6 +17657,46 @@ function sendCommMessage() {
     textarea.value = '';
   }
 }
+
+// 打开审核提醒配置抽屉
+function openAuditReminderDrawer() {
+  const overlay = document.getElementById('auditReminderDrawerOverlay');
+  if(overlay) {
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+// 关闭审核提醒配置抽屉
+function closeAuditReminderDrawer() {
+  const overlay = document.getElementById('auditReminderDrawerOverlay');
+  if(overlay) {
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+// 保存审核提醒配置
+function saveAuditReminderConfig() {
+  closeAuditReminderDrawer();
+  showWechatToast('审核提醒配置已保存');
+}
+
+// 审核提醒配置抽屉：checkbox 选中状态联动 label 样式
+document.addEventListener('DOMContentLoaded', function() {
+  const drawerBody = document.getElementById('auditReminderDrawerBody');
+  if(drawerBody) {
+    drawerBody.addEventListener('change', function(e) {
+      if(e.target && e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+        const label = e.target.closest('.reminder-checkbox-item');
+        if(label) {
+          label.classList.toggle('checked', e.target.checked);
+        }
+      }
+    });
+  }
+});
+
 </script>
 
 <!-- 审批记录弹窗 -->
