@@ -46,7 +46,97 @@
       background: transparent;
     }
     .back-btn:active { background: #eee; }
-    
+     /* 项目匹配状态提示 */
+    .match-status-tip {
+      display: none;
+      background: #E8F4FF;
+      border: 1px solid #B3D8FF;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.25s ease;
+    }
+    .match-status-tip.show { display: block; }
+    .match-status-tip .tip-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #165DFF;
+      margin-bottom: 8px;
+    }
+    .match-status-tip .tip-title i {
+      width: 22px; height: 22px;
+      background: #165DFF;
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+    }
+    .match-status-tip .tip-desc {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+    .match-status-tip .match-progress {
+
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #FAAD14;
+      background: #FFFBE6;
+      color: #FAAD14;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .match-status-tip .match-progress.show { display: inline-flex; }
+    /* 主知情审核提示横幅 */
+    .main-informed-banner {
+      display: none;
+      background: #FFF7E6;
+      border: 1px solid #FFD591;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      animation: fadeIn 0.25s ease;
+    }
+    .main-informed-banner.show { display: block; }
+    .main-informed-banner-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .main-informed-banner-icon {
+      font-size: 20px;
+      color: #D46B08;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .main-informed-banner-text {
+      font-size: 13px;
+      color: #333;
+      line-height: 1.6;
+    }
+    .main-informed-banner-text strong {
+      color: #D46B08;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .breathing-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #FAAD14;
+      animation: breathe 1.5s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
     /* 操作按钮区域 */
     .action-bar {
       display: flex;
@@ -1012,15 +1102,23 @@
         <button class="modal-close" onclick="closeAuditModal()"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
-        <!-- 主知情审核提示 -->
-        <div class="info-banner" id="mainInformedBanner">
-          <div class="info-banner-content">
-            <i class="fas fa-circle-info info-banner-icon"></i>
-            <div class="info-banner-text">
-              <strong>主知情审核阶段</strong> — 请填写筛选号和知情时间
-            </div>
+        
+        <!-- 项目匹配状态提示 -->
+      <div class="match-status-tip" id="matchStatusTip">
+        <div class="tip-title"><i class="fas fa-info"></i> 预提交审批模式</div>
+        <div class="tip-desc">您先预设提交审核内容，待匹配完成后，系统会自动帮您提交。</div>
+        <div class="match-progress show" id="matchProgressTag"><span class="breathing-dot"></span> 项目匹配中，您可继续设置预提交审批内容</div>
+      </div>
+
+      <!-- 主知情审核提示 -->
+      <div class="main-informed-banner" id="mainInformedBanner">
+        <div class="main-informed-banner-content">
+          <i class="fas fa-clipboard-check main-informed-banner-icon"></i>
+          <div class="main-informed-banner-text">
+            <div>请填写筛选号和知情时间。</div>
           </div>
         </div>
+      </div>
         <div class="form-group">
           <label class="form-label">方案编码</label>
           <input type="text" class="form-input readonly" value="1918-302" readonly />
@@ -1029,14 +1127,14 @@
           <label class="form-label required">参研中心</label>
           <input type="text" class="form-input" value="测试B" readonly style="background:#f5f5f5" />
         </div>
-        <div class="form-group" id="screenNoGroup" style="display:none">
-          <label class="form-label required">筛选号</label>
-          <input type="text" class="form-input" id="auditScreenNo" placeholder="请输入筛选号" value="" />
-        </div>
-        <div class="form-group" id="informedDateGroup" style="display:none">
-          <label class="form-label required">知情时间</label>
-          <input type="date" class="form-input" id="auditInformedDate" value="" />
-        </div>
+         <div class="form-group highlight-required" id="informedDateGroup">
+        <label class="form-label"><span class="required">*</span>知情时间：</label>
+        <input type="date" class="form-input" id="informedDate">
+      </div>
+      <div class="form-group highlight-required" id="screenNoGroup">
+        <label class="form-label"><span class="required">*</span>筛选号：</label>
+        <input type="text" class="form-input" id="screenNo" placeholder="请输入筛选号">
+      </div>
         <div class="form-group">
           <label class="form-label">审批人 <span class="required">*</span></label>
           <input type="text" class="form-input" id="auditReviewer" placeholder="输入姓名模糊搜索审批人" value="张三" />
@@ -1324,16 +1422,19 @@
       var overlay = document.getElementById('auditModalOverlay');
       overlay.classList.add('show');
       document.body.style.overflow = 'hidden';
+      document.getElementById('matchStatusTip').classList.add('show');
+
+      var mainInformedBanner = document.getElementById('mainInformedBanner');
 
       // 场景7：主知情审核，显示筛选号和知情时间
       if (sc.needMainInformedAudit) {
-        document.getElementById('mainInformedBanner').classList.add('show');
+        if (mainInformedBanner) mainInformedBanner.classList.add('show');
         document.getElementById('screenNoGroup').style.display = 'block';
         document.getElementById('informedDateGroup').style.display = 'block';
         document.getElementById('auditScreenNo').value = sc.screenNo || '';
         document.getElementById('auditInformedDate').value = sc.informedDate || '';
       } else {
-        document.getElementById('mainInformedBanner').classList.remove('show');
+        if (mainInformedBanner) mainInformedBanner.classList.remove('show');
         document.getElementById('screenNoGroup').style.display = 'none';
         document.getElementById('informedDateGroup').style.display = 'none';
       }
