@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件夹显示配置 - 智能预筛系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #165DFF;
+      --primary-light: #E8F3FF;
+      --success: #00B42A;
+      --danger: #F53F3F;
+      --warning: #FF7D00;
+      --purple: #722ED1;
+      --purple-light: #F0E8FF;
+      --gray-bg: #F5F7FA;
+      --border: #E5E7EB;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #F0F2F5;
+      color: #333;
+      min-width: 1200px;
+    }
+
+    /* 顶部导航 */
+    .top-nav {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .top-nav .nav-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top-nav .nav-title i { color: var(--primary); font-size: 20px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #0e4fd9; }
+    .btn-outline { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary-light); }
+
+    /* 主内容区 - 左右分栏（详见下方 .main-content 定义） */
+
+    /* 说明卡片 */
+    .desc-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .desc-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .desc-title i { color: var(--primary); font-size: 14px; }
+    .desc-list {
+      list-style: none;
+      font-size: 13px;
+      color: #666;
+      line-height: 1.9;
+    }
+    .desc-list li {
+      position: relative;
+      padding-left: 16px;
+    }
+    .desc-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      background: var(--primary);
+      transform: rotate(45deg);
+    }
+
+    /* 表格卡片 */
+    .table-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+
+    /* 工具栏 */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #F5F7FA;
+      border-radius: 6px;
+      padding: 7px 12px;
+      width: 240px;
+    }
+    .search-box i { color: #999; font-size: 13px; }
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: #333;
+      width: 100%;
+    }
+    .search-box input::placeholder { color: #bbb; }
+
+    /* 数据表格 */
+    .config-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .config-table thead th {
+      background: #FAFAFA;
+      padding: 13px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .config-table tbody tr { border-bottom: 1px solid #F0F0F0; }
+    .config-table tbody tr:hover { background: #FAFBFF; }
+    .config-table tbody td {
+      padding: 14px 12px;
+      vertical-align: middle;
+      color: #333;
+    }
+    .config-table .idx { color: var(--primary); font-weight: 500; }
+
+    /* 树形结构 - 根目录行 */
+    .config-table .root-row { background: #FAFBFF; }
+    .config-table .root-row:hover { background: #F0F4FF; }
+    .config-table .root-row td { font-weight: 600; }
+    .config-table .root-row .folder-icon {
+      background: var(--primary);
+      color: #fff;
+    }
+    .config-table .root-row .folder-name-text { font-weight: 600; color: #1a1a1a; }
+
+    /* 树形结构 - 子目录行 */
+    .config-table .child-row .folder-icon {
+      width: 26px;
+      height: 26px;
+      font-size: 13px;
+    }
+    .tree-line {
+      color: #C9CED6;
+      font-size: 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      user-select: none;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .tree-toggle {
+      color: #999;
+      cursor: pointer;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .tree-toggle:hover { color: var(--primary); }
+    .tree-toggle-placeholder { display: inline-block; width: 16px; flex-shrink: 0; }
+
+    /* 文件夹名称 */
+    .folder-name-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .folder-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .folder-name-text { font-weight: 500; color: #333; }
+    .folder-name-sub {
+      font-size: 12px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    /* 属性标签 */
+    .attr-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .attr-fixed { background: #F5F5F5; color: #666; }
+    .attr-config { background: var(--primary-light); color: var(--primary); }
+    .attr-system { background: var(--purple-light); color: var(--purple); }
+
+    /* 显示状态开关 */
+    .switch-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .switch {
+      position: relative;
+      width: 36px;
+      height: 20px;
+      background: #D9D9D9;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .switch.on { background: var(--primary); }
+    .switch::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .switch.on::after { transform: translateX(16px); }
+    .switch-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .switch-label.on { color: var(--primary); font-weight: 500; }
+
+    /* 提示语 */
+    .tip-text {
+      color: #666;
+      line-height: 1.5;
+      max-width: 260px;
+    }
+
+    /* 子目录 */
+    .child-link {
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .child-link:hover { text-decoration: underline; }
+    .child-count { color: #999; }
+
+    /* 操作按钮 */
+    .action-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .action-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      background: transparent;
+      font-size: 14px;
+    }
+    .action-btn:hover { background: #F5F7FA; color: var(--primary); }
+    .action-btn.danger:hover { background: #FFF1F0; color: var(--danger); }
+
+    /* 左右分栏 */
+    .main-content {
+      display: flex;
+      gap: 20px;
+      padding: 20px 24px 40px;
+    }
+    .left-panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .right-panel {
+      width: 420px;
+      flex-shrink: 0;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+      position: sticky;
+      top: 76px;
+    }
+    .prd-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      background: #FAFBFF;
+      border-radius: 8px 8px 0 0;
+    }
+    .prd-header h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .prd-header h2 i { color: var(--primary); }
+    .prd-meta {
+      display: flex;
+      gap: 14px;
+      font-size: 12px;
+      color: #999;
+    }
+    .prd-meta .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .prd-content {
+      padding: 16px 20px;
+    }
+    .prd-section {
+      margin-bottom: 20px;
+    }
+    .prd-section h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #F0F0F0;
+    }
+    .prd-section h3 i { color: var(--primary); font-size: 13px; }
+    .prd-section h4 {
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin: 12px 0 8px;
+    }
+    .prd-section p {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.7;
+    }
+    .prd-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .prd-table th,
+    .prd-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border: 1px solid #F0F0F0;
+    }
+    .prd-table th {
+      background: #FAFAFA;
+      font-weight: 600;
+      color: #666;
+    }
+    .prd-table td { color: #555; }
+    .update-list { display: flex; flex-direction: column; gap: 12px; }
+    .update-item {
+      background: #FAFBFF;
+      border-radius: 6px;
+      padding: 12px;
+      border-left: 3px solid var(--primary);
+    }
+    .update-item strong {
+      font-size: 13px;
+      color: #333;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .update-item p {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+    .update-item ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.8;
+    }
+    .update-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .update-tag.new { background: #E8F5E9; color: #2E7D32; }
+    .update-tag.edit { background: #FFF3E0; color: #EF6C00; }
+    .update-tag.feature { background: #E3F2FD; color: #1565C0; }
+    .update-tag.logic { background: #F3E5F5; color: #6A1B9A; }
+    .flowchart {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: #FAFAFA;
+      border-radius: 6px;
+    }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: 1px solid #E8E8E8;
+      width: 100%;
+    }
+    .step-number {
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .step-content strong { font-size: 13px; color: #333; }
+    .step-content p { font-size: 12px; color: #999; margin: 0; }
+    .flow-arrow { color: #ccc; font-size: 16px; }
+    .flow-decision {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #FFF9E6;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: 1px solid #F5A623;
+      width: 100%;
+    }
+    .decision-icon {
+      width: 24px;
+      height: 24px;
+      background: #F5A623;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .flow-branches {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+    .branch {
+      flex: 1;
+      background: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #E8E8E8;
+      font-size: 12px;
+    }
+    .branch-label {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .branch-label.yes { background: #E8F5E9; color: #2E7D32; }
+    .branch-label.no { background: #FFEBEE; color: #C62828; }
+    .ui-spec { display: flex; flex-direction: column; gap: 10px; }
+    .spec-item {
+      background: #FAFAFA;
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    .spec-item strong { font-size: 13px; color: #333; display: block; margin-bottom: 4px; }
+    .spec-item ul { margin: 0; padding-left: 16px; font-size: 12px; color: #666; line-height: 1.8; }
+
+    /* 树形缩进：通过内联 padding-left 控制层级缩进 */
+    .child-row .folder-name-cell { color: #444; }
+
+    /* 排序图标 */
+    .sort-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      color: #ccc;
+    }
+    .sort-btns i { font-size: 10px; line-height: 1; cursor: pointer; }
+    .sort-btns i:hover { color: var(--primary); }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #bbb;
+      display: none;
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; display: block; }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-dialog {
+      background: #fff;
+      border-radius: 10px;
+      width: 520px;
+      max-width: 90vw;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+      animation: slideIn 0.25s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: 17px; font-weight: 600; }
+    .modal-close {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      font-size: 16px;
+      color: #999;
+    }
+    .modal-close:hover { background: #F5F7FA; color: #333; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 24px 20px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    .form-label .required { color: var(--danger); margin-right: 2px; }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #D9D9D9;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(22,93,255,0.1);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 64px;
+    }
+    .form-hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* 删除确认 */
+    .confirm-content { text-align: center; padding: 10px 0; }
+    .confirm-content .warn-icon { font-size: 44px; color: var(--danger); margin-bottom: 12px; }
+    .confirm-content p { font-size: 15px; color: #555; line-height: 1.6; }
+    .confirm-content .warn-detail { font-size: 13px; color: #999; margin-top: 8px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      display: none;
+      animation: toastIn 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .toast.show { display: block; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <div class="top-nav">
+    <div class="nav-title">
+      <i class="fas fa-folder-tree"></i>
+      文件夹显示配置
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main-content">
+
+    <!-- 左侧面板 -->
+    <div class="left-panel">
+      <!-- 说明区 -->
+      <div class="desc-card">
+        <div class="desc-title">
+          <i class="fas fa-gem"></i>
+          文件夹显示配置说明
+        </div>
+        <ul class="desc-list">
+          <li>固定项（不可关闭）：原始资料、AI分类资料 — 系统核心文件夹，始终显示</li>
+          <li>可配置项（开关控制）：基因检测报告、导入期资料等 — 关闭后开关灰显/隐藏</li>
+          <li>文件类型配置：系统按照设定的文件类型（预筛/入组/导入期/主知情/其它）进行项目匹配；无文件类型的文件夹不参与匹配</li>
+          <li>提示语配置：点击编辑可调整进入该文件夹后顶部的提示说明内容</li>
+          <li>子目录管理：点击「新增」可在对应文件夹下创建二级子目录；注意：AI分类资料、审批上传附件存档、AI预筛结果存档、预筛表提取结果存档不支持新增子目录（系统托管/自动管理）</li>
+          <li>排序管理：拖拽行右侧排序图标可调整文件夹在列表中的显示顺序</li>
+          <li>历史记录：每月对文件夹的变更记录将保留在最近变更记录里</li>
+        </ul>
+      </div>
+
+      <!-- 表格区 -->
+      <div class="table-card">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="搜索文件夹名称" oninput="renderTable()">
+            </div>
+            <span style="font-size:13px;color:#999;">共 <strong style="color:var(--primary);" id="totalCount">0</strong> 个文件夹</span>
+          </div>
+          <button class="btn btn-primary" onclick="openAddModal(null)">
+            <i class="fas fa-plus"></i> 新增根目录
+          </button>
+        </div>
+
+        <table class="config-table">
+          <thead>
+            <tr>
+              <th style="width:60px;">序号</th>
+              <th style="width:20%;">文件夹名称</th>
+              <th style="width:90px;">文件类型</th>
+              <th style="width:90px;">属性</th>
+              <th style="width:110px;">显示状态</th>
+              <th>提示语</th>
+              <th style="width:80px;">子目录</th>
+              <th style="width:60px;text-align:center;">历史</th>
+              <th style="width:50px;text-align:center;">排序</th>
+              <th style="width:120px;text-align:center;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">
+          <i class="fas fa-folder-open"></i>
+          <p>暂无文件夹配置，点击右上角「新增根目录」创建</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧 PRD 面板 -->
+    <div class="right-panel">
+      <div class="prd-header">
+        <h2><i class="fas fa-file-alt"></i> 产品需求文档 (PRD)</h2>
+        <div class="prd-meta">
+          <span class="meta-item"><i class="fas fa-calendar"></i> 版本：v2.0</span>
+          <span class="meta-item"><i class="fas fa-edit"></i> 更新日期：2026-07-10</span>
+        </div>
+      </div>
+
+      <div class="prd-content">
+      
+
+        <section class="prd-section">
+          <h3><i class="fas fa-tasks"></i> 本次更新内容（v2.0）</h3>
+          <div class="update-list">
+            <div class="update-item">
+              <span class="update-tag new">新增</span>
+              <strong>1 新增文件根目录</strong>
+              <p>支持管理员在系统中创建新的根目录文件夹</p>
+
+            </div>
+            <div class="update-item">
+              <span class="update-tag edit">修改</span>
+              <strong>2.2 根目录可修改</strong>
+              <p>已创建的根目录支持编辑基本信息，包括名称、阶段类型、属性、提示语、显示状态等。</p>
+              <ul>
+                <li>可修改文件夹名称和提示语</li>
+                <li>可切换阶段类型和属性类型</li>
+                <li>可切换显示状态（始终显示/已关闭）</li>
+              </ul>
+            </div>
+            <div class="update-item">
+              <span class="update-tag feature">功能</span>
+              <strong>2.3 文件类型独立选择</strong>
+              <p>每个文件夹可选择文件类型（预筛/入组/导入期/主知情/AI分类/其它），文件类型独立于所属根目录，用于项目匹配逻辑。</p>
+              <ul>
+                <li>文件类型可选：预筛、入组、导入期、主知情、AI分类、其它</li>
+                <li>文件类型可以为其它，表示不参与匹配</li>
+                <li>所属根目录决定文件夹的显示分组位置</li>
+                <li>文件类型决定项目匹配时是否需要上传文件</li>
+              </ul>
+            </div>
+           
+            <div class="update-item">
+              <span class="update-tag logic">逻辑</span>
+              <strong>2.4 子目录类型继承规则</strong>
+              <p>如果根目录选择了"其它"类型，其子目录有明确的文件类型，则子目录下上传的文件需要参与匹配。</p>
+              <ul>
+                <li>判断依据：查看上传文件的上一级目录是否有文件类型</li>
+                <li>根目录为"其它" + 子目录有类型 = 子目录文件参与匹配</li>
+                <li>根目录无类型 + 子目录有类型 = 子目录文件参与匹配</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 新增/编辑弹窗 -->
+  <div class="modal-overlay" id="folderModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">新增文件夹</h3>
+        <button class="modal-close" onclick="closeFolderModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <input type="hidden" id="editParentId">
+        
+        <!-- 名称和提示语编辑区 -->
+        <div style="background:#F5F7FA;padding:16px;border-radius:8px;margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;">
+            <i class="fas fa-edit" style="color:var(--primary);margin-right:6px;"></i>
+            基本信息编辑
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label"><span class="required">*</span>文件夹名称</label>
+            <input type="text" class="form-input" id="folderName" placeholder="请输入文件夹名称" maxlength="50">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">提示语</label>
+            <textarea class="form-textarea" id="folderTip" placeholder="请输入顶部提示语内容" maxlength="200"></textarea>
+          </div>
+        </div>
+
+        <div class="form-group" id="parentGroup" style="display:none;">
+          <label class="form-label">父目录</label>
+          <input type="text" class="form-input" id="parentName" readonly style="background:#F5F7FA;color:#999;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">文件类型</label>
+          <select class="form-select" id="folderFileType">
+            <option value="">请选择（不选则不参与匹配）</option>
+            <option value="pre-screening">预筛</option>
+            <option value="enrollment">入组</option>
+            <option value="run-in">导入期</option>
+            <option value="main-informed">主知情</option>
+            <option value="other">其它</option>
+          </select>
+          <div class="form-hint">文件类型用于项目匹配逻辑，可为空表示不参与匹配</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"><span class="required">*</span>属性</label>
+            <select class="form-select" id="folderAttr">
+              <option value="">请选择</option>
+              <option value="fixed-uncloseable">固定不可改</option>
+              <option value="fixed-unavailable">固定不可用</option>
+              <option value="configurable">可配置</option>
+              <option value="system-managed">系统管理</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><span class="required">*</span>显示状态</label>
+            <select class="form-select" id="folderDisplay">
+              <option value="1">始终显示</option>
+              <option value="0">已关闭</option>
+            </select>
+          </div>
+        </div>
+        <div style="background:#FFF9E6;padding:12px;border-radius:8px;border-left:3px solid #F5A623;">
+          <div style="font-size:13px;font-weight:600;color:#666;margin-bottom:8px;">
+            <i class="fas fa-info-circle" style="color:#F5A623;margin-right:4px;"></i>
+            匹配规则说明
+          </div>
+          <div style="font-size:12px;color:#666;line-height:1.6;">
+            文件类型决定项目匹配时是否需要上传文件。有文件类型的文件夹参与匹配；无文件类型的目录不参与匹配。如果根目录为"其它"，子目录有文件类型，子目录下文件参与匹配。
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeFolderModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveFolder()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-dialog" style="width:400px;">
+      <div class="modal-header">
+        <h3>确认删除</h3>
+        <button class="modal-close" onclick="closeDeleteModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-content">
+          <i class="fas fa-exclamation-triangle warn-icon"></i>
+          <p id="deleteMsg">确定要删除此文件夹吗？</p>
+          <p class="warn-detail" id="deleteDetail"></p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-primary" style="background:var(--danger);" onclick="confirmDelete()">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let idCounter = 100;
+    let deleteTargetId = null;
+    let collapsedIds = new Set(); // 已折叠的根目录ID集合
+
+    // fileType 显示映射（文件类型）
+    const fileTypeMap = {
+      'pre-screening': '预筛',
+      'enrollment': '入组',
+      'run-in': '导入期',
+      'main-informed': '主知情',
+      'other': '其它'
+    };
+
+    // 属性标签映射
+    const attrMap = {
+      'fixed-uncloseable': { label: '固定不可改', cls: 'attr-fixed' },
+      'fixed-unavailable': { label: '固定不可用', cls: 'attr-fixed' },
+      'configurable': { label: '可配置', cls: 'attr-config' },
+      'system-managed': { label: '系统管理', cls: 'attr-system' }
+    };
+
+    // 系统托管项：禁止新增子目录
+    const noChildSystemFolders = ['AI分类资料', '审批上传附件存档', 'AI预筛结果存档', '预筛表提取结果存档'];
+
+    // 初始数据（树形结构：parentId 为 null 表示根目录，每个文件夹字段一致均可编辑）
+    let tableData = [
+      // 根目录：预筛阶段
+      { id: 1, parentId: null, name: '预筛阶段', fileType: 'pre-screening', attr: 'fixed-uncloseable', display: 1, tip: '预筛阶段的根目录文件夹，固定显示且不可关闭。', sort: 1 },
+      { id: 2, parentId: 1, name: '原始资料', fileType: 'pre-screening', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
+      { id: 3, parentId: 1, name: '基因检测报告', fileType: 'pre-screening', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
+      { id: 4, parentId: 1, name: '审批上传附件存档', fileType: '', attr: 'configurable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档。', sort: 4 },
+      { id: 5, parentId: 1, name: 'AI分类资料', fileType: '', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
+
+      // 根目录：入组阶段
+      { id: 6, parentId: null, name: '入组阶段', fileType: 'enrollment', attr: 'fixed-uncloseable', display: 1, tip: '入组阶段的根目录文件夹，固定显示且不可关闭。', sort: 6 },
+      { id: 7, parentId: 6, name: '原始资料', fileType: 'enrollment', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
+      { id: 8, parentId: 6, name: '导入期资料', fileType: 'enrollment', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
+      { id: 9, parentId: 6, name: '审批上传附件存档', fileType: '', attr: 'configurable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档。', sort: 9 },
+      { id: 10, parentId: 6, name: 'AI分类资料', fileType: '', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
+
+      // 根目录：平级独立文件夹
+      { id: 11, parentId: null, name: '平级独立文件夹', fileType: '', attr: 'fixed-uncloseable', display: 1, tip: '平级独立文件夹根目录，不参与AI匹配。', sort: 11 },
+      { id: 12, parentId: 11, name: '不参与AI预筛资料', fileType: '', attr: 'configurable', display: 1, tip: '此文件夹内的文件不会被提交至AI系统进行自动识别与分析，也不会进行脱敏，请注意隐私保护。如需AI辅助判定，仅会上传至默认入排文件夹。', sort: 12 },
+
+      // 根目录：存档资料
+      { id: 13, parentId: null, name: '存档资料', fileType: '', attr: 'fixed-uncloseable', display: 1, tip: '存档资料根目录，由系统自动生成，仅支持预览和下载。', sort: 13 },
+      { id: 14, parentId: 13, name: 'AI预筛结果存档', fileType: '', attr: 'configurable', display: 1, tip: 'AI预筛结果由系统自动化生成，记录每次AI预筛分析的完整信息。存档资料为只读状态，仅支持预览和下载。', sort: 14 },
+      { id: 15, parentId: 13, name: '预筛表提取结果存档', fileType: '', attr: 'configurable', display: 1, tip: '预筛表提取结果由系统自动化生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。', sort: 15 },
+
+      // 根目录：系统
+      { id: 16, parentId: null, name: '系统', fileType: '', attr: 'fixed-uncloseable', display: 1, tip: '系统根目录，包含系统自动管理的文件夹。', sort: 16 },
+      { id: 17, parentId: 16, name: '最近删除', fileType: '', attr: 'configurable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。', sort: 17 }
+    ];
+
+    function generateId() { return ++idCounter; }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // 获取需要展示的文件夹（支持搜索：匹配项及其所有祖先目录均展示，保持树形结构）
+    function getDisplayItems() {
+      const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!keyword) return tableData;
+      const matched = tableData.filter(d => d.name && d.name.toLowerCase().includes(keyword));
+      const showIds = new Set();
+      matched.forEach(m => {
+        let cur = m;
+        while (cur) {
+          showIds.add(cur.id);
+          cur = cur.parentId ? tableData.find(d => d.id === cur.parentId) : null;
+        }
+      });
+      return tableData.filter(d => showIds.has(d.id));
+    }
+
+    function renderTable() {
+      const displayItems = getDisplayItems();
+      const tbody = document.getElementById('tableBody');
+      const emptyState = document.getElementById('emptyState');
+      document.getElementById('totalCount').textContent = displayItems.length;
+
+      if (displayItems.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+      }
+      emptyState.style.display = 'none';
+
+      const roots = displayItems.filter(d => d.parentId === null).sort((a, b) => a.sort - b.sort);
+      let html = '';
+      let ridx = 0;
+      roots.forEach(root => {
+        ridx++;
+        html += renderTreeNode(root, String(ridx), 0, displayItems, false);
+      });
+      tbody.innerHTML = html;
+    }
+
+    // 递归渲染树节点：先渲染当前行，再递归渲染其子目录
+    function renderTreeNode(item, idxLabel, depth, displayItems, isLast) {
+      const children = displayItems.filter(d => d.parentId === item.id).sort((a, b) => a.sort - b.sort);
+      const hasChildren = children.length > 0;
+      const isCollapsed = collapsedIds.has(item.id);
+      let html = renderRow(item, idxLabel, depth, hasChildren, isCollapsed, isLast);
+      if (!isCollapsed) {
+        children.forEach((child, ci) => {
+          const childLabel = `${idxLabel}.${ci + 1}`;
+          const childIsLast = ci === children.length - 1;
+          html += renderTreeNode(child, childLabel, depth + 1, displayItems, childIsLast);
+        });
+      }
+      return html;
+    }
+
+    function renderRow(item, idxLabel, depth, hasChildren, isCollapsed, isLast) {
+      const attr = attrMap[item.attr] || { label: item.attr, cls: 'attr-fixed' };
+      const displayOn = item.display === 1;
+      const isRoot = depth === 0;
+      const isSystemNoChild = noChildSystemFolders.includes(item.name);
+      const indent = depth * 24; // 每一级缩进 24px
+      const treeLine = isRoot ? '' : (isLast ? '└─' : '├─');
+
+      // 根目录行的展开/折叠按钮
+      let toggleHtml = '';
+      if (isRoot) {
+        if (hasChildren) {
+          const iconCls = isCollapsed ? 'fa-caret-right' : 'fa-caret-down';
+          toggleHtml = `<i class="fas ${iconCls} tree-toggle" onclick="toggleExpand(${item.id})" title="展开/折叠"></i>`;
+        } else {
+          toggleHtml = '<span class="tree-toggle-placeholder"></span>';
+        }
+      }
+
+      const childText = isSystemNoChild
+        ? '<span class="child-count">—</span>'
+        : `<span class="child-link" onclick="openAddModal(${item.id})"><i class="fas fa-plus"></i> 新增</span>`;
+
+      const folderIcon = isRoot ? 'fa-folder-open' : 'fa-folder';
+      const rowClass = isRoot ? 'root-row' : 'child-row';
+
+      return `<tr class="${rowClass}">
+        <td class="idx">${idxLabel}</td>
+        <td>
+          <div class="folder-name-cell" style="padding-left:${indent}px;">
+            ${treeLine ? `<span class="tree-line">${treeLine}</span>` : ''}
+            ${toggleHtml}
+            <div class="folder-icon"><i class="fas ${folderIcon}"></i></div>
+            <div>
+              <div class="folder-name-text">${escapeHtml(item.name)}</div>
+              
+            </div>
+          </div>
+        </td>
+        <td>${item.fileType ? escapeHtml(fileTypeMap[item.fileType] || item.fileType) : '<span style="color:#ccc;">-</span>'}</td>
+        <td><span class="attr-tag ${attr.cls}">${attr.label}</span></td>
+        <td>
+          <div class="switch-wrap">
+            <div class="switch ${displayOn ? 'on' : ''}" onclick="toggleDisplay(${item.id})"></div>
+            <span class="switch-label ${displayOn ? 'on' : ''}">${displayOn ? '始终显示' : '已关闭'}</span>
+          </div>
+        </td>
+        <td><div class="tip-text">${escapeHtml(item.tip || '')}</div></td>
+        <td>${childText}</td>
+        <td style="text-align:center;"><button class="action-btn" title="历史记录" onclick="showToast('暂无历史记录', 'success')"><i class="far fa-clock"></i></button></td>
+        <td style="text-align:center;">
+          <div class="sort-btns">
+            <i class="fas fa-caret-up" onclick="moveSort(${item.id}, -1)" title="上移"></i>
+            <i class="fas fa-caret-down" onclick="moveSort(${item.id}, 1)" title="下移"></i>
+          </div>
+        </td>
+        <td style="text-align:center;">
+          <div class="action-btns" style="justify-content:center;">
+            <button class="action-btn" title="编辑" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i></button>
+            <button class="action-btn" title="新增子目录" onclick="openAddModal(${item.id})"><i class="fas fa-folder-plus"></i></button>
+            <button class="action-btn danger" title="删除" onclick="openDeleteModal(${item.id})"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    // 展开/折叠根目录
+    function toggleExpand(id) {
+      if (collapsedIds.has(id)) collapsedIds.delete(id);
+      else collapsedIds.add(id);
+      renderTable();
+    }
+
+    // 显示状态切换
+    function toggleDisplay(id) {
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+      item.display = item.display === 1 ? 0 : 1;
+      renderTable();
+      showToast(item.display === 1 ? '已设置为始终显示' : '已关闭显示', 'success');
+    }
+
+    // 排序（在同一父级层级内上下移动）
+    function moveSort(id, direction) {
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+      const siblings = tableData.filter(d => d.parentId === item.parentId).sort((a, b) => a.sort - b.sort);
+      const index = siblings.findIndex(d => d.id === id);
+      if (index === -1) return;
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+      const target = siblings[targetIndex];
+      const temp = item.sort;
+      item.sort = target.sort;
+      target.sort = temp;
+      renderTable();
+    }
+
+    // 新增
+    function openAddModal(parentId) {
+      document.getElementById('editId').value = '';
+      document.getElementById('editParentId').value = parentId !== null && parentId !== undefined ? parentId : '';
+      document.getElementById('folderName').value = '';
+      document.getElementById('folderFileType').value = '';
+      document.getElementById('folderAttr').value = '';
+      document.getElementById('folderDisplay').value = '1';
+      document.getElementById('folderTip').value = '';
+      
+
+      const parentGroup = document.getElementById('parentGroup');
+      const parentName = document.getElementById('parentName');
+      const modalTitle = document.getElementById('modalTitle');
+
+      if (parentId) {
+        const parent = tableData.find(d => d.id === parentId);
+        parentGroup.style.display = 'block';
+        parentName.value = parent ? parent.name : '';
+        modalTitle.textContent = '新增子目录';
+      } else {
+        parentGroup.style.display = 'none';
+        parentName.value = '';
+        modalTitle.textContent = '新增根目录';
+      }
+
+      document.getElementById('folderModal').classList.add('show');
+      setTimeout(() => document.getElementById('folderName').focus(), 100);
+    }
+
+    // 编辑
+    function openEditModal(id) {
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('editId').value = item.id;
+      document.getElementById('editParentId').value = item.parentId || '';
+      document.getElementById('folderName').value = item.name;
+      document.getElementById('folderFileType').value = item.fileType || '';
+      document.getElementById('folderAttr').value = item.attr;
+      document.getElementById('folderDisplay').value = item.display === 1 ? '1' : '0';
+      document.getElementById('folderTip').value = item.tip || '';
+
+      const parentGroup = document.getElementById('parentGroup');
+      const parentName = document.getElementById('parentName');
+      if (item.parentId) {
+        const parent = tableData.find(d => d.id === item.parentId);
+        parentGroup.style.display = 'block';
+        parentName.value = parent ? parent.name : '';
+      } else {
+        parentGroup.style.display = 'none';
+        parentName.value = '';
+      }
+      document.getElementById('modalTitle').textContent = '编辑文件夹';
+      document.getElementById('folderModal').classList.add('show');
+    }
+
+    function closeFolderModal() {
+      document.getElementById('folderModal').classList.remove('show');
+    }
+
+    function saveFolder() {
+      const editId = document.getElementById('editId').value;
+      const parentId = document.getElementById('editParentId').value;
+      const name = document.getElementById('folderName').value.trim();
+      const fileType = document.getElementById('folderFileType').value;
+      const attr = document.getElementById('folderAttr').value;
+      const display = parseInt(document.getElementById('folderDisplay').value);
+      const tip = document.getElementById('folderTip').value.trim();
+
+      if (!name) { showToast('请输入文件夹名称', 'error'); return; }
+      if (!attr) { showToast('请选择属性', 'error'); return; }
+
+      if (editId) {
+        const item = tableData.find(d => d.id === parseInt(editId));
+        if (item) {
+          item.name = name;
+          item.fileType = fileType;
+          item.attr = attr;
+          item.display = display;
+          item.tip = tip;
+        }
+        showToast('文件夹修改成功', 'success');
+      } else {
+        const pid = parentId ? parseInt(parentId) : null;
+        const maxSort = Math.max(...tableData.map(d => d.sort), 0);
+        const newItem = {
+          id: generateId(),
+          parentId: pid,
+          name,
+          fileType,
+          attr,
+          display,
+          tip,
+          sort: maxSort + 1
+        };
+        tableData.push(newItem);
+        // 若在折叠的父目录下新增子目录，自动展开父目录
+        if (pid && collapsedIds.has(pid)) collapsedIds.delete(pid);
+        showToast(pid ? '子目录创建成功' : '根目录创建成功', 'success');
+      }
+
+      closeFolderModal();
+      renderTable();
+    }
+
+    // 删除
+    function openDeleteModal(id) {
+      deleteTargetId = id;
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+      const childCount = tableData.filter(d => d.parentId === id).length;
+      document.getElementById('deleteMsg').textContent = `确定要删除文件夹「${item.name}」吗？`;
+      document.getElementById('deleteDetail').textContent = childCount > 0
+        ? `该文件夹下有 ${childCount} 个子目录，将一并删除。删除后不可恢复，已关联的文件将移入「最近删除」。`
+        : '删除后不可恢复，已关联的文件将移入「最近删除」。';
+      document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('show');
+      deleteTargetId = null;
+    }
+
+    function confirmDelete() {
+      if (!deleteTargetId) return;
+      // 递归收集当前文件夹及其所有子孙目录
+      const toDelete = new Set();
+      const collect = (pid) => {
+        toDelete.add(pid);
+        tableData.filter(d => d.parentId === pid).forEach(c => collect(c.id));
+      };
+      collect(deleteTargetId);
+      tableData = tableData.filter(d => !toDelete.has(d.id));
+      closeDeleteModal();
+      showToast('文件夹及其子目录已删除', 'success');
+      renderTable();
+    }
+
+    // Toast
+    let toastTimer;
+    function showToast(msg, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast show ' + (type || '');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // 弹窗交互
+    document.getElementById('folderModal').addEventListener('click', function(e) {
+      if (e.target === this) closeFolderModal();
+    });
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDeleteModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeFolderModal();
+        closeDeleteModal();
+      }
+      if (e.key === 'Enter' && document.getElementById('folderModal').classList.contains('show')) {
+        saveFolder();
+      }
+    });
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+    });
+  </script>
+</body>
+</html>

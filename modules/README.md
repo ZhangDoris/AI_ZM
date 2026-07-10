@@ -12,7 +12,7 @@
 | `screening_number_edit` | 预筛号修改 | 预筛号修改功能 |
 | `upfile_tips` | upfile_tips | 上传文件提示模块 |
 | `match_decoupler` | match_decoupler | 匹配解耦 |
-     
+| `file` | file | 文件改造 | 
 
 ## 其他模块文件（位于 modules/ 根目录）
 
