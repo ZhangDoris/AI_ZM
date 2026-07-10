@@ -3489,6 +3489,21 @@
     }
     .md-tab-item:hover { color: #1677ff; }
     .md-tab-item.active { color: #1677ff; border-bottom-color: #1677ff; font-weight: 500; }
+    /* 思维链三态（成功/匹配中/失败） */
+    .md-tc-state { text-align:center; padding:48px 24px; }
+    .md-tc-state-icon { width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px; }
+    .md-tc-state-icon.matching { background:#f3effc;color:#722ed1; animation:pulse 1.4s infinite; }
+    .md-tc-state-icon.failed { background:#fff1f0;color:#ff4d4f; }
+    .md-tc-state-title { font-size:18px;font-weight:600;color:#1d2129;margin-bottom:8px; }
+    .md-tc-state-desc { font-size:13px;color:#86909c;line-height:1.8;max-width:540px;margin:0 auto 16px; }
+    .md-tc-state-meta { display:flex;gap:28px;justify-content:center;font-size:13px;color:#4e5969;margin-bottom:20px; }
+    .md-tc-state-meta b { color:#722ed1;font-variant-numeric:tabular-nums; }
+    .md-tc-error-box { max-width:560px;margin:0 auto 20px;text-align:left;background:#fff1f0;border:1px solid #ffccc7;border-radius:8px;padding:16px; }
+    .md-tc-error-row { display:flex;font-size:13px;padding:7px 0;border-bottom:1px dashed #ffccc7; }
+    .md-tc-error-row:last-child { border-bottom:none; }
+    .md-tc-error-row > span:first-child { width:80px;color:#86909c;flex-shrink:0; }
+    .md-tc-error-row > span:last-child { color:#4e5969;flex:1; }
+    .md-tc-state-actions { display:flex;gap:12px;justify-content:center; }
     .md-main-content { padding: 24px; max-width: 1600px; margin: 0 auto; }
     .md-card {
       background: #fff; border-radius: 8px; padding: 20px;
@@ -5513,9 +5528,9 @@ const scProjectData = [
 // 智能筛选 - 患者列表数据（按方案编号分组）
 const scPatientData = {
   'SHR-2019-nCoV-001': [
-    { id:1, patientNo:'PT_CN001_0001', nameAbbr:'王*明', age:58, gender:'男', domain:'血液类疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN001', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-12 10:24', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否' },
-    { id:2, patientNo:'PT_CN001_0002', nameAbbr:'李*华', age:45, gender:'女', domain:'风湿免疫性疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN002', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-15 14:08', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'预筛通过', isExtrapolated:'是' },
-    { id:3, patientNo:'PT_CN001_0003', nameAbbr:'赵*强', age:62, gender:'男', domain:'血液类疾病', center:'上海瑞金医院', centerNo:'CN002', screenNo:'WYNA-CN003', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-04-02 09:15', creator:'陈伟', creatorRole:'CRC', matchStatus:'匹配中', patientStatus:'预筛驳回', isExtrapolated:'否' },
+    { id:1, patientNo:'PT_CN001_0001', nameAbbr:'王*明', age:58, gender:'男', domain:'血液类疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN001', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-12 10:24', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否', thinkStatus:'failed' },
+    { id:2, patientNo:'PT_CN001_0002', nameAbbr:'李*华', age:45, gender:'女', domain:'风湿免疫性疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN002', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-15 14:08', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'预筛通过', isExtrapolated:'是', thinkStatus:'success' },
+    { id:3, patientNo:'PT_CN001_0003', nameAbbr:'赵*强', age:62, gender:'男', domain:'血液类疾病', center:'上海瑞金医院', centerNo:'CN002', screenNo:'WYNA-CN003', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-04-02 09:15', creator:'陈伟', creatorRole:'CRC', matchStatus:'匹配中', patientStatus:'预筛驳回', isExtrapolated:'否', thinkStatus:'running' },
   ],
   'SHR-A2102-I-102': [
     { id:4, patientNo:'PT_CN002_0001', nameAbbr:'孙*芳', age:51, gender:'女', domain:'肺癌', center:'中山大学肿瘤医院', centerNo:'CN003', screenNo:'WYNA-CN004', planNo:'SHR-A2102-I-102', projectName:'HER2阳性乳腺癌患者中评价SHR-A2102联合吡咯替尼的安全性、耐受性、药代动力学及初步疗效的b/Ⅱ期临床研究', createTime:'2025-02-20 11:30', creator:'刘洋', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'主知情通过', isExtrapolated:'是' },
@@ -7763,7 +7778,7 @@ function buildMatchDetailContent(p) {
     <!-- Tab 3: 思维链 -->
     <div id="mdTabThinkchain" style="display:none">
       <div class="md-card">
-        <!-- 类型选择 -->
+        <!-- 类型选择 + 全部思考 -->
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
           <span style="font-size:14px;font-weight:600;color:#333">思维链类型：</span>
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#666">
@@ -7775,6 +7790,9 @@ function buildMatchDetailContent(p) {
           <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:#666">
             <input type="radio" name="mdTcType" value="custom" onchange="switchMdTcType(this.value)"> 自定义
           </label>
+          <button id="mdThinkAllBtn" onclick="mdThinkAll()" style="margin-left:auto;padding:6px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+            <i class="fas fa-sync-alt"></i> 全部思考
+          </button>
         </div>
         <!-- 思维链列表区 -->
         <div id="mdThinkChainListArea"></div>
@@ -7917,19 +7935,56 @@ function switchMdTcType(type) {
 function renderMdThinkChainList() {
   const container = document.getElementById('mdThinkChainListArea');
   if (!container) return;
-  
+  const overlay = document.getElementById('matchDetailOverlay');
+  const p = overlay._patientData || {};
+
+  // 状态判定：匹配中/思考中 => matching；思考失败 => failed；其余 => success
+  const isMatching = p.matchStatus === '匹配中' || p.thinkStatus === 'running';
+  const isFailed = p.thinkStatus === 'failed';
+  const isSuccess = !isMatching && !isFailed;
+
+  // 顶部「全部思考」按钮按状态变化
+  const allBtn = document.getElementById('mdThinkAllBtn');
+  if (allBtn) {
+    if (isMatching) {
+      allBtn.style.display = 'none';
+    } else {
+      allBtn.style.display = 'inline-flex';
+      if (isFailed) {
+        allBtn.innerHTML = '<i class="fas fa-redo"></i> 重新思考';
+        allBtn.style.background = '#ff4d4f';
+        allBtn.title = '重新触发该患者的全部思维链思考';
+      } else {
+        allBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 全部思考';
+        allBtn.style.background = '#1677ff';
+        allBtn.title = '重新触发该患者的全部思维链思考';
+      }
+    }
+  }
+
+  if (isMatching) {
+    container.innerHTML = buildMdTcMatching(p);
+    startMdTcWaitTimer();
+    return;
+  }
+  if (isFailed) {
+    container.innerHTML = buildMdTcFailed(p);
+    return;
+  }
+  // 成功态：原完整思维链列表
+  container.innerHTML = buildMdTcSuccessHtml();
+}
+
+// 成功态：渲染完整思维链列表
+function buildMdTcSuccessHtml() {
   const chains = mdTcResultsByType[mdCurrentTcType] || [];
-  
   if (chains.length === 0) {
-    container.innerHTML = `
+    return `
       <div style="text-align:center;padding:40px;color:#999">
         <div style="font-size:32px;margin-bottom:12px">🧠</div>
         <div>暂无该类型的思维链结果</div>
-      </div>
-    `;
-    return;
+      </div>`;
   }
-  
   let html = '';
   chains.forEach((chain, index) => {
     html += `
@@ -7938,6 +7993,7 @@ function renderMdThinkChainList() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="background:#1677ff;color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${index + 1}</span>
             <span style="font-size:14px;font-weight:600;color:#333">${chain.name}</span>
+            <span style="font-size:12px;padding:1px 8px;border-radius:10px;background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f">已完成</span>
           </div>
           <div style="display:flex;align-items:center;gap:12px">
             <span style="font-size:12px;color:#999">${chain.id}</span>
@@ -7949,18 +8005,93 @@ function renderMdThinkChainList() {
         <div style="padding:16px;background:#fff">
           <pre style="margin:0;font-family:inherit;font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${chain.markdown}</pre>
         </div>
-      </div>
-    `;
+      </div>`;
   });
-  
   html += `
     <div style="display:flex;align-items:center;gap:8px;padding:12px;background:#fff7e6;border-radius:4px;color:#fa8c16;font-size:13px;margin-top:16px">
       <i class="fas fa-exclamation-circle"></i>
       <span>以上内容由AI生成，仅供参考，请谨慎鉴别</span>
-    </div>
-  `;
-  
-  container.innerHTML = html;
+    </div>`;
+  return html;
+}
+
+// 匹配中态（思考中）
+function buildMdTcMatching(p) {
+  return `
+    <div class="md-tc-state">
+      <div class="md-tc-state-icon matching"><i class="fas fa-brain"></i></div>
+      <div class="md-tc-state-title">正在思考中，请稍后再来</div>
+      <div class="md-tc-state-desc">
+        患者 <b>${p.nameAbbr||''}</b>（筛选号 ${p.screenNo||''}）的思维链正在生成，系统与「匹配详情」并行计算，
+        思考完成后将通过站内消息 / 邮件通知您，无需在此等待。
+      </div>
+      <div class="md-tc-state-meta">
+        <span>已等待：<b id="mdTcWaitTime">00:00</b></span>
+        <span>队列位置：第 2 / 5 位</span>
+      </div>
+      <div class="md-tc-state-actions">
+        <button class="btn-sm btn-primary" onclick="mdNotifyMe()">思考完成时通知我</button>
+        <button class="btn-sm" onclick="closeMatchDetail()">返回列表</button>
+      </div>
+    </div>`;
+}
+
+// 思考失败态
+function buildMdTcFailed(p) {
+  return `
+    <div class="md-tc-state">
+      <div class="md-tc-state-icon failed"><i class="fas fa-times-circle"></i></div>
+      <div class="md-tc-state-title">思考失败，请重新思考</div>
+      <div class="md-tc-state-desc">
+        患者 <b>${p.nameAbbr||''}</b>（筛选号 ${p.screenNo||''}）的思维链生成未完成，请点击右上角「全部思考」重新触发。
+      </div>
+      <div class="md-tc-error-box">
+        <div class="md-tc-error-row"><span>失败时间</span><span>2026-07-10 09:42:13</span></div>
+        <div class="md-tc-error-row"><span>错误码</span><span style="color:#ff4d4f;font-weight:600">TC_GEN_FAILED_504</span></div>
+        <div class="md-tc-error-row"><span>错误信息</span><span>RAG 检索服务超时，未能获取足够病历上下文</span></div>
+        <div class="md-tc-error-row"><span>已重试</span><span>1 次（自动重试后仍失败）</span></div>
+      </div>
+      <div class="md-tc-state-actions">
+        <button class="btn-sm btn-primary" style="background:#ff4d4f;border-color:#ff4d4f" onclick="mdThinkAll()"><i class="fas fa-redo"></i> 全部思考</button>
+        <button class="btn-sm" onclick="closeMatchDetail()">返回列表</button>
+      </div>
+    </div>`;
+}
+
+// 等待计时器（匹配中态动态刷新已等待时长）
+function startMdTcWaitTimer() {
+  clearInterval(window._mdTcWaitTimer);
+  window._mdTcWaitSeconds = 0;
+  const tick = () => {
+    const el = document.getElementById('mdTcWaitTime');
+    if (!el) { clearInterval(window._mdTcWaitTimer); return; }
+    window._mdTcWaitSeconds = (window._mdTcWaitSeconds || 0) + 1;
+    const m = String(Math.floor(window._mdTcWaitSeconds / 60)).padStart(2, '0');
+    const s = String(window._mdTcWaitSeconds % 60).padStart(2, '0');
+    el.textContent = m + ':' + s;
+  };
+  window._mdTcWaitTimer = setInterval(tick, 1000);
+}
+
+// 全部思考 / 重新思考 触发
+function mdThinkAll() {
+  const overlay = document.getElementById('matchDetailOverlay');
+  const p = overlay._patientData;
+  showWechatToast('🧠 AI 正在分析处理中，请稍后…思考成功之后，将会通知您');
+  if (p) p.thinkStatus = 'running';
+  renderMdThinkChainList();
+  // 模拟思考完成：3 秒后转为成功（若仍处于思维链 tab）
+  clearTimeout(window._mdThinkTimer);
+  window._mdThinkTimer = setTimeout(() => {
+    if (p) p.thinkStatus = 'success';
+    const tab = document.getElementById('mdTabThinkchain');
+    if (tab && tab.style.display !== 'none') renderMdThinkChainList();
+  }, 3000);
+}
+
+// 思考完成时通知我
+function mdNotifyMe() {
+  showWechatToast('已开启通知，思考完成时将提醒您');
 }
 
 // 查看/编辑思维链（overlay版本）

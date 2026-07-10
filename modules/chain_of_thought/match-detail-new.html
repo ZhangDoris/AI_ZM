@@ -1119,7 +1119,7 @@
       
       <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
       <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
-      <div class="tab-item" onclick="switchTab('thinkchain')">思考链</div>
+      <div class="tab-item" id="tab-thinkchain-btn" onclick="switchTab('thinkchain')">思考链</div>
       <div class="tab-item" style="color: #ff4d4f;">开发提示:只加了思考链,如果项目没有配置思维链，就不显示这个tab</div>
     </div>
   </div>
@@ -1280,10 +1280,15 @@
             </div>
         </div>
        
-         <!-- 思维链类型选择 -->
-      <div style="margin-bottom:16px;display:flex;gap:8px">
-        <button onclick="switchTcType('inclusion')" style="padding:6px 16px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer">入排条件</button>
-        <button onclick="switchTcType('screening')" style="padding:6px 16px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:13px;cursor:pointer">筛选表</button>
+         <!-- 思维链类型选择 + 全部思考按钮 -->
+      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:8px">
+          <button onclick="switchTcType('inclusion')" style="padding:6px 16px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer">入排条件</button>
+          <button onclick="switchTcType('screening')" style="padding:6px 16px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:13px;cursor:pointer">筛选表</button>
+        </div>
+        <button id="tcAllThinkBtn" onclick="executeAllTcThinking()" style="padding:6px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;display:none;align-items:center;gap:4px">
+          <i class="fas fa-brain" style="color:#fff"></i>全部思考
+        </button>
       </div>
         <!-- 思考链列表区 -->
         <div id="thinkChainListArea"></div>
@@ -1356,6 +1361,15 @@
     const centerNo = urlParams.get('centerNo');
     const center = urlParams.get('center');
     const projectName = urlParams.get('projectName');
+    const thinkStatus = urlParams.get('thinkStatus') || '';     // 思考链状态：'running'|'failed'|空=成功
+    const thinkEnabled = urlParams.get('thinkEnabled') !== '0'; // 项目是否配置了思考链
+    window._tcRetryMode = false; // 点击「全部思考」/「重新思考」后标记为已重试，后续展示成功内容
+
+    // 项目未配置思考链：隐藏「思考链」Tab
+    if (!thinkEnabled) {
+      const tcTab = document.getElementById('tab-thinkchain-btn');
+      if (tcTab) tcTab.style.display = 'none';
+    }
 
     // 设置页面标题
     if (screenNo && center) {
@@ -1992,13 +2006,50 @@ function toggleThinkChainItem(chainId) {
   }
 }
 
-// 渲染思考链列表
+// 渲染思考链列表（三态：思考中 / 失败 / 成功）
 function renderThinkChainList() {
   const container = document.getElementById('thinkChainListArea');
   if (!container) return;
-  
+
+  const allBtn = document.getElementById('tcAllThinkBtn');
+
+  // 状态①：思考失败（未重试时）
+  if (thinkStatus === 'failed' && !window._tcRetryMode) {
+    if (allBtn) allBtn.style.display = 'inline-flex';
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px">
+        <div style="width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;background:#fff1f0;color:#f5222d">
+          <i class="fas fa-times-circle" style="font-size:30px"></i>
+        </div>
+        <div style="font-size:16px;font-weight:600;color:#f5222d;margin-bottom:8px">思考失败</div>
+        <div style="font-size:13px;color:#666;margin-bottom:24px;line-height:1.6"> 思考失败，请点击右上角「AI思考」重新触发。</div>
+        
+      </div>
+    `;
+    return;
+  }
+
+  // 状态②：思考中
+  if (thinkStatus === 'running') {
+    if (allBtn) allBtn.style.display = 'none';
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 24px">
+        <div style="width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;background:#f3effc;color:#722ed1">
+          <i class="fas fa-spinner fa-spin" style="font-size:30px"></i>
+        </div>
+        <div style="font-size:16px;font-weight:600;color:#722ed1;margin-bottom:8px">AI 正在思考中，请稍后再来</div>
+        <div style="font-size:13px;color:#666;margin-bottom:24px;line-height:1.6">思考完成后将自动更新结果</div>
+        
+      </div>
+    `;
+    return;
+  }
+
+  // 状态③：成功/正常，直接展示思考链内容
+  if (allBtn) allBtn.style.display = 'none';
+
   const chains = tcResultsByType[currentTcType] || [];
-  
+
   if (chains.length === 0) {
     container.innerHTML = `
       <div style="text-align:center;padding:40px;color:#999">
@@ -2008,7 +2059,7 @@ function renderThinkChainList() {
     `;
     return;
   }
-  
+
   let html = '';
   chains.forEach((chain, index) => {
     const chainId = `tc-item-${index}`;
@@ -2018,11 +2069,12 @@ function renderThinkChainList() {
           <div style="display:flex;align-items:center;gap:8px">
             <span style="background:#1677ff;color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">${index + 1}</span>
             <span style="font-size:14px;font-weight:600;color:#333">${chain.name}</span>
+            <span style="background:#f6ffed;color:#52c41a;padding:2px 8px;border-radius:4px;font-size:11px;border:1px solid #b7eb8f">已完成</span>
           </div>
           <div style="display:flex;align-items:center;gap:12px">
             <i id="icon-${chainId}" class="fas fa-chevron-up" style="color:#999;font-size:14px"></i>
             <button onclick="viewThinkChain('${chain.id}');event.stopPropagation()" style="padding:4px 12px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px">
-              <i class="fas fa-edit"></i> 查看思考链
+              <i class="fas fa-edit"></i> 查看/编辑思考链
             </button>
           </div>
         </div>
@@ -2032,7 +2084,7 @@ function renderThinkChainList() {
       </div>
     `;
   });
-  
+
   // 免责声明 - 悬浮固定在底部
   html += `
     <div style="position:fixed;bottom:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:12px 24px;background:#fff7e6;border-top:1px solid #ffd591;color:#fa8c16;font-size:13px;z-index:1000;box-shadow:0 -2px 8px rgba(0,0,0,0.08)">
@@ -2040,8 +2092,44 @@ function renderThinkChainList() {
       <span style="flex:1">以上内容由AI生成，仅供参考，请谨慎鉴别。如果需要校正思考链，可以修改思考链的逻辑。</span>
     </div>
   `;
-  
+
   container.innerHTML = html;
+}
+
+// 思考完成时通知我
+function notifyMeWhenDone() {
+  alert('已开启通知，思考完成时将提醒您');
+}
+
+// 全部思考（失败态点击） - 切回思考中 → 3s 后转成功
+function executeAllTcThinking() {
+  const container = document.getElementById('thinkChainListArea');
+  if (!container) return;
+  const allBtn = document.getElementById('tcAllThinkBtn');
+  if (allBtn) allBtn.style.display = 'none';
+  container.innerHTML = `
+    <div style="text-align:center;padding:48px 24px">
+      <div style="width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;background:#f3effc;color:#722ed1">
+        <i class="fas fa-spinner fa-spin" style="font-size:30px"></i>
+      </div>
+      <div style="font-size:16px;font-weight:600;color:#722ed1;margin-bottom:8px">🧠 AI 正在分析处理中，请稍后…</div>
+      <div style="font-size:13px;color:#666;margin-bottom:24px">思考成功之后，将会更新结果</div>
+    </div>
+  `;
+  // 模拟 3 秒后成功
+  setTimeout(() => {
+    window._tcRetryMode = true;
+    if (document.getElementById('tab-thinkchain').style.display !== 'none') {
+      renderThinkChainList();
+    }
+  }, 3000);
+  alert('🧠 AI 正在分析处理中，请稍后…思考成功之后，将会通知您');
+}
+
+// 在「查看/编辑思考链」弹窗内点击底部【AI思考】
+function executeTcFromModal() {
+  closeThinkChainDetailModal();
+  executeAllTcThinking();
 }
 
 // 查看/编辑思考链
@@ -2223,7 +2311,7 @@ let tcCurrentChain = null;
             <div>① 编辑按钮只有管理员和医学经理、项目经理有，有修改权限</div>
             </div>
         </div>
-    <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 60px);padding:20px 24px">
+    <div class="modal-body" style="overflow-y:auto;max-height:calc(85vh - 140px);padding:20px 24px">
       <!-- 版本号和入排内容 -->
       <div style="margin-bottom:20px;padding:16px;background:#f9fafb;border-radius:8px">
         <div id="tcVersionInfo" style="margin-bottom:8px;font-size:13px;color:#333;display:none"></div>
@@ -2233,6 +2321,13 @@ let tcCurrentChain = null;
       <!-- 步骤列表 -->
       <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
       <div id="tcStepsContainer"></div>
+    </div>
+    <!-- 底部操作区 -->
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 24px;border-top:1px solid #e8e8e8;background:#fafafa;flex-shrink:0">
+      <button onclick="closeThinkChainDetailModal()" style="min-width:88px;padding:8px 20px;background:#fff;border:1px solid #d9d9d9;border-radius:4px;font-size:14px;color:#333;cursor:pointer">关闭</button>
+      <button onclick="executeTcFromModal()" style="min-width:88px;padding:8px 20px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <i class="fas fa-brain"></i>AI思考
+      </button>
     </div>
   </div>
 </div>
