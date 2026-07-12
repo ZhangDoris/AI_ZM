@@ -6553,25 +6553,18 @@ function updatePRDPanel(mod, sub) {
             <li><strong>返回按钮</strong>：← 返回项目列表</li>
             <li><strong>患者编号</strong>：患者提交审批的时候，后台自动生成一个患者编号：'项目方案编号+ PT+中心号+4位流水号'，页面显示的时候 显示"PT+中心号+4位流水号"</li>
             <li><strong>提交审批</strong>：患者可以自己选择审批流程</li>
+            <li><strong>提交审核点击效果</strong>：
+              <ul style="margin-top:6px">
+                <li><strong>第一条数据 王*明（patientIndex=0）</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择流程和审批人后点击「提交」→ Toast 提示「【判断：是】审批提交成功！该患者AI思考结果为失败状态，已标记为需要人工复核。」</li>
+                <li><strong>第二条数据 李*华（patientIndex=1）</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择流程和审批人后点击「提交」→ Toast 提示「【判断：否】审批提交成功！该患者AI思考结果为成功状态，无需人工复核，正常流转。」</li>
+                <li><strong>其他数据</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择后提交 → 常规 Toast 提示「审批提交成功！」</li>
+              </ul>
+            </li>
+            <li><strong>判断逻辑说明</strong>：第一条数据 <code>thinkStatus:'failed'</code>（AI思考失败）→ 判断为<strong style="color:#F53F3F">是</strong>（需要人工复核）；第二条数据 <code>thinkStatus:'success'</code>（AI思考成功）→ 判断为<strong style="color:#00B42A">否</strong>（无需人工复核，正常流转）。该判断仅用于演示不同患者提交后的差异化效果。</li>
           </ul>`
         },
-        {
-          title: '项目匹配列',
-          content: `<ul>
-            <li><strong>项目匹配</strong>：查看详细的匹配分析（入排标准逐条判断）</li>
-          </ul>`
-        },
-        {
-          title: '操作列',
-          content: `<ul>
-            <li><strong>编辑</strong>：编辑患者基本信息</li>
-            <li><strong>病史与资料</strong>：查看/编辑患者病史和上传的文档资料</li>
-            <li><strong>匹配详情</strong>：查看详细的匹配分析（入排标准逐条判断）</li>
-            <li><strong>提交审批</strong>：可以选择审批流程</li>
-            <li><strong>审批记录</strong>：查看该患者的审批历史轨迹</li>
-            <li><strong>删除</strong>：删除该患者记录（红色，需二次确认）</li>
-          </ul>`
-        },
+      
+        
        
         
       ]
@@ -15467,7 +15460,7 @@ function showWechatToast(msg, type) {
   if(!toast) {
     toast = document.createElement('div');
     toast.id = 'wcToast';
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:13px;z-index:99999;pointer-events:none;transition:opacity 0.3s;white-space:nowrap';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:8px 18px;border-radius:20px;font-size:13px;z-index:100010;pointer-events:none;transition:opacity 0.3s;white-space:nowrap';
     document.body.appendChild(toast);
   }
   if(type === 'error') {
@@ -17450,6 +17443,30 @@ function setReviewerActive(idx) {
   items.forEach((item, i) => item.classList.toggle('active', i === idx));
 }
 
+function onReviewerKeydown(e) {
+  const dropdown = document.getElementById('reviewerDropdown');
+  if(!dropdown || !dropdown.classList.contains('open')) return;
+  const items = dropdown.querySelectorAll('.autocomplete-item');
+  if(items.length === 0) return;
+  if(e.key === 'ArrowDown') {
+    e.preventDefault();
+    reviewerActiveIndex = (reviewerActiveIndex + 1) % items.length;
+    setReviewerActive(reviewerActiveIndex);
+  } else if(e.key === 'ArrowUp') {
+    e.preventDefault();
+    reviewerActiveIndex = (reviewerActiveIndex - 1 + items.length) % items.length;
+    setReviewerActive(reviewerActiveIndex);
+  } else if(e.key === 'Enter') {
+    e.preventDefault();
+    if(reviewerActiveIndex >= 0 && reviewerActiveIndex < items.length) {
+      const item = items[reviewerActiveIndex];
+      selectReviewer(item.dataset.value, item.dataset.label);
+    }
+  } else if(e.key === 'Escape') {
+    hideReviewerDropdown();
+  }
+}
+
 function updateReviewerInputStyle(hasValue) {
   const input = document.getElementById('submitAuditReviewer');
   if(input) input.classList.toggle('has-value', hasValue);
@@ -17547,15 +17564,16 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
             <input type="text" class="submit-audit-input readonly" value="${patient.patientNo} - ${patient.nameAbbr}" readonly />
           </div>
         </div>
-         <div class="submit-audit-for -row">     
+         <div class="submit-audit-for -row">
           <label class="submit-audit-form-label required">审批模板：</label>
           <div class="submit-audit-form-control">
-            <select class="submit-audit-select" id="submitAuditFlow" onchange="checkNonRecommendedFlow()">
-          <option value="常规模板" selected>常规审批模板-主流程</option>
-          <option value="快速审批模板">快速审批模板</option>
+            <select class="submit-audit-select" id="submitAuditTemplate">
+              <option value="常规模板" selected>常规审批模板-主流程</option>
+              <option value="快速审批模板">快速审批模板</option>
             </select>
-            </div>
-        <div class="submit-audit-for -row">     
+          </div>
+        </div>
+        <div class="submit-audit-for -row">
           <label class="submit-audit-form-label required">审批流程</label>
           <div class="submit-audit-form-control">
             <select class="submit-audit-select" id="submitAuditFlow" onchange="checkNonRecommendedFlow()">
@@ -17593,7 +17611,10 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
                 id="submitAuditReviewer"
                 placeholder="输入姓名模糊搜索审批人&#10;"
                 autocomplete="off"
-               
+                oninput="filterReviewerSuggestions()"
+                onfocus="showReviewerDropdown()"
+                onblur="setTimeout(hideReviewerDropdown, 150)"
+                onkeydown="onReviewerKeydown(event)"
               />
               <div class="autocomplete-dropdown" id="reviewerDropdown"></div>
               <input type="hidden" id="submitAuditReviewerValue" />
@@ -17682,6 +17703,37 @@ function closeSubmitAuditModal() {
   document.body.style.overflow = '';
 }
 
+// AI智能匹配弹窗暂存的提交参数
+let pendingAuditParams = null;
+
+function showAiMatchModal() {
+  document.getElementById('aiMatchModal').classList.add('open');
+}
+
+function closeAiMatchModal() {
+  document.getElementById('aiMatchModal').classList.remove('open');
+}
+
+// 点击"项目匹配"
+function onAiMatchConfirm() {
+  closeAiMatchModal();
+  showWechatToast('匹配中，匹配完成后系统将自动帮您提交审批');
+  // 继续执行之前暂存的提交
+  if(pendingAuditParams) {
+    const { schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark } = pendingAuditParams;
+    pendingAuditParams = null;
+    doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark);
+  }
+}
+
+// 点击"关闭"
+function onAiMatchClose() {
+  closeAiMatchModal();
+  showWechatToast('您目前还没有点击项目匹配(入组)，无法跨阶段提交审核。');
+  // 不执行提交，保持提交审核弹窗打开
+  pendingAuditParams = null;
+}
+
 function submitAudit(schemeNo, patientIndex) {
   const reviewerValue = document.getElementById('submitAuditReviewerValue')?.value;
   const reviewerLabel = document.getElementById('submitAuditReviewer')?.value;
@@ -17698,29 +17750,29 @@ function submitAudit(schemeNo, patientIndex) {
   }
 
   // 检查是否选择了非推荐流程
+  let finalRemark = remark;
   if(currentRecommendedFlow && flow !== currentRecommendedFlow) {
-    // 获取内联原因输入框的值
     const reason = document.getElementById('nonRecommendedReasonInline')?.value.trim();
-    
     if(!reason) {
       showWechatToast('检测到您选择的是非标准审批流程，请填写原因');
-      // 聚焦到原因输入框
       setTimeout(() => {
         const textarea = document.getElementById('nonRecommendedReasonInline');
         if(textarea) textarea.focus();
       }, 100);
       return;
     }
-    
-    // 将原因添加到备注中
-    const fullRemark = remark ? remark + '\n\n【非推荐流程原因】' + reason : '【非推荐流程原因】' + reason;
-    
-    // 执行提交
-    doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, fullRemark);
-  } else {
-    // 直接提交（选择的是推荐流程）
-    doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark);
+    finalRemark = remark ? remark + '\n\n【非推荐流程原因】' + reason : '【非推荐流程原因】' + reason;
   }
+
+  // 第一条数据（patientIndex===0）弹出AI智能匹配提示框
+  if(patientIndex === 0) {
+    pendingAuditParams = { schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark: finalRemark };
+    showAiMatchModal();
+    return;
+  }
+
+  // 其他数据直接提交
+  doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, finalRemark);
 }
 
 // 执行实际的审批提交
@@ -17736,9 +17788,21 @@ function doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabe
 
   // 更新患者状态
   patient.patientStatus = '待审批';
-  document.getElementById('scContent').innerHTML = buildScPatientListContent();
+  const scContentEl = document.getElementById('scContent');
+  if (scContentEl) scContentEl.innerHTML = buildScPatientListContent();
 
-  showWechatToast('审批提交成功！<br>审批流程：' + flowLabel + '｜审批人：' + reviewerName + '｜患者：' + patient.patientNo);
+  // 患者提交审核效果判断（按数据索引演示不同场景）
+  let toastMsg = '';
+  if(patientIndex === 0) {
+    // 第一条数据 王*明：AI思考失败，判断为"是"（需要人工复核）
+    toastMsg = '匹配中，匹配完成后系统将自动帮您提交审批';
+  } else if(patientIndex === 1) {
+    // 第二条数据 李*华：AI思考成功，判断为"否"（无需人工复核）
+    toastMsg = '审批提交成功！';
+  } else {
+    toastMsg = '审批提交成功！';
+  }
+  showWechatToast(toastMsg);
 }
 
 // 引用重点关注的弹窗
@@ -18072,6 +18136,17 @@ document.addEventListener('keydown', function(e) {
     if (overlay && overlay.classList.contains('show')) {
       closeFlowZoom();
     }
+    closeAiMatchModal();
+  }
+});
+
+// AI智能匹配弹窗点击遮罩关闭（DOM 加载后绑定）
+window.addEventListener('DOMContentLoaded', function() {
+  const aiMatchModal = document.getElementById('aiMatchModal');
+  if(aiMatchModal) {
+    aiMatchModal.addEventListener('click', function(e) {
+      if (e.target === this) closeAiMatchModal();
+    });
   }
 });
 
@@ -18229,6 +18304,24 @@ document.addEventListener('keydown', function(e) {
 <div class="flow-zoom-overlay" id="flowZoomOverlay" onclick="closeFlowZoom(event)">
   <button class="flow-zoom-close" onclick="closeFlowZoom()" title="关闭（ESC）">✕</button>
   <div class="flow-zoom-container" id="flowZoomContent"></div>
+</div>
+
+<!-- AI智能匹配提示框（跨阶段提交时弹出） -->
+<div class="modal-overlay" id="aiMatchModal" style="z-index:100002">
+  <div class="modal-container" style="max-width:480px;">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-robot" style="color:#165DFF;margin-right:8px;"></i>AI智能匹配</h3>
+      <button class="modal-close" onclick="closeAiMatchModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:24px;text-align:center;">
+      <i class="fas fa-exclamation-circle" style="font-size:42px;color:#165DFF;margin-bottom:16px;display:block;"></i>
+      <p style="font-size:15px;color:#333;line-height:1.8;font-weight:500;">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交</p>
+    </div>
+    <div class="modal-footer" style="padding:16px 24px;border-top:1px solid #f0f0f0;display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">项目匹配</button>
+      <button class="btn btn-cancel" onclick="onAiMatchClose()" style="background:#f5f5f5;color:#666;border:1px solid #d9d9d9;">关闭</button>
+    </div>
+  </div>
 </div>
 
 </body>

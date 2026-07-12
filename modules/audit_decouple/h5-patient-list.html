@@ -585,6 +585,63 @@
       color: #fff;
     }
 
+    /* AI智能匹配提示弹窗 */
+    .ai-match-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 400;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .ai-match-overlay.show { display: flex; }
+    .ai-match-panel {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 340px;
+      padding: 28px 20px 20px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: scaleIn 0.25s ease;
+    }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .ai-match-icon {
+      font-size: 48px;
+      color: #165DFF;
+      margin-bottom: 16px;
+    }
+    .ai-match-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+    .ai-match-text {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .ai-match-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .ai-match-btns .action-btn {
+      flex: 1;
+      padding: 12px 0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+    }
+
     /* 智能推荐卡片 */
     .smart-recommend-card {
       margin-top: 12px;
@@ -1017,6 +1074,20 @@
     </div>
   </div>`
 </div>
+
+<!-- AI智能匹配提示弹窗 -->
+<div class="ai-match-overlay" id="aiMatchOverlay">
+  <div class="ai-match-panel">
+    <i class="fas fa-robot ai-match-icon"></i>
+    <div class="ai-match-title">AI智能匹配</div>
+    <div class="ai-match-text">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交</div>
+    <div class="ai-match-btns">
+      <button class="action-btn btn-primary" onclick="onAiMatchConfirm()">项目匹配</button>
+      <button class="action-btn btn-ghost" onclick="onAiMatchClose()">关闭</button>
+    </div>
+  </div>
+</div>
+
 <!-- PRD Drawer -->
 <div class="prd-drawer" id="prdDrawer">
   <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="展开需求说明面板">
@@ -1115,7 +1186,7 @@
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px">暂无数据</div>';
         return;
       }
-      container.innerHTML = data.map(p => {
+      container.innerHTML = data.map((p, idx) => {
         const matchedTag = p.matchStatus === 'matched'
           ? '<span class="status-tag tag-matched"><i class="fas fa-check-circle"></i> 匹配完成</span>'
           : '<span class="status-tag tag-unmatched"><i class="fas fa-exclamation-circle"></i> 未匹配</span>';
@@ -1161,7 +1232,7 @@
             '<span><i class="fas fa-user-md"></i> 待操作人：' + p.operator + '</span>' +
           '</div>' +
           '<div class="action-btns">' +
-            '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\')">提交审批</button>' +
+            '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">提交审批</button>' +
             '<button class="action-btn btn-outline" onclick="toastMsg(\'审批记录 - ' + p.name + '\')">审批记录</button>' +
             '<button class="action-btn btn-ghost" onclick="toastMsg(\'匹配详情 - ' + p.name + '\')">匹配详情</button>' +
           '</div>' +
@@ -1277,7 +1348,10 @@
     }
 
     // 提交审批弹窗 - H5手机端
-    function openAuditModal(patientName) {
+    let currentPatientIndex = null;
+
+    function openAuditModal(patientName, idx) {
+      currentPatientIndex = idx;
       document.getElementById('auditModal').classList.add('show');
       document.getElementById('panelOverlay').classList.add('show');
       document.body.style.overflow = 'hidden';
@@ -1302,6 +1376,41 @@
       }
     }
 
+    // 暂存审批参数（用于AI匹配后继续提交）
+    let pendingAuditData = null;
+
+    function showAiMatchOverlay() {
+      document.getElementById('aiMatchOverlay').classList.add('show');
+    }
+    function hideAiMatchOverlay() {
+      document.getElementById('aiMatchOverlay').classList.remove('show');
+    }
+
+    // 点击"项目匹配"
+    function onAiMatchConfirm() {
+      hideAiMatchOverlay();
+      toastMsg('匹配中，匹配完成后系统将自动帮您提交审批');
+      // 继续执行提交
+      if (pendingAuditData) {
+        pendingAuditData = null;
+        executeSubmitAudit('匹配中，匹配完成后系统将自动帮您提交审批');
+      }
+    }
+
+    // 点击"关闭"
+    function onAiMatchClose() {
+      hideAiMatchOverlay();
+      toastMsg('您目前还没有点击项目匹配(入组)，无法跨阶段提交审核');
+      pendingAuditData = null;
+      // 不关闭提交审核弹窗，保持原状
+    }
+
+    // 真正执行提交
+    function executeSubmitAudit(msg) {
+      toastMsg(msg || '提交审批成功');
+      closeAuditModal();
+    }
+
     function submitAudit() {
       const process = document.getElementById('auditProcess').value;
       const auditor = document.getElementById('auditor').value;
@@ -1318,8 +1427,22 @@
           return;
         }
       }
-      toastMsg('提交审批成功');
-      closeAuditModal();
+
+      // 第一条数据（currentPatientIndex === 0，ZWMS）弹出AI智能匹配提示框
+      if (currentPatientIndex === 0) {
+        pendingAuditData = true;
+        showAiMatchOverlay();
+        return;
+      }
+
+      // 第二条数据（currentPatientIndex === 1，HGKD）判断为"否"
+      if (currentPatientIndex === 1) {
+        executeSubmitAudit('审批提交成功！');
+        return;
+      }
+
+      // 其他数据正常提交
+      executeSubmitAudit();
     }
 
     // 初始渲染
@@ -1339,6 +1462,19 @@ function updatePRDPanel(mod, sub) {
         {
           title: '★ 本次修改',
           content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审批功能，点击提交审批，加了可以选择审批流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审批人也要动态变化，选择了非推荐的流程，需要提醒他必须填写理由</span></strong></li><li>患者列表加一个项目编号</li><li>全部中心的选择需要加联想下拉框，目前是改了一种样式，比较适配手机</li></ul>'
+        },
+        {
+          title: '提交审核点击效果',
+          content: `<ul>
+            <li><strong>第一条数据 ZWMS（index=0）</strong>：点击提交审批 → 校验必填项通过 → 弹出 <strong>AI智能匹配提示框</strong>（内容：检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交）
+              <ul style="margin-top:4px">
+                <li><strong>项目匹配</strong>：点击后 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭匹配弹窗 → 继续提交 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭提交审核弹窗</li>
+                <li><strong>关闭</strong>：点击后 → Toast「您目前还没有点击项目匹配(入组)，无法跨阶段提交审核」→ 关闭匹配弹窗 → <strong>保持提交审核弹窗页面</strong>（不执行提交）</li>
+              </ul>
+            </li>
+            <li><strong>第二条数据 HGKD（index=1）</strong>：点击提交审批 → 校验必填项通过 → 直接提交 →Toast「提交审批成功」→ 关闭提交审核弹窗</li>
+            <li><strong>其他数据</strong>：点击提交审批 → 校验必填项通过 → 正常提交 → Toast「提交审批成功」→ 关闭提交审核弹窗</li>
+          </ul>`
         }
         
         
