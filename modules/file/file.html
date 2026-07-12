@@ -931,6 +931,7 @@
               <th style="width:90px;">属性</th>
               <th style="width:110px;">显示状态</th>
               <th>提示语</th>
+              <th style="width:80px;">匹配</th>
               <th style="width:80px;">子目录</th>
               <th style="width:60px;text-align:center;">历史</th>
               <th style="width:50px;text-align:center;">排序</th>
@@ -963,8 +964,8 @@
           <h3><i class="fas fa-tasks"></i> 本次更新内容（v2.0）</h3>
           <div class="update-list">
             <div class="update-item">
-              <strong>1 根目录默认加一个“随机阶段”，在入组阶段的下面，默认时隐藏关闭，如果随机阶段有文件，需要参与入组匹配</strong>
-              <strong>2 所有的文件夹都可以修改名字，包括根目录可修改名称</strong>
+              <strong>1 可以新增根目录，根目录下可以新增二级文件夹，二级文件夹可以设置是否参与AI匹配</strong>
+              <strong>2  所有的文件夹都可以修改名字，包括根目录可修改名称，基因检测报告不可以删除，原来的基因检测报告还是上传到这个地方</strong>
               <strong>3 AI的目录时可以设置关闭的，审批上传附件存档 是不可以关闭</strong>
              <strong>4 之前用文件夹名字去判断的，都改成用文件夹id去判断</strong>
                 
@@ -1029,6 +1030,13 @@
             </select>
           </div>
         </div>
+        <div class="form-group" id="matchableGroup" style="display:none;margin-top:12px;">
+          <label class="form-label">参与匹配</label>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="switch" id="folderMatchable" onclick="this.classList.toggle('on')"></div>
+            <span style="font-size:13px;color:#666;">开启后，该目录下的文件将参与AI智能匹配</span>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeFolderModal()">取消</button>
@@ -1074,43 +1082,46 @@
       'system-managed': { label: '系统管理', cls: 'attr-system' }
     };
 
-    // 系统托管项：禁止新增子目录
-    const noChildSystemFolders = ['AI分类资料', '审批上传附件存档', 'AI预筛结果存档', '预筛表提取结果存档'];
+    // 系统托管项（禁止新增子目录）：通过 id 判断，不依赖文件夹名称
+    const noChildSystemFolderIds = [5, 10, 21, 4, 9, 20, 14, 15]; // AI分类资料(id:5/10/21)、审批上传附件存档(id:4/9/20)、AI预筛结果存档(14)、预筛表提取结果存档(15)
 
-    // 初始数据（树形结构：parentId 为 null 表示根目录，每个文件夹字段一致均可编辑）
-    // 注意：后端通过文件夹 id（写死）判断文件归属，名称仅用于前端展示，可自由修改但不可删除/新建后端依赖的核心目录
+    // 不可删除的文件夹 id 集合：通过 id 判断，不依赖文件夹名称
+    const noDeleteFolderIds = [3, 8]; // 基因检测报告(id:3/8)，后端基因检测功能依赖此目录上传
+
+    // ====================================================================
+    // 文件夹配置规则（所有判断均通过文件夹 id 写死，不依赖文件夹名称）：
+    // 1. 可新增根目录，根目录下可新增二级文件夹，二级文件夹可设置是否参与AI匹配
+    // 2. 所有文件夹均可修改名称（包括根目录）；基因检测报告(id:3/8)不可删除，后端基因检测功能依赖此目录上传
+    // 3. AI分类资料(id:5/10/21)可通过开关控制显示/隐藏；审批上传附件存档(id:4/9/20)不可关闭（fixed-unavailable）
+    // 4. 之前用文件夹名称判断的，全部改为用文件夹 id 判断（见 noChildSystemFolderIds、noDeleteFolderIds）
+    // ====================================================================
     let tableData = [
       // 根目录：预筛阶段
       { id: 1, parentId: null, name: '预筛阶段', attr: 'fixed-uncloseable', display: 1, tip: '预筛阶段的根目录文件夹，固定显示且不可关闭。', sort: 1 },
-      { id: 2, parentId: 1, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
-      { id: 3, parentId: 1, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
-      { id: 4, parentId: 1, name: '审批上传附件存档', attr: 'configurable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档。', sort: 4 },
-      { id: 5, parentId: 1, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
+      { id: 2, parentId: 1, matchable: false, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
+      { id: 3, parentId: 1, matchable: false, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
+      { id: 4, parentId: 1, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 4 },
+      { id: 5, parentId: 1, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
 
       // 根目录：入组阶段
       { id: 6, parentId: null, name: '入组阶段', attr: 'fixed-uncloseable', display: 1, tip: '入组阶段的根目录文件夹，固定显示且不可关闭。', sort: 6 },
-      { id: 7, parentId: 6, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
-      { id: 8, parentId: 6, name: '导入期资料', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
-      { id: 9, parentId: 6, name: '审批上传附件存档', attr: 'configurable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档。', sort: 9 },
-      { id: 10, parentId: 6, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
-// 根目录：随机阶段（默认关闭，可打开）
-      { id: 18, parentId: null, name: '随机阶段', attr: 'fixed-uncloseable', display: 0, tip: '随机阶段的根目录文件夹，默认关闭隐藏，可手动打开显示。', sort: 7 },
-      { id: 19, parentId: 18, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 1 },
-      { id: 20, parentId: 18, name: '审批上传附件存档', attr: 'configurable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档。', sort: 2 },
-      { id: 21, parentId: 18, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 3 },
+      { id: 7, parentId: 6, matchable: false, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
+      { id: 8, parentId: 6, matchable: false, name: '导入期资料', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
+      { id: 9, parentId: 6, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 9 },
+      { id: 10, parentId: 6, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
 
       // 根目录：平级独立文件夹
       { id: 11, parentId: null, name: '平级独立文件夹', attr: 'fixed-uncloseable', display: 1, tip: '平级独立文件夹根目录，不参与AI匹配。', sort: 12 },
-      { id: 12, parentId: 11, name: '不参与AI预筛资料', attr: 'configurable', display: 1, tip: '此文件夹内的文件不会被提交至AI系统进行自动识别与分析，也不会进行脱敏，请注意隐私保护。如需AI辅助判定，仅会上传至默认入排文件夹。', sort: 13},
+      { id: 12, parentId: 11, matchable: false, name: '不参与AI预筛资料', attr: 'configurable', display: 1, tip: '此文件夹内的文件不会被提交至AI系统进行自动识别与分析，也不会进行脱敏，请注意隐私保护。如需AI辅助判定，仅会上传至默认入排文件夹。', sort: 13},
 
       // 根目录：存档资料
       { id: 13, parentId: null, name: '存档资料', attr: 'fixed-uncloseable', display: 1, tip: '存档资料根目录，由系统自动生成，仅支持预览和下载。', sort: 13 },
-      { id: 14, parentId: 13, name: 'AI预筛结果存档', attr: 'configurable', display: 1, tip: 'AI预筛结果由系统自动化生成，记录每次AI预筛分析的完整信息。存档资料为只读状态，仅支持预览和下载。', sort: 14 },
-      { id: 15, parentId: 13, name: '预筛表提取结果存档', attr: 'configurable', display: 1, tip: '预筛表提取结果由系统自动化生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。', sort: 15 },
+      { id: 14, parentId: 13, matchable: false, name: 'AI预筛结果存档', attr: 'configurable', display: 1, tip: 'AI预筛结果由系统自动化生成，记录每次AI预筛分析的完整信息。存档资料为只读状态，仅支持预览和下载。', sort: 14 },
+      { id: 15, parentId: 13, matchable: false, name: '预筛表提取结果存档', attr: 'configurable', display: 1, tip: '预筛表提取结果由系统自动化生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。', sort: 15 },
 
       // 根目录：系统
       { id: 16, parentId: null, name: '系统', attr: 'fixed-uncloseable', display: 1, tip: '系统根目录，包含系统自动管理的文件夹。', sort: 16 },
-      { id: 17, parentId: 16, name: '最近删除', attr: 'configurable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。', sort: 17 },
+      { id: 17, parentId: 16, matchable: false, name: '最近删除', attr: 'configurable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。', sort: 17 },
 
        ];
 
@@ -1182,7 +1193,7 @@
       const attr = attrMap[item.attr] || { label: item.attr, cls: 'attr-fixed' };
       const displayOn = item.display === 1;
       const isRoot = depth === 0;
-      const isSystemNoChild = noChildSystemFolders.includes(item.name);
+      const isSystemNoChild = noChildSystemFolderIds.includes(item.id);
       const indent = depth * 24; // 每一级缩进 24px
       const treeLine = isRoot ? '' : (isLast ? '└─' : '├─');
 
@@ -1225,6 +1236,7 @@
           </div>
         </td>
         <td><div class="tip-text">${escapeHtml(item.tip || '')}</div></td>
+        <td>${isRoot ? '<span style="color:#ccc;">—</span>' : `<div class="switch-wrap"><div class="switch ${item.matchable ? 'on' : ''}" onclick="toggleMatchable(${item.id})"></div><span class="switch-label ${item.matchable ? 'on' : ''}">${item.matchable ? '参与' : '不参与'}</span></div>`}</td>
         <td>${childText}</td>
         <td style="text-align:center;"><button class="action-btn" title="历史记录" onclick="showToast('暂无历史记录', 'success')"><i class="far fa-clock"></i></button></td>
         <td style="text-align:center;">
@@ -1236,8 +1248,7 @@
         <td style="text-align:center;">
           <div class="action-btns" style="justify-content:center;">
             <button class="action-btn" title="编辑" onclick="openEditModal(${item.id})"><i class="fas fa-edit"></i></button>
-            <button class="action-btn" title="新增子目录" onclick="openAddModal(${item.id})"><i class="fas fa-folder-plus"></i></button>
-            <button class="action-btn danger" title="删除" onclick="openDeleteModal(${item.id})"><i class="fas fa-trash-alt"></i></button>
+            ${noDeleteFolderIds.includes(item.id) ? '' : '<button class="action-btn danger" title="删除" onclick="openDeleteModal(' + item.id + ')"><i class="fas fa-trash-alt"></i></button>'}
           </div>
         </td>
       </tr>`;
@@ -1257,6 +1268,14 @@
       item.display = item.display === 1 ? 0 : 1;
       renderTable();
       showToast(item.display === 1 ? '已设置为始终显示' : '已关闭显示', 'success');
+    }
+
+    function toggleMatchable(id) {
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+      item.matchable = !item.matchable;
+      renderTable();
+      showToast(item.matchable ? '已开启匹配参与' : '已关闭匹配参与', 'success');
     }
 
     // 排序（在同一父级层级内上下移动）
@@ -1284,7 +1303,23 @@
       document.getElementById('folderAttr').value = '';
       document.getElementById('folderDisplay').value = '1';
       document.getElementById('folderTip').value = '';
-      
+
+      const matchableGroup = document.getElementById('matchableGroup');
+      const matchableSwitch = document.getElementById('folderMatchable');
+      if (parentId) {
+        const parent = tableData.find(d => d.id === parentId);
+        // 参与匹配：仅第二级目录（父目录是根目录）显示
+        if (parent && parent.parentId === null) {
+          matchableGroup.style.display = 'block';
+          matchableSwitch.classList.remove('on');
+        } else {
+          matchableGroup.style.display = 'none';
+          matchableSwitch.classList.remove('on');
+        }
+      } else {
+        matchableGroup.style.display = 'none';
+        matchableSwitch.classList.remove('on');
+      }
 
       const parentGroup = document.getElementById('parentGroup');
       const parentName = document.getElementById('parentName');
@@ -1317,6 +1352,24 @@
       document.getElementById('folderDisplay').value = item.display === 1 ? '1' : '0';
       document.getElementById('folderTip').value = item.tip || '';
 
+      const matchableGroup = document.getElementById('matchableGroup');
+      const matchableSwitch = document.getElementById('folderMatchable');
+      // 参与匹配：仅第二级目录（父目录是根目录）显示
+      if (item.parentId) {
+        const parent = tableData.find(d => d.id === item.parentId);
+        if (parent && parent.parentId === null) {
+          matchableGroup.style.display = 'block';
+          if (item.matchable) matchableSwitch.classList.add('on');
+          else matchableSwitch.classList.remove('on');
+        } else {
+          matchableGroup.style.display = 'none';
+          matchableSwitch.classList.remove('on');
+        }
+      } else {
+        matchableGroup.style.display = 'none';
+        matchableSwitch.classList.remove('on');
+      }
+
       const parentGroup = document.getElementById('parentGroup');
       const parentName = document.getElementById('parentName');
       if (item.parentId) {
@@ -1342,6 +1395,7 @@
       const attr = document.getElementById('folderAttr').value;
       const display = parseInt(document.getElementById('folderDisplay').value);
       const tip = document.getElementById('folderTip').value.trim();
+      const matchable = document.getElementById('folderMatchable').classList.contains('on');
 
       if (!name) { showToast('请输入文件夹名称', 'error'); return; }
       if (!attr) { showToast('请选择属性', 'error'); return; }
@@ -1353,6 +1407,7 @@
           item.attr = attr;
           item.display = display;
           item.tip = tip;
+          item.matchable = matchable;
         }
         showToast('文件夹修改成功', 'success');
       } else {
@@ -1365,6 +1420,7 @@
           attr,
           display,
           tip,
+          matchable,
           sort: maxSort + 1
         };
         tableData.push(newItem);
@@ -1379,6 +1435,10 @@
 
     // 删除
     function openDeleteModal(id) {
+      if (noDeleteFolderIds.includes(id)) {
+        showToast('该文件夹为系统核心目录，不可删除', 'error');
+        return;
+      }
       deleteTargetId = id;
       const item = tableData.find(d => d.id === id);
       if (!item) return;
