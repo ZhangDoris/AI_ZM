@@ -1138,7 +1138,7 @@
       },
       {
         id: 4, name: 'RFNE', gender: '女', age: 38, abbr: 'RFNE',
-        matchStatus: 'matched', submitStatus: 'unsubmit',
+        matchStatus: 'matched', submitStatus: 'enrolled',
         center: '广州中山医院', operator: '陈医生',
         diagnosis: 'SHR-2019-nCoV-001',
         histories: [
@@ -1192,6 +1192,8 @@
           : '<span class="status-tag tag-unmatched"><i class="fas fa-exclamation-circle"></i> 未匹配</span>';
         const submitTag = p.submitStatus === 'submitted'
           ? '<span class="status-tag tag-submitted">已提交</span>'
+          : p.submitStatus === 'enrolled'
+          ? '<span class="status-tag tag-matched"><i class="fas fa-check-circle"></i> 入组通过</span>'
           : '<span class="status-tag tag-unsubmit">未提交</span>';
 
         // 病史与资料展开区
@@ -1232,7 +1234,9 @@
             '<span><i class="fas fa-user-md"></i> 待操作人：' + p.operator + '</span>' +
           '</div>' +
           '<div class="action-btns">' +
-            '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">提交审批</button>' +
+            (p.submitStatus === 'enrolled'
+              ? '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">补充审核</button>'
+              : '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">提交审批</button>') +
             '<button class="action-btn btn-outline" onclick="toastMsg(\'审批记录 - ' + p.name + '\')">审批记录</button>' +
             '<button class="action-btn btn-ghost" onclick="toastMsg(\'匹配详情 - ' + p.name + '\')">匹配详情</button>' +
           '</div>' +
@@ -1284,7 +1288,7 @@
 
       // 按Tab过滤
       if (activeTab === 'pending') {
-        filtered = filtered.filter(p => p.submitStatus === 'unsubmit');
+        filtered = filtered.filter(p => p.submitStatus === 'unsubmit' || p.submitStatus === 'enrolled');
       }
 
       // 按中心过滤
@@ -1351,7 +1355,10 @@
     let currentPatientIndex = null;
 
     function openAuditModal(patientName, idx) {
-      currentPatientIndex = idx;
+      currentPatientIndex = patients.findIndex(p => p.name === patientName);
+      // 第四条数据（入组通过）弹窗标题改为补充审核
+      const modal = document.getElementById('auditModal');
+      modal.querySelector('.audit-header-title').textContent = patients[currentPatientIndex]?.submitStatus === 'enrolled' ? '补充审核' : '提交审批';
       document.getElementById('auditModal').classList.add('show');
       document.getElementById('panelOverlay').classList.add('show');
       document.body.style.overflow = 'hidden';
@@ -1466,14 +1473,15 @@ function updatePRDPanel(mod, sub) {
         {
           title: '提交审核点击效果',
           content: `<ul>
-            <li><strong>第一条数据 ZWMS（index=0）</strong>：点击提交审批 → 校验必填项通过 → 弹出 <strong>AI智能匹配提示框</strong>（内容：检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交）
+            <li><strong>第一条数据 ZWMS（强制非正常流程，且 从预筛跨到了入组阶段）</strong>：点击提交审批 → 校验必填项通过 → 弹出 <strong>AI智能匹配提示框</strong>（内容：检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交）
               <ul style="margin-top:4px">
                 <li><strong>项目匹配</strong>：点击后 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭匹配弹窗 → 继续提交 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭提交审核弹窗</li>
                 <li><strong>关闭</strong>：点击后 → Toast「您目前还没有点击项目匹配(入组)，无法跨阶段提交审核」→ 关闭匹配弹窗 → <strong>保持提交审核弹窗页面</strong>（不执行提交）</li>
               </ul>
             </li>
-            <li><strong>第二条数据 HGKD（index=1）</strong>：点击提交审批 → 校验必填项通过 → 直接提交 →Toast「提交审批成功」→ 关闭提交审核弹窗</li>
+            <li><strong>第二条数据 HGKD（强制非正常流程，且 还是在预筛阶段）</strong>：点击提交审批 → 校验必填项通过 → 直接提交 →Toast「提交审批成功」→ 关闭提交审核弹窗</li>
             <li><strong>其他数据</strong>：点击提交审批 → 校验必填项通过 → 正常提交 → Toast「提交审批成功」→ 关闭提交审核弹窗</li>
+            <li><strong>第三条数据 RFNE（入组通过，可以补充审核）</strong>：操作按钮显示为<strong>「补充审核」</strong>（与提交审批功能一致），点击后弹窗标题为「补充审核」，校验必填项通过 → 直接提交 → Toast「提交审批成功」→ 关闭弹窗。补充审核适用于已入组通过的患者追加审核流程的场景。注意：在"待操作"tab下因过滤了已提交数据，RFNE可能显示为第三条，但判断逻辑是基于患者原始 id 而非列表索引。</li>
           </ul>`
         }
         
