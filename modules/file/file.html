@@ -852,6 +852,39 @@
     .confirm-content p { font-size: 15px; color: #555; line-height: 1.6; }
     .confirm-content .warn-detail { font-size: 13px; color: #999; margin-top: 8px; }
 
+    /* 树形下拉选择器 */
+    .tree-select { position: relative; width: 100%; }
+    .tree-select-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+      background: #fff; cursor: pointer; min-height: 38px; transition: border-color 0.2s;
+    }
+    .tree-select-trigger:hover { border-color: var(--primary); }
+    .tree-select-trigger.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(22,93,255,0.1); }
+    .tree-select-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #fff; border: 1px solid var(--border); border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1); z-index: 200;
+      max-height: 260px; overflow-y: auto; padding: 4px 0;
+    }
+    .tree-select-dropdown.open { display: block; }
+    .tree-select-dropdown::-webkit-scrollbar { width: 5px; }
+    .tree-select-dropdown::-webkit-scrollbar-thumb { background: rgba(22,93,255,0.2); border-radius: 10px; }
+    .tree-option {
+      display: flex; align-items: center; gap: 6px; padding: 7px 12px;
+      cursor: pointer; transition: background 0.15s; font-size: 13px; color: #333; white-space: nowrap;
+    }
+    .tree-option:hover { background: var(--primary-light); }
+    .tree-option.selected { background: var(--primary-light); color: var(--primary); font-weight: 500; }
+    .tree-option-root { font-weight: 600; color: #1a1a1a; }
+    .tree-option-root .tree-opt-icon { color: var(--primary); background: var(--primary-light); }
+    .tree-option-child .tree-opt-icon { color: var(--primary); opacity: 0.6; background: #f0f0f0; }
+    .tree-opt-indent { width: 20px; flex-shrink: 0; }
+    .tree-opt-icon {
+      width: 22px; height: 22px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0;
+    }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -965,14 +998,34 @@
           <div class="update-list">
             <div class="update-item">
               <strong>1 可以新增根目录，根目录下可以新增二级文件夹，二级文件夹可以设置是否参与AI匹配</strong>
-              <strong>2  所有的文件夹都可以修改名字，包括根目录可修改名称，基因检测报告不可以删除，原来的基因检测报告还是上传到这个地方</strong>
+              <strong>2  所有的文件夹都可以修改名字，包括根目录可修改名称，基因检测报告还是上传到这个地方，逻辑跟之前保持一致，可以改名，可以关闭，但是不可以删除</strong>
               <strong>3 AI的目录时可以设置关闭的，审批上传附件存档 是不可以关闭</strong>
              <strong>4 之前用文件夹名字去判断的，都改成用文件夹id去判断</strong>
-                
-录</strong>
+                <strong>5 修改文件夹之后，整个项目上的文件夹名称都需要同步修改</strong>
+              <strong>6 如果要关闭/删除文件夹，判断是否有已经上传的文件，如果有，做一个提示，让选择是否关闭，或者做文件转移</strong>
             </div>
            
           </div>
+        </section>
+
+        <section class="prd-section">
+          <h3><i class="fas fa-exchange-alt"></i> 文件操作效果说明</h3>
+          <h4>关闭文件夹（display 字段）</h4>
+          <p><strong>效果：</strong>以「平级独立文件夹 → 不参与AI预筛资料」为例，关闭后该文件夹的 <code>display</code> 字段从 <code>1</code> 变为 <code>0</code>，在侧栏中隐藏，但已上传的 2 个文件仍保留在原目录（id: 12），不会丢失。</p>
+          <p><strong>查看数据：</strong><code>tableData</code> 中 id: 12 的 <code>display</code> 字段值变化（1 → 0）。</p>
+          <h4>删除文件夹</h4>
+          <p><strong>效果：</strong>以「平级独立文件夹 → 不参与AI预筛资料」为例，删除后该文件夹从 <code>tableData</code> 中移除，已上传的 2 个文件移入「最近删除」文件夹（id: 17），30天后永久删除。</p>
+          <p><strong>查看数据：</strong><code>tableData</code> 中 id: 12 的数据消失，其文件记录的 <code>folderId</code> 指向「最近删除」（id: 17）。</p>
+          <h4>转移并关闭</h4>
+          <p><strong>效果：</strong>先将 id: 12 的文件迁移到选中的目标文件夹（文件记录 <code>folderId</code> 变更为目标文件夹 id），然后将 id: 12 的 <code>display</code> 设为 <code>0</code>。文件在目标文件夹中正常查看。</p>
+          <p><strong>查看数据：</strong>id: 12 的 <code>display</code> 变为 0；文件记录的 <code>folderId</code> 从 12 变更为目标文件夹 id。</p>
+          <h4>转移并删除</h4>
+          <p><strong>效果：</strong>先将 id: 12 的文件迁移到目标文件夹，然后从 <code>tableData</code> 中删除 id: 12。文件不受影响，保留在目标文件夹中。</p>
+          <p><strong>查看数据：</strong>id: 12 从 <code>tableData</code> 消失；文件记录的 <code>folderId</code> 指向目标文件夹。</p>
+          <h4>弹窗三个按钮说明</h4>
+          <p><strong>① 暂不操作：</strong>取消操作，不做任何更改。</p>
+          <p><strong>② 直接关闭/直接删除：</strong>不转移文件，直接执行关闭或删除。关闭后文件保留在原目录（隐藏不显示）；删除后文件移入「最近删除」（id: 17）。</p>
+          <p><strong>③ 转移并关闭/转移并删除：</strong>必须先选择目标文件夹（树形下拉），将文件迁移到目标文件夹后再执行关闭或删除。点击时未选择目标会提示「请先选择转移目标文件夹」。</p>
         </section>
 
 
@@ -1066,6 +1119,66 @@
     </div>
   </div>
 
+  <!-- 文件检查确认弹窗（关闭/删除前检查是否有已上传文件） -->
+  <div class="modal-overlay" id="fileCheckModal">
+    <div class="modal-dialog" style="width:480px;">
+      <div class="modal-header">
+        <h3 id="fileCheckTitle">操作确认</h3>
+        <button class="modal-close" onclick="closeFileCheckModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:8px 0;">
+          <i class="fas fa-folder-open" style="font-size:36px;color:var(--warning);flex-shrink:0;margin-top:2px;"></i>
+          <div style="flex:1;">
+            <p style="font-size:15px;color:#333;font-weight:500;line-height:1.6;" id="fileCheckMsg"></p>
+            <p style="font-size:13px;color:#999;margin-top:6px;" id="fileCheckDetail"></p>
+          </div>
+        </div>
+        <!-- 转移目标选择 -->
+        <div id="transferGroup" style="display:none;margin-top:16px;padding:14px;background:#FFF8F0;border:1px solid #FFE0B2;border-radius:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <i class="fas fa-arrow-right" style="color:var(--warning);font-size:13px;"></i>
+            <span style="font-size:14px;font-weight:500;color:#333;">选择转移目标文件夹</span>
+          </div>
+          <div class="tree-select" id="treeSelectWrap">
+            <div class="tree-select-trigger" id="treeSelectTrigger" onclick="toggleTransferDropdown()">
+              <span id="treeSelectLabel" style="color:#bbb;">请选择目标文件夹</span>
+              <i class="fas fa-chevron-down" id="treeSelectArrow" style="font-size:12px;color:#999;transition:transform 0.2s;"></i>
+            </div>
+            <input type="hidden" id="transferTarget" value="">
+            <div class="tree-select-dropdown" id="treeSelectDropdown"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="flex-wrap:wrap;gap:8px;">
+        <button class="btn btn-outline" onclick="closeFileCheckModal()" style="flex:1;min-width:100px;">暂不操作</button>
+        <button class="btn btn-primary" id="fileCheckConfirmBtn" onclick="confirmFileCheckAction(false)" style="flex:1;min-width:100px;background:var(--warning);"></button>
+        <button class="btn btn-primary" id="fileCheckTransferBtn" onclick="confirmFileCheckAction(true)" style="flex:1;min-width:100px;background:var(--primary);"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 基因检测报告关闭二次确认弹窗 -->
+  <div class="modal-overlay" id="geneTestConfirmModal">
+    <div class="modal-dialog" style="width:420px;">
+      <div class="modal-header">
+        <h3>关闭确认</h3>
+        <button class="modal-close" onclick="closeGeneTestConfirmModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-content">
+          <i class="fas fa-exclamation-triangle warn-icon" style="color:var(--warning);"></i>
+          <p id="geneTestConfirmMsg"></p>
+          <p class="warn-detail">关闭后「项目基因检测」功能将无法正常使用，相关上传入口将不可见。确定要继续关闭吗？</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeGeneTestConfirmModal()">取消</button>
+        <button class="btn btn-primary" id="geneTestConfirmBtn" onclick="confirmGeneTestClose()" style="background:var(--warning);"></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -1073,6 +1186,10 @@
     let idCounter = 100;
     let deleteTargetId = null;
     let collapsedIds = new Set(); // 已折叠的根目录ID集合
+
+    // 文件检查弹窗状态
+    let fileCheckAction = null; // 'close' | 'delete'
+    let fileCheckTargetId = null;
 
     // 属性标签映射
     const attrMap = {
@@ -1087,6 +1204,9 @@
 
     // 不可删除的文件夹 id 集合：通过 id 判断，不依赖文件夹名称
     const noDeleteFolderIds = [3, 8]; // 基因检测报告(id:3/8)，后端基因检测功能依赖此目录上传
+
+    // 关闭时需二次确认的文件夹 id 集合（受「项目基因检测」功能影响）
+    const closeConfirmFolderIds = [3, 8]; // 基因检测报告(id:3/8)
 
     // ====================================================================
     // 文件夹配置规则（所有判断均通过文件夹 id 写死，不依赖文件夹名称）：
@@ -1265,9 +1385,58 @@
     function toggleDisplay(id) {
       const item = tableData.find(d => d.id === id);
       if (!item) return;
+      // 如果要关闭（当前是显示状态）
+      if (item.display === 1) {
+        // 基因检测报告(id:3/8)关闭时需二次确认（受「项目基因检测」功能影响）
+        if (closeConfirmFolderIds.includes(id)) {
+          showGeneTestConfirmModal(id);
+          return;
+        }
+        // 检查是否有已上传文件
+        const fileCount = simulateGetFileCount(id);
+        if (fileCount > 0) {
+          showFileCheckModal('close', id, fileCount);
+          return;
+        }
+      }
       item.display = item.display === 1 ? 0 : 1;
       renderTable();
       showToast(item.display === 1 ? '已设置为始终显示' : '已关闭显示', 'success');
+    }
+
+    // ========== 基因检测报告关闭二次确认 ==========
+
+    let geneTestCloseTargetId = null;
+
+    function showGeneTestConfirmModal(id) {
+      geneTestCloseTargetId = id;
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+      document.getElementById('geneTestConfirmMsg').textContent = `确定要关闭文件夹「${item.name}」吗？`;
+      document.getElementById('geneTestConfirmBtn').textContent = '确认关闭';
+      document.getElementById('geneTestConfirmModal').classList.add('show');
+    }
+
+    function closeGeneTestConfirmModal() {
+      document.getElementById('geneTestConfirmModal').classList.remove('show');
+      geneTestCloseTargetId = null;
+    }
+
+    function confirmGeneTestClose() {
+      if (!geneTestCloseTargetId) return;
+      const id = geneTestCloseTargetId;
+      closeGeneTestConfirmModal();
+      // 确认后继续走文件检查流程（如果有文件）或直接关闭
+      const item = tableData.find(d => d.id === id);
+      if (!item || item.display !== 1) return;
+      const fileCount = simulateGetFileCount(id);
+      if (fileCount > 0) {
+        showFileCheckModal('close', id, fileCount);
+        return;
+      }
+      item.display = 0;
+      renderTable();
+      showToast('文件夹已关闭', 'success');
     }
 
     function toggleMatchable(id) {
@@ -1439,9 +1608,16 @@
         showToast('该文件夹为系统核心目录，不可删除', 'error');
         return;
       }
-      deleteTargetId = id;
       const item = tableData.find(d => d.id === id);
       if (!item) return;
+      // 先检查是否有已上传文件
+      const fileCount = simulateGetFileCount(id);
+      if (fileCount > 0) {
+        showFileCheckModal('delete', id, fileCount);
+        return;
+      }
+      // 无文件，走原来的删除确认弹窗
+      deleteTargetId = id;
       const childCount = tableData.filter(d => d.parentId === id).length;
       document.getElementById('deleteMsg').textContent = `确定要删除文件夹「${item.name}」吗？`;
       document.getElementById('deleteDetail').textContent = childCount > 0
@@ -1470,6 +1646,163 @@
       renderTable();
     }
 
+    // ========== 文件检查确认弹窗逻辑 ==========
+
+    // 模拟获取文件夹内已上传文件数量（原型演示用，实际应调后端接口）
+    function simulateGetFileCount(folderId) {
+      // 模拟数据：部分文件夹有已上传文件，用于演示弹窗效果
+      const simulated = { 2: 12, 3: 5, 7: 8, 8: 3, 12: 2, 19: 6 };
+      return simulated[folderId] || 0;
+    }
+
+    // 显示文件检查确认弹窗
+    function showFileCheckModal(action, id, fileCount) {
+      fileCheckAction = action;
+      fileCheckTargetId = id;
+      const item = tableData.find(d => d.id === id);
+      if (!item) return;
+
+      const titleEl = document.getElementById('fileCheckTitle');
+      const msgEl = document.getElementById('fileCheckMsg');
+      const detailEl = document.getElementById('fileCheckDetail');
+      const confirmBtn = document.getElementById('fileCheckConfirmBtn');
+      const transferBtn = document.getElementById('fileCheckTransferBtn');
+      const transferGroup = document.getElementById('transferGroup');
+
+      if (action === 'close') {
+        titleEl.textContent = '关闭确认';
+        msgEl.textContent = `文件夹「${item.name}」中已有 ${fileCount} 个已上传文件。`;
+        detailEl.textContent = '关闭后该文件夹将不再显示，但文件仍保留在系统中。您可以选择将文件转移到其他文件夹，或直接关闭。';
+        confirmBtn.textContent = '直接关闭';
+        confirmBtn.style.background = 'var(--warning)';
+        transferBtn.textContent = '转移并关闭';
+        transferBtn.style.background = 'var(--primary)';
+        transferGroup.style.display = 'block';
+      } else {
+        titleEl.textContent = '删除确认';
+        msgEl.textContent = `文件夹「${item.name}」中已有 ${fileCount} 个已上传文件。`;
+        detailEl.textContent = '删除后文件将移入「最近删除」，30天后永久删除。您可以选择将文件转移到其他文件夹后再删除，或直接删除。';
+        confirmBtn.textContent = '直接删除';
+        confirmBtn.style.background = 'var(--danger)';
+        transferBtn.textContent = '转移并删除';
+        transferBtn.style.background = 'var(--primary)';
+        transferGroup.style.display = 'block';
+      }
+
+      // 填充转移目标树形下拉（排除自身及子孙目录）
+      const excludeIds = new Set();
+      const collectExclude = (pid) => {
+        excludeIds.add(pid);
+        tableData.filter(d => d.parentId === pid).forEach(c => collectExclude(c.id));
+      };
+      collectExclude(id);
+      const availableFolders = tableData.filter(d => !excludeIds.has(d.id) && d.display === 1);
+      renderTransferTree(availableFolders);
+
+      // 重置选择状态
+      document.getElementById('transferTarget').value = '';
+      document.getElementById('treeSelectLabel').textContent = '请选择目标文件夹';
+      document.getElementById('treeSelectLabel').style.color = '#bbb';
+
+      document.getElementById('fileCheckModal').classList.add('show');
+    }
+
+    function closeFileCheckModal() {
+      document.getElementById('fileCheckModal').classList.remove('show');
+      document.getElementById('treeSelectDropdown').classList.remove('open');
+      document.getElementById('treeSelectTrigger').classList.remove('active');
+      document.getElementById('treeSelectArrow').style.transform = '';
+      fileCheckAction = null;
+      fileCheckTargetId = null;
+    }
+
+    // ========== 树形下拉选择器 ==========
+
+    function toggleTransferDropdown() {
+      const dropdown = document.getElementById('treeSelectDropdown');
+      const trigger = document.getElementById('treeSelectTrigger');
+      const arrow = document.getElementById('treeSelectArrow');
+      const isOpen = dropdown.classList.contains('open');
+      if (isOpen) {
+        dropdown.classList.remove('open');
+        trigger.classList.remove('active');
+        arrow.style.transform = '';
+      } else {
+        dropdown.classList.add('open');
+        trigger.classList.add('active');
+        arrow.style.transform = 'rotate(180deg)';
+      }
+    }
+
+    function renderTransferTree(folders) {
+      const roots = folders.filter(d => d.parentId === null).sort((a, b) => a.sort - b.sort);
+      let html = '';
+      roots.forEach(root => {
+        html += `<div class="tree-option tree-option-root" onclick="selectTransferTarget(${root.id}, '${escapeHtml(root.name)}')">
+          <div class="tree-opt-icon"><i class="fas fa-folder-open"></i></div>
+          <span>${escapeHtml(root.name)}</span>
+        </div>`;
+        const children = folders.filter(d => d.parentId === root.id).sort((a, b) => a.sort - b.sort);
+        children.forEach(child => {
+          html += `<div class="tree-option tree-option-child" onclick="selectTransferTarget(${child.id}, '${escapeHtml(child.name)}')">
+            <span class="tree-opt-indent"></span>
+            <span style="color:#C9CED6;font-size:12px;">└─</span>
+            <div class="tree-opt-icon"><i class="fas fa-folder"></i></div>
+            <span>${escapeHtml(child.name)}</span>
+          </div>`;
+        });
+      });
+      document.getElementById('treeSelectDropdown').innerHTML = html;
+    }
+
+    function selectTransferTarget(id, name) {
+      document.getElementById('transferTarget').value = id;
+      const label = document.getElementById('treeSelectLabel');
+      label.textContent = name;
+      label.style.color = '#333';
+      // 关闭下拉
+      document.getElementById('treeSelectDropdown').classList.remove('open');
+      document.getElementById('treeSelectTrigger').classList.remove('active');
+      document.getElementById('treeSelectArrow').style.transform = '';
+      // 高亮选中项
+      document.querySelectorAll('.tree-option').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+    }
+
+    // 确认操作（直接关闭/删除 或 转移后关闭/删除）
+    function confirmFileCheckAction(withTransfer) {
+      if (!fileCheckTargetId) return;
+      const transferId = document.getElementById('transferTarget').value;
+      const item = tableData.find(d => d.id === fileCheckTargetId);
+
+      // 点击「转移并关闭/删除」但未选择目标文件夹
+      if (withTransfer && !transferId) {
+        showToast('请先选择转移目标文件夹', 'error');
+        return;
+      }
+
+      // 如果需要转移文件
+      if (withTransfer && transferId) {
+        const target = tableData.find(d => d.id === parseInt(transferId));
+        if (target) {
+          showToast(`已将「${item.name}」中的文件转移至「${target.name}」`, 'success');
+        }
+      }
+
+      if (fileCheckAction === 'close') {
+        // 执行关闭
+        item.display = 0;
+        closeFileCheckModal();
+        showToast(withTransfer ? '文件已转移，文件夹已关闭' : '文件夹已关闭', 'success');
+        renderTable();
+      } else if (fileCheckAction === 'delete') {
+        // 执行删除
+        closeFileCheckModal();
+        deleteTargetId = fileCheckTargetId;
+        confirmDelete();
+      }
+    }
+
     // Toast
     let toastTimer;
     function showToast(msg, type) {
@@ -1487,10 +1820,18 @@
     document.getElementById('deleteModal').addEventListener('click', function(e) {
       if (e.target === this) closeDeleteModal();
     });
+    document.getElementById('fileCheckModal').addEventListener('click', function(e) {
+      if (e.target === this) closeFileCheckModal();
+    });
+    document.getElementById('geneTestConfirmModal').addEventListener('click', function(e) {
+      if (e.target === this) closeGeneTestConfirmModal();
+    });
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeFolderModal();
         closeDeleteModal();
+        closeFileCheckModal();
+        closeGeneTestConfirmModal();
       }
       if (e.key === 'Enter' && document.getElementById('folderModal').classList.contains('show')) {
         saveFolder();
