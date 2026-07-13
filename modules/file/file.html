@@ -1074,7 +1074,16 @@
       <div class="modal-body">
         <input type="hidden" id="editId">
         <input type="hidden" id="editParentId">
-        
+
+        <!-- 子目录场景：显示父目录信息 -->
+        <div id="subFolderHeader" style="display:none;margin-bottom:16px;">
+          <div style="font-size:13px;color:#666;display:flex;align-items:center;gap:6px;">
+            <i class="fas fa-folder-open" style="color:var(--primary);"></i>
+            <span id="subFolderParentLabel">新建子目录</span>
+          </div>
+          <div style="font-size:16px;font-weight:600;color:#333;margin-top:4px;padding-left:22px;" id="subFolderParentName"></div>
+        </div>
+
         <!-- 名称和提示语编辑区 -->
         <div style="background:#F5F7FA;padding:16px;border-radius:8px;margin-bottom:16px;">
           <div style="font-size:14px;font-weight:600;color:#333;margin-bottom:12px;">
@@ -1082,8 +1091,15 @@
             基本信息编辑
           </div>
           <div class="form-group" style="margin-bottom:12px;">
-            <label class="form-label"><span class="required">*</span>文件夹名称</label>
-            <input type="text" class="form-input" id="folderName" placeholder="请输入文件夹名称" maxlength="50">
+            <label class="form-label"><span class="required">*</span>子目录名称</label>
+            <input type="text" class="form-input" id="folderName" placeholder="请输入子目录名称" maxlength="50">
+          </div>
+          <!-- 目录层级：仅新建子目录时显示 -->
+          <div class="form-group" id="levelGroup" style="margin-bottom:12px;">
+            <label class="form-label"><span class="required">*</span>目录层级</label>
+            <select class="form-select" id="folderLevel">
+              <option value="1">一级目录（直接挂载在父文件夹下）</option>
+            </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label class="form-label">提示语</label>
@@ -1123,7 +1139,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" onclick="closeFolderModal()">取消</button>
-        <button class="btn btn-primary" onclick="saveFolder()">保存</button>
+        <button class="btn btn-primary" onclick="saveFolder()">确认新建</button>
       </div>
     </div>
   </div>
@@ -1544,16 +1560,26 @@
       const parentGroup = document.getElementById('parentGroup');
       const parentName = document.getElementById('parentName');
       const modalTitle = document.getElementById('modalTitle');
+      const subFolderHeader = document.getElementById('subFolderHeader');
+      const subFolderParentName = document.getElementById('subFolderParentName');
+      const levelGroup = document.getElementById('levelGroup');
 
       if (parentId) {
         const parent = tableData.find(d => d.id === parentId);
-        parentGroup.style.display = 'block';
-        parentName.value = parent ? parent.name : '';
-        modalTitle.textContent = '新增子目录';
+        parentGroup.style.display = 'none'; // 用新的副标题替代旧的父目录输入框
+        parentName.value = '';
+        modalTitle.textContent = '新建子目录';
+        // 显示副标题：新建子目录 — 父目录名称
+        subFolderHeader.style.display = 'block';
+        subFolderParentName.textContent = parent ? '新建子目录 — ' + parent.name : '';
+        levelGroup.style.display = 'block';
       } else {
         parentGroup.style.display = 'none';
         parentName.value = '';
         modalTitle.textContent = '新增根目录';
+        subFolderHeader.style.display = 'none';
+        subFolderParentName.textContent = '';
+        levelGroup.style.display = 'none';
       }
 
       document.getElementById('folderModal').classList.add('show');
@@ -1592,13 +1618,24 @@
 
       const parentGroup = document.getElementById('parentGroup');
       const parentName = document.getElementById('parentName');
+      const subFolderHeader = document.getElementById('subFolderHeader');
+      const subFolderParentName = document.getElementById('subFolderParentName');
+      const levelGroup = document.getElementById('levelGroup');
+
       if (item.parentId) {
         const parent = tableData.find(d => d.id === item.parentId);
-        parentGroup.style.display = 'block';
-        parentName.value = parent ? parent.name : '';
+        parentGroup.style.display = 'none';
+        parentName.value = '';
+        // 编辑模式也显示副标题
+        subFolderHeader.style.display = 'block';
+        subFolderParentName.textContent = parent ? '编辑子目录 — ' + parent.name : '';
+        levelGroup.style.display = 'none'; // 编辑时不显示目录层级
       } else {
         parentGroup.style.display = 'none';
         parentName.value = '';
+        subFolderHeader.style.display = 'none';
+        subFolderParentName.textContent = '';
+        levelGroup.style.display = 'none';
       }
       document.getElementById('modalTitle').textContent = '编辑文件夹';
       document.getElementById('folderModal').classList.add('show');
