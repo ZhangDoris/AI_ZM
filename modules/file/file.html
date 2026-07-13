@@ -362,6 +362,13 @@
     .switch.on::after { transform: translateX(16px); }
     .switch-label { font-size: 13px; color: #666; white-space: nowrap; }
     .switch-label.on { color: var(--primary); font-weight: 500; }
+    .switch.disabled {
+      background: #E8E8E8 !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+    }
+    .switch.disabled::after { background: #ccc; }
+    .switch-label.disabled { color: #bbb; }
 
     /* 提示语 */
     .tip-text {
@@ -998,24 +1005,47 @@
           <div class="update-list">
             <div class="update-item">
               <strong>1 可以新增根目录，根目录下可以新增二级文件夹，二级文件夹可以设置是否参与AI匹配</strong>
-              <strong>2  所有的文件夹都可以修改名字，包括根目录可修改名称，基因检测报告还是上传到这个地方，逻辑跟之前保持一致，可以改名，可以关闭，但是不可以删除</strong>
+              <strong>2  所有的文件夹都可以修改名字，包括根目录可修改名称，页面上已有的文件夹（id 1~21）均不可删除，仅用户新增的文件夹可删除</strong>
               <strong>3 AI的目录时可以设置关闭的，审批上传附件存档 是不可以关闭</strong>
              <strong>4 之前用文件夹名字去判断的，都改成用文件夹id去判断</strong>
                 <strong>5 修改文件夹之后，整个项目上的文件夹名称都需要同步修改</strong>
               <strong>6 如果要关闭/删除文件夹，判断是否有已经上传的文件，如果有，做一个提示，让选择是否关闭，或者做文件转移</strong>
+              <strong>7 根目录（预筛阶段、入组阶段、平级独立文件夹、存档资料、系统）不可关闭，点击关闭开关会提示「根目录为系统核心目录，不可关闭」。随机阶段根目录为<strong>用户可管理</strong>，可修改/删除/关闭</strong>
+              <strong>8 新增「随机阶段」根目录及子文件夹（原始资料、基因检测报告、审批上传附件存档、AI分类资料），所有文件夹均为 configurable 属性，用户可自行管理（修改名称、关闭、删除）</strong>
             </div>
            
           </div>
         </section>
-
+  <section class="prd-section" style="color: red;">
+          <h3><i class="fas fa-tasks"></i> 本周任务</h3>
+          <div class="update-list">
+            <div class="update-item">
+              <strong>1 根目录可新增可修改</strong>
+              <strong>2 二级目录加 是否参与匹配</strong>
+              <strong>3 新增的文件夹可以删除、关闭</strong>
+              <strong>4 排序问题</strong>
+              <strong>5 每一级别文件夹 名字不可以重复</strong>
+          </div>
+          </div>
+        </section>
         <section class="prd-section">
           <h3><i class="fas fa-exchange-alt"></i> 文件操作效果说明</h3>
           <h4>关闭文件夹（display 字段）</h4>
+          <p><strong>说明：</strong>原来的文件夹 只可以关闭，不可以删除，预筛阶段、入组阶段 、原始资料、审批上传附件存档 不可以关闭，原始资料、基因检测报告、导入期资料 默认 参与匹配</p>
           <p><strong>效果：</strong>以「平级独立文件夹 → 不参与AI预筛资料」为例，关闭后该文件夹的 <code>display</code> 字段从 <code>1</code> 变为 <code>0</code>，在侧栏中隐藏，但已上传的 2 个文件仍保留在原目录（id: 12），不会丢失。</p>
           <p><strong>查看数据：</strong><code>tableData</code> 中 id: 12 的 <code>display</code> 字段值变化（1 → 0）。</p>
+          <h4>根目录不可关闭</h4>
+          <p><strong>效果：</strong>系统根目录（id: 1/6/11/13/16）点击关闭开关时，Toast 提示「根目录为系统核心目录，不可关闭」，开关保持开启状态，<code>display</code> 字段不变。随机阶段（id: 22）为<strong>用户可管理根目录</strong>，可正常关闭。</p>
+          <p><strong>查看数据：</strong>系统根目录的 <code>display</code> 字段始终为 1；随机阶段的 <code>display</code> 可随用户操作变化。</p>
           <h4>删除文件夹</h4>
           <p><strong>效果：</strong>以「平级独立文件夹 → 不参与AI预筛资料」为例，删除后该文件夹从 <code>tableData</code> 中移除，已上传的 2 个文件移入「最近删除」文件夹（id: 17），30天后永久删除。</p>
           <p><strong>查看数据：</strong><code>tableData</code> 中 id: 12 的数据消失，其文件记录的 <code>folderId</code> 指向「最近删除」（id: 17）。</p>
+          <h4>已有文件夹不可删除</h4>
+          <p><strong>效果：</strong>页面上已有的系统文件夹（id: 1~21）操作列不显示删除按钮，<code>openDeleteModal</code> 中也会拦截并提示 Toast。随机阶段（id: 22~26）为用户可管理文件夹，显示删除按钮且可删除。</p>
+          <p><strong>查看数据：</strong><code>noDeleteFolderIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]</code>，渲染时通过 id 判断，不依赖文件夹名称。</p>
+          <h4>固定不可关闭项</h4>
+          <p><strong>效果：</strong>预筛阶段和入组阶段下的「原始资料」（id: 2/7）和「审批上传附件存档」（id: 4/9）为 <code>fixed-unavailable</code> 属性，始终显示不可关闭。随机阶段下的所有子文件夹（id: 23~26）为 <code>configurable</code>，用户可自由关闭。</p>
+          <p><strong>查看数据：</strong><code>item.attr === 'fixed-unavailable'</code> 时拦截关闭操作并 Toast 提示。</p>
           <h4>转移并关闭</h4>
           <p><strong>效果：</strong>先将 id: 12 的文件迁移到选中的目标文件夹（文件记录 <code>folderId</code> 变更为目标文件夹 id），然后将 id: 12 的 <code>display</code> 设为 <code>0</code>。文件在目标文件夹中正常查看。</p>
           <p><strong>查看数据：</strong>id: 12 的 <code>display</code> 变为 0；文件记录的 <code>folderId</code> 从 12 变更为目标文件夹 id。</p>
@@ -1078,8 +1108,8 @@
           <div class="form-group">
             <label class="form-label"><span class="required">*</span>显示状态</label>
             <select class="form-select" id="folderDisplay">
-              <option value="1">始终显示</option>
-              <option value="0">已关闭</option>
+              <option value="1">开启</option>
+              <option value="0">关闭</option>
             </select>
           </div>
         </div>
@@ -1202,31 +1232,35 @@
     // 系统托管项（禁止新增子目录）：通过 id 判断，不依赖文件夹名称
     const noChildSystemFolderIds = [5, 10, 21, 4, 9, 20, 14, 15]; // AI分类资料(id:5/10/21)、审批上传附件存档(id:4/9/20)、AI预筛结果存档(14)、预筛表提取结果存档(15)
 
-    // 不可删除的文件夹 id 集合：通过 id 判断，不依赖文件夹名称
-    const noDeleteFolderIds = [3, 8]; // 基因检测报告(id:3/8)，后端基因检测功能依赖此目录上传
+    // 不可删除的文件夹 id 集合：页面上已有的文件夹（id 1~21）均不可删除，只有用户新增的文件夹可删除
+    const noDeleteFolderIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
 
     // 关闭时需二次确认的文件夹 id 集合（受「项目基因检测」功能影响）
-    const closeConfirmFolderIds = [3, 8]; // 基因检测报告(id:3/8)
+    const closeConfirmFolderIds = [3, 8]; // 基因检测报告(id:3/8)，预筛/入组阶段的基因检测报告关闭需二次确认
+
+    // 根目录 id 集合（不可关闭）
+    const rootFolderIds = [1, 6, 11, 13, 16]; // 预筛阶段、入组阶段、平级独立文件夹、存档资料、系统（随机阶段可关闭）
 
     // ====================================================================
     // 文件夹配置规则（所有判断均通过文件夹 id 写死，不依赖文件夹名称）：
     // 1. 可新增根目录，根目录下可新增二级文件夹，二级文件夹可设置是否参与AI匹配
-    // 2. 所有文件夹均可修改名称（包括根目录）；基因检测报告(id:3/8)不可删除，后端基因检测功能依赖此目录上传
-    // 3. AI分类资料(id:5/10/21)可通过开关控制显示/隐藏；审批上传附件存档(id:4/9/20)不可关闭（fixed-unavailable）
-    // 4. 之前用文件夹名称判断的，全部改为用文件夹 id 判断（见 noChildSystemFolderIds、noDeleteFolderIds）
+    // 2. 所有文件夹均可修改名称（包括根目录）；页面上已有的文件夹（id 1~21）均不可删除，仅用户新增的文件夹可删除
+    // 3. 根目录（预筛阶段、入组阶段等）不可关闭；二级文件夹可以关闭（关闭前检查文件并弹窗确认）
+    // 4. AI分类资料(id:5/10/21)可通过开关控制显示/隐藏；审批上传附件存档(id:4/9/20)不可关闭（fixed-unavailable）
+    // 5. 之前用文件夹名称判断的，全部改为用文件夹 id 判断
     // ====================================================================
     let tableData = [
       // 根目录：预筛阶段
       { id: 1, parentId: null, name: '预筛阶段', attr: 'fixed-uncloseable', display: 1, tip: '预筛阶段的根目录文件夹，固定显示且不可关闭。', sort: 1 },
-      { id: 2, parentId: 1, matchable: false, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
-      { id: 3, parentId: 1, matchable: false, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
+      { id: 2, parentId: 1, matchable: true, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
+      { id: 3, parentId: 1, matchable: true, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
       { id: 4, parentId: 1, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 4 },
       { id: 5, parentId: 1, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
 
       // 根目录：入组阶段
       { id: 6, parentId: null, name: '入组阶段', attr: 'fixed-uncloseable', display: 1, tip: '入组阶段的根目录文件夹，固定显示且不可关闭。', sort: 6 },
-      { id: 7, parentId: 6, matchable: false, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
-      { id: 8, parentId: 6, matchable: false, name: '导入期资料', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
+      { id: 7, parentId: 6, matchable: true, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
+      { id: 8, parentId: 6, matchable: true, name: '导入期资料', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
       { id: 9, parentId: 6, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 9 },
       { id: 10, parentId: 6, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
 
@@ -1242,6 +1276,13 @@
       // 根目录：系统
       { id: 16, parentId: null, name: '系统', attr: 'fixed-uncloseable', display: 1, tip: '系统根目录，包含系统自动管理的文件夹。', sort: 16 },
       { id: 17, parentId: 16, matchable: false, name: '最近删除', attr: 'configurable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。', sort: 17 },
+
+      // 根目录：随机阶段（用户可管理，可修改/删除/关闭）
+      { id: 22, parentId: null, name: '随机阶段', attr: 'configurable', display: 1, tip: '随机阶段的根目录文件夹，用户可自行管理。', sort: 18 },
+      { id: 23, parentId: 22, matchable: true, name: '原始资料', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 19 },
+      { id: 24, parentId: 22, matchable: true, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 20 },
+      { id: 25, parentId: 22, matchable: false, name: '审批上传附件存档', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 21 },
+      { id: 26, parentId: 22, matchable: false, name: 'AI分类资料', attr: 'configurable', display: 1, tip: '本页数据由AI系统自动识别分类生成，用户可管理显示状态。', sort: 22 },
 
        ];
 
@@ -1351,8 +1392,8 @@
         <td><span class="attr-tag ${attr.cls}">${attr.label}</span></td>
         <td>
           <div class="switch-wrap">
-            <div class="switch ${displayOn ? 'on' : ''}" onclick="toggleDisplay(${item.id})"></div>
-            <span class="switch-label ${displayOn ? 'on' : ''}">${displayOn ? '始终显示' : '已关闭'}</span>
+            <div class="switch ${displayOn ? 'on' : ''} ${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? 'disabled' : ''}" onclick="${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? '' : 'toggleDisplay(' + item.id + ')'}"></div>
+            <span class="switch-label ${displayOn ? 'on' : ''} ${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? 'disabled' : ''}">${displayOn ? '开启' : '关闭'}</span>
           </div>
         </td>
         <td><div class="tip-text">${escapeHtml(item.tip || '')}</div></td>
@@ -1385,6 +1426,16 @@
     function toggleDisplay(id) {
       const item = tableData.find(d => d.id === id);
       if (!item) return;
+      // 根目录不可关闭
+      if (rootFolderIds.includes(id)) {
+        showToast('根目录为系统核心目录，不可关闭', 'error');
+        return;
+      }
+      // 固定不可关闭项（原始资料、审批上传附件存档）始终显示
+      if (item.attr === 'fixed-unavailable') {
+        showToast('该文件夹为系统固定项，不可关闭', 'error');
+        return;
+      }
       // 如果要关闭（当前是显示状态）
       if (item.display === 1) {
         // 基因检测报告(id:3/8)关闭时需二次确认（受「项目基因检测」功能影响）
@@ -1401,7 +1452,7 @@
       }
       item.display = item.display === 1 ? 0 : 1;
       renderTable();
-      showToast(item.display === 1 ? '已设置为始终显示' : '已关闭显示', 'success');
+      showToast(item.display === 1 ? '已开启' : '已关闭', 'success');
     }
 
     // ========== 基因检测报告关闭二次确认 ==========
