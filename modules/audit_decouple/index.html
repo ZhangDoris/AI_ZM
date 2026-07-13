@@ -16573,6 +16573,9 @@ function renderProjectApprovalRows() {
       const isMainFlowTag = flow.isMainFlow ? '<span class="edit-tag edit-tag-purple" style="margin-left:8px">★ 主流程</span>' : '';
       const acts = [
         '<span class="action-link process" onclick="viewProjectApprovalProcess('+template.id+','+flowIdx+')">查看审批流程</span>',
+        flow.isMainFlow
+          ? '<span class="action-link" style="color:#999;cursor:default">已为主流程</span>'
+          : '<span class="action-link process" onclick="setFlowAsMain('+template.id+','+flowIdx+')">设置主流程</span>',
         '<span class="action-link" onclick="openAuditReminderDrawer()">提醒设置</span>',
         '<span class="action-link danger" onclick="deleteProjectApprovalFlow('+template.id+','+flowIdx+')">删除</span>'
       ];
@@ -16653,23 +16656,36 @@ function toggleProjectTemplateActive(templateName, activate) {
   document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
 }
 
-// 设置主流程
+// 设置主流程（流程行上点击，直接生效，无需弹窗）
+function setFlowAsMain(templateId, flowIdx) {
+  const template = _projectApprovalTemplates.find(t => t.id === templateId);
+  if(!template || !template.flows || !template.flows[flowIdx]) return;
+
+  const selectedFlow = template.flows[flowIdx];
+
+  // 将该模板下所有流程的 isMainFlow 设为 false
+  template.flows.forEach(f => f.isMainFlow = false);
+  // 将选中的流程设为主流程
+  selectedFlow.isMainFlow = true;
+
+  // 刷新列表
+  document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
+
+  // 显示成功提示
+  showWechatToast('主流程设置成功：' + selectedFlow.workflowName);
+}
+
+// 设置主流程（模板行上点击，保持原有弹窗选择逻辑）
 let _currentTemplateForMainFlow = null;
 
 function setMainFlow(templateName) {
   const template = _projectApprovalTemplates.find(t => t.name === templateName);
   if(!template || !template.flows) return;
   
-  // 检查是否已经有主流程
-  const existingMainFlow = template.flows.find(f => f.isMainFlow);
-  if(existingMainFlow) {
-    showMainFlowExistsModal(existingMainFlow, template);
-    return;
-  }
   
-  // 没有主流程，显示选择弹窗
-  _currentTemplateForMainFlow = template;
-  showSelectMainFlowModal(template);
+    showMainFlowExistsModal(true, template);
+    return;
+  
 }
 
 // 显示已存在主流程的提示弹窗
