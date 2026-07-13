@@ -6556,10 +6556,10 @@ function updatePRDPanel(mod, sub) {
           </ul>`
         },
         {
-          title: '【2】主流程设置（核心规则）',
+          title: '【2】主流程模板设置（核心规则）',
           content: `<ul>
             <li><strong>规则</strong>：每个项目<strong style="color:#F53F3F">必须设置一个主流程</strong>，且<strong style="color:#F53F3F">主流程有且只有一个</strong></li>
-            <li><strong>设置入口</strong>：审批模板配置列表 → 模板行操作列 → 点击「主流程设置」</li>
+            <li><strong>设置入口</strong>：审批模板配置列表 → 模板行操作列 → 点击「主流程模板设置」</li>
             <li><strong>操作流程</strong>：选择一个已生效的流程节点作为主流程；如果当前模板已存在主流程，弹窗提示「主流程只能有一个」，确认后将主流程切换为新选流程</li>
             <li><strong>校验时机</strong>：
               <ul style="margin-top:4px">
@@ -16562,7 +16562,7 @@ function renderProjectApprovalRows() {
       html += ` <span class="action-link" onclick="event.stopPropagation();toggleProjectTemplateActive('${escapedName}',true)">生效</span>`;
     }
     html += ` <span class="action-link danger" onclick="event.stopPropagation();deleteProjectTemplate('${escapedName}')">删除</span>`;
-    html += ` <span class="action-link process" onclick="event.stopPropagation();setMainFlow('${escapedName}')">主流程设置</span>`;
+    html += ` <span class="action-link process" onclick="event.stopPropagation();setMainFlow('${escapedName}')">主流程模板设置</span>`;
     html += '</td>';
     html += '</tr>';
     
@@ -16572,9 +16572,7 @@ function renderProjectApprovalRows() {
       const isMainFlowTag = flow.isMainFlow ? '<span class="edit-tag edit-tag-purple" style="margin-left:8px">★ 主流程</span>' : '';
       const acts = [
         '<span class="action-link process" onclick="viewProjectApprovalProcess('+template.id+','+flowIdx+')">查看审批流程</span>',
-        flow.isMainFlow
-          ? '<span class="action-link" style="color:#999;cursor:default">已为主流程</span>'
-          : '<span class="action-link process" onclick="setFlowAsMain('+template.id+','+flowIdx+')">设置主流程</span>',
+     
         '<span class="action-link" onclick="openAuditReminderDrawer()">提醒设置</span>',
         '<span class="action-link danger" onclick="deleteProjectApprovalFlow('+template.id+','+flowIdx+')">删除</span>'
       ];
@@ -16656,22 +16654,22 @@ function toggleProjectTemplateActive(templateName, activate) {
 }
 
 // 设置主流程（流程行上点击，直接生效，无需弹窗）
-function setFlowAsMain(templateId, flowIdx) {
-  const template = _projectApprovalTemplates.find(t => t.id === templateId);
-  if(!template || !template.flows || !template.flows[flowIdx]) return;
-
-  const selectedFlow = template.flows[flowIdx];
+function setFlowAsMain(name) {
+  const template = _projectApprovalTemplates.find(t => t.name === name);
+  if(!template) return;
 
   // 将该模板下所有流程的 isMainFlow 设为 false
   template.flows.forEach(f => f.isMainFlow = false);
-  // 将选中的流程设为主流程
-  selectedFlow.isMainFlow = true;
+  // 将第一个流程设为主流程（或根据业务逻辑选择）
+  if(template.flows.length > 0) {
+    template.flows[0].isMainFlow = true;
+  }
 
   // 刷新列表
   document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
-
-  // 显示成功提示
-  showWechatToast('主流程设置成功：' + selectedFlow.workflowName);
+  closeMainFlowExistsModal();
+  // 显示成功提示 — 整个模板设置为主流程模板
+  showWechatToast('主流程模板【' + template.name + '】设置成功');
 }
 
 // 设置主流程（模板行上点击，保持原有弹窗选择逻辑）
@@ -16699,7 +16697,7 @@ function showMainFlowExistsModal(existingFlow, template) {
         </div>
         <div class="modal-body" style="padding:24px">
           <div style="background:#fff7e6;border-left:4px solid #faad14;padding:16px;margin-bottom:16px">
-            <div style="font-size:14px;font-weight:500;color:#d48806;margin-bottom:8px">⚠️ 主流程只能有一个！</div>
+            <div style="font-size:14px;font-weight:500;color:#d48806;margin-bottom:8px">⚠️ 主流程模板只能有一个！</div>
             <div style="font-size:13px;color:#666;line-height:1.8">
               <div>当前主流程：<strong style="color:#1677ff">${template.name}</strong> </div>
               <div style="margin-top:8px">当前选中模板将设为主流程；若已存在其他主流程，系统自动以本次新设置为准。</div>
@@ -16708,7 +16706,7 @@ function showMainFlowExistsModal(existingFlow, template) {
         </div>
         <div class="modal-footer">
           <button class="btn" onclick="closeMainFlowExistsModal()">取消</button>
-          <button class="btn btn-primary" onclick="closeMainFlowExistsModal()">确认</button>
+          <button class="btn btn-primary" onclick="setFlowAsMain('${template.name}')">确认</button>
         </div>
       </div>
     </div>
@@ -17211,16 +17209,16 @@ function showMainFlowRequiredModal() {
         </div>
         <div class="modal-body" style="padding:32px 24px;text-align:center">
           <div style="font-size:56px;margin-bottom:20px">⚠️</div>
-          <div style="font-size:16px;color:#333;font-weight:600;margin-bottom:12px">必须设置一个主流程</div>
+          <div style="font-size:16px;color:#333;font-weight:600;margin-bottom:12px">必须设置一个主流程模板</div>
           <div style="font-size:13px;color:#999;line-height:1.8;margin-bottom:8px">
-            每个项目<strong style="color:#F53F3F">必须有且只有一个主流程</strong>，<br/>
+            每个项目<strong style="color:#F53F3F">必须有且只有一个主流程模板</strong>，<br/>
             请在「审批模板配置」中点击流程行的<br/>
-            <strong style="color:#1677ff">「主流程设置」</strong>按钮进行设置后再上架。
+            <strong style="color:#1677ff">「主流程模板设置」</strong>按钮进行设置后再上架。
           </div>
           <div style="margin-top:20px;padding:12px 16px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;text-align:left;font-size:12px;color:#8c8c8c;line-height:1.8">
             <strong>💡 操作指引：</strong><br/>
             1. 展开已生效的审批模板<br/>
-            2. 点击目标流程行的「主流程设置」按钮<br/>
+            2. 点击目标流程行的「主流程模板设置」按钮<br/>
             3. 确认后该流程将标记为 ★ 主流程
           </div>
         </div>
