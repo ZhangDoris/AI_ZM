@@ -16662,9 +16662,11 @@ function setFlowAsMain(name) {
   const template = _projectApprovalTemplates.find(t => t.name === name);
   if(!template) return;
 
-  // 将该模板下所有流程的 isMainFlow 设为 false
-  template.flows.forEach(f => f.isMainFlow = false);
-  // 将第一个流程设为主流程（或根据业务逻辑选择）
+  // 先清除所有模板下所有流程的 isMainFlow 标记（确保全局只有一个主流程）
+  _projectApprovalTemplates.forEach(t => {
+    if(t.flows) t.flows.forEach(f => f.isMainFlow = false);
+  });
+  // 将当前模板的第一个流程设为主流程
   if(template.flows.length > 0) {
     template.flows[0].isMainFlow = true;
   }
