@@ -968,8 +968,7 @@
             </div>
             <span style="font-size:13px;color:#999;">共 <strong style="color:var(--primary);" id="totalCount">0</strong> 个文件夹</span>
           </div>
-          <button class="btn btn-primary" onclick="openAddModal()"><i class="fas fa-plus"></i> 新增根目录</button>
-     
+        
         </div>
 
         <table class="config-table">
@@ -991,7 +990,7 @@
         </table>
         <div class="empty-state" id="emptyState">
           <i class="fas fa-folder-open"></i>
-          <p>暂无文件夹配置，点击右上角「新增根目录」创建</p>
+          <p>暂无文件夹配置，点击根目录行的「新增」创建</p>
         </div>
       </div>
     </div>
@@ -1119,15 +1118,13 @@
             基本信息编辑
           </div>
           <div class="form-group" style="margin-bottom:12px;">
-            <label class="form-label"><span class="required">*</span>子目录名称</label>
+            <label class="form-label" id="folderNameLabel"><span class="required">*</span>子目录名称</label>
             <input type="text" class="form-input" id="folderName" placeholder="请输入子目录名称" maxlength="50">
           </div>
-          <!-- 目录层级：仅新建子目录时显示 -->
+          <!-- 目录层级：新建时显示，根据父目录类型动态切换选项 -->
           <div class="form-group" id="levelGroup" style="margin-bottom:12px;">
             <label class="form-label"><span class="required">*</span>目录层级</label>
-            <select class="form-select" id="folderLevel">
-              <option value="1">一级目录（直接挂载在父文件夹下）</option>
-               <option value="2">二级目录(挂载在一级子目录下)</option>
+            <select class="form-select" id="folderLevel" onchange="onLevelChange()">
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
@@ -1424,7 +1421,7 @@
         }
       }
 
-      const childText = isSystemNoChild || isRoot
+      const childText = isSystemNoChild
         ? '<span class="child-count">—</span>'
         : `<span class="child-link" onclick="openAddModal(${item.id})"><i class="fas fa-plus"></i> 新增</span>`;
 
@@ -1578,23 +1575,12 @@
       document.getElementById('folderAttr').value = '';
       document.getElementById('folderDisplay').value = '1';
       document.getElementById('folderTip').value = '';
+      document.getElementById('folderName').placeholder = '请输入子目录名称';
 
       const matchableGroup = document.getElementById('matchableGroup');
       const matchableSwitch = document.getElementById('folderMatchable');
-      if (parentId) {
-        const parent = tableData.find(d => d.id === parentId);
-        // 参与匹配：仅第二级目录（父目录是根目录）显示
-        if (parent && parent.parentId === null) {
-          matchableGroup.style.display = 'block';
-          matchableSwitch.classList.remove('on');
-        } else {
-          matchableGroup.style.display = 'none';
-          matchableSwitch.classList.remove('on');
-        }
-      } else {
-        matchableGroup.style.display = 'none';
-        matchableSwitch.classList.remove('on');
-      }
+      matchableGroup.style.display = 'none';
+      matchableSwitch.classList.remove('on');
 
       const parentGroup = document.getElementById('parentGroup');
       const parentName = document.getElementById('parentName');
@@ -1602,16 +1588,29 @@
       const subFolderHeader = document.getElementById('subFolderHeader');
       const subFolderParentName = document.getElementById('subFolderParentName');
       const levelGroup = document.getElementById('levelGroup');
+      const levelSelect = document.getElementById('folderLevel');
+      const nameLabel = document.getElementById('folderNameLabel');
 
       if (parentId) {
         const parent = tableData.find(d => d.id === parentId);
-        parentGroup.style.display = 'none'; // 用新的副标题替代旧的父目录输入框
+        parentGroup.style.display = 'none';
         parentName.value = '';
-        modalTitle.textContent = '新建子目录';
-        // 显示副标题：新建子目录 — 父目录名称
         subFolderHeader.style.display = 'block';
         subFolderParentName.textContent = parent ? '新建子目录 — ' + parent.name : '';
+        modalTitle.textContent = '新建子目录';
         levelGroup.style.display = 'block';
+
+        if (parent && parent.parentId === null) {
+          // 父级是根目录 → 层级选项：根目录、一级目录
+          levelSelect.innerHTML = '<option value="root">根目录</option><option value="level1">一级目录（直接挂载在根目录下）</option>';
+          nameLabel.innerHTML = '<span class="required">*</span>子目录名称';
+          document.getElementById('folderName').placeholder = '请输入文件夹名称';
+        } else {
+          // 父级是一级目录 → 层级选项：一级目录、二级目录
+          levelSelect.innerHTML = '<option value="level1">一级目录（直接挂载在根目录下）</option><option value="level2">二级目录（挂载在一级子目录下）</option>';
+          nameLabel.innerHTML = '<span class="required">*</span>子目录名称';
+          document.getElementById('folderName').placeholder = '请输入子目录名称';
+        }
       } else {
         parentGroup.style.display = 'none';
         parentName.value = '';
@@ -1619,10 +1618,42 @@
         subFolderHeader.style.display = 'none';
         subFolderParentName.textContent = '';
         levelGroup.style.display = 'none';
+        levelSelect.innerHTML = '';
+        nameLabel.innerHTML = '<span class="required">*</span>根目录名称';
+        document.getElementById('folderName').placeholder = '请输入根目录名称';
       }
 
       document.getElementById('folderModal').classList.add('show');
       setTimeout(() => document.getElementById('folderName').focus(), 100);
+    }
+
+    // 层级切换时联动「参与匹配」选项
+    function onLevelChange() {
+      const level = document.getElementById('folderLevel').value;
+      const matchableGroup = document.getElementById('matchableGroup');
+      const matchableSwitch = document.getElementById('folderMatchable');
+      const nameLabel = document.getElementById('folderNameLabel');
+      const nameInput = document.getElementById('folderName');
+
+      if (level === 'level1') {
+        // 一级目录 → 显示「是否参与匹配」
+        matchableGroup.style.display = 'block';
+      } else {
+        matchableGroup.style.display = 'none';
+        matchableSwitch.classList.remove('on');
+      }
+
+      // 动态更新名称标签
+      if (level === 'root') {
+        nameLabel.innerHTML = '<span class="required">*</span>根目录名称';
+        nameInput.placeholder = '请输入根目录名称';
+      } else if (level === 'level1') {
+        nameLabel.innerHTML = '<span class="required">*</span>一级目录名称';
+        nameInput.placeholder = '请输入一级目录名称';
+      } else if (level === 'level2') {
+        nameLabel.innerHTML = '<span class="required">*</span>二级目录名称';
+        nameInput.placeholder = '请输入二级目录名称';
+      }
     }
 
     // 编辑
@@ -1669,12 +1700,16 @@
         subFolderHeader.style.display = 'block';
         subFolderParentName.textContent = parent ? '编辑子目录 — ' + parent.name : '';
         levelGroup.style.display = 'none'; // 编辑时不显示目录层级
+        document.getElementById('folderNameLabel').innerHTML = '<span class="required">*</span>子目录名称';
+        document.getElementById('folderName').placeholder = '请输入子目录名称';
       } else {
         parentGroup.style.display = 'none';
         parentName.value = '';
         subFolderHeader.style.display = 'none';
         subFolderParentName.textContent = '';
         levelGroup.style.display = 'none';
+        document.getElementById('folderNameLabel').innerHTML = '<span class="required">*</span>根目录名称';
+        document.getElementById('folderName').placeholder = '请输入根目录名称';
       }
       document.getElementById('modalTitle').textContent = '编辑文件夹';
       document.getElementById('folderModal').classList.add('show');
@@ -1692,6 +1727,8 @@
       const display = parseInt(document.getElementById('folderDisplay').value);
       const tip = document.getElementById('folderTip').value.trim();
       const matchable = document.getElementById('folderMatchable').classList.contains('on');
+      const level = document.getElementById('folderLevel').value;
+      const pid = parentId ? parseInt(parentId) : null;
 
       if (!name) { showToast('请输入文件夹名称', 'error'); return; }
       if (!attr) { showToast('请选择属性', 'error'); return; }
@@ -1707,22 +1744,38 @@
         }
         showToast('文件夹修改成功', 'success');
       } else {
-        const pid = parentId ? parseInt(parentId) : null;
+        // 根据层级选择计算实际 parentId
+        let actualParentId = null;
+        if (pid) {
+          const parent = tableData.find(d => d.id === pid);
+          if (parent && parent.parentId === null) {
+            // 父级是根目录
+            if (level === 'root') actualParentId = null;
+            else if (level === 'level1') actualParentId = pid;
+          } else {
+            // 父级是一级目录
+            if (level === 'level1') actualParentId = parent ? parent.parentId : null;
+            else if (level === 'level2') actualParentId = pid;
+          }
+        } else {
+          actualParentId = null;
+        }
+
         const maxSort = Math.max(...tableData.map(d => d.sort), 0);
         const newItem = {
           id: generateId(),
-          parentId: pid,
+          parentId: actualParentId,
           name,
           attr,
           display,
           tip,
-          matchable,
+          matchable: level === 'level1' ? matchable : false,
           sort: maxSort + 1
         };
         tableData.push(newItem);
         // 若在折叠的父目录下新增子目录，自动展开父目录
-        if (pid && collapsedIds.has(pid)) collapsedIds.delete(pid);
-        showToast(pid ? '子目录创建成功' : '根目录创建成功', 'success');
+        if (actualParentId && collapsedIds.has(actualParentId)) collapsedIds.delete(actualParentId);
+        showToast(actualParentId ? '子目录创建成功' : '根目录创建成功', 'success');
       }
 
       closeFolderModal();
