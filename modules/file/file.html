@@ -369,6 +369,15 @@
     }
     .switch.disabled::after { background: #ccc; }
     .switch-label.disabled { color: #bbb; }
+    /* 开启且不可编辑（锁定开启）：绿色 + 锁图标，与「开启可编辑(蓝)」「关闭(灰)」区分 */
+    .switch.locked {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(0,180,42,0.3);
+      cursor: not-allowed;
+    }
+    .switch.locked::after { background: #fff; }
+    .switch-label.locked { color: var(--success); font-weight: 600; }
+    .switch-label.locked i { font-size: 11px; margin-left: 3px; }
 
     /* 提示语 */
     .tip-text {
@@ -1029,9 +1038,27 @@
           </div>
         </section>
         <section class="prd-section">
+          <h3><i class="fas fa-toggle-on"></i> 默认初始显示配置</h3>
+          <p>系统首次加载（默认初始状态）仅开启展示以下文件夹，其余文件夹默认处于「关闭」状态，用户可按需在配置页手动开启：</p>
+          <table class="prd-table">
+            <thead>
+              <tr><th>根目录</th><th>默认开启的子目录</th><th>默认参与的子目录</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>预筛阶段</td><td>原始资料、审批上传附件存档</td><td>原始资料、基因检测报告、审批上传附件存档</td></tr>
+              <tr><td>入组阶段</td><td>原始资料、审批上传附件存档</td><td>导入期资料、原始资料、审批上传附件存档</td></tr>
+              <tr><td>系统</td><td>最近删除</td><td>—</td></tr>
+              <tr><td>平级独立文件夹</td><td>—</td><td>-</td></tr>
+              <tr><td>存档资料</td><td>—</td><td—</td></tr>
+            </tbody>
+          </table>
+          
+         
+        </section>
+        <section class="prd-section">
           <h3><i class="fas fa-exchange-alt"></i> 文件操作效果说明</h3>
           <h4>关闭文件夹（display 字段）</h4>
-          <p><strong>说明：</strong>原来的文件夹 只可以关闭，不可以删除，预筛阶段、入组阶段 、原始资料、审批上传附件存档 不可以关闭，原始资料、基因检测报告、导入期资料 默认 参与匹配</p>
+          <p><strong>说明：</strong>原来的文件夹 只可以关闭，不可以删除，预筛阶段、入组阶段 、原始资料、审批上传附件存档 不可以关闭，原始资料、基因检测报告、导入期资料、审批上传附件存档 默认 参与匹配</p>
           <p><strong>效果：</strong>以「平级独立文件夹 → 不参与AI预筛资料」为例，关闭后该文件夹的 <code>display</code> 字段从 <code>1</code> 变为 <code>0</code>，在侧栏中隐藏，但已上传的 2 个文件仍保留在原目录（id: 12），不会丢失。</p>
           <p><strong>查看数据：</strong><code>tableData</code> 中 id: 12 的 <code>display</code> 字段值变化（1 → 0）。</p>
           <h4>根目录不可关闭</h4>
@@ -1044,7 +1071,8 @@
           <p><strong>效果：</strong>页面上已有的系统文件夹（id: 1~21）操作列不显示删除按钮，<code>openDeleteModal</code> 中也会拦截并提示 Toast。随机阶段（id: 22~26）为用户可管理文件夹，显示删除按钮且可删除。</p>
           <p><strong>查看数据：</strong><code>noDeleteFolderIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]</code>，渲染时通过 id 判断，不依赖文件夹名称。</p>
           <h4>固定不可关闭项</h4>
-          <p><strong>效果：</strong>预筛阶段和入组阶段下的「原始资料」（id: 2/7）和「审批上传附件存档」（id: 4/9）为 <code>fixed-unavailable</code> 属性，始终显示不可关闭。随机阶段下的所有子文件夹（id: 23~26）为 <code>configurable</code>，用户可自由关闭。</p>
+          <p><strong>效果：</strong>预筛阶段和入组阶段下的「原始资料」（id: 2/7）和「审批上传附件存档」（id: 4/9），以及「最近删除」（id: 17）为 <code>fixed-unavailable</code> 属性，始终显示不可关闭。随机阶段下的所有子文件夹（id: 23~26）为 <code>configurable</code>，用户可自由关闭。</p>
+          <p><strong>开关三态配色：</strong>① <strong style="color:#165DFF;">蓝色「开启」</strong>=可编辑（configurable，可手动开关）；② <strong style="color:#00B42A;">绿色「开启 🔒」</strong>=开启且不可编辑（fixed-unavailable / 根目录，固定开启）；③ <strong style="color:#999;">灰色「关闭」</strong>=已关闭。绿色带锁图标与蓝色明确区分，一眼可辨"是否可改"。</p>
           <p><strong>查看数据：</strong><code>item.attr === 'fixed-unavailable'</code> 时拦截关闭操作并 Toast 提示。</p>
           <h4>转移并关闭</h4>
           <p><strong>效果：</strong>先将 id: 12 的文件迁移到选中的目标文件夹（文件记录 <code>folderId</code> 变更为目标文件夹 id），然后将 id: 12 的 <code>display</code> 设为 <code>0</code>。文件在目标文件夹中正常查看。</p>
@@ -1247,10 +1275,10 @@
     };
 
     // 系统托管项（禁止新增子目录）：通过 id 判断，不依赖文件夹名称
-    const noChildSystemFolderIds = [5, 10, 21, 4, 9, 20, 14, 15]; // AI分类资料(id:5/10/21)、审批上传附件存档(id:4/9/20)、AI预筛结果存档(14)、预筛表提取结果存档(15)
+    const noChildSystemFolderIds = [5, 10, 21, 4, 9, 20, 14, 15, 27, 28]; // AI分类资料(id:5/10/21)、审批上传附件存档(id:4/9/20)、AI预筛结果存档(14)、预筛表提取结果存档(15)、合并症/合并药AI识别清单(id:27/28)
 
-    // 不可删除的文件夹 id 集合：页面上已有的文件夹（id 1~21）均不可删除，只有用户新增的文件夹可删除
-    const noDeleteFolderIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
+    // 不可删除的文件夹 id 集合：页面上已有的文件夹（id 1~21、27、28）均不可删除，只有用户新增的文件夹可删除
+    const noDeleteFolderIds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,27,28];
 
     // 关闭时需二次确认的文件夹 id 集合（受「项目基因检测」功能影响）
     const closeConfirmFolderIds = [3, 8]; // 基因检测报告(id:3/8)，预筛/入组阶段的基因检测报告关闭需二次确认
@@ -1266,40 +1294,43 @@
     // 4. AI分类资料(id:5/10/21)可通过开关控制显示/隐藏；审批上传附件存档(id:4/9/20)不可关闭（fixed-unavailable）
     // 5. 之前用文件夹名称判断的，全部改为用文件夹 id 判断
     // ====================================================================
+    // 默认初始显示规则：
+    //   默认开启(1)：预筛阶段(1)+原始资料(2)+审批上传附件存档(4)、入组阶段(6)+原始资料(7)+审批上传附件存档(9)、系统(16)+最近删除(17)
+    //   其余（基因检测报告、AI分类资料、导入期资料、平级独立文件夹、存档资料、随机阶段及其子目录）默认关闭(0)
     let tableData = [
-      // 根目录：预筛阶段
+      // 根目录：预筛阶段（默认开启）
       { id: 1, parentId: null, name: '预筛阶段', attr: 'fixed-uncloseable', display: 1, tip: '预筛阶段的根目录文件夹，固定显示且不可关闭。', sort: 1 },
       { id: 2, parentId: 1, matchable: true, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 2 },
-      { id: 3, parentId: 1, matchable: true, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
-      { id: 4, parentId: 1, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 4 },
-      { id: 5, parentId: 1, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
+      { id: 3, parentId: 1, matchable: true, name: '基因检测报告', attr: 'configurable', display: 0, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 3 },
+      { id: 4, parentId: 1, matchable: true, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭，默认参与AI匹配。', sort: 4 },
+      { id: 5, parentId: 1, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 0, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 5 },
 
-      // 根目录：入组阶段
+      // 根目录：入组阶段（默认开启）
       { id: 6, parentId: null, name: '入组阶段', attr: 'fixed-uncloseable', display: 1, tip: '入组阶段的根目录文件夹，固定显示且不可关闭。', sort: 6 },
       { id: 7, parentId: 6, matchable: true, name: '原始资料', attr: 'fixed-unavailable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 7 },
-      { id: 8, parentId: 6, matchable: true, name: '导入期资料', attr: 'configurable', display: 1, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
-      { id: 9, parentId: 6, matchable: false, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭。', sort: 9 },
-      { id: 10, parentId: 6, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 1, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
+      { id: 8, parentId: 6, matchable: true, name: '导入期资料', attr: 'configurable', display: 0, tip: '该文件夹固定显示且不可关闭，在本阶段中即使删除了任何文件，均会触发AI智能筛选。', sort: 8 },
+      { id: 9, parentId: 6, matchable: true, name: '审批上传附件存档', attr: 'fixed-unavailable', display: 1, tip: '本文件夹中文件是审批过程中上传的附件存档，固定显示不可关闭，默认参与AI匹配。', sort: 9 },
+      { id: 10, parentId: 6, matchable: false, name: 'AI分类资料', attr: 'system-managed', display: 0, tip: '本页数据由AI系统自动识别分类生成，分类结果可能存在一定误差，请注意核对。AI分类资料由系统自动管理，不支持手动上传。', sort: 10 },
 
-      // 根目录：平级独立文件夹
-      { id: 11, parentId: null, name: '平级独立文件夹', attr: 'fixed-uncloseable', display: 1, tip: '平级独立文件夹根目录，不参与AI匹配。', sort: 12 },
-      { id: 12, parentId: 11, matchable: false, name: '不参与AI预筛资料', attr: 'configurable', display: 1, tip: '此文件夹内的文件不会被提交至AI系统进行自动识别与分析，也不会进行脱敏，请注意隐私保护。如需AI辅助判定，仅会上传至默认入排文件夹。', sort: 13},
+      // 根目录：平级独立文件夹（默认关闭）
+      { id: 11, parentId: null, name: '平级独立文件夹', attr: 'fixed-uncloseable', display: 0, tip: '平级独立文件夹根目录，不参与AI匹配。', sort: 12 },
+      { id: 12, parentId: 11, matchable: false, name: '不参与AI预筛资料', attr: 'configurable', display: 0, tip: '此文件夹内的文件不会被提交至AI系统进行自动识别与分析，也不会进行脱敏，请注意隐私保护。如需AI辅助判定，仅会上传至默认入排文件夹。', sort: 13},
 
-      // 根目录：存档资料
-      { id: 13, parentId: null, name: '存档资料', attr: 'fixed-uncloseable', display: 1, tip: '存档资料根目录，由系统自动生成，仅支持预览和下载。', sort: 13 },
-      { id: 14, parentId: 13, matchable: false, name: 'AI预筛结果存档', attr: 'configurable', display: 1, tip: 'AI预筛结果由系统自动化生成，记录每次AI预筛分析的完整信息。存档资料为只读状态，仅支持预览和下载。', sort: 14 },
-      { id: 15, parentId: 13, matchable: false, name: '预筛表提取结果存档', attr: 'configurable', display: 1, tip: '预筛表提取结果由系统自动化生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。', sort: 15 },
+      // 根目录：存档资料（默认关闭）
+      { id: 13, parentId: null, name: '存档资料', attr: 'fixed-uncloseable', display: 0, tip: '存档资料根目录，由系统自动生成，仅支持预览和下载。', sort: 13 },
+      { id: 14, parentId: 13, matchable: false, name: 'AI预筛结果存档', attr: 'configurable', display: 0, tip: 'AI预筛结果由系统自动化生成，记录每次AI预筛分析的完整信息。存档资料为只读状态，仅支持预览和下载。', sort: 14 },
+      { id: 15, parentId: 13, matchable: false, name: '预筛表提取结果存档', attr: 'configurable', display: 0, tip: '预筛表提取结果由系统自动化生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。', sort: 15 },
 
-      // 根目录：系统
+      // 根目录：系统（默认开启）
       { id: 16, parentId: null, name: '系统', attr: 'fixed-uncloseable', display: 1, tip: '系统根目录，包含系统自动管理的文件夹。', sort: 16 },
-      { id: 17, parentId: 16, matchable: false, name: '最近删除', attr: 'configurable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。', sort: 17 },
+      { id: 17, parentId: 16, matchable: false, name: '最近删除', attr: 'fixed-unavailable', display: 1, tip: '最近删除的文件最多保留30天，到期后将永久删除且无法恢复。如需恢复文件，请在删除记录列表点击「恢复」操作。该文件夹固定开启且不可关闭。', sort: 17 },
 
-      // 根目录：随机阶段（用户可管理，可修改/删除/关闭）
-      { id: 22, parentId: null, name: '随机阶段', attr: 'configurable', display: 1, tip: '随机阶段的根目录文件夹，用户可自行管理。', sort: 18 },
-      { id: 23, parentId: 22, matchable: true, name: '原始资料', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 19 },
-      { id: 24, parentId: 22, matchable: true, name: '基因检测报告', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 20 },
-      { id: 25, parentId: 22, matchable: false, name: '审批上传附件存档', attr: 'configurable', display: 1, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 21 },
-      { id: 26, parentId: 22, matchable: false, name: 'AI分类资料', attr: 'configurable', display: 1, tip: '本页数据由AI系统自动识别分类生成，用户可管理显示状态。', sort: 22 },
+      // 根目录：随机阶段（用户可管理，默认关闭）
+      { id: 22, parentId: null, name: '随机阶段', attr: 'configurable', display: 0, tip: '随机阶段的根目录文件夹，用户可自行管理。', sort: 18 },
+      { id: 23, parentId: 22, matchable: true, name: '原始资料', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 19 },
+      { id: 24, parentId: 22, matchable: true, name: '基因检测报告', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 20 },
+      { id: 25, parentId: 22, matchable: true, name: '审批上传附件存档', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除，默认参与AI匹配。', sort: 21 },
+      { id: 26, parentId: 22, matchable: false, name: 'AI分类资料', attr: 'configurable', display: 0, tip: '本页数据由AI系统自动识别分类生成，用户可管理显示状态。', sort: 22 },
 
        ];
 
@@ -1372,6 +1403,13 @@
       const displayOn = item.display === 1;
       const isRoot = depth === 0;
       const isSystemNoChild = noChildSystemFolderIds.includes(item.id);
+      // 开关三态：开启可编辑(蓝) / 开启不可编辑=锁定(绿) / 关闭(灰)
+      const switchDisabled = (isRoot && item.id !== 22) || item.attr === 'fixed-unavailable';
+      const lockedOn = displayOn && switchDisabled;
+      const switchCls = 'switch' + (displayOn ? ' on' : '') + (switchDisabled ? (displayOn ? ' locked' : ' disabled') : '');
+      const switchOnClick = switchDisabled ? '' : `toggleDisplay(${item.id})`;
+      const labelCls = 'switch-label' + (displayOn ? ' on' : '') + (switchDisabled ? (displayOn ? ' locked' : ' disabled') : '');
+      const labelText = displayOn ? (lockedOn ? '开启 <i class="fas fa-lock" title="固定开启，不可关闭"></i>' : '开启') : '关闭';
       const indent = depth * 24; // 每一级缩进 24px
       const treeLine = isRoot ? '' : (isLast ? '└─' : '├─');
 
@@ -1409,8 +1447,8 @@
         <td><span class="attr-tag ${attr.cls}">${attr.label}</span></td>
         <td>
           <div class="switch-wrap">
-            <div class="switch ${displayOn ? 'on' : ''} ${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? 'disabled' : ''}" onclick="${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? '' : 'toggleDisplay(' + item.id + ')'}"></div>
-            <span class="switch-label ${displayOn ? 'on' : ''} ${(isRoot && item.id !== 22) || item.attr === 'fixed-unavailable' ? 'disabled' : ''}">${displayOn ? '开启' : '关闭'}</span>
+            <div class="${switchCls}" ${switchOnClick ? `onclick="${switchOnClick}"` : ''} title="${lockedOn ? '固定开启，不可关闭' : ''}"></div>
+            <span class="${labelCls}">${labelText}</span>
           </div>
         </td>
         <td><div class="tip-text">${escapeHtml(item.tip || '')}</div></td>
