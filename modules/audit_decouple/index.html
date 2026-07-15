@@ -2393,6 +2393,16 @@
     .modal-body { padding: 20px 24px; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid #f0f0f0; background: #fafbfc; }
 
+    /* 入排版本选择弹窗 */
+    .version-select-wrapper { margin: 16px 20px 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: #fff; }
+    .version-select-table { width: 100%; border-collapse: collapse; }
+    .version-select-table th { background: #f5f7fa; padding: 12px 16px; text-align: left; font-weight: 600; color: #333; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
+    .version-select-table td { padding: 14px 16px; color: #4e5969; font-size: 14px; vertical-align: middle; background: #fff; }
+    .version-select { width: 100%; padding: 8px 32px 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; font-size: 14px; color: #1d2129; outline: none; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+    .version-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .version-select-info { padding: 16px 20px 0; }
+    .version-select-info .matching-info-icon { display: flex; align-items: center; justify-content: center; }
+
     /* 模板新建弹窗 - Tab切换样式 */
     .wf-form-tabs {
       display: flex; align-items: center; gap: 0;
@@ -8286,18 +8296,87 @@ function viewMdThinkChain(chainId) {
 // 处理项目匹配点击
 function handleProjectMatch(patientId, matchStatus, schemeNo, patientIndex) {
   console.log('项目匹配:', patientId, '状态:', matchStatus, '方案:', schemeNo, '索引:', patientIndex);
-  
+
   // 判断是否正在匹配中
   if (matchStatus === '待匹配' || matchStatus === '匹配中') {
     // 显示提示：正在匹配中，请稍后点击
     showWechatToast('正在匹配中，请稍后点击');
-  } else if (matchStatus === '已匹配') {
-    // 显示确认框：确认匹配
-    showProjectMatchConfirm(patientId, schemeNo, patientIndex);
+  } else if (patientIndex === 1) {
+    // 第二条数据：先入排版本选择
+    showVersionMatchConfirm(patientId, schemeNo, patientIndex);
   } else {
     // 默认显示确认框
     showProjectMatchConfirm(patientId, schemeNo, patientIndex);
   }
+}
+
+// 显示入排版本选择弹窗（第二条数据专用）
+function showVersionMatchConfirm(patientId, schemeNo, patientIndex) {
+  const patient = findPatientById(patientId);
+  if (!patient) return;
+
+  const project = scProjectData.find(p => p.schemeNo === schemeNo);
+  const projectCode = project ? project.schemeNo : schemeNo;
+
+  // 避免重复打开
+  closeProjectMatchConfirm();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'projectMatchConfirmModal';
+  overlay.innerHTML = `
+    <div class="modal-panel" style="width:520px;max-height:80vh">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-code-branch" style="color:#1677ff;margin-right:8px"></i>入排版本选择</h3>
+        <button class="modal-close" onclick="closeProjectMatchConfirm()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:0">
+        <div class="version-select-wrapper">
+          <table class="version-select-table">
+            <thead>
+              <tr>
+                <th>项目编码</th>
+                <th>入排标准版本选择</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${projectCode}</td>
+                <td>
+                  <select id="matchVersionSelect" class="version-select">
+                    <option value="V1.0">V1.0 (V1.0)</option>
+                    <option value="V2.0" selected>V2.0 (V2.0)</option>
+                    <option value="V3.0">V3.0 (V3.0)</option>
+                  </select>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="version-select-info">
+          <div class="matching-info">
+            <div class="matching-info-header">
+              <span class="matching-info-icon"><i class="fa-solid fa-info" style="font-size:10px"></i></span>
+              <span class="matching-info-title">温馨提示</span>
+            </div>
+            <ul>
+            <li><strong style="color:#1677ff">匹配并预提交：</strong>先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+            <li><strong style="color:#1677ff">仅项目匹配：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
+                          <li><strong style="color:#1677ff">取消：</strong>暂时不操作。</li>
+
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:flex-end;gap:10px">
+        <button class="btn btn-default" onclick="closeProjectMatchConfirm()">取消</button>
+        <button class="btn btn-primary" onclick="onlyMatchProject(${patientId})">仅项目匹配</button>
+        <button class="btn btn-warning" onclick="preSubmitProjectMatch(${patientId}, '${schemeNo}', ${patientIndex})">匹配并预提交</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
 }
 
 // 显示项目匹配确认框
@@ -8334,9 +8413,10 @@ function showProjectMatchConfirm(patientId, schemeNo, patientIndex) {
         </div>
       </div>
       <div class="modal-footer" style="justify-content:flex-end;gap:10px">
-        <button class="btn btn-default" onclick="closeProjectMatchConfirm()">取消</button>
         <button class="btn btn-primary" onclick="onlyMatchProject(${patientId})">仅项目匹配</button>
         <button class="btn btn-primary" onclick="preSubmitProjectMatch(${patientId}, '${schemeNo}', ${patientIndex})">匹配并预提交</button>
+                <button class="btn btn-default" onclick="closeProjectMatchConfirm()">取消</button>
+
       </div>
     </div>
   `;
@@ -8356,24 +8436,27 @@ function closeProjectMatchConfirm() {
 // 仅执行项目匹配
 function onlyMatchProject(patientId) {
   closeProjectMatchConfirm();
-  executeProjectMatch(patientId);
+  const version = document.getElementById('matchVersionSelect')?.value;
+  executeProjectMatch(patientId, version);
   showWechatToast('已开始项目匹配，请稍后查看结果');
 }
 
 // 预提交：先打开提交审批弹窗，提交时同步执行项目匹配
 function preSubmitProjectMatch(patientId, schemeNo, patientIndex) {
   closeProjectMatchConfirm();
+  const version = document.getElementById('matchVersionSelect')?.value;
   // 标记后续提交需要同步执行项目匹配
-  window._matchWithSubmit = { patientId, schemeNo, patientIndex };
+  window._matchWithSubmit = { patientId, schemeNo, patientIndex, version };
   openSubmitAuditModal(schemeNo, patientIndex, true);
 }
 
 // 执行项目匹配（更新匹配状态）
-function executeProjectMatch(patientId) {
+function executeProjectMatch(patientId, version) {
   const patient = findPatientById(patientId);
   if (!patient) return;
-  
+
   patient.matchStatus = '已匹配';
+  if (version) patient.matchVersion = version;
   // 刷新患者列表，显示最新匹配状态
   const scContentEl = document.getElementById('scContent');
   if (scContentEl) {
@@ -18073,6 +18156,7 @@ function doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabe
   if (pendingMatch) {
     // 同步执行项目匹配：更新患者匹配状态并刷新列表
     patient.matchStatus = '已匹配';
+    if (window._matchWithSubmit.version) patient.matchVersion = window._matchWithSubmit.version;
     window._matchWithSubmit = null;
   }
 
