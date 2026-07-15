@@ -905,6 +905,40 @@
       border: 1px solid #91caff;
     }
 
+    /* 多屏切换 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 智能筛选 - 项目列表 */
+    .proj-search-bar { padding: 10px 16px; background: #fff; }
+    .proj-filter-bar { display: flex; align-items: center; gap: 8px; padding: 4px 16px 10px; background: #fff; }
+    .proj-filter-pill {
+      flex: 1; text-align: center; padding: 8px 0;
+      border: 1px solid #165DFF; color: #165DFF;
+      border-radius: 6px; font-size: 13px; background: #fff; cursor: pointer;
+    }
+    .proj-filter-pill i { font-size: 10px; margin-left: 4px; }
+    .proj-seg-bar { display: flex; background: #fff; border-bottom: 1px solid #eee; }
+    .proj-seg {
+      flex: 1; text-align: center; padding: 12px 0; font-size: 15px;
+      color: #888; position: relative; cursor: pointer;
+    }
+    .proj-seg.active { color: #165DFF; font-weight: 600; }
+    .proj-seg.active::after {
+      content: ''; position: absolute; bottom: 6px; left: 50%;
+      transform: translateX(-50%); width: 28px; height: 3px;
+      background: #165DFF; border-radius: 2px;
+    }
+    .project-card {
+      background: #fff; border-radius: 8px; padding: 16px 14px;
+      margin: 10px 12px; cursor: pointer; transition: transform .15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .project-card:active { transform: scale(0.99); }
+    .project-card .pname { font-size: 17px; font-weight: 600; color: #1a1a1a; margin-bottom: 6px; }
+    .project-card .pdisease { font-size: 12px; color: #666; }
+    .project-card .pmeta { margin-top: 8px; font-size: 12px; color: #999; display: flex; gap: 12px; }
+
   </style>
 </head>
 <body>
@@ -915,10 +949,36 @@
 
 
  
+  <!-- ========== Screen 1：智能筛选 - 项目列表（入口） ========== -->
+  <div id="screen-projects" class="screen active">
+    <div class="nav-bar">
+      <div class="nav-btn" style="visibility:hidden"><i class="fas fa-chevron-left"></i></div>
+      <span class="nav-title">智能筛选</span>
+      <div class="nav-avatar">我</div>
+    </div>
+    <div class="proj-search-bar">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="请输入搜索关键词" oninput="filterProjects()">
+      </div>
+    </div>
+    <div class="proj-filter-bar">
+      <div class="proj-filter-pill" onclick="toastMsg('切换研究中心')">全部 <i class="fas fa-chevron-down"></i></div>
+    </div>
+    <div class="proj-seg-bar">
+      <div class="proj-seg active" id="seg-mine" onclick="switchProjSeg('mine')">本人项目</div>
+      <div class="proj-seg" id="seg-other" onclick="switchProjSeg('other')">其他项目</div>
+    </div>
+    <div id="projectList"></div>
+    <div class="bottom-spacer"></div>
+  </div>
+
+  <!-- ========== Screen 2：患者列表（点击项目进入，即当前页面） ========== -->
   <!-- 顶部导航栏 -->
+  <div id="screen-patients" class="screen">
   <div class="nav-bar">
-    <div class="nav-btn" onclick="history.back()"><i class="fas fa-chevron-left"></i></div>
-    <span class="nav-title">患者列表</span>
+    <div class="nav-btn" onclick="goScreen('projects')"><i class="fas fa-chevron-left"></i></div>
+    <span class="nav-title" id="patientScreenTitle">患者列表</span>
     <div class="nav-avatar">我</div>
   </div>
 
@@ -951,6 +1011,7 @@
   <!-- 患者列表容器 -->
   <div id="patientList"></div>
   <div class="bottom-spacer"></div>
+  </div><!-- /screen-patients -->
 
   <!-- 中心选择面板 -->
   <div class="panel-overlay" id="panelOverlay" onclick="hideCenterPanel(); closeAuditModal();"></div>
@@ -1179,6 +1240,67 @@
     let selectedCenter = '全部中心';
     let searchKeyword = '';
 
+    // ==================== 智能筛选 - 项目列表 ====================
+    let currentProjSeg = 'mine';
+    let projKeyword = '';
+
+    const PROJECTS = [
+      { id:'p1', name:'0302-305',         disease:'血液类疾病、风湿免疫性疾病', owner:'mine' },
+      { id:'p2', name:'SHR-A2102-I-102',  disease:'肺癌',                  owner:'mine' },
+      { id:'p3', name:'HRS-1167-I-101',  disease:'妇科肿瘤',              owner:'mine' },
+      { id:'p4', name:'SHR-2019-nCoV-001', disease:'呼吸系统疾病',        owner:'other' },
+    ];
+
+    function renderProjects() {
+      const wrap = document.getElementById('projectList');
+      if (!wrap) return;
+      const list = PROJECTS.filter(p =>
+        p.owner === currentProjSeg &&
+        (projKeyword === '' || p.name.toLowerCase().includes(projKeyword) || p.disease.toLowerCase().includes(projKeyword))
+      );
+      if (list.length === 0) {
+        wrap.innerHTML = '<div style="text-align:center;padding:40px;color:#999;font-size:14px">暂无项目</div>';
+        return;
+      }
+      wrap.innerHTML = list.map(p => `
+        <div class="project-card" onclick="openProject('${p.id}')">
+          <div class="pname">${p.name}</div>
+          <div class="pdisease">${p.disease}</div>
+          <div class="pmeta"><span><i class="fas fa-layer-group" style="margin-right:4px"></i>入排标准 V2.0</span></div>
+        </div>
+      `).join('');
+    }
+
+    function filterProjects() {
+      const input = document.querySelector('#screen-projects .search-input-wrap input');
+      projKeyword = (input && input.value || '').toLowerCase();
+      renderProjects();
+    }
+
+    function switchProjSeg(name) {
+      currentProjSeg = name;
+      document.querySelectorAll('.proj-seg').forEach(el => el.classList.remove('active'));
+      const el = document.getElementById('seg-' + name);
+      if (el) el.classList.add('active');
+      renderProjects();
+    }
+
+    // 进入项目 -> 患者列表（即当前页面）
+    function openProject(pid) {
+      const p = PROJECTS.find(x => x.id === pid);
+      const title = document.getElementById('patientScreenTitle');
+      if (title) title.textContent = p ? p.name + ' · 患者列表' : '患者列表';
+      goScreen('patients');
+    }
+
+    // 多屏切换
+    function goScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const el = document.getElementById('screen-' + name);
+      if (el) el.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
     // 渲染患者卡片
     function renderCards(data) {
       const container = document.getElementById('patientList');
@@ -1281,7 +1403,7 @@
 
     // 筛选患者
     function filterPatients() {
-      const keyword = (document.querySelector('.search-input-wrap input') || {}).value || '';
+      const keyword = (document.querySelector('#screen-patients .search-input-wrap input') || {}).value || '';
       searchKeyword = keyword.toLowerCase();
 
       let filtered = patients;
@@ -1453,6 +1575,7 @@
     }
 
     // 初始渲染
+    renderProjects();
     filterPatients();
     updatePRDPanel('audit');
 
@@ -1469,6 +1592,15 @@ function updatePRDPanel(mod, sub) {
         {
           title: '★ 本次修改',
           content: '<ul><li><strong style= "color: red">修改摘要：<span stype="color: yellow">该提交审批功能，点击提交审批，加了可以选择审批流程的下拉，默认推荐当前项目设置的流程，可以选择患者应该执行的流程，选了之后，审批人也要动态变化，选择了非推荐的流程，需要提醒他必须填写理由</span></strong></li><li>患者列表加一个项目编号</li><li>全部中心的选择需要加联想下拉框，目前是改了一种样式，比较适配手机</li></ul>'
+        },
+        {
+          title: '▲ 智能筛选入口（新增，参考 chain_of_thought/h5-app-demo.html）',
+          content: `<ul>
+            <li>新增「智能筛选 - 项目列表」作为入口屏：顶部搜索框 + 全部中心筛选 + 本人项目/其他项目切换 + 项目卡片（参考 demo 的 Screen 4）。</li>
+            <li>项目卡片：0302-305（血液/风湿）、SHR-A2102-I-102（肺癌）、HRS-1167-I-101（妇科肿瘤）归属本人项目；SHR-2019-nCoV-001（呼吸）归属其他项目。</li>
+            <li>点击任一项目卡片 → 进入当前「患者列表」页（提交审批 / AI 智能匹配 / 补充审核等功能保持不变）。</li>
+            <li>患者列表页左上角返回按钮 → 回到智能筛选项目列表。</li>
+          </ul>`
         },
         {
           title: '提交审核点击效果',

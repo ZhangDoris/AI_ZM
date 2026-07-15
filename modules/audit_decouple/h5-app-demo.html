@@ -785,6 +785,14 @@
       color: #1677ff;
       background: #fff;
     }
+    .pt-card .pt-match-tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 3px 10px; border-radius: 12px;
+      background: #e6f4ff; color: #1677ff; border: 1px solid #1677ff;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      white-space: nowrap; margin-left: 8px;
+    }
+    .pt-card .pt-match-tag:active { background: #1677ff; color: #fff; }
     .pt-card .pt-files {
       display: flex; align-items: center; gap: 6px;
       margin-top: 10px;
@@ -1147,6 +1155,82 @@
     .ai-modal .ai-confirm { background: #1677ff; color: #fff; }
     .ai-modal .ai-cancel { background: #f5f5f5; color: #666; }
 
+    /* 项目匹配确认弹窗 */
+    .pm-modal-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 410;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .pm-modal-overlay.show { display: flex; }
+    .pm-modal {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 320px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: aiScaleIn .25s ease;
+    }
+    .pm-modal .pm-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+    }
+    .pm-modal .pm-header-left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pm-modal .pm-icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #e6f7ff; color: #1677ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .pm-modal .pm-title { font-size: 16px; font-weight: 600; color: #333; }
+    .pm-modal .pm-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #f5f5f5; color: #999;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px;
+    }
+    .pm-modal .pm-close:active { background: #e8e8e8; }
+    .pm-modal .pm-body { padding: 18px 16px; text-align: left; }
+    .pm-modal .pm-question { font-size: 14px; color: #333; margin-bottom: 14px; }
+    .pm-modal .pm-tip {
+      background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px;
+      padding: 12px; margin-bottom: 16px;
+    }
+    .pm-modal .pm-tip-hd {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #1677ff; margin-bottom: 8px;
+    }
+    .pm-modal .pm-tip-hd i { font-size: 14px; }
+    .pm-modal .pm-tip ul {
+      margin: 0; padding-left: 16px;
+      font-size: 12px; color: #595959; line-height: 1.8;
+    }
+    .pm-modal .pm-tip li { margin-bottom: 4px; }
+    .pm-modal .pm-version { margin-bottom: 4px; }
+    .pm-modal .pm-version-label {
+      display: block; font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;
+    }
+    .pm-modal .pm-version-label::before { content: '*'; color: #ff4d4f; margin-right: 4px; }
+    .pm-modal .pm-version-select {
+      width: 100%; padding: 9px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fff; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .pm-modal .pm-version-select:focus { border-color: #1677ff; }
+    .pm-modal .pm-version-select:invalid { color: #999; }
+    .pm-modal .pm-version-hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .pm-modal .pm-footer {
+      display: flex; gap: 8px; padding: 0 16px 16px;
+    }
+    .pm-modal .pm-footer button {
+      flex: 1; padding: 10px 4px; border: 1px solid #d9d9d9; border-radius: 8px;
+      font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: #666;
+    }
+    .pm-modal .pm-footer .pm-btn-outline { color: #1677ff; border-color: #1677ff; background: #fff; }
+    .pm-modal .pm-footer .pm-btn-outline:active { background: #e6f4ff; }
+    .pm-modal .pm-footer .pm-btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .pm-modal .pm-footer .pm-btn-primary:active { background: #0958d9; }
+
     /* 轻提示 Toast */
     .toast-mini {
       position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -1466,7 +1550,7 @@
         </div>
         <div class="sh-footer">
           <button class="cancel-btn" onclick="closeAudit()">取消</button>
-          <button class="submit-btn" onclick="submitAudit()">确定</button>
+          <button class="submit-btn" id="auditSubmitBtn" onclick="submitAudit()">确定</button>
         </div>
       </div>
 
@@ -1532,6 +1616,42 @@
         </div>
       </div>
 
+      <!-- ====== 项目匹配确认弹窗 ====== -->
+      <div class="pm-modal-overlay" id="pmModalOverlay" onclick="closeProjectMatch(event)">
+        <div class="pm-modal" onclick="event.stopPropagation()">
+          <div class="pm-header">
+            <div class="pm-header-left">
+              <div class="pm-icon"><i class="fas fa-search"></i></div>
+              <div class="pm-title">项目匹配确认</div>
+            </div>
+            <div class="pm-close" onclick="closeProjectMatch()"><i class="fas fa-times"></i></div>
+          </div>
+          <div class="pm-body">
+            <div class="pm-question">确定要执行项目匹配吗？</div>
+            <div class="pm-tip">
+              <div class="pm-tip-hd"><i class="fas fa-info-circle"></i> 温馨提示</div>
+              <ul>
+                <li><b>取消</b>：暂时不操作。</li>
+                <li><b>匹配并预提交</b>：先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+                <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，等您看完再决定。</li>
+              </ul>
+            </div>
+            <div class="pm-version" id="pmVersionArea" style="display:none">
+              <label class="pm-version-label">入排版本</label>
+              <select class="pm-version-select" id="pmVersionSelect" required>
+                <option value="" disabled selected>请选择入排版本</option>
+              </select>
+              <div class="pm-version-hint">选择入排版本后，系统将按该版本进行匹配</div>
+            </div>
+          </div>
+          <div class="pm-footer">
+            <button class="pm-btn-cancel" onclick="closeProjectMatch()">取消</button>
+            <button class="pm-btn-outline" onclick="onProjectMatchOnly()">仅项目匹配</button>
+            <button class="pm-btn-primary" onclick="onProjectMatchPreSubmit()">匹配并预提交</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -1549,24 +1669,24 @@
     <h4 id="prd-pin-2"><span class="pin">2</span>入口：智能筛选</h4>
     <ul>
       <li>点击「智能筛选」入口进入项目列表</li>
-      <li>顶部带搜索框 + 全部筛选 + 本人/其他项目切换</li>
     </ul>
 
     <h4 id="prd-pin-3"><span class="pin">3</span>项目列表</h4>
     <ul>
       <li>4 个项目卡片：<b>0302-305（血液/风湿）</b>、<b>SHR-A2102-I-102（肺癌）</b>、<b>HRS-1167-I-101（妇科肿瘤）</b>、<b>SHR-2019-nCoV-001（呼吸）</b></li>
-      <li>点击任一项目 → 进入该项目下的患者列表</li>
+      <li>点击第一个项目 → 进入该项目下的患者列表</li>
     </ul>
 
     <h4 id="prd-pin-4"><span class="pin">4</span>患者列表 - 提交审核</h4>
     <ul>
-      <li>患者卡片操作区含「提交审批」按钮（<b>已入组通过</b>患者显示「补充审核」）。</li>
-      <li>点击 → 底部弹出提交审批表单（方案编码 / 参研中心 / 审批模板 / 审批流程 / 审批人 / 备注）；审批流程默认推荐「预筛审批」，并展示项目审批链路（预筛→主知情→入组），选非推荐流程需填写原因。</li>
-      <li><b>ZWMS\HGKD</b>（跨阶段,强制非正常流程）：提交 → 校验必填项通过 → 弹出 <b>AI 智能匹配</b> 提示框。
+      <li>患者卡片操作区含「提交审批」按钮；<b>ZWMS / HGKD</b> 卡片额外显示「项目匹配」按钮（原型为展示效果临时放在患者列表）。</li>
+      <li>点击「提交审批」→ 底部弹出提交审批表单（方案编码 / 参研中心 / 审批模板 / 审批流程 / 审批人 / 备注）；审批流程默认推荐「预筛审批」，并展示项目审批链路（预筛→主知情→入组），选非推荐流程需填写原因。</li>
+      <li><b>ZWMS\HGKD</b>（跨阶段，强制非正常流程）：点击「项目匹配」→ 弹出 <b>项目匹配确认</b> 弹窗。
         HGKD 额外需选择<b>入排版本</b>（V1.0 / V2.0 / V3.0），ZWMS 无此步骤。
         <ul>
-          <li><b>项目匹配</b>：选择入排版本并点击后 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭匹配弹窗 → 继续提交 → Toast「匹配中，匹配完成后系统将自动帮您提交审批」→ 关闭提交审核弹窗</li>
-          <li><b>关闭</b>：点击后 → Toast「您目前还没有点击项目匹配(入组)，无法跨阶段提交审核」→ 关闭匹配弹窗 → 保持提交审核弹窗页面（不执行提交）</li>
+          <li><b>匹配并预提交</b>：选择入排版本后 → 直接进入提交审批页，此时点击「提交审核」直接提交，无需后端再次校验。</li>
+          <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，患者卡片状态更新为「匹配完成」。</li>
+          <li><b>取消</b>：关闭弹窗，不执行任何操作。</li>
         </ul>
       </li>
       <li><b>RFNE</b>（入组通过，可以补充审核）：操作按钮显示为「补充审核」（与提交审批功能一致），点击后弹窗标题为「补充审核」→ 校验必填项通过 → 直接提交 → Toast「提交审批成功」→ 关闭弹窗。补充审核适用于已入组通过的患者追加审核流程的场景。</li>
@@ -1846,6 +1966,9 @@ HDL-C：1.09 mmol/L
       const wrap = document.getElementById('patientList');
       wrap.innerHTML = PATIENT_DATA.map(d => {
         const tags = d.tags.map(t => `<span class="pill ${t.cls}">${t.txt}</span>`).join('');
+        const matchTag = d.aiMatch
+          ? `<span class="pt-match-tag" onclick="event.stopPropagation();openProjectMatch(${d.id})">项目匹配</span>`
+          : '';
         return `
           <div class="pt-card" id="ptcard-${d.id}">
             <div class="pt-hd">
@@ -1858,7 +1981,10 @@ HDL-C：1.09 mmol/L
             </div>
             <div class="pt-tags">${tags}</div>
             <div class="pt-row"><span class="lbl">中心名称：</span>${d.center}</div>
-            <div class="pt-row"><span class="lbl">待操作人：</span>${d.operator}</div>
+            <div class="pt-row" style="display:flex;justify-content:space-between;align-items:center">
+              <span><span class="lbl">待操作人：</span>${d.operator}</span>
+              ${matchTag}
+            </div>
             <div class="pt-actions">
               <div class="pt-btn primary" onclick="event.stopPropagation();openAudit(${d.id})">${d.submitStatus === 'enrolled' ? '补充审核' : '提交审批'}</div>
               <div class="pt-btn" onclick="event.stopPropagation();openAuditRecord(${d.id})">审核记录</div>
@@ -1904,6 +2030,8 @@ HDL-C：1.09 mmol/L
 
     // ========= 智能筛选 - 提交审批（参考 h5-patient-list.html） =========
     let currentAuditPatientId = null;
+    let currentMatchPatientId = null;
+    let preSubmitMode = false;
     const RECOMMENDED_FLOW = '预筛审批';
 
     // 轻提示 Toast
@@ -1922,6 +2050,9 @@ HDL-C：1.09 mmol/L
       const d = PATIENT_DATA.find(x => x.id === ptId);
       const titleEl = document.getElementById('auditSheetTitle');
       if (titleEl) titleEl.textContent = (d && d.submitStatus === 'enrolled') ? '补充审核' : '提交审批';
+      // 预提交模式下提交按钮显示为“提交审核”
+      const submitBtn = document.getElementById('auditSubmitBtn');
+      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交审核' : '确定';
       // 方案编码带入当前项目名
       const planEl = document.getElementById('auditPlanNo');
       if (planEl && currentProject) planEl.value = currentProject.name;
@@ -1931,6 +2062,64 @@ HDL-C：1.09 mmol/L
     function closeAudit() {
       document.getElementById('auditSheet').classList.remove('show');
       document.getElementById('auditOverlay').classList.remove('show');
+      preSubmitMode = false;
+    }
+
+    // 项目匹配确认弹窗
+    function openProjectMatch(ptId) {
+      currentMatchPatientId = ptId;
+      currentAuditPatientId = ptId;
+      const cur = PATIENT_DATA.find(x => x.id === ptId);
+      const versionArea = document.getElementById('pmVersionArea');
+      const sel = document.getElementById('pmVersionSelect');
+      if (cur && Array.isArray(cur.inExVersions) && cur.inExVersions.length > 0) {
+        versionArea.style.display = 'block';
+        sel.innerHTML = '<option value="" disabled selected>请选择入排版本</option>';
+        cur.inExVersions.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+        sel.value = '';
+      } else {
+        versionArea.style.display = 'none';
+        sel.value = '';
+      }
+      document.getElementById('pmModalOverlay').classList.add('show');
+    }
+
+    function closeProjectMatch() {
+      document.getElementById('pmModalOverlay').classList.remove('show');
+    }
+
+    function onProjectMatchOnly() {
+      const cur = PATIENT_DATA.find(x => x.id === currentMatchPatientId);
+      if (cur) {
+        // 仅项目匹配：更新为匹配完成状态，但不提交审批
+        cur.matchLabel = '匹配完成';
+        const idx = cur.tags.findIndex(t => t.txt === '未匹配');
+        if (idx !== -1) cur.tags[idx] = { txt: '匹配完成', cls: 'pill-green' };
+        renderPatientList();
+      }
+      toastMini('项目匹配完成');
+      closeProjectMatch();
+    }
+
+    function onProjectMatchPreSubmit() {
+      const cur = PATIENT_DATA.find(x => x.id === currentMatchPatientId);
+      const versionArea = document.getElementById('pmVersionArea');
+      if (versionArea.style.display !== 'none') {
+        const sel = document.getElementById('pmVersionSelect');
+        if (!sel.value) {
+          toastMini('请选择入排版本');
+          sel.focus();
+          return;
+        }
+      }
+      closeProjectMatch();
+      preSubmitMode = true;
+      openAudit(currentMatchPatientId);
     }
 
     // 审核记录页
@@ -2055,6 +2244,13 @@ HDL-C：1.09 mmol/L
 
     // 点击确定
     function submitAudit() {
+      // 预提交模式：点击后直接提交，不再校验必填项/版本/流程
+      if (preSubmitMode) {
+        doSubmitAudit('提交审批成功');
+        preSubmitMode = false;
+        return;
+      }
+
       const flow = document.getElementById('auditProcessFlow').value;
       const auditor = document.getElementById('auditor').value;
       if (!flow || !auditor) {
@@ -2071,11 +2267,11 @@ HDL-C：1.09 mmol/L
         }
       }
 
-      // 需要 AI 智能匹配的患者（ZWMS/HGKD 等）先弹出匹配弹窗
+      // 需要 AI 智能匹配的患者（ZWMS/HGKD 等）先弹出项目匹配确认弹窗
       const cur = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
       if (cur && cur.aiMatch) {
         pendingAudit = true;
-        openAiModal();
+        openProjectMatch(currentAuditPatientId);
         return;
       }
 

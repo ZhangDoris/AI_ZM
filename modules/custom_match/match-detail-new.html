@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>匹配详情 - AI智能筛选系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      background: #f5f7fa;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    /* 顶部导航栏 */
+    .top-header {
+      background: #fff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e8e8e8;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #1677ff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: #f0f5ff;
+    }
+
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      padding: 6px 16px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #333;
+    }
+
+    .btn-sm:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+    }
+
+    .btn-primary {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+    }
+
+    .btn-primary:hover {
+      background: #4096ff;
+      border-color: #4096ff;
+      color: #fff;
+    }
+
+    /* Tab导航 */
+    .tab-navigation {
+      background: #fff;
+      padding: 0 24px;
+      border-bottom: 1px solid #e8e8e8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    /* 右侧突出的版本切换按钮 */
+    .tab-navigation .version-switch-right {
+      margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 8px 22px;
+      border-width: 1.5px;
+      border-radius: 22px;
+      box-shadow: 0 4px 14px rgba(22,119,255,0.28);
+      flex-shrink: 0;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tab-navigation .version-switch-right:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(22,119,255,0.42);
+    }
+    .tab-navigation .version-switch-right .new-badge {
+      animation: pulse-badge 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,63,63,0.35); }
+      50% { box-shadow: 0 0 0 4px rgba(245,63,63,0); }
+    }
+    .tab-navigation.sticky {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .tab-nav-inner {
+      display: flex;
+      gap: 0;
+    }
+
+    .tab-item {
+      padding: 12px 24px;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .tab-item:hover {
+      color: #1677ff;
+    }
+
+    .tab-item.active {
+      color: #1677ff;
+      border-bottom-color: #1677ff;
+      font-weight: 500;
+    }
+
+    /* 主内容区域 */
+    .main-content {
+      padding: 24px;
+      margin: 0 auto;
+      width: 100%;
+      max-width: none;
+    }
+
+    /* 卡片样式 */
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 3px solid #1677ff;
+    }
+
+    /* 匹配运行信息 */
+    .match-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .info-value {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* 项目信息 */
+    .project-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .project-details {
+      flex: 1;
+    }
+
+    .info-row {
+      display: flex;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-row .label {
+      color: #666;
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+
+    .info-row .value {
+      color: #333;
+      flex: 1;
+    }
+
+    .info-time {
+      color: #999;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    /* 历史匹配版本 */
+    .version-history {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px dashed #e8e8e8;
+    }
+
+    .version-history-label {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    .version-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .version-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #d9d9d9;
+      background: #fafafa;
+      color: #666;
+    }
+
+    .version-tag:hover {
+      border-color: #1677ff;
+      color: #1677ff;
+      background: #f0f5ff;
+    }
+
+    .version-tag.active {
+      border-color: #d9d9d9;
+      background: #f0f0f0;
+      color: #999;
+      cursor: default;
+    }
+
+    .version-tag.active:hover {
+      border-color: #d9d9d9;
+      background: #f0f0f0;
+      color: #999;
+    }
+
+    .version-tag .version-current {
+      font-size: 11px;
+      color: #999;
+      margin-left: 2px;
+    }
+
+    .version-tag .version-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #d9d9d9;
+    }
+
+    .version-tag.active .version-dot {
+      background: #bbb;
+    }
+
+    .version-tag.prescreen .version-dot { background: #52c41a; }
+    .version-tag.consented .version-dot { background: #1677ff; }
+    .version-tag.enrolled .version-dot { background: #722ed1; }
+    .version-tag.active.prescreen .version-dot { background: #bbb; }
+    .version-tag.active.consented .version-dot { background: #bbb; }
+    .version-tag.active.enrolled .version-dot { background: #bbb; }
+
+    .version-tag .version-time {
+      font-size: 11px;
+      color: #bbb;
+      margin-left: 2px;
+    }
+
+    .version-tag.active .version-time {
+      color: #bbb;
+    }
+
+    /* 匹配度卡片 */
+    .match-cards {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .match-card {
+      flex: 1;
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .match-card-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .match-card-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .match-card-value.pending {
+      color: #faad14;
+    }
+
+    /* 匹配摘要 */
+    .match-summary {
+      background: #fafafa;
+      border-radius: 6px;
+      padding: 16px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #666;
+    }
+
+    /* AI建议 */
+    .ai-recommendation {
+      display: flex;
+      gap: 16px;
+    }
+
+    .ai-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      min-width: 80px;
+      text-align: right;
+      padding-top: 12px;
+    }
+
+    .ai-content {
+      flex: 1;
+    }
+
+    .ai-result {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #fff2f0;
+      color: #ff4d4f;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .ai-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #333;
+    }
+
+    .reason-list {
+      margin-top: 12px;
+      padding-left: 0;
+    }
+
+    .reason-item {
+      font-size: 13px;
+      line-height: 1.8;
+      color: #666;
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .reason-item::before {
+      content: attr(data-index);
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: #999;
+    }
+
+    .locate-link {
+      color: #1677ff;
+      cursor: pointer;
+      margin-left: 4px;
+      font-size: 12px;
+    }
+
+    .locate-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 表格样式 */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .detail-table thead {
+      background: linear-gradient(135deg, #1677ff 0%, #0050b3 100%);
+      color: #fff;
+    }
+
+    .detail-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .detail-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: top;
+    }
+
+    .detail-table tbody tr:nth-child(even) {
+      background: #fafafa;
+    }
+
+    .detail-table tbody tr:hover {
+      background: #f0f5ff;
+    }
+
+    .cell-scroll {
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .judge-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .judge-matched {
+      background: #f6ffed;
+      color: #52c41a;
+    }
+
+    .judge-unmatched {
+      background: #fff2f0;
+      color: #ff4d4f;
+    }
+
+    .judge-pending {
+      background: #fff7e6;
+      color: #faad14;
+    }
+
+    .action-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-link {
+      color: #1677ff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .action-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 加载遮罩 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #1677ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+     /* 需求说明面板 — 右侧抽屉 */
+    .prd-drawer {
+      position: fixed;
+      top: 56px;
+      right: 0;
+      width: 20vw;
+      min-width: 300px;
+      max-width: 480px;
+      height: calc(100vh - 56px);
+      background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+      z-index: 60;
+      transform: translateX(100%);
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #e8e8e8;
+    }
+    .prd-drawer.expanded {
+      transform: translateX(0);
+    }
+    .prd-drawer-handle {
+      position: absolute;
+      left: -56px;
+      top: 160px;
+      width: 56px;
+      height: 140px;
+      background: linear-gradient(180deg, #1677ff 0%, #0958d9 100%);
+      color: #fff;
+      border-radius: 10px 0 0 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: -4px 0 22px rgba(22,119,255,0.45);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 61;
+    }
+    .prd-drawer-handle::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: #fff;
+      opacity: 0.3;
+      border-radius: 10px 0 0 10px;
+    }
+    .prd-drawer-handle:hover {
+      width: 64px;
+      left: -64px;
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -6px 0 30px rgba(22,119,255,0.65);
+    }
+    .prd-drawer-handle:active {
+      background: linear-gradient(180deg, #0958d9 0%, #0047b3 100%);
+      box-shadow: -2px 0 12px rgba(22,119,255,0.4);
+      transition: all 0.08s;
+    }
+    .prd-drawer-handle .handle-text {
+      writing-mode: vertical-rl;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 6px;
+    }
+    .prd-drawer-handle .handle-icon {
+      font-size: 18px;
+    }
+    .prd-drawer-handle .handle-hint {
+      position: absolute;
+      right: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .prd-drawer-handle:hover .handle-hint {
+      opacity: 1;
+    }
+    /* 抽屉展开时把手隐藏 */
+    .prd-drawer.expanded .prd-drawer-handle {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    .prd-drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .prd-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1677ff;
+      flex-shrink: 0;
+      margin: 0 20px;
+      padding-top: 16px;
+    }
+    .prd-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1677ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prd-panel-close {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: #f5f5f5;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .prd-panel-close:hover {
+      background: #ff4d4f;
+      color: white;
+    }
+    /* 手机端 */
+    @media (max-width: 768px) {
+      .prd-drawer {
+        width: 85vw;
+        min-width: unset;
+        max-width: unset;
+      }
+    }
+    .prd-section {
+      margin-bottom: 16px;
+    }
+    .prd-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ad4e00;
+      margin-bottom: 8px;
+      padding-left: 10px;
+      border-left: 3px solid #fa8c16;
+    }
+    .prd-section-content {
+      font-size: 12px;
+      color: #7a5a2e;
+      line-height: 1.8;
+      padding-left: 13px;
+    }
+    .prd-section-content ul {
+      margin: 4px 0;
+      padding-left: 16px;
+    }
+    .prd-section-content ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+    .prd-section-content li {
+      margin-bottom: 4px;
+    }
+    .prd-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+    .prd-badge-admin {
+      background: #fff7e6;
+      color: #fa8c16;
+      border: 1px solid #ffd591;
+    }
+    .prd-badge-core {
+      background: #f6ffed;
+      color: #52c41a;
+      border: 1px solid #b7eb8f;
+    }
+    .prd-badge-data {
+      background: #f0f5ff;
+      color: #1677ff;
+      border: 1px solid #91caff;
+    }
+
+    /* ==================== 页面外壳 & PRD 右侧嵌入式面板 ==================== */
+    .app-shell {
+      display: flex;
+      align-items: stretch;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .app-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .prd-side {
+      width: 22vw;
+      min-width: 300px;
+      max-width: 460px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #fffdf7 0%, #fff7e8 100%);
+      border-left: 1px solid #ffe0b2;
+      box-shadow: -4px 0 24px rgba(250,140,22,0.10);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+      transition: width .32s cubic-bezier(0.4,0,0.2,1), min-width .32s, border-left-width .32s;
+    }
+    .prd-side.collapsed {
+      width: 0;
+      min-width: 0;
+      border-left-width: 0;
+      box-shadow: none;
+    }
+    .prd-side-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 2px solid #fa8c16;
+      background: rgba(250,140,22,0.06);
+    }
+    .prd-side-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #d46b08;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .prd-side-toggle {
+      width: 26px; height: 26px;
+      border: none; border-radius: 6px;
+      background: #fff; color: #fa8c16;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; transition: all .2s;
+      box-shadow: 0 1px 4px rgba(250,140,22,0.18);
+    }
+    .prd-side-toggle:hover { background: #fa8c16; color: #fff; }
+    .prd-side-body { flex: 1; overflow-y: auto; padding: 18px; }
+    .prd-side-reopen {
+      display: none;
+      position: absolute;
+      left: -30px; top: 50%;
+      transform: translateY(-50%);
+      width: 30px; height: 120px;
+      background: linear-gradient(180deg, #fa8c16 0%, #d46b08 100%);
+      color: #fff; border: none; border-radius: 10px 0 0 10px;
+      font-size: 13px; font-weight: 700; letter-spacing: 4px;
+      cursor: pointer;
+      z-index: 20;
+      box-shadow: -4px 0 18px rgba(250,140,22,0.45);
+      align-items: center; justify-content: center;
+      writing-mode: vertical-rl;
+    }
+    .prd-side.collapsed .prd-side-reopen { display: flex; }
+
+    /* 底部 AI 免责声明（悬浮，不随滚动） */
+    .ai-disclaimer {
+      position: sticky;
+      bottom: 0;
+      width: fit-content;
+      margin: 24px auto 0;
+      z-index: 6;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .3px;
+      border-radius: 20px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.22);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .ai-disclaimer i { color: #ffd666; font-size: 12px; }
+    .prd-side.collapsed .prd-side-head,
+    .prd-side.collapsed .prd-side-body { display: none; }
+    @media (max-width: 1100px) {
+      .prd-side { width: 30vw; min-width: 260px; }
+    }
+    @media (max-width: 768px) {
+      .app-shell { flex-direction: column; height: auto; overflow: visible; }
+      .app-main { overflow-y: visible; }
+      .prd-side {
+        width: 100% !important; min-width: 0; max-width: none;
+        border-left: none; border-top: 2px solid #ffe0b2;
+      }
+      .prd-side.collapsed { width: 100% !important; min-width: 0; }
+      .prd-side-reopen {
+        left: 50%; top: -30px; transform: translateX(-50%);
+        width: 120px; height: 30px; writing-mode: horizontal-tb;
+        border-radius: 10px 10px 0 0; letter-spacing: 2px;
+      }
+    }
+
+    /* ==================== 版本切换按钮 ==================== */
+    .btn-version {
+      position: relative;
+      color: #165dff;
+      border-color: #165dff;
+      font-weight: 500;
+      overflow: hidden;
+    }
+    .btn-version:hover { background: #165dff; color: #fff; }
+    .btn-version.btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .btn-version.btn-primary:hover { background: #4096ff; border-color: #4096ff; color: #fff; }
+    .btn-version .new-badge {
+      display: inline-block; background: #f53f3f; color: #fff; font-size: 10px;
+      padding: 1px 5px; border-radius: 8px; margin-left: 4px; font-weight: 600;
+      line-height: 1.4; vertical-align: middle;
+    }
+
+    /* ==================== 新版（智能匹配/思考链） ==================== */
+    .new-tab-content { display: block; }
+
+    .ai-match-layout {
+      display: flex;
+      gap: 20px;
+      padding: 24px;
+      margin: 0 auto;
+      width: 100%;
+      align-items: flex-start;
+    }
+    .ai-main { flex: 1; min-width: 0; }
+    .ai-section {
+      background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .ai-section-title {
+      font-size: 14px; font-weight: 600; color: #333; margin-bottom: 16px;
+      padding-left: 12px; border-left: 3px solid #1677ff;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* 版本切换器（Ant Design 风格标签） */
+    .version-switcher { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    .version-switcher-label { font-size: 13px; color: #666; white-space: nowrap; }
+    .version-tag {
+      height: 28px; padding: 0 12px; font-size: 13px; border: 1px solid #d9d9d9;
+      background: #fff; color: #666; border-radius: 4px; cursor: pointer; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .version-tag:hover { color: #1677ff; border-color: #1677ff; }
+    .version-tag.active { color: #1677ff; border-color: #1677ff; background: #e6f4ff; font-weight: 500; }
+    .version-tag .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .version-info-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .vi-item { display: flex; flex-direction: column; gap: 4px; padding: 12px; background: #f5f7fa; border-radius: 6px; }
+    .vi-label { font-size: 12px; color: #999; }
+    .vi-value { font-size: 14px; font-weight: 500; color: #333; }
+
+    /* 新版结论：分类列表 */
+    .conclusion-list { display: flex; flex-direction: column; gap: 16px; }
+    .conclusion-block { border-radius: 8px; overflow: hidden; border: 1px solid #e8e8e8; background: #fff; }
+    /* 结论内的 AI 风险提示子块 — 与建议待定保持同样样式 */
+    .risk-suggest-block {
+      margin-top: 22px;
+    }
+    .risk-suggest-block .conclusion-block.pending { margin-top: 0; }
+
+    .conclusion-block.reject { border-color: #ffccc7; background: #fff2f0; }
+    .conclusion-block.pending { border-color: #ffd591; background: #fffbe6; }
+    .conclusion-block-head {
+      padding: 12px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px;
+    }
+    .conclusion-block.reject .conclusion-block-head { color: #cf1322; background: #fff1f0; }
+    .conclusion-block.pending .conclusion-block-head { color: #d46b08; background: #fff7e6; }
+    .conclusion-block-head .cb-count {
+      width: 20px; height: 20px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; color: #fff;
+    }
+    .conclusion-block.reject .cb-count { background: #ff4d4f; }
+    .conclusion-block.pending .cb-count { background: #faad14; }
+    .conclusion-block-body { padding: 12px 16px; }
+    .conclusion-item {
+      display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; font-size: 13px; line-height: 1.6; color: #595959;
+      border-bottom: 1px dashed #f0f0f0;
+    }
+    .conclusion-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .conclusion-item:first-child { padding-top: 0; }
+    .conclusion-item-icon { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; margin-top: 2px; }
+    .conclusion-block.reject .conclusion-item-icon { background: #ff4d4f; }
+    .conclusion-block.pending .conclusion-item-icon { background: #faad14; }
+    .conclusion-item-main { flex: 1; }
+    .conclusion-item-title { font-weight: 600; color: #262626; margin-bottom: 2px; }
+    .conclusion-item-desc { color: #595959; }
+
+    /* 旧版结论卡片保留 */
+    .conclusion-card { border: 1px solid #ffe0e0; border-radius: 8px; overflow: hidden; }
+
+    .conclusion-result { padding: 14px 18px; font-size: 16px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .conclusion-result.reject { background: #f53f3f; }
+    .conclusion-result.pass { background: #00b42a; }
+    .conclusion-result.pending { background: #ff7d00; }
+    .conclusion-text { padding: 14px 18px; font-size: 13px; line-height: 1.7; color: #555; }
+    .conclusion-tags { padding: 0 18px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .c-tag { font-size: 12px; padding: 3px 10px; border-radius: 4px; }
+    .c-tag.warn { background: #fff1f0; color: #f53f3f; border: 1px solid #ffccc7; }
+    .c-tag.pending { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+    .c-tag.ok { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+
+    .unmatched-list { display: none; }
+    .unmatched-item { display: none; }
+
+
+    /* 合并症 / 合并药物 AI识别 - 表格化 */
+    .recognition-meta {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .recognition-count {
+      font-size: 12px; font-weight: 600; color: #1677ff;
+      background: #e6f0ff; border: 1px solid #91caff; border-radius: 12px; padding: 2px 12px;
+    }
+    .recognition-note { font-size: 12px; color: #999; }
+    .recognition-table .rec-name-cell {
+      display: inline-flex; align-items: center;
+      font-size: 14px; font-weight: 600; color: #262626;
+    }
+    .recognition-table .rec-dose-cell { color: #555; font-size: 13px; }
+    .recognition-table .rec-evidence-cell {
+      color: #1677ff; font-size: 12px; line-height: 1.5;
+      background: #f5f7fa; border-left: 2px solid #91caff; padding: 6px 10px; border-radius: 4px;
+    }
+    .recognition-empty { padding: 30px 0; text-align: center; color: #999; font-size: 13px; }
+
+
+    .think-summary { display: flex; flex-direction: column; gap: 8px; }
+    .think-step { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6; color: #555; }
+    .think-step .ts-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #1677ff; margin-top: 6px; }
+
+    /* 右侧锚点导航 - Ant Design Anchor 风格 */
+    .ai-anchor {
+      width: 140px; flex-shrink: 0; position: sticky; top: 20px; align-self: flex-start;
+      background: #fff; border-radius: 8px; padding: 16px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .anchor-nav-title {
+      font-size: 12px; font-weight: 600; color: #8c8c8c; margin-bottom: 8px;
+      padding-left: 16px; letter-spacing: .5px;
+    }
+    .anchor-nav { list-style: none; padding: 0; margin: 0; position: relative; }
+    /* 竖直轨道线 */
+    .anchor-nav::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 2px; background: #f0f0f0; border-radius: 1px;
+    }
+    .anchor-nav-item {
+      position: relative; padding: 8px 0 8px 16px; font-size: 14px;
+      color: rgba(0,0,0,0.65); cursor: pointer; line-height: 1.57;
+      transition: color .2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* active 蓝色墨条 */
+    .anchor-nav-item::before {
+      content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 2px; height: 0; background: #1677ff; border-radius: 1px;
+      transition: height .2s ease;
+    }
+    .anchor-nav-item:hover { color: #1677ff; }
+    .anchor-nav-item.active { color: #1677ff; font-weight: 500; }
+    .anchor-nav-item.active::before { height: 22px; }
+
+    /* 思考链详情 */
+    .think-chain { display: flex; flex-direction: column; padding-left: 8px; }
+    .tc-step { position: relative; padding: 0 0 22px 28px; border-left: 2px solid #e8e8e8; }
+    .tc-step:last-child { border-left-color: transparent; padding-bottom: 0; }
+    .tc-step .tc-node { position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #1677ff; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+    .tc-step .tc-title { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 4px; }
+    .tc-step .tc-desc { font-size: 13px; line-height: 1.7; color: #555; }
+    .tc-step .tc-evidence { margin-top: 6px; font-size: 12px; color: #1677ff; background: #f5f7fa; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #91caff; }
+
+    @media (max-width: 900px) {
+      .ai-match-layout { flex-direction: column; }
+      .ai-anchor { display: none; }
+      .version-info-bar { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* 预筛阶段 印章 */
+    .stage-stamp {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 90px;
+      height: 90px;
+      border: 3px double #f5222d;
+      border-radius: 50%;
+      color: #f5222d;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      transform: rotate(-18deg);
+      opacity: 0.82;
+      flex-shrink: 0;
+      margin-left: 12px;
+      line-height: 1.3;
+      text-align: center;
+      user-select: none;
+      pointer-events: none;
+    }
+    .stage-stamp .stamp-icon {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #f5222d;
+    }
+    .stage-stamp-inner {
+      text-align: center;
+      line-height: 1.4;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+  <div class="app-main">
+  <!-- 顶部导航 -->
+  <div class="top-header">
+    <div class="header-left">
+      <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        <span id="patientTitle">WYNA-CN053-安阳市肿瘤医院 | 匹配详情（HRS-8080-303）</span>
+      </button>
+    </div>
+    <div class="header-right">
+      <div class="stage-stamp">
+        <span class="stamp-icon"><i class="fas fa-certificate"></i></span>
+        <div class="stage-stamp-inner">预筛<br>阶段</div>
+      </div>
+      <button class="btn-sm btn-primary">标记储备</button>
+      <button class="btn-sm">病史与资料</button>
+      <button class="btn-sm">编辑基本信息</button>
+      <button class="btn-sm">审批记录</button>
+      <button class="btn-sm">邮件记录</button>
+      <div class="user-avatar">张</div>
+    </div>
+  </div>
+
+  <!-- ==================== 旧版（当前版本） ==================== -->
+  <div id="version-old">
+
+  <!-- Tab导航 -->
+  <div class="tab-navigation">
+    <div class="tab-nav-inner">
+      <div class="tab-item active" >预筛</div>
+      <div class="tab-item">入组</div>
+    </div>
+    <button class="btn-sm btn-version version-switch-right" id="versionSwitchBtnOld" onclick="togglePageVersion()"><i class="fas fa-exchange-alt"></i> 新版本 <span class="new-badge">NEW</span></button>
+  </div>
+  <div class="tab-navigation">
+    <div class="tab-nav-inner">
+      <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
+      <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="main-content">
+    
+    <!-- Tab 1: 匹配详情 -->
+    <div id="tab-match" class="tab-content active">
+      <!-- 项目信息 -->
+      <div class="card">
+        <div class="project-info">
+          <div class="project-details">
+            <div class="info-row">
+              <div class="label">方案编号：</div>
+              <div class="value" id="schemeNo">HRS-8080-303</div>
+            </div>
+            <div class="info-row">
+              <div class="label">项目名称：</div>
+              <div class="value" id="projectName">HRS-8080单药对比医生选择的治疗在既往接受内分泌治疗后出现疾病进展的伴有ESR1突变的ER阳性HER2阴性局部晚期或转移性乳腺癌中的有效性、安全性的多中心、开放、随机对照的Ⅲ期临床研究</div>
+            </div>
+            <div class="info-row">
+              <div class="label">入排标准版本：</div>
+              <div class="value">
+                入排标准（入排标准）
+                <span class="info-time">上次更新时间：2026-06-01 16:43:01</span>
+              </div>
+            </div>
+          
+          </div>
+          <button class="btn-sm btn-primary">导出PDF</button>
+        </div>
+      </div>
+      <!-- 匹配运行信息 -->
+      <div class="card">
+        <div class="card-title">匹配运行信息</div>
+        <div class="match-info-grid">
+          <div class="info-item">
+            <div class="info-label">AI 模型</div>
+            <div class="info-value">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">开始匹配时间</div>
+            <div class="info-value" id="startTime">2026-06-05 11:53:08</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">结束匹配时间</div>
+            <div class="info-value" id="endTime">2026-06-05 11:57:19</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">RAG 用时</div>
+            <div class="info-value">00:07</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">LLM 用时</div>
+            <div class="info-value">03:45</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">总用时</div>
+            <div class="info-value">04:11</div>
+          </div>
+        </div>
+      </div>
+
+     
+
+      <!-- 匹配度统计 -->
+      <div class="card">
+        <div class="match-cards">
+          <div class="match-card">
+            <div class="match-card-label">匹配度</div>
+            <div class="match-card-value" id="matchRate">0.0%</div>
+          </div>
+          <div class="match-card">
+            <div class="match-card-label">待定占比</div>
+            <div class="match-card-value pending" id="pendingRate">21.88%</div>
+          </div>
+        </div>
+        <div class="match-summary" id="matchSummary">
+          主要入选标准10条中，3条匹配，1条不匹配，6条待定；<br>
+          主要排除标准22条中，20条匹配，1条不匹配，1条待定；<br>
+          直接排除。
+        </div>
+      </div>
+
+      <!-- AI建议 -->
+      <div class="card">
+        <div class="ai-recommendation">
+          <div class="ai-label">AI建议</div>
+          <div class="ai-content">
+            <div class="ai-result">排除</div>
+            <div class="ai-text">
+              该患者不符合该项目入选要求，排除。<br><br>
+              排除原因如下:
+              <div class="reason-list">
+                <div class="reason-item" data-index="1.">
+                  病历显示患者正在接受来曲唑内分泌治疗（最近1线），但2026-06-02盆腔MRI报告提示骨转移范围较前（2025-11-07）增大，表明疾病进展；进展时间距离当前时间（2026-06-05）仅3天，不满足"最近1线内分泌治疗需在6个月内未发生疾病进展"的要求。【入选标准5】<span class="locate-link" onclick="locateCriteria(5)">定位</span>
+                </div>
+                <div class="reason-item" data-index="2.">
+                  患者于2026年6月2日（首次用药拟开始时间2026年6月5日前3天）仍在接受芳香酶抑制剂（来曲唑）内分泌治疗，符合排除标准中"首次用药前2周内接受过内分泌治疗"的条件。【排除标准3】<span class="locate-link" onclick="locateCriteria(3)">定位</span>
+                </div>
+              </div>
+              <br>
+              需补充以下信息:
+              <div class="reason-list">
+                <div class="reason-item" data-index="1.">
+                  需补充ECOG体力状态评分结果【入选标准2】<span class="locate-link" onclick="locateCriteria(2)">定位</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 匹配详情表格 -->
+      <div class="card">
+        <div class="card-title">匹配详情</div>
+        <div class="table-container">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th style="width:50px">序号</th>
+                <th style="width:100px">标准类型</th>
+                <th style="min-width:250px">纳排内容</th>
+                <th style="min-width:250px">源数据</th>
+                <th style="min-width:280px">AI判断</th>
+                <th style="width:160px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="matchDetailTable">
+              <!-- 动态生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: 筛选表 -->
+    <div id="tab-prescreen" class="tab-content" style="display:none;">
+      <div class="card" id="prescreenCard">
+        <div class="project-info" style="margin-bottom: 16px; align-items: center;">
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <span style="padding: 4px 12px; background: #f6ffed; color: #52c41a; border-radius: 4px; font-size: 12px;">提取成功</span>
+            <button class="btn-sm btn-primary">智能提取</button>
+            <button class="btn-sm btn-primary">下载</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th style="width: 60px">序号</th>
+                <th style="width: 150px">项目</th>
+                <th>AI提取</th>
+                <th style="width: 200px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="prescreenTable">
+              <!-- 动态生成 -->
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #fff7e6; border-radius: 4px; display: flex; align-items: center; gap: 8px; color: #fa8c16; font-size: 13px;">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /version-old -->
+
+  <!-- ==================== 新版（智能匹配/思考链） ==================== -->
+  <div id="version-new" style="display:none;">
+    <!-- 新版 Tab 导航 -->
+    <div class="tab-navigation sticky">
+      <div class="tab-nav-inner">
+        <div class="tab-item active" onclick="switchNewTab('aimatch')">智能匹配</div>
+        <div class="tab-item" onclick="switchNewTab('prescreen')">筛选表</div>
+        <div class="tab-item" onclick="switchNewTab('thinkchain')">思考链</div>
+      </div>
+      <button class="btn-sm btn-version btn-primary version-switch-right" id="versionSwitchBtnNew" onclick="togglePageVersion()"><i class="fas fa-exchange-alt"></i> 旧版本</button>
+    </div>
+
+    <!-- ========== 智能匹配 ========== -->
+    <div id="tab-new-aimatch" class="new-tab-content">
+      <div class="ai-match-layout">
+        <!-- 左侧主内容 -->
+        <div class="ai-main">
+
+          <!-- 1. 版本号 -->
+          <div class="ai-section" id="section-version">
+            <div class="ai-section-title"><span><i class="fas fa-code-branch"></i> 版本号</span></div>
+            <div class="version-switcher" id="versionSwitcher">
+              <span class="version-switcher-label">匹配版本：</span>
+              <button class="version-tag active" data-version="v1" onclick="switchMatchVersion('v1')">
+                <span class="status-dot"></span>预筛-2026-06-05
+              </button>
+              <button class="version-tag" data-version="v2" onclick="switchMatchVersion('v2')">
+                <span class="status-dot"></span>入组-2026-06-20
+              </button>
+              <button class="version-tag" data-version="v3" onclick="switchMatchVersion('v3')">
+                <span class="status-dot"></span>入组-2026-07-14
+              </button>
+            </div>
+            <div class="version-info-bar">
+              <div class="vi-item"><span class="vi-label">匹配版本</span><span class="vi-value" id="newVersionNo">preScreen-1.0</span></div>
+              <div class="vi-item"><span class="vi-label">AI 模型</span><span class="vi-value" id="newAIModel">GPT-4o + RAG</span></div>
+              <div class="vi-item"><span class="vi-label">运行时间</span><span class="vi-value" id="newRunTime">2026-06-05 11:53 ~ 11:57</span></div>
+              <div class="vi-item"><span class="vi-label">匹配度</span><span class="vi-value" id="newMatchRate">0.0%</span></div>
+            </div>
+          </div>
+
+
+          <!-- 2. 基本信息 -->
+          <div class="ai-section" id="section-basic">
+            <div class="ai-section-title"><span><i class="fas fa-info-circle"></i> 基本信息</span></div>
+            <div class="match-info-grid" id="aiBasicInfo">
+              <div class="info-item"><div class="info-label">患者编号</div><div class="info-value" data-field="patientNo">WYNA-CN053</div></div>
+              <div class="info-item"><div class="info-label">性别 / 年龄</div><div class="info-value" data-field="genderAge">女 / 36岁</div></div>
+              <div class="info-item"><div class="info-label">中心</div><div class="info-value" data-field="center">安阳市肿瘤医院</div></div>
+              <div class="info-item"><div class="info-label">诊断</div><div class="info-value" data-field="diagnosis">右乳癌根治术后复发转移（骨转移）</div></div>
+              <div class="info-item"><div class="info-label">方案编号</div><div class="info-value" data-field="schemeNo">SHR-1918-301</div></div>
+              <div class="info-item"><div class="info-label">ASCVD分级</div><div class="info-value" data-field="ascvd">高危</div></div>
+            </div>
+          </div>
+
+
+          <!-- 3. 结论 + 风险提示 -->
+          <div class="ai-section" id="section-conclusion">
+            <div class="ai-section-title"><span><i class="fas fa-gavel"></i> AI判定结论</span></div>
+            <div class="conclusion-list" id="conclusionList">
+              <!-- JS 渲染 -->
+            </div>
+            <div class="risk-suggest-block">
+              <div class="conclusion-block pending">
+                <div class="conclusion-block-head">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  AI 风险提示
+                  <span class="cb-count" id="riskCount">0</span>
+                </div>
+                <div class="conclusion-block-body" id="riskList"><!-- JS 渲染 --></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 4. 匹配详情 -->
+          <div class="ai-section" id="section-detail">
+            <div class="ai-section-title"><span><i class="fas fa-table"></i> 匹配详情</span></div>
+            <div class="table-container">
+              <table class="detail-table">
+                <thead>
+                  <tr>
+                    <th style="width:50px">序号</th>
+                    <th style="width:100px">标准类型</th>
+                    <th style="min-width:250px">纳排内容</th>
+                    <th style="min-width:250px">源数据</th>
+                    <th style="min-width:280px">AI判断</th>
+                    <th style="width:160px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="aiMatchDetailTable"><!-- JS 渲染 --></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 6. 合并症AI识别 -->
+          <div class="ai-section" id="section-comorbidity">
+            <div class="ai-section-title"><span><i class="fas fa-notes-medical"></i> 合并症AI识别</span></div>
+            <div id="comorbidityList"><!-- JS 渲染 --></div>
+          </div>
+
+          <!-- 7. 合并药物AI识别 -->
+          <div class="ai-section" id="section-medication">
+            <div class="ai-section-title"><span><i class="fas fa-pills"></i> 合并药物AI识别</span></div>
+            <div id="medicationList"><!-- JS 渲染 --></div>
+          </div>
+
+        </div>
+
+        <!-- 右侧锚点导航 -->
+        <div class="ai-anchor">
+          <div class="anchor-nav-title">页面导航</div>
+          <ul class="anchor-nav">
+            <li class="anchor-nav-item active" data-anchor="section-version" onclick="scrollToSection('section-version')">1. 版本号</li>
+            <li class="anchor-nav-item" data-anchor="section-basic" onclick="scrollToSection('section-basic')">2. 基本信息</li>
+            <li class="anchor-nav-item" data-anchor="section-conclusion" onclick="scrollToSection('section-conclusion')">3. AI判定结论</li>
+            <li class="anchor-nav-item" data-anchor="section-detail" onclick="scrollToSection('section-detail')">4. 匹配详情</li>
+            <li class="anchor-nav-item" data-anchor="section-comorbidity" onclick="scrollToSection('section-comorbidity')">5. 合并症AI识别</li>
+            <li class="anchor-nav-item" data-anchor="section-medication" onclick="scrollToSection('section-medication')">6. 合并药物AI识别</li>
+
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 筛选表 ========== -->
+    <div id="tab-new-prescreen" class="new-tab-content" style="display:none;">
+      <div class="card">
+        <div class="card-title"><i class="fas fa-filter"></i> 筛选表</div>
+        <div class="table-container">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th style="width:60px">序号</th>
+                <th style="width:150px">项目</th>
+                <th>AI提取</th>
+                <th style="width:200px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="newPrescreenTable">
+              <!-- JS 渲染 -->
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== 思考链 ========== -->
+    <div id="tab-new-thinkchain" class="new-tab-content" style="display:none;">
+      <div class="card">
+        <div class="card-title">AI 思考链（推理过程）</div>
+        <div class="think-chain" id="thinkChainContainer"><!-- JS 渲染 --></div>
+      </div>
+    </div>
+
+    <!-- 底部 AI 免责声明（悬浮，不随滚动） -->
+    <div class="ai-disclaimer"><i class="fas fa-robot"></i> 内容由 AI 生成，仅供参考，请谨慎鉴别</div>
+  </div>
+
+  <!-- 加载遮罩 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  </div><!-- /app-main -->
+
+  <!-- PRD 右侧嵌入式面板（可收起） -->
+  <aside class="prd-side" id="prdSide">
+    <div class="prd-side-head">
+      <span class="prd-side-title"><i class="fas fa-book-open"></i> 需求说明（PRD）</span>
+      <button class="prd-side-toggle" onclick="togglePRDSide()" title="收起面板"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="prd-side-body" id="prdPanel"></div>
+    <button class="prd-side-reopen" id="prdSideReopen" onclick="togglePRDSide()" title="展开需求说明"><i class="fas fa-book-open"></i> PRD</button>
+  </aside>
+  </div><!-- /app-shell -->
+  <script>
+    // 从URL获取参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('id');
+    const schemeNo = urlParams.get('schemeNo');
+    const patientNo = urlParams.get('patientNo');
+    const screenNo = urlParams.get('screenNo');
+    const age = urlParams.get('age');
+    const gender = urlParams.get('gender');
+    const centerNo = urlParams.get('centerNo');
+    const center = urlParams.get('center');
+    const projectName = urlParams.get('projectName');
+
+    // 设置页面标题
+    if (screenNo && center) {
+      document.getElementById('patientTitle').textContent = 
+        `${screenNo}-${center} | 匹配详情（${schemeNo}）`;
+    }
+
+    // 设置项目信息
+    if (schemeNo) {
+      document.getElementById('schemeNo').textContent = schemeNo;
+    }
+    if (projectName) {
+      document.getElementById('projectName').textContent = projectName;
+    }
+
+    // 历史匹配版本数据
+    const versionHistory = [
+      { type: 'prescreen', label: '预筛审批', time: '2026-06-05 11:57', versionId: 'v1', matchRate: '0.0%', result: '排除' },
+      { type: 'consented', label: '主知情审批', time: '2026-06-08 14:23', versionId: 'v2', matchRate: '45.2%', result: '待定' },
+      { type: 'enrolled', label: '入组审批（最新）', time: '2026-06-12 09:15', versionId: 'v3', matchRate: '52.6%', result: '入选' }
+    ];
+
+    // 当前版本（从URL参数获取，默认显示预筛版本）
+    const currentVersion = urlParams.get('version') || 'prescreen';
+
+    // 不同版本的预筛数据
+    const prescreenDataByVersion = {
+      'prescreen': [
+        { seq: 1, item: '性别', value: '女' },
+        { seq: 2, item: '年龄', value: '36' },
+        { seq: 3, item: 'ECOG评分', value: '' },
+        { seq: 4, item: '当前诊断', value: '右乳癌根治术后复发转移（骨转移）' },
+        { seq: 5, item: 'ESR1突变', value: '' },
+        { seq: 6, item: '病理检测情况', value: '2020-10-17 病理检测：（肿物切除术后右侧乳腺根治标本）乳腺缺损区周围未见癌，各切缘及乳头乳晕未见癌，可见脉管内癌栓，腋窝淋巴结13枚（6/13）癌转移；\n2020-10-21 病理检测：（右侧乳腺肿物）浸润性导管癌 非特殊型 肿瘤大小约13*2*2cm...' }
+      ],
+      'consented': [
+        { seq: 1, item: '性别', value: '女' },
+        { seq: 2, item: '年龄', value: '36' },
+        { seq: 3, item: 'ECOG评分', value: '1分' },
+        { seq: 4, item: '当前诊断', value: '右乳癌根治术后复发转移（骨转移）' },
+        { seq: 5, item: 'ESR1突变', value: '阳性（检测到ESR1 Y537S突变）' },
+        { seq: 6, item: '病理检测情况', value: '2020-10-17 病理检测：（肿物切除术后右侧乳腺根治标本）乳腺缺损区周围未见癌，各切缘及乳头乳晕未见癌，可见脉管内癌栓，腋窝淋巴结13枚（6/13）癌转移；\n2020-10-21 病理检测：（右侧乳腺肿物）浸润性导管癌 非特殊型 肿瘤大小约13*2*2cm，低分化可见脉管内癌栓。免疫组化：ER（中强+90%）、PR（中强+70%）、HER2（0）、Ki-67（30%）' }
+      ],
+      'enrolled': [
+        { seq: 1, item: '性别', value: '女' },
+        { seq: 2, item: '年龄', value: '36' },
+        { seq: 3, item: 'ECOG评分', value: '0分' },
+        { seq: 4, item: '当前诊断', value: '右乳癌根治术后复发转移（骨转移）' },
+        { seq: 5, item: 'ESR1突变', value: '阳性（检测到ESR1 Y537S突变）' },
+        { seq: 6, item: '病理检测情况', value: '2020-10-17 病理检测：（肿物切除术后右侧乳腺根治标本）乳腺缺损区周围未见癌，各切缘及乳头乳晕未见癌，可见脉管内癌栓，腋窝淋巴结13枚（6/13）癌转移；\n2020-10-21 病理检测：（右侧乳腺肿物）浸润性导管癌 非特殊型 肿瘤大小约13*2*2cm，低分化可见脉管内癌栓。免疫组化：ER（中强+90%）、PR（中强+70%）、HER2（0）、Ki-67（30%）' }
+      ]
+    };
+
+    // 渲染历史版本标签 - 匹配详情页
+    function renderVersionTags() {
+      const container = document.getElementById('versionTags');
+      if (!container) return;
+      container.innerHTML = versionHistory.map(v => {
+        const isActive = v.type === currentVersion;
+        return `<span class="version-tag ${v.type}${isActive ? ' active' : ''}" 
+                      ${isActive ? '' : `onclick="switchVersion('${v.type}')"`} 
+                      title="${v.label} | ${v.time} | 匹配度: ${v.matchRate} | 结果: ${v.result}">
+                  <span class="version-dot"></span>
+                  ${v.label}
+                  <span class="version-time">${v.time}</span>
+                  ${isActive ? '<span class="version-current">（当前）</span>' : ''}
+                </span>`;
+      }).join('');
+    }
+
+    // 渲染历史版本标签 - 筛选表页
+    function renderPrescreenVersionTags() {
+      const container = document.getElementById('prescreenVersionTags');
+      if (!container) return;
+      container.innerHTML = versionHistory.map(v => {
+        const isActive = v.type === currentVersion;
+        return `<span class="version-tag ${v.type}${isActive ? ' active' : ''}" 
+                      ${isActive ? '' : `onclick="switchPrescreenVersion('${v.type}')"`} 
+                      title="${v.label} | ${v.time}">
+                  <span class="version-dot"></span>
+                  ${v.label}
+                  <span class="version-time">${v.time}</span>
+                  ${isActive ? '<span class="version-current">（当前）</span>' : ''}
+                </span>`;
+      }).join('');
+    }
+
+    // 切换预筛表版本 - 不跳转页面，只刷新数据
+    function switchPrescreenVersion(versionType) {
+      // 显示加载效果
+      showLoading();
+      
+      // 更新URL参数（不刷新页面）
+      const params = new URLSearchParams(window.location.search);
+      params.set('version', versionType);
+      window.history.pushState({}, '', '?' + params.toString());
+      
+      // 模拟异步加载数据
+      setTimeout(() => {
+        // 更新当前版本
+        window.currentVersion = versionType;
+        
+        // 重新渲染筛选表
+        renderPrescreenTable();
+        
+        // 重新渲染版本标签（更新active状态）
+        renderPrescreenVersionTags();
+        
+        // 隐藏加载效果
+        hideLoading();
+      }, 3000);
+    }
+
+    // 显示加载效果
+    function showLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.classList.add('active');
+      }
+    }
+
+    // 隐藏加载效果
+    function hideLoading() {
+      const overlay = document.getElementById('loadingOverlay');
+      if (overlay) {
+        overlay.classList.remove('active');
+      }
+    }
+
+    // 切换版本 - 打开同页面不同版本
+    function switchVersion(versionType) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('version', versionType);
+      window.location.href = window.location.pathname + '?' + params.toString();
+    }
+
+    // 渲染筛选表 - 根据当前版本显示对应数据
+    function renderPrescreenTable() {
+      const tbody = document.getElementById('prescreenTable');
+      if (!tbody) return;
+      
+      // 使用全局变量或从URL获取当前版本
+      const version = window.currentVersion || urlParams.get('version') || 'prescreen';
+      
+      // 根据当前版本获取对应的数据
+      const data = prescreenDataByVersion[version] || prescreenDataByVersion['prescreen'];
+      
+      tbody.innerHTML = data.map(item => `
+        <tr>
+          <td>${item.seq}</td>
+          <td>${item.item}</td>
+          <td>${item.value || '-'}</td>
+          <td>
+            <div class="action-links">
+              <span class="action-link">编辑</span>
+              <span class="action-link">病历溯源</span>
+              <span class="action-link" style="color:#999">修正记录</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 模拟匹配详情数据
+    const matchDetailData = [
+      {
+        type: '入选标准1',
+        criteria: '年龄18~75岁（含两端值）的女性',
+        source: '【门诊复诊病历】性别：女 年龄：35岁',
+        judge: 'matched',
+        judgeText: '匹配 ：病历中明确记录性别为女性，年龄35岁，符合18~75岁范围（35≥18且35≤75成立）'
+      },
+      {
+        type: '入选标准2',
+        criteria: 'ECOG体力状态（PS）0~1分',
+        source: '【未在病历中找到与该标准相关的信息】',
+        judge: 'pending',
+        judgeText: '待定 ：病历中未提及ECOG体力状态评分记录'
+      },
+      {
+        type: '入选标准3',
+        criteria: '组织学确诊的乳腺癌（浸润性导管癌）、ER阳性（90%）、HER2阴性',
+        source: '【术后病理（安阳市人民医院 2020年10月21日 B202000760）】（右侧乳腺肿物）浸润性导管癌 非特殊型 肿瘤大小...',
+        judge: 'pending',
+        judgeText: '待定 ：患者有组织学确诊的乳腺癌（浸润性导管癌）、ER阳性（90%）、H...'
+      }
+    ];
+
+    // 渲染匹配详情表格
+    function renderMatchDetailTable() {
+      const tbody = document.getElementById('matchDetailTable');
+      tbody.innerHTML = matchDetailData.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.type}</td>
+          <td><div class="cell-scroll">${item.criteria}</div></td>
+          <td><div class="cell-scroll">${item.source}</div></td>
+          <td>
+            <div style="display:flex;align-items:flex-start;gap:6px">
+              ${getJudgeIcon(item.judge)}
+              <span class="judge-badge judge-${item.judge}">${item.judgeText}</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-links">
+              <span class="action-link">病历溯源</span>
+              <span class="action-link">结果修正</span>
+            </div>
+            <div class="action-links" style="margin-top:4px">
+              <span class="action-link" style="color:#999">修正记录</span>
+              <span class="action-link" style="color:#999">清空修正</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 获取判断图标
+    function getJudgeIcon(judge) {
+      if (judge === 'matched') {
+        return '<span style="color:#52c41a;font-size:14px"><i class="fas fa-check-circle"></i></span>';
+      } else if (judge === 'unmatched') {
+        return '<span style="color:#ff4d4f;font-size:14px"><i class="fas fa-times-circle"></i></span>';
+      } else {
+        return '<span style="color:#faad14;font-size:14px"><i class="fas fa-question-circle"></i></span>';
+      }
+    }
+
+    // Tab切换
+    function switchTab(tab) {
+      // 更新Tab样式 - 仅限旧版
+      document.querySelectorAll('#version-old .tab-item').forEach(el => {
+        el.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 显示对应内容 - 仅限旧版
+      document.querySelectorAll('#version-old .tab-content').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.getElementById('tab-' + tab).style.display = 'block';
+    }
+
+    // 返回上一页 - 直接跳转到 index.html 的智能筛选患者列表
+    function goBack() {
+      // 获取当前页面的方案编号和中心信息
+      const schemeNo = urlParams.get('schemeNo') || '';
+      const centerNo = urlParams.get('centerNo') || '';
+      
+      // 构造返回链接，带上必要的参数以便定位到智能筛选的患者列表
+      // logged=1 表示已登录状态，避免跳转到登录页
+      let returnUrl = 'index.html?module=ai&logged=1';
+      const params = [];
+      
+      if (schemeNo) {
+        params.push(`schemeNo=${encodeURIComponent(schemeNo)}`);
+      }
+      if (centerNo) {
+        params.push(`centerNo=${encodeURIComponent(centerNo)}`);
+      }
+      
+      if (params.length > 0) {
+        returnUrl += '&' + params.join('&');
+      }
+      
+      window.location.href = returnUrl;
+    }
+
+    // 定位到具体标准
+    function locateCriteria(index) {
+      alert(`定位到入选/排除标准第${index}条（功能演示）`);
+    }
+
+    // ==================== 新版（智能匹配/思考链）示例数据 ====================
+    const matchVersionData = {
+      v1: {
+        versionNo: '预筛-2026-06-05',
+        aiModel: 'GPT-4o + RAG',
+        runTime: '2026-06-05 10:15 ~ 10:22',
+        matchRate: '28.6%',
+        basicInfo: { patientNo: 'LIP-2026-0042', genderAge: '男 / 52岁', center: '北京安贞医院', diagnosis: '原发性混合型高脂血症', schemeNo: 'SHR-1918-301', ascvd: '高危' },
+        conclusion: {
+          reject: [
+            { title: '入选标准2 不匹配', desc: '血脂报告日期为2026-01-20，距今超3个月，不满足"近期（三个月以内）"要求，存在筛败风险。' }
+          ],
+          pending: [
+            { title: '排除标准7 待确认', desc: '有高血压病史3年，但近期血压未记录，需确认血压控制情况（若收缩压≥160或舒张压≥100则不满足）。' },
+            { title: '排除标准23 待确认', desc: '肝功能（ALT/AST/GGT）近半年未检测，需补充后判定。' },
+            { title: '排除标准24 待确认', desc: '传染病筛查（乙肝/丙肝/HIV）未完成，需补充。' }
+          ]
+        },
+        matchDetail: [
+          { type: '入选标准1', criteria: '年龄≥18周岁', source: '【门诊病历】男，52岁', judge: 'matched', judgeText: '匹配：52岁，符合≥18周岁' },
+          { type: '入选标准2', criteria: '有血脂报告为近期（三个月以内）', source: '【检验报告 2026-01-20】TG 2.3，LDL-C 3.8，TC 6.5', judge: 'unmatched', judgeText: '不匹配：最新血脂报告距当前约4.5个月，超出3个月时效，存在筛败风险' },
+          { type: '入选标准3', criteria: '空腹TG≥1.5且≤11.3mmol/L', source: '【检验报告 2026-01-20】TG 2.3 mmol/L', judge: 'matched', judgeText: '匹配：TG 2.3，在1.5~11.3范围内' },
+          { type: '入选标准4', criteria: 'ASCVD分级符合中危及以上（如依靠既往TC≥7.2评为高危，需二级及以上医院出具）', source: '【既往记录】TC最高7.8（北京安贞医院 2025-03-15），ASCVD高危', judge: 'matched', judgeText: '匹配：既往TC 7.8，三甲医院出具，符合高危标准' },
+          { type: '入选标准5', criteria: 'LDL-C符合ASCVD分级标准阈值相差10%以内，高危需LDL-C≥2.6', source: '【检验报告 2026-01-20】LDL-C 3.8 mmol/L', judge: 'matched', judgeText: '匹配：高危标准需≥2.6，LDL-C 3.8符合要求' },
+          { type: '排除标准7', criteria: '控制不佳的高血压（收缩压≥160和/或舒张压≥100mmHg）', source: '【既往病史】高血压病史3年，近3个月血压未记录', judge: 'pending', judgeText: '待定：有高血压病史，近期血压数据缺失，需确认控制情况' },
+          { type: '排除标准23', criteria: 'ALT/AST/GGT＞3×ULN或总胆红素＞2×ULN', source: '【未在近期病历中找到相关信息】', judge: 'pending', judgeText: '待定：肝功能近半年未检测' },
+          { type: '排除标准24', criteria: 'HIV阳性、HCV阳性且RNA阳性、HBsAg阳性且HBV-DNA≥1000 copies/mL', source: '【未检测】', judge: 'pending', judgeText: '待定：传染病筛查未完成' },
+          { type: '排除标准1', criteria: '已知对试验用药品过敏，或对其他抗体类药物严重过敏', source: '【过敏史】未发现药物过敏记录', judge: 'matched', judgeText: '未命中：无已知药物过敏史' },
+          { type: '排除标准2', criteria: '纯合子家族性高胆固醇血症（HoFH）', source: '【既往诊断】未诊断HoFH', judge: 'matched', judgeText: '未命中：无相关诊断' }
+        ],
+        unmatched: [
+          { type: '入选标准2', text: '血脂报告（2026-01-20）超出3个月时效，建议尽快复查空腹血脂四项，更新报告后再行评估。' },
+          { type: '排除标准7', text: '高血压病史，血压控制情况未知。若收缩压≥160或舒张压≥100则不满足，建议监测近期血压。' },
+          { type: '排除标准23', text: '肝功能未检测，需补充ALT/AST/GGT/TBIL。若ALT/AST/GGT >3×ULN则不满足；既往肝酶偏高趋势提示筛选风险。' },
+          { type: '排除标准24', text: '传染病筛查（乙肝五项、HCV抗体+RNA、HIV抗体）未完成，需尽快补查。' }
+        ],
+        prescreen: [
+          { seq: 1, item: '性别', value: '男' },
+          { seq: 2, item: '年龄', value: '52' },
+          { seq: 3, item: 'TG', value: '2.3 mmol/L' },
+          { seq: 4, item: 'LDL-C', value: '3.8 mmol/L' },
+          { seq: 5, item: 'TC', value: '6.5 mmol/L' },
+          { seq: 6, item: 'HDL-C', value: '1.1 mmol/L' },
+          { seq: 7, item: '血脂报告日期', value: '2026-01-20' },
+          { seq: 8, item: 'ASCVD分级', value: '高危（既往TC 7.8）' },
+          { seq: 9, item: '血压', value: '' },
+          { seq: 10, item: 'ALT', value: '' }
+        ],
+        thinkChain: [
+          { title: '解析入排标准', desc: '系统读取方案 SHR-1918-301 V1.0 的入排标准文本，拆分为可判定的结构化条目（入选 6 条 / 排除 28 条）。', evidence: '来源：SHR-1918-301 方案入排标准 · 版本 V1.0' },
+          { title: '抽取患者信息', desc: '从门诊病历、检验报告中抽取关键字段：男、52岁、TG 2.3、LDL-C 3.8、既往TC 7.8、高血压病史。', evidence: '来源：北京安贞医院 2026-01-20 检验报告' },
+          { title: '逐条匹配判定', desc: '年龄、TG、LDL-C、ASCVD分级均符合；血脂报告超3个月触发筛败；血压、肝功能、传染病未查。', evidence: '入选标准2 → 不匹配（报告超期）' },
+          { title: '生成结论', desc: '综合判定：血脂报告超期是硬性不满足项，建议复查后再评估。其他待定项需补充检查。', evidence: '结论：不符合入排标准（1项）+ 待定（3项）' }
+        ],
+        comorbidity: [
+          { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：既往病史记录 · 高血压病史3年' },
+          { name: '脂肪肝', icon: 'fa-notes-medical', evidence: '来源：腹部超声 2026-01-20' },
+          { name: '胆囊结石', icon: 'fa-notes-medical', evidence: '来源：腹部超声 2026-01-20' }
+        ],
+        medication: [
+          { name: '阿托伐他汀钙片 20mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-01-20 开具' },
+          { name: '苯磺酸氨氯地平片 5mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-01-20 开具' },
+          { name: '阿司匹林肠溶片 100mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-01-20 开具' }
+        ]
+      },
+      v2: {
+        versionNo: '入组-2026-06-20',
+        aiModel: 'GPT-4o + RAG + 知识库增强',
+        runTime: '2026-06-20 09:08 ~ 09:16',
+        matchRate: '71.4%',
+        basicInfo: { patientNo: 'LIP-2026-0042', genderAge: '男 / 52岁', center: '北京安贞医院', diagnosis: '原发性混合型高脂血症', schemeNo: 'SHR-1918-301', ascvd: '高危' },
+        conclusion: {
+          reject: [],
+          pending: [
+            { title: '入选标准3 筛败风险', desc: '复查TG 1.65 mmol/L，处于1.5~1.7边缘范围，存在筛败风险，建议再次空腹复查确认。' },
+            { title: '排除标准23 筛选风险', desc: 'ALT轻微升高至68 U/L（ULN=40），虽未达3×ULN，但既往趋势提示筛选风险。' }
+          ]
+        },
+        matchDetail: [
+          { type: '入选标准1', criteria: '年龄≥18周岁', source: '【门诊病历】男，52岁', judge: 'matched', judgeText: '匹配' },
+          { type: '入选标准2', criteria: '有血脂报告为近期（三个月以内）', source: '【检验报告 2026-06-15】TG 1.65，LDL-C 3.2，TC 5.8，HDL-C 1.05', judge: 'matched', judgeText: '匹配：报告日期 2026-06-15，在3个月内' },
+          { type: '入选标准3', criteria: '空腹TG≥1.5且≤11.3mmol/L；TG在1.5~1.7之间提示筛败风险', source: '【检验报告 2026-06-15】TG 1.65 mmol/L', judge: 'pending', judgeText: '待定：TG 1.65在1.5~1.7边缘范围，提示筛败风险，建议复查' },
+          { type: '入选标准4', criteria: 'ASCVD分级符合中危及以上', source: '【既往记录】TC最高7.8（北京安贞医院 2025-03-15），ASCVD高危', judge: 'matched', judgeText: '匹配：ASCVD高危，三甲医院出具' },
+          { type: '入选标准5', criteria: 'LDL-C符合ASCVD分级阈值，高危LDL-C≥2.6', source: '【检验报告 2026-06-15】LDL-C 3.2 mmol/L', judge: 'matched', judgeText: '匹配：高危标准需≥2.6，LDL-C 3.2符合要求' },
+          { type: '入选标准6', criteria: '既往无非方案降脂药物，或背景药物剂量符合', source: '【用药记录】未服用其他降脂药物', judge: 'matched', judgeText: '未命中：无其他降脂药物使用史' },
+          { type: '排除标准7', criteria: '控制不佳的高血压（收缩压≥160和/或舒张压≥100mmHg）', source: '【门诊记录 2026-06-15】血压 145/92 mmHg', judge: 'matched', judgeText: '未命中：145/92，未达160/100标准' },
+          { type: '排除标准23', criteria: 'ALT/AST/GGT＞3×ULN或总胆红素＞2×ULN', source: '【检验报告 2026-06-15】ALT 68 U/L（ULN=40），AST 45，GGT 52', judge: 'pending', judgeText: '待定：ALT 68（1.7xULN），未达3xULN但偏高；既往肝酶偏高趋势提示筛选风险' },
+          { type: '排除标准24', criteria: 'HIV阳性、HCV阳性且RNA阳性、HBsAg阳性且HBV-DNA≥1000 copies/mL', source: '【检验报告 2026-06-15】HBsAg(-)、HCV-Ab(-)、HIV-Ab(-)', judge: 'matched', judgeText: '未命中：传染病筛查均为阴性' },
+          { type: '排除标准9', criteria: '1型糖尿病不建议储备，2型糖尿病HbA1c>8.5%提示筛败风险', source: '【门诊记录】无糖尿病史，空腹血糖 5.6 mmol/L', judge: 'matched', judgeText: '未命中：无糖尿病史' }
+        ],
+        unmatched: [
+          { type: '入选标准3', text: 'TG 1.65处于1.5~1.7边缘范围，建议1~2周后空腹复查血脂四项，若TG降至1.5以下则不符合入选标准。' },
+          { type: '排除标准23', text: 'ALT 68 U/L轻度升高（1.7xULN），虽未超3xULN阈值，但既往肝酶偏高趋势需关注，建议复查肝功能。' }
+        ],
+        prescreen: [
+          { seq: 1, item: '性别', value: '男' },
+          { seq: 2, item: '年龄', value: '52' },
+          { seq: 3, item: 'TG', value: '1.65 mmol/L' },
+          { seq: 4, item: 'LDL-C', value: '3.2 mmol/L' },
+          { seq: 5, item: 'TC', value: '5.8 mmol/L' },
+          { seq: 6, item: 'HDL-C', value: '1.05 mmol/L' },
+          { seq: 7, item: '血脂报告日期', value: '2026-06-15' },
+          { seq: 8, item: 'ASCVD分级', value: '高危（既往TC 7.8）' },
+          { seq: 9, item: '血压', value: '145/92 mmHg' },
+          { seq: 10, item: 'ALT', value: '68 U/L' }
+        ],
+        thinkChain: [
+          { title: '更新病历信息', desc: '患者于2026-06-15完成复查：血脂四项、肝功能、传染病筛查、血压测量。血脂报告在3个月有效期内。', evidence: '来源：北京安贞医院 2026-06-15 检验报告' },
+          { title: '血脂指标评估', desc: 'TG 1.65在1.5~1.7边缘范围，虽在入选范围内但提示筛败风险；LDL-C 3.2满足高危≥2.6的标准。', evidence: '入选标准3 → 边缘值，提示筛败风险' },
+          { title: '肝功能评估', desc: 'ALT 68 U/L为1.7xULN，未达排除标准3xULN，但提示注意；需结合病史评估肝酶偏高原因。', evidence: '排除标准23 → 未命中但提示风险' },
+          { title: '生成结论', desc: '主要指标基本符合，TG边缘值和ALT偏高为风险点，建议复查后判断是否可以入组。', evidence: '结论：待定（2项筛选风险）' }
+        ],
+        comorbidity: [
+          { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：门诊记录 2026-06-15 血压 145/92' },
+          { name: '非酒精性脂肪肝', icon: 'fa-notes-medical', evidence: '来源：腹部超声 2026-06-15' },
+          { name: '甲状腺结节（TI-RADS 3类）', icon: 'fa-notes-medical', evidence: '来源：甲状腺超声 2026-06-15' }
+        ],
+        medication: [
+          { name: '阿托伐他汀钙片 20mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-06-15 开具' },
+          { name: '苯磺酸氨氯地平片 5mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-06-15 开具' },
+          { name: '阿司匹林肠溶片 100mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-06-15 开具' }
+        ]
+      },
+      v3: {
+        versionNo: '入组-2026-07-14',
+        aiModel: 'Claude 3.5 + RAG + 规则引擎',
+        runTime: '2026-07-14 08:42 ~ 08:51',
+        matchRate: '92.9%',
+        basicInfo: { patientNo: 'LIP-2026-0042', genderAge: '男 / 52岁', center: '北京安贞医院', diagnosis: '原发性混合型高脂血症', schemeNo: 'SHR-1918-301', ascvd: '高危' },
+        conclusion: { reject: [], pending: [] },
+        matchDetail: [
+          { type: '入选标准1', criteria: '年龄≥18周岁', source: '【门诊病历】男，52岁', judge: 'matched', judgeText: '匹配' },
+          { type: '入选标准2', criteria: '有血脂报告为近期（三个月以内）', source: '【检验报告 2026-07-10】TG 1.82，LDL-C 3.5', judge: 'matched', judgeText: '匹配：报告日期 2026-07-10，在3个月内' },
+          { type: '入选标准3', criteria: '空腹TG≥1.5且≤11.3mmol/L', source: '【检验报告 2026-07-10】TG 1.82 mmol/L', judge: 'matched', judgeText: '匹配：TG 1.82，稳定在1.5~11.3范围内，且超出1.7边缘值' },
+          { type: '入选标准4', criteria: 'ASCVD分级符合中危及以上', source: '【既往记录】TC最高7.8（北京安贞医院），ASCVD高危', judge: 'matched', judgeText: '匹配：ASCVD高危' },
+          { type: '入选标准5', criteria: 'LDL-C符合ASCVD分级阈值，高危LDL-C≥2.6', source: '【检验报告 2026-07-10】LDL-C 3.5 mmol/L', judge: 'matched', judgeText: '匹配：3.5 ≥ 2.6，符合高危标准' },
+          { type: '排除标准7', criteria: '控制不佳的高血压（收缩压≥160和/或舒张压≥100mmHg）', source: '【门诊记录 2026-07-10】血压 138/88 mmHg', judge: 'matched', judgeText: '未命中：138/88，控制良好' },
+          { type: '排除标准23', criteria: 'ALT/AST/GGT＞3×ULN或总胆红素＞2×ULN', source: '【检验报告 2026-07-10】ALT 42 U/L（ULN=40），AST 35，GGT 38', judge: 'matched', judgeText: '未命中：ALT 42仅略高（1.05xULN），AST/GGT正常' },
+          { type: '排除标准24', criteria: 'HIV阳性、HCV阳性且RNA阳性、HBsAg阳性且HBV-DNA≥1000 copies/mL', source: '【既往报告】HBsAg(-)、HCV-Ab(-)、HIV-Ab(-)', judge: 'matched', judgeText: '未命中：传染病筛查阴性' },
+          { type: '排除标准9', criteria: '1型糖尿病不建议储备，2型糖尿病HbA1c>8.5%提示筛败风险', source: '【门诊记录】无糖尿病史，HbA1c 5.4%', judge: 'matched', judgeText: '未命中：无糖尿病，HbA1c正常' },
+          { type: '排除标准4', criteria: '储备日期往前3个月内有急性冠脉综合征、脑血管病史', source: '【门诊记录】否认近期心血管事件', judge: 'matched', judgeText: '未命中：3个月内无相关事件' },
+          { type: '排除标准5', criteria: '储备日期往前3个月内严重心律失常', source: '【ECG 2026-07-10】窦性心律，正常心电图', judge: 'matched', judgeText: '未命中：ECG正常' },
+          { type: '排除标准1', criteria: '已知对试验用药品过敏或对其他抗体类药物严重过敏', source: '【过敏史】无', judge: 'matched', judgeText: '未命中：无已知过敏史' },
+          { type: '排除标准25', criteria: 'CK＞3×ULN', source: '【检验报告 2026-07-10】CK 126 U/L（ULN=200）', judge: 'matched', judgeText: '未命中：CK正常' }
+        ],
+        unmatched: [],
+        prescreen: [
+          { seq: 1, item: '性别', value: '男' },
+          { seq: 2, item: '年龄', value: '52' },
+          { seq: 3, item: 'TG', value: '1.82 mmol/L' },
+          { seq: 4, item: 'LDL-C', value: '3.5 mmol/L' },
+          { seq: 5, item: 'TC', value: '6.1 mmol/L' },
+          { seq: 6, item: 'HDL-C', value: '1.08 mmol/L' },
+          { seq: 7, item: '血脂报告日期', value: '2026-07-10' },
+          { seq: 8, item: 'ASCVD分级', value: '高危（既往TC 7.8）' },
+          { seq: 9, item: '血压', value: '138/88 mmHg' },
+          { seq: 10, item: 'ALT', value: '42 U/L' }
+        ],
+        thinkChain: [
+          { title: '多模型交叉验证', desc: 'Claude 3.5 与规则引擎分别输出判定，取一致性结果。对TG边缘和ALT波动进行双重校验。', evidence: '模型一致性：96.4%（26/27条标准一致）' },
+          { title: 'TG复查确认', desc: 'TG 1.82，稳定在1.5以上且超出边缘值1.7，排除筛败风险；LDL-C 3.5满足高危标准。', evidence: '入选标准3 → 匹配（TG稳定）' },
+          { title: '肝功能复查确认', desc: 'ALT回落至42 U/L（1.05xULN），AST、GGT均正常，无持续恶化趋势。', evidence: '排除标准23 → 未命中' },
+          { title: '生成结论', desc: '所有入选标准匹配、排除标准无命中，各项指标稳定，患者可进入筛选。', evidence: '结论：符合入排标准' }
+        ],
+        comorbidity: [
+          { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：门诊记录 2026-07-10 血压 138/88' },
+          { name: '非酒精性脂肪肝', icon: 'fa-notes-medical', evidence: '来源：检验报告 2026-07-10' },
+          { name: '甲状腺结节（TI-RADS 3类）', icon: 'fa-notes-medical', evidence: '来源：甲状腺超声 2026-07-10' }
+        ],
+        medication: [
+          { name: '瑞舒伐他汀钙片 10mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-07-10 开具' },
+          { name: '苯磺酸氨氯地平片 5mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-07-10 开具' },
+          { name: '阿司匹林肠溶片 100mg qd', icon: 'fa-pills', evidence: '来源：门诊处方 · 2026-07-10 开具' }
+        ]
+      }
+    };
+
+    // 当前展示的智能匹配版本
+    let currentMatchVersion = 'v1';
+
+
+    // 新版：匹配详情表格
+    function renderNewMatchDetailTable(data) {
+      const tbody = document.getElementById('aiMatchDetailTable');
+      if (!tbody) return;
+      const list = data || newMatchDetailData;
+      tbody.innerHTML = list.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.type}</td>
+          <td><div class="cell-scroll">${item.criteria}</div></td>
+          <td><div class="cell-scroll">${item.source}</div></td>
+          <td>
+              <div style="display:flex;align-items:flex-start;gap:6px">
+              ${getJudgeIcon(item.judge)}
+              <span class="judge-badge judge-${item.judge}">${item.judgeText}</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-links">
+              <span class="action-link">病历溯源</span>
+              <span class="action-link">结果修正</span>
+            </div>
+            <div class="action-links" style="margin-top:4px">
+              <span class="action-link" style="color:#999">修正记录</span>
+              <span class="action-link" style="color:#999">清空修正</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 新版：AI风险提示（与建议待定保持同样式：黄色结论块 + 圆形序号 + 标题/描述）
+    function renderUnmatchedList(data) {
+      const box = document.getElementById('riskList');
+      const countEl = document.getElementById('riskCount');
+      if (!box) return;
+      const list = data || unmatchedData;
+      if (countEl) countEl.textContent = list.length;
+      if (list.length === 0) {
+        box.innerHTML = '<div class="conclusion-item" style="border:none;padding-top:0"><span class="conclusion-item-icon" style="background:#faad14"><i class="fas fa-check"></i></span><div class="conclusion-item-main"><div class="conclusion-item-title">暂无AI风险提示</div></div></div>';
+        return;
+      }
+      box.innerHTML = list.map((item, i) => `
+        <div class="conclusion-item">
+          <span class="conclusion-item-icon">${i + 1}</span>
+          <div class="conclusion-item-main">
+            <div class="conclusion-item-title">${item.type}</div>
+            <div class="conclusion-item-desc">${item.text}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+
+    // 新版：合并症 / 合并药物 AI识别（表格化输出：名称 / 规格频次 / 证据来源）
+    function renderRecognition(boxId, data, type) {
+      const box = document.getElementById(boxId);
+      if (!box) return;
+      const list = data || [];
+      if (list.length === 0) {
+        box.innerHTML = '<div class="recognition-empty">未识别到相关记录</div>';
+        return;
+      }
+      const isMed = type === 'medication';
+      const titleName = isMed ? '合并用药' : '合并症';
+
+      const rows = list.map((item, i) => {
+        let name = item.name || '';
+        let dose = '';
+        // 合并用药：将 "药物名 规格 频次" 拆分，首段为药名，其余为规格/频次
+        if (isMed && name.indexOf(' ') > -1) {
+          const parts = name.split(' ');
+          name = parts.shift();
+          dose = parts.join(' ');
+        }
+        return `
+          <tr>
+            <td>${i + 1}</td>
+            <td><span class="rec-name-cell">${name}</span></td>
+            ${isMed ? `<td class="rec-dose-cell">${dose || '—'}</td>` : ''}
+            <td><div class="rec-evidence-cell">${item.evidence || '—'}</div></td>
+          </tr>`;
+      }).join('');
+
+      const headCols = isMed
+        ? `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th style="min-width:140px">规格 / 频次</th><th>证据来源</th>`
+        : `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th>证据来源</th>`;
+
+      box.innerHTML = `
+        <div class="recognition-meta">
+          <span class="recognition-count">共识别 ${list.length} 项</span>
+          <span class="recognition-note">以下为 AI 从病史与资料中自动抽取，供人工复核</span>
+        </div>
+        <div class="table-container">
+          <table class="detail-table recognition-table">
+            <thead><tr>${headCols}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    // 新版：筛选表
+    function renderNewPrescreenTable(data) {
+      const tbody = document.getElementById('newPrescreenTable');
+      if (!tbody) return;
+      const list = data || matchVersionData[currentMatchVersion].prescreen;
+      tbody.innerHTML = list.map(item => `
+        <tr>
+          <td>${item.seq}</td>
+          <td>${item.item}</td>
+          <td>${item.value || '-'}</td>
+          <td>
+            <div class="action-links">
+              <span class="action-link">编辑</span>
+              <span class="action-link">病历溯源</span>
+              <span class="action-link" style="color:#999">修正记录</span>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 新版：思考链详情
+    function renderThinkChain(data) {
+      const box = document.getElementById('thinkChainContainer');
+      if (!box) return;
+      const list = data || thinkChainData;
+      box.innerHTML = list.map((step, i) => `
+        <div class="tc-step">
+          <span class="tc-node">${i + 1}</span>
+          <div class="tc-title">${step.title}</div>
+          <div class="tc-desc">${step.desc}</div>
+          <div class="tc-evidence">${step.evidence}</div>
+        </div>
+      `).join('');
+    }
+
+    // 新版：版本号区域
+    function renderVersionMeta(data) {
+      const v = data || matchVersionData[currentMatchVersion];
+      if (!v) return;
+      const noEl = document.getElementById('newVersionNo');
+      const modelEl = document.getElementById('newAIModel');
+      const runEl = document.getElementById('newRunTime');
+      const rateEl = document.getElementById('newMatchRate');
+      if (noEl) noEl.textContent = v.versionNo;
+      if (modelEl) modelEl.textContent = v.aiModel;
+      if (runEl) runEl.textContent = v.runTime;
+      if (rateEl) rateEl.textContent = v.matchRate;
+    }
+
+    // 新版：基本信息
+    function renderBasicInfo(data) {
+      const v = data || matchVersionData[currentMatchVersion];
+      if (!v) return;
+      const box = document.getElementById('aiBasicInfo');
+      if (!box) return;
+      Object.keys(v.basicInfo).forEach(key => {
+        const el = box.querySelector('[data-field="' + key + '"]');
+        if (el) el.textContent = v.basicInfo[key];
+      });
+    }
+
+    // 新版：结论（分类：不符合入排标准 / 建议待定）
+    function renderConclusion(data) {
+      const v = data || matchVersionData[currentMatchVersion];
+      if (!v || !v.conclusion) return;
+      const box = document.getElementById('conclusionList');
+      if (!box) return;
+
+      const rejectList = v.conclusion.reject || [];
+      const pendingList = v.conclusion.pending || [];
+
+      let html = '';
+
+      if (rejectList.length > 0) {
+        html += `
+          <div class="conclusion-block reject">
+            <div class="conclusion-block-head">
+              <i class="fas fa-times-circle"></i>
+              不符合入排标准
+              <span class="cb-count">${rejectList.length}</span>
+            </div>
+            <div class="conclusion-block-body">
+              ${rejectList.map(item => `
+                <div class="conclusion-item">
+                  <span class="conclusion-item-icon"><i class="fas fa-times"></i></span>
+                  <div class="conclusion-item-main">
+                    <div class="conclusion-item-title">${item.title}</div>
+                    <div class="conclusion-item-desc">${item.desc}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (pendingList.length > 0) {
+        html += `
+          <div class="conclusion-block pending">
+            <div class="conclusion-block-head">
+              <i class="fas fa-question-circle"></i>
+              建议待定
+              <span class="cb-count">${pendingList.length}</span>
+            </div>
+            <div class="conclusion-block-body">
+              ${pendingList.map(item => `
+                <div class="conclusion-item">
+                  <span class="conclusion-item-icon"><i class="fas fa-question"></i></span>
+                  <div class="conclusion-item-main">
+                    <div class="conclusion-item-title">${item.title}</div>
+                    <div class="conclusion-item-desc">${item.desc}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (rejectList.length === 0 && pendingList.length === 0) {
+        html = `
+          <div class="conclusion-block" style="border-color:#b7eb8f;background:#f6ffed">
+            <div class="conclusion-block-head" style="color:#389e0d;background:#f6ffed">
+              <i class="fas fa-check-circle"></i> 符合入排标准
+            </div>
+            <div class="conclusion-block-body">
+              <div class="conclusion-item" style="border:none;padding-top:0">
+                <span class="conclusion-item-icon" style="background:#52c41a"><i class="fas fa-check"></i></span>
+                <div class="conclusion-item-main">
+                  <div class="conclusion-item-title">所有入选标准均匹配，排除标准无命中</div>
+                  <div class="conclusion-item-desc">患者可进入筛选流程。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      box.innerHTML = html;
+    }
+
+
+    // 智能匹配版本切换
+    function switchMatchVersion(version) {
+      if (!matchVersionData[version]) return;
+      currentMatchVersion = version;
+
+      // 更新版本标签激活状态
+      document.querySelectorAll('#versionSwitcher .version-tag').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.version === version);
+      });
+
+      const v = matchVersionData[version];
+      renderVersionMeta(v);
+      renderBasicInfo(v);
+      renderConclusion(v);
+      renderNewMatchDetailTable(v.matchDetail);
+      renderUnmatchedList(v.unmatched);
+      renderRecognition('comorbidityList', v.comorbidity, 'comorbidity');
+      renderRecognition('medicationList', v.medication, 'medication');
+      renderNewPrescreenTable(v.prescreen);
+      renderThinkChain(v.thinkChain);
+    }
+
+    // 保留旧版默认数据数组（兼容初始化）
+    const newMatchDetailData = matchVersionData.v1.matchDetail;
+    const unmatchedData = matchVersionData.v1.unmatched;
+    const thinkChainData = matchVersionData.v1.thinkChain;
+
+    // ==================== 页面版本切换（旧版/新版） ====================
+    function togglePageVersion() {
+      var current = window.pageView || 'old';
+      switchPageVersion(current === 'old' ? 'new' : 'old');
+    }
+
+    function switchPageVersion(version) {
+      var oldEl = document.getElementById('version-old');
+      var newEl = document.getElementById('version-new');
+      if (!oldEl || !newEl) return;
+      if (version === 'old') {
+        oldEl.style.display = 'block';
+        newEl.style.display = 'none';
+        window.pageView = 'old';
+      } else {
+        oldEl.style.display = 'none';
+        newEl.style.display = 'block';
+        window.pageView = 'new';
+        setTimeout(initAnchorObserver, 300);
+      }
+    }
+
+    // ==================== 新版 Tab 切换 ====================
+    function switchNewTab(tab) {
+      document.querySelectorAll('#version-new .tab-item').forEach(el => el.classList.remove('active'));
+      var target = document.querySelector('#version-new .tab-item[onclick*="' + tab + '"]');
+      if (target) target.classList.add('active');
+      document.querySelectorAll('#version-new .new-tab-content').forEach(el => el.style.display = 'none');
+      var content = document.getElementById('tab-new-' + tab);
+      if (content) content.style.display = 'block';
+    }
+
+    // ==================== 锚点滚动 ====================
+    function scrollToSection(id) {
+      var el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.querySelectorAll('.anchor-nav-item').forEach(n => n.classList.remove('active'));
+      var nav = document.querySelector('.anchor-nav-item[data-anchor="' + id + '"]');
+      if (nav) nav.classList.add('active');
+    }
+
+    // 滚动时自动更新锚点高亮
+    var anchorObserver = null;
+    function initAnchorObserver() {
+      var sections = document.querySelectorAll('#version-new .ai-section');
+      if (sections.length === 0) return;
+      var observerOptions = { root: null, rootMargin: '-80px 0px -70% 0px', threshold: 0 };
+      if (anchorObserver) anchorObserver.disconnect();
+      anchorObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            var id = entry.target.id;
+            document.querySelectorAll('.anchor-nav-item').forEach(n => n.classList.remove('active'));
+            var nav = document.querySelector('.anchor-nav-item[data-anchor="' + id + '"]');
+            if (nav) nav.classList.add('active');
+          }
+        });
+      }, observerOptions);
+      sections.forEach(function(s) { anchorObserver.observe(s); });
+    }
+
+    // 页面加载时初始化
+    window.addEventListener('DOMContentLoaded', function() {
+      // 设置全局当前版本
+      window.currentVersion = currentVersion;
+      window.pageView = 'old';
+
+      // 旧版渲染（独立容错，避免单点失败导致整页空白）
+      try { renderVersionTags(); } catch (e) { console.error('renderVersionTags', e); }
+      try { renderPrescreenVersionTags(); } catch (e) { console.error('renderPrescreenVersionTags', e); }
+      try { renderMatchDetailTable(); } catch (e) { console.error('renderMatchDetailTable', e); }
+      try { renderPrescreenTable(); } catch (e) { console.error('renderPrescreenTable', e); }
+
+      // 新版内容初始化
+      try { switchMatchVersion('v1'); } catch (e) { console.error('switchMatchVersion', e); }
+
+      // 设置当前时间
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' + 
+                     String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                     String(now.getDate()).padStart(2, '0') + ' ' + 
+                     String(now.getHours()).padStart(2, '0') + ':' + 
+                     String(now.getMinutes()).padStart(2, '0') + ':' + 
+                     String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('endTime').textContent = timeStr;
+
+      // 初始化 PRD 面板（须在函数定义之后调用）
+      try { updatePRDPanel('audit'); } catch (e) { console.error('updatePRDPanel', e); }
+    });
+
+// ==================== PRD 需求说明面板 ====================
+function updatePRDPanel(mod, sub) {
+  const prdPanel = document.getElementById('prdPanel');
+  if (!prdPanel) return;
+  
+  // 定义各模块的需求说明（参考 PRD_匹配管理模块.md → 匹配详情页面）
+  const prdData = {
+    'audit': {
+      title: '匹配详情（PRD 参考）',
+      sections: [
+        {
+          title: '★ 本次修改',
+          content: '<ul><li><strong style="color:red;">修改摘要</strong></li><li>① 去掉分组和预筛的标签页</li><li>② 匹配详情和预筛表中加历史版本，点击不同的版本刷新当前页面内容</li><li>③ 智能匹配新增「合并症AI识别」「合并药物AI识别」两个区块（第6/7节），自动从病历识别疾病名称与药品名称并展示来源</li></ul>'
+        },
+        {
+          title: '一、页面定位',
+          content: '<ul><li><strong>入口：</strong>匹配日志（最新）/ 筛选表日志 点击「匹配详情 / 查看数据」进入</li><li><strong>目标用户：</strong>管理员（系统维护、数据分析）、医学经理（排查匹配问题、效果分析）</li><li><strong>权限：</strong>仅查看、导出PDF、重新匹配；日志不可编辑、不可删除</li></ul>'
+        },
+        {
+          title: '二、页面区块结构',
+          content: '<ul><li><strong>匹配运行信息：</strong>AI模型、开始/结束匹配时间、RAG用时、LLM用时、总用时</li><li><strong>方案信息：</strong>方案编号、项目名称、入排标准版本（含上次更新时间）</li><li><strong>匹配度：</strong>入选标准（通过数/待定义数）、排除标准（通过数/待定义数）</li><li><strong>AI建议：</strong>通过 / 筛败 + 建议说明</li><li><strong>匹配详情列表：</strong>序号、标准类型、纳排内容、源数据、AI判断（RAG判定）、操作（病历溯源）</li></ul>'
+        },
+        {
+          title: '三、历史版本切换',
+          content: '<ul><li>顶部「匹配版本」切换器：预筛 / 入组 等多个版本</li><li>点击不同版本，<strong>刷新整页内容</strong>（运行信息、结论、匹配详情列表）</li><li>当前版本标签高亮显示</li></ul>'
+        },
+        {
+          title: '四、重新匹配',
+          content: '<ul><li>点击「重新匹配」触发后端匹配接口</li><li>接口调用期间按钮显示加载态，防止重复提交</li><li>完成后最新匹配记录自动更新</li></ul>'
+        },
+        {
+          title: '五、验收要点',
+          content: '<ul><li>匹配状态标签：灰色=识别中、绿色=匹配成功、红色=匹配失败</li><li>匹配详情列表逐条展示标准判定与病历溯源</li><li>支持导出PDF；日志不可编辑/删除</li><li>历史版本切换可正确刷新当前页面</li></ul>'
+        }
+      ]
+    },
+  }
+// 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
+  const subKey = sub ? mod + '-' + sub : null;
+  const prd = prdData[subKey] || prdData[mod];
+  if (!prd) {
+    prdPanel.innerHTML = '<div class="prd-section"><div class="prd-section-content">暂无该模块的需求说明。</div></div>';
+    return;
+  }
+  
+  let html = '';
+  
+  prd.sections.forEach(section => {
+    html += `
+      <div class="prd-section">
+        <div class="prd-section-title">${section.title}</div>
+        <div class="prd-section-content">${section.content}</div>
+      </div>
+    `;
+  });
+  
+  prdPanel.innerHTML = html;
+}
+    
+/* 收缩 / 展开 右侧 PRD 面板 */
+function togglePRDSide() {
+  const side = document.getElementById('prdSide');
+  if (side) side.classList.toggle('collapsed');
+}
+function collapsePRDSide() {
+  const side = document.getElementById('prdSide');
+  if (side) side.classList.add('collapsed');
+}
+function expandPRDSide() {
+  const side = document.getElementById('prdSide');
+  if (side) side.classList.remove('collapsed');
+}
+
+/* 兼容旧调用 */
+function closePRDPanel() { collapsePRDSide(); }
+function togglePRDDrawer() { togglePRDSide(); }
+function collapsePRDDrawer() { collapsePRDSide(); }
+function expandPRDDrawer() { expandPRDSide(); }
+  </script>
+</body>
+</html>
