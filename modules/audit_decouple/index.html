@@ -6725,6 +6725,12 @@ function updatePRDPanel(mod, sub) {
             <li><strong>第四条数据 孙*芳（入组通过 ，可以补充审核）</strong>：操作列显示为<strong>「补充审核」</strong>（功能与提交审批一致），适用于已入组通过的患者追加审核流程的场景。点击后弹出审批流程选择弹窗，流程与提交审批相同。</li>
               </ul>
             </li>
+              <li><strong>项目匹配点击效果</strong>：
+              <ul style="margin-top:6px">
+                <li><strong>第一条数据 王*明 单版本不需要选择版本的效果</li>
+                <li><strong>第二条数据 李*华 需要选择版本的效果</li>
+            </ul>
+            </li>
             <li><strong>判断逻辑说明</strong>：第一条数据 <code>thinkStatus:'failed'</code>（AI思考失败）→ 判断为<strong style="color:#F53F3F">是</strong>（需要人工复核）；第二条数据 <code>thinkStatus:'success'</code>（AI思考成功）→ 判断为<strong style="color:#00B42A">否</strong>（无需人工复核，正常流转）。该判断仅用于演示不同患者提交后的差异化效果。</li>
           </ul>`
         },
@@ -8301,8 +8307,8 @@ function handleProjectMatch(patientId, matchStatus, schemeNo, patientIndex) {
   if (matchStatus === '待匹配' || matchStatus === '匹配中') {
     // 显示提示：正在匹配中，请稍后点击
     showWechatToast('正在匹配中，请稍后点击');
-  } else if (patientIndex === 1) {
-    // 第二条数据：先入排版本选择
+  } else if (patientIndex === 2) {
+    // 第三条数据：先入排版本选择
     showVersionMatchConfirm(patientId, schemeNo, patientIndex);
   } else {
     // 默认显示确认框
@@ -18045,7 +18051,13 @@ function closeSubmitAuditModal() {
 let pendingAuditParams = null;
 
 function showAiMatchModal() {
-  document.getElementById('aiMatchModal').classList.add('open');
+  const modal = document.getElementById('aiMatchModal');
+  const versionArea = document.getElementById('aiMatchVersionArea');
+  // 仅第二条数据展示入排版本选择
+  if (versionArea) {
+    versionArea.style.display = (pendingAuditParams && pendingAuditParams.patientIndex === 1) ? 'block' : 'none';
+  }
+  modal.classList.add('open');
 }
 
 function closeAiMatchModal() {
@@ -18059,6 +18071,25 @@ function onAiMatchConfirm() {
   // 继续执行之前暂存的提交
   if(pendingAuditParams) {
     const { schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark } = pendingAuditParams;
+    // 仅第二条数据显示版本选择，需保存所选版本号
+    const versionArea = document.getElementById('aiMatchVersionArea');
+    const versionVisible = versionArea && versionArea.style.display !== 'none';
+    if (versionVisible) {
+      const versionSelect = document.getElementById('aiMatchVersionSelect');
+      const version = versionSelect ? versionSelect.value : '';
+      if (version) {
+        const patients = scPatientData[schemeNo] || [];
+        const patient = patients[patientIndex];
+        if (patient) {
+          patient.matchVersion = version;
+          patient.matchStatus = '已匹配';
+          const scContentEl = document.getElementById('scContent');
+          if (scContentEl) {
+            scContentEl.innerHTML = buildScPatientListContent();
+          }
+        }
+      }
+    }
     pendingAuditParams = null;
     doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark);
   }
@@ -18128,8 +18159,8 @@ function submitAudit(schemeNo, patientIndex) {
     window._matchWithSubmit.schemeNo === schemeNo && 
     window._matchWithSubmit.patientIndex === patientIndex;
 
-  // 第一条数据（patientIndex===0）弹出AI智能匹配提示框（仅在非预提交场景）
-  if(patientIndex === 0 && !pendingMatch) {
+  // 第一、二条数据弹出AI智能匹配提示框（仅在非预提交场景；第二条额外显示版本选择）
+  if((patientIndex === 0 || patientIndex === 1) && !pendingMatch) {
     pendingAuditParams = { schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark: finalRemark };
     showAiMatchModal();
     return;
@@ -18171,12 +18202,9 @@ function doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabe
   let toastMsg = '';
   if(pendingMatch) {
     toastMsg = '匹配成功，已自动提交审批！';
-  } else if(patientIndex === 0) {
-    // 第一条数据 王*明：AI思考失败，判断为"是"（需要人工复核）
+  } else if(patientIndex === 0 || patientIndex === 1) {
+    // 第一、二条数据：AI匹配后自动提交
     toastMsg = '匹配中，匹配完成后系统将自动帮您提交审批';
-  } else if(patientIndex === 1) {
-    // 第二条数据 李*华：AI思考成功，判断为"否"（无需人工复核）
-    toastMsg = '审批提交成功！';
   } else {
     toastMsg = '审批提交成功！';
   }
@@ -18724,10 +18752,20 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="modal-body" style="padding:24px;text-align:center;">
       <i class="fas fa-exclamation-circle" style="font-size:42px;color:#165DFF;margin-bottom:16px;display:block;"></i>
       <p style="font-size:15px;color:#333;line-height:1.8;font-weight:500;">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交</p>
+      <div id="aiMatchVersionArea" style="display:none; margin-top:20px; text-align:left; padding:14px 16px; background:#f5f7fa; border-radius:8px;">
+        <div style="font-size:13px; color:#333; font-weight:600; margin-bottom:8px;">
+          <i class="fa-solid fa-code-branch" style="color:#1677ff; margin-right:6px;"></i>入排标准版本
+        </div>
+        <select id="aiMatchVersionSelect" class="version-select" style="width:100%;">
+          <option value="V1.0">V1.0 (V1.0)</option>
+          <option value="V2.0" selected>V2.0 (V2.0)</option>
+          <option value="V3.0">V3.0 (V3.0)</option>
+        </select>
+      </div>
     </div>
     <div class="modal-footer" style="padding:16px 24px;border-top:1px solid #f0f0f0;display:flex;gap:12px;justify-content:center;">
       <button class="btn btn-cancel" onclick="onAiMatchClose()" style="background:#f5f5f5;color:#666;border:1px solid #d9d9d9;">关闭</button>
-      <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">项目匹配</button>
+      <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">匹配并提交</button>
 
     </div>
   </div>
