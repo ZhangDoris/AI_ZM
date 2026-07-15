@@ -737,6 +737,8 @@
     .btn-danger:hover { background: #ff7875; }
     .btn-success { background: #52c41a; color: white; }
     .btn-success:hover { background: #73d13d; }
+    .btn-warning { background: #faad14; color: white; }
+    .btn-warning:hover { background: #ffc53d; }
     .btn-sm { padding: 5px 12px; font-size: 12px; }
     
     /* 趋势图按钮 */
@@ -1491,7 +1493,71 @@
       background: #165DFF; color: #fff;
     }
     .submit-audit-btn-submit:hover { background: #0958d9; box-shadow: 0 2px 8px rgba(22,93,255,0.3); }
-
+  .matching-info {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f4ff 100%);
+      border-radius: 12px;
+      padding: 18px 20px;
+      font-size: 13px;
+      color: #333;
+      line-height: 1.8;
+      box-shadow: 0 2px 8px rgba(22, 119, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+    .matching-info::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #1677ff, #4096ff);
+      border-radius: 2px 0 0 2px;
+    }
+    .matching-info-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-left: 8px;
+    }
+    .matching-info-icon {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #1677ff, #4096ff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .matching-info-title {
+      font-weight: 600;
+      color: #1677ff;
+      font-size: 14px;
+    }
+    .matching-info ul {
+      margin: 0;
+      padding-left: 28px;
+      list-style: none;
+    }
+    .matching-info li {
+      position: relative;
+      margin-bottom: 8px;
+      padding-left: 16px;
+    }
+    .matching-info li:last-child {
+      margin-bottom: 0;
+    }
+    .matching-info li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #1677ff;
+      font-weight: bold;
+    }
     /* ===== 非推荐流程内联提示区域 ===== */
     .non-recommended-inline {
       margin-top: 16px;
@@ -7403,7 +7469,7 @@ function buildScPatientListContent() {
           <div style="font-size:12px;color:#333;line-height:1.9">
             <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
             <div>① 加了返回项目列表的返回按钮</div>
-            <div>② 项目匹配单独一列修改出来，固定到右侧，点击【项目匹配】，判断如果在匹配中，给一个提示 "正在匹配中，请稍后点击"，如果没有在匹配中，出现一个确认匹配的确认框，分别点击第一条数据和第三条数据</div>
+            <div>② 项目匹配单独一列修改出来，固定到右侧，点击【项目匹配】，判断如果在匹配中，给一个提示 "正在匹配中，请稍后点击"，如果没有在匹配中，弹出一个确认框，包含【取消】【仅匹配】【预提交】三个按钮；点击预提交后打开提交审核弹窗，设置好内容提交后同步执行匹配与审批提交</div>
             <div>③ 每个患者自动生成一个患者编号，提交审批的时候生成，生成规则：项目编号-PT-中心号-4位流水号，页面显示：PT-中心号-4位流水号；如果中心号为空：生成规则：项目编号-PT-XX-4位流水号,页面显示：PT-XX-4位流水号</div>
             <div>④ 患者编号还需要处理 历史数据，导出和预筛表导出的时候也需要加患者编号</div>
             <div>⑤ 在当前页面 把项目编码带出来显示。</div>
@@ -7453,7 +7519,7 @@ function buildScPatientListContent() {
             <td><span class="sc-status-tag ${p.patientStatus==='已入组'?'enrolled':p.patientStatus==='筛选失败'?'failed':'screening'}">${p.patientStatus}</span></td>
             <td>${p.creator}</td>
             <td class="col-sticky-right-1">
-              <a href="javascript:void(0)" class="sc-project-match-btn" onclick="event.stopPropagation();handleProjectMatch(${p.id}, '${p.matchStatus}')">
+              <a href="javascript:void(0)" class="sc-project-match-btn" onclick="event.stopPropagation();handleProjectMatch(${p.id}, '${p.matchStatus}', '${schemeNo}', ${i})">
                 <i class="fa-solid fa-magnifying-glass-chart"></i> 项目匹配
               </a>
             </td>
@@ -8217,8 +8283,8 @@ function viewMdThinkChain(chainId) {
 
 // ==================== 项目匹配功能 ====================
 // 处理项目匹配点击
-function handleProjectMatch(patientId, matchStatus) {
-  console.log('项目匹配:', patientId, '状态:', matchStatus);
+function handleProjectMatch(patientId, matchStatus, schemeNo, patientIndex) {
+  console.log('项目匹配:', patientId, '状态:', matchStatus, '方案:', schemeNo, '索引:', patientIndex);
   
   // 判断是否正在匹配中
   if (matchStatus === '待匹配' || matchStatus === '匹配中') {
@@ -8226,15 +8292,15 @@ function handleProjectMatch(patientId, matchStatus) {
     showWechatToast('正在匹配中，请稍后点击');
   } else if (matchStatus === '已匹配') {
     // 显示确认框：确认匹配
-    showProjectMatchConfirm(patientId);
+    showProjectMatchConfirm(patientId, schemeNo, patientIndex);
   } else {
     // 默认显示确认框
-    showProjectMatchConfirm(patientId);
+    showProjectMatchConfirm(patientId, schemeNo, patientIndex);
   }
 }
 
 // 显示项目匹配确认框
-function showProjectMatchConfirm(patientId) {
+function showProjectMatchConfirm(patientId, schemeNo, patientIndex) {
   // 获取患者信息
   const patient = findPatientById(patientId);
   if (!patient) return;
@@ -8242,7 +8308,7 @@ function showProjectMatchConfirm(patientId) {
   // 避免重复打开
   closeProjectMatchConfirm();
 
-  // 创建确认弹窗（使用与项目一致的 .modal-panel 结构）
+  // 创建确认弹窗（确认语 + 温馨提示 + 三个按钮）
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.id = 'projectMatchConfirmModal';
@@ -8250,15 +8316,26 @@ function showProjectMatchConfirm(patientId) {
     <div class="modal-panel" style="width:460px;max-height:80vh">
       <div class="modal-header">
         <h3><i class="fa-solid fa-magnifying-glass" style="color:#1677ff;margin-right:8px"></i>项目匹配确认</h3>
-        <button class="modal-close" onclick="closeProjectMatchConfirm()">×</button>
+        <button class="modal-close" onclick="closeProjectMatchConfirm()">&times;</button>
       </div>
       <div class="modal-body" style="font-size:14px;color:#4e5969;line-height:1.8">
-        <p>确定要为患者 <strong style="color:#1d2129">${patient.name || ''}</strong>（筛选号：<strong style="color:#1677ff">${patient.screenNo || ''}</strong>）执行项目匹配吗？</p>
-        <p style="margin-top:8px;color:#86909c;font-size:13px">匹配完成后可在「匹配详情」中查看入排标准的逐条判断结果。</p>
+        <p>确定要执行项目匹配吗？</p>
+        <div class="matching-info">
+          <div class="matching-info-header">
+            <span class="matching-info-icon">💡</span>
+            <span class="matching-info-title">温馨提示</span>
+          </div>
+          <ul>
+            <li><strong style="color:#1677ff">取消：</strong>暂时不操作。</li>
+            <li><strong style="color:#1677ff">匹配并预提交：</strong>先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+            <li><strong style="color:#1677ff">仅项目匹配：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
+          </ul>
+        </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="justify-content:flex-end;gap:10px">
         <button class="btn btn-default" onclick="closeProjectMatchConfirm()">取消</button>
-        <button class="btn btn-primary" onclick="confirmProjectMatch(${patientId})">确认匹配</button>
+        <button class="btn btn-primary" onclick="onlyMatchProject(${patientId})">仅项目匹配</button>
+        <button class="btn btn-primary" onclick="preSubmitProjectMatch(${patientId}, '${schemeNo}', ${patientIndex})">匹配并预提交</button>
       </div>
     </div>
   `;
@@ -8275,10 +8352,32 @@ function closeProjectMatchConfirm() {
   }
 }
 
-// 确认执行项目匹配
-function confirmProjectMatch(patientId) {
+// 仅执行项目匹配
+function onlyMatchProject(patientId) {
   closeProjectMatchConfirm();
+  executeProjectMatch(patientId);
   showWechatToast('已开始项目匹配，请稍后查看结果');
+}
+
+// 预提交：先打开提交审批弹窗，提交时同步执行项目匹配
+function preSubmitProjectMatch(patientId, schemeNo, patientIndex) {
+  closeProjectMatchConfirm();
+  // 标记后续提交需要同步执行项目匹配
+  window._matchWithSubmit = { patientId, schemeNo, patientIndex };
+  openSubmitAuditModal(schemeNo, patientIndex, true);
+}
+
+// 执行项目匹配（更新匹配状态）
+function executeProjectMatch(patientId) {
+  const patient = findPatientById(patientId);
+  if (!patient) return;
+  
+  patient.matchStatus = '已匹配';
+  // 刷新患者列表，显示最新匹配状态
+  const scContentEl = document.getElementById('scContent');
+  if (scContentEl) {
+    scContentEl.innerHTML = buildScPatientListContent();
+  }
 }
 
 // 根据ID查找患者
@@ -17633,7 +17732,7 @@ function getRecommendedFlow(patientStatus) {
   return flowMap[patientStatus] || { flow:'prescreen', label:'预筛审批', hint:'患者当前状态：' + (patientStatus || '未知') + '，默认推荐预筛审批' };
 }
 
-function openSubmitAuditModal(schemeNo, patientIndex) {
+function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
   const patients = scPatientData[schemeNo] || [];
   const patient = patients[patientIndex];
   if(!patient) {
@@ -17642,6 +17741,12 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
   }
   const project = scProjectData.find(p => p.schemeNo === schemeNo);
   const projectName = project ? project.name : schemeNo;
+
+  // 标题：预提交进入显示「预提交审批」，否则显示「提交审批」
+  const auditTitle = isPreSubmit ? '预提交审批' : '提交审批';
+
+  // 记录是否来自预提交，供提交时校验
+  window._submitIsPreSubmit = !!isPreSubmit;
 
   // 智能推荐审批流程
   const recommended = getRecommendedFlow(patient.patientStatus);
@@ -17660,7 +17765,7 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
     <div class="submit-audit-panel">
       <div class="submit-audit-header">
         <span class="submit-audit-title">
-          <i class="fa-solid fa-paper-plane" style="color:#165DFF;margin-right:8px"></i>提交审批
+          <i class="fa-solid fa-paper-plane" style="color:#165DFF;margin-right:8px"></i>${auditTitle}
         </span>
         <button class="submit-audit-close" onclick="closeSubmitAuditModal()">&times;</button>
       </div>
@@ -17675,6 +17780,7 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
             <div>④ 当选择了审批流程之后，审批人也需要随着变动，跟流程绑定</div>
             <div>⑤ 如果还没开始走流程，或者是 主流程没有开始，那么可以选择其他流程（1.还没有提交过审批；2. 第一次提交了审批，被驳回了；这两种情况 可以换流程模板），如果已经再走 主流程审批，走了一半了，不允许换流程模板</div>
             <div>⑥ 审批流程默认选中 模板下的该走的流程，如果这个流程提交审批，被驳回，还可以选择其他流程（假设初始提交应该是预筛审批，但是被CRA驳回了，再次提交的时候，还可以选择 主知情审批或者其他审批）</div>
+            <div>⑦ 预提交场景下，弹窗新增【筛选号】和【知情时间】两个字段（标记为必填）；<strong>仅当审核类型为「主知情通过-入组预提交（入组审批）」或「提交导入期审核（导入审批）」时，这两个字段才真正必填，提交时需校验不能为空</strong>。</div>
             </div>
         </div>
       <div class="submit-audit-body">
@@ -17696,6 +17802,20 @@ function openSubmitAuditModal(schemeNo, patientIndex) {
             <input type="text" class="submit-audit-input readonly" value="${patient.patientNo} - ${patient.nameAbbr}" readonly />
           </div>
         </div>
+        ${isPreSubmit ? `
+        <div class="submit-audit-form-row" id="preSubmitRequiredFields">
+          <label class="submit-audit-form-label required">筛选号</label>
+          <div class="submit-audit-form-control">
+            <input type="text" class="submit-audit-input" id="submitAuditScreenNo" value="${patient.screenNo || ''}" placeholder="请输入筛选号" />
+          </div>
+        </div>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">知情时间</label>
+          <div class="submit-audit-form-control">
+            <input type="datetime-local" class="submit-audit-input" id="submitAuditInformedTime" placeholder="请选择知情时间" />
+          </div>
+        </div>
+        ` : ''}
          <div class="submit-audit-for -row">
           <label class="submit-audit-form-label required">审批模板：</label>
           <div class="submit-audit-form-control">
@@ -17872,6 +17992,27 @@ function submitAudit(schemeNo, patientIndex) {
   const flow = document.getElementById('submitAuditFlow')?.value;
   const remark = document.getElementById('submitAuditRemark')?.value || '';
 
+  // 预提交场景下，校验筛选号与知情时间
+  if(window._submitIsPreSubmit) {
+    const patients = scPatientData[schemeNo] || [];
+    const patient = patients[patientIndex];
+    const patientStatus = patient ? patient.patientStatus : '';
+    // 仅「主知情通过-入组预提交（入组审批）」与「提交导入期审核（导入审批）」时必填
+    const needRequired = (flow === 'enroll' && patientStatus === '主知情通过') || flow === 'import';
+    if(needRequired) {
+      const screenNo = document.getElementById('submitAuditScreenNo')?.value.trim();
+      const informedTime = document.getElementById('submitAuditInformedTime')?.value.trim();
+      if(!screenNo) {
+        showWechatToast('当前审核类型必须填写筛选号');
+        return;
+      }
+      if(!informedTime) {
+        showWechatToast('当前审核类型必须填写知情时间');
+        return;
+      }
+    }
+  }
+
   if(!reviewerValue) {
     showWechatToast('请选择审批人');
     return;
@@ -17896,8 +18037,13 @@ function submitAudit(schemeNo, patientIndex) {
     finalRemark = remark ? remark + '\n\n【非推荐流程原因】' + reason : '【非推荐流程原因】' + reason;
   }
 
-  // 第一条数据（patientIndex===0）弹出AI智能匹配提示框
-  if(patientIndex === 0) {
+  // 判断当前提交是否来自项目匹配预提交（需要同步执行匹配）
+  const pendingMatch = window._matchWithSubmit && 
+    window._matchWithSubmit.schemeNo === schemeNo && 
+    window._matchWithSubmit.patientIndex === patientIndex;
+
+  // 第一条数据（patientIndex===0）弹出AI智能匹配提示框（仅在非预提交场景）
+  if(patientIndex === 0 && !pendingMatch) {
     pendingAuditParams = { schemeNo, patientIndex, flow, reviewerValue, reviewerLabel, remark: finalRemark };
     showAiMatchModal();
     return;
@@ -17916,6 +18062,17 @@ function doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabe
   const reviewerName = reviewerLabel || reviewerValue;
   const flowLabel = submitAuditFlows.find(f => f.value === flow)?.label || flow;
 
+  // 检查是否来自项目匹配的预提交（需要同步执行匹配）
+  const pendingMatch = window._matchWithSubmit && 
+    window._matchWithSubmit.schemeNo === schemeNo && 
+    window._matchWithSubmit.patientIndex === patientIndex;
+
+  if (pendingMatch) {
+    // 同步执行项目匹配：更新患者匹配状态并刷新列表
+    patient.matchStatus = '已匹配';
+    window._matchWithSubmit = null;
+  }
+
   closeSubmitAuditModal();
 
   // 更新患者状态
@@ -17925,7 +18082,9 @@ function doSubmitAudit(schemeNo, patientIndex, flow, reviewerValue, reviewerLabe
 
   // 患者提交审核效果判断（按数据索引演示不同场景）
   let toastMsg = '';
-  if(patientIndex === 0) {
+  if(pendingMatch) {
+    toastMsg = '匹配成功，已自动提交审批！';
+  } else if(patientIndex === 0) {
     // 第一条数据 王*明：AI思考失败，判断为"是"（需要人工复核）
     toastMsg = '匹配中，匹配完成后系统将自动帮您提交审批';
   } else if(patientIndex === 1) {
@@ -18480,8 +18639,9 @@ window.addEventListener('DOMContentLoaded', function() {
       <p style="font-size:15px;color:#333;line-height:1.8;font-weight:500;">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交</p>
     </div>
     <div class="modal-footer" style="padding:16px 24px;border-top:1px solid #f0f0f0;display:flex;gap:12px;justify-content:center;">
-      <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">项目匹配</button>
       <button class="btn btn-cancel" onclick="onAiMatchClose()" style="background:#f5f5f5;color:#666;border:1px solid #d9d9d9;">关闭</button>
+      <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">项目匹配</button>
+
     </div>
   </div>
 </div>
