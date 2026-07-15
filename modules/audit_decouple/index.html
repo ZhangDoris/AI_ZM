@@ -398,108 +398,81 @@
     .page-header p { font-size: 13px; color: #888; margin-top: 3px; }
     .header-actions { display: flex; gap: 10px; }
 
-    /* 需求说明面板 — 右侧抽屉 */
+    /* PRD 面板 — 嵌入式布局（参考 prototype-html skill） */
     .prd-drawer {
-      position: fixed;
-      top: 56px;
-      right: 0;
-      width: 20vw;
-      min-width: 300px;
+      width: 22%;
+      min-width: 320px;
       max-width: 480px;
-      height: calc(100vh - 56px);
-      background: #fff;
-      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
-      z-index: 60;
-      transform: translateX(100%);
-      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(135deg, #fff7e6 0%, #fffbeb 100%);
+      border-left: 2px dashed #fcd34d;
       display: flex;
       flex-direction: column;
-      border-left: 1px solid #e8e8e8;
+      flex-shrink: 0;
+      transition: width 0.3s ease, min-width 0.3s ease, border 0.3s ease, padding 0.3s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .prd-drawer.expanded {
-      transform: translateX(0);
+    .prd-drawer.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      max-width: 0 !important;
+      border-left: none;
+      padding: 0;
     }
+    .prd-drawer.collapsed .prd-drawer-body {
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Drawer 把手 — 在面板左侧 */
     .prd-drawer-handle {
       position: absolute;
-      left: -56px;
-      top: 160px;
-      width: 56px;
-      height: 140px;
-      background: linear-gradient(180deg, #1677ff 0%, #0958d9 100%);
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #d46b08 0%, #ad6800 100%);
       color: #fff;
-      border-radius: 10px 0 0 10px;
+      border-radius: 8px 0 0 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       cursor: pointer;
-      box-shadow: -4px 0 22px rgba(22,119,255,0.45);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -2px 0 8px rgba(212,107,8,0.3);
+      transition: all 0.25s ease;
       user-select: none;
       border: none;
       outline: none;
-      z-index: 61;
-    }
-    .prd-drawer-handle::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 4px;
-      height: 100%;
-      background: #fff;
-      opacity: 0.3;
-      border-radius: 10px 0 0 10px;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
     }
     .prd-drawer-handle:hover {
-      width: 64px;
-      left: -64px;
-      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
-      box-shadow: -6px 0 30px rgba(22,119,255,0.65);
+      background: linear-gradient(180deg, #e87b0f 0%, #c07e00 100%);
+      box-shadow: -4px 0 12px rgba(212,107,8,0.45);
+      width: 38px;
+      left: -38px;
     }
-    .prd-drawer-handle:active {
-      background: linear-gradient(180deg, #0958d9 0%, #0047b3 100%);
-      box-shadow: -2px 0 12px rgba(22,119,255,0.4);
-      transition: all 0.08s;
-    }
-    .prd-drawer-handle .handle-text {
-      writing-mode: vertical-rl;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 6px;
-    }
-    .prd-drawer-handle .handle-icon {
-      font-size: 18px;
-    }
-    .prd-drawer-handle .handle-hint {
-      position: absolute;
-      right: calc(100% + 10px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,0.75);
-      color: #fff;
-      font-size: 11px;
-      padding: 6px 10px;
-      border-radius: 4px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .prd-drawer-handle:hover .handle-hint {
-      opacity: 1;
-    }
-    /* 抽屉展开时把手隐藏 */
-    .prd-drawer.expanded .prd-drawer-handle {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
+    .prd-drawer-handle i {
+      writing-mode: horizontal-tb;
+      font-size: 16px;
     }
     .prd-drawer-body {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 16px 20px;
+    }
+    .prd-drawer-body::-webkit-scrollbar {
+      width: 4px;
+    }
+    .prd-drawer-body::-webkit-scrollbar-thumb {
+      background: #fcd34d;
+      border-radius: 2px;
     }
     .prd-panel-header {
       display: flex;
@@ -507,15 +480,15 @@
       justify-content: space-between;
       margin-bottom: 16px;
       padding-bottom: 12px;
-      border-bottom: 2px solid #1677ff;
+      border-bottom: 2px solid #fcd34d;
       flex-shrink: 0;
-      margin: 0 20px;
-      padding-top: 16px;
+      margin: 0 4px;
+      padding-top: 4px;
     }
     .prd-panel-title {
       font-size: 15px;
       font-weight: 700;
-      color: #1677ff;
+      color: #d46b08;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -525,8 +498,8 @@
       height: 24px;
       border-radius: 50%;
       border: none;
-      background: #f5f5f5;
-      color: #999;
+      background: #fff3e0;
+      color: #d46b08;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -535,16 +508,61 @@
       transition: all 0.2s;
     }
     .prd-panel-close:hover {
-      background: #ff4d4f;
+      background: #d46b08;
       color: white;
     }
-    /* 手机端 */
+    /* 手机端 — PRD 面板覆盖整屏，把手隐藏 */
     @media (max-width: 768px) {
       .prd-drawer {
+        position: fixed;
+        top: 56px;
+        right: 0;
         width: 85vw;
         min-width: unset;
         max-width: unset;
+        height: calc(100vh - 56px);
+        z-index: 100;
+        border-left: 2px dashed #fcd34d;
+        transform: translateX(100%);
+        transition: transform 0.35s ease;
       }
+      .prd-drawer.collapsed {
+        width: 85vw !important;
+        min-width: unset !important;
+        max-width: unset !important;
+        transform: translateX(100%);
+      }
+      .prd-drawer:not(.collapsed) {
+        transform: translateX(0);
+      }
+      .prd-drawer-handle {
+        display: none;
+      }
+    }
+    /* 移动端 PRD 切换按钮 */
+    .mobile-prd-btn {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 200;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #d46b08, #ad6800);
+      color: #fff;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(212,107,8,0.4);
+      cursor: pointer;
+      border: none;
+      font-size: 18px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .mobile-prd-btn:active { transform: scale(0.92); }
+    .mobile-prd-btn.show { display: flex; }
+    @media (max-width: 768px) {
+      .mobile-prd-btn.show { display: flex; }
     }
     /* 审核提醒配置抽屉 */
     .reminder-drawer-overlay {
@@ -3481,6 +3499,7 @@
     .md-header-right { display: flex; gap: 8px; }
     .md-tab-nav {
       background: #fff; padding: 0 24px; border-bottom: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: space-between;
     }
     .md-tab-nav-inner { display: flex; gap: 0; }
     .md-tab-item {
@@ -3489,6 +3508,29 @@
     }
     .md-tab-item:hover { color: #1677ff; }
     .md-tab-item.active { color: #1677ff; border-bottom-color: #1677ff; font-weight: 500; }
+    /* 旧版匹配详情页右上角版本切换 */
+    .md-tab-nav .version-switch-right {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 22px; font-size: 14px; font-weight: 600;
+      border: 1.5px solid #1677ff; border-radius: 22px; color: #1677ff;
+      background: #fff; cursor: pointer; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(22,119,255,0.28);
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .md-tab-nav .version-switch-right:hover {
+      background: #1677ff; color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(22,119,255,0.42);
+    }
+    .md-tab-nav .version-switch-right .new-badge {
+      display: inline-block; background: #f53f3f; color: #fff; font-size: 10px;
+      padding: 1px 5px; border-radius: 8px; font-weight: 600; line-height: 1.4;
+      animation: pulse-badge 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245,63,63,0.35); }
+      50% { box-shadow: 0 0 0 4px rgba(245,63,63,0); }
+    }
     /* 思维链三态（成功/匹配中/失败） */
     .md-tc-state { text-align:center; padding:48px 24px; }
     .md-tc-state-icon { width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px; }
@@ -5247,15 +5289,100 @@
 <div class="left-sidebar hidden" id="leftSidebar"></div>
 <!-- Main Panel -->
 <div class="main-panel" id="mainPanel"></div>
-</div>
-<!-- PRD Drawer -->
+<!-- PRD Drawer — 嵌入式布局 -->
 <div class="prd-drawer" id="prdDrawer">
-  <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="展开需求说明面板">
-    <span class="handle-hint">点击查看PRD</span>
-    <span class="handle-icon"><i class="fa-solid fa-chevron-left"></i></span>
-    <span class="handle-text">P R D</span>
+  <button class="prd-drawer-handle" id="prdDrawerHandle" onclick="togglePRDDrawer()" title="收起/展开PRD面板">
+    <i class="fas fa-chevron-right" id="prdDrawerIcon"></i>
+    <span>PRD</span>
   </button>
-  <div class="prd-drawer-body" id="prdPanel"></div>
+  <div class="prd-drawer-body" id="prdPanel">
+    <div class="prd-panel-header">
+      <div class="prd-panel-title">📋 本次修改说明</div>
+      <button class="prd-panel-close" onclick="collapsePRDDrawer()" title="折叠面板">✕</button>
+    </div>
+    <div class="prd-section">
+      <div class="prd-section-title">审批流程解耦 · 原型修改说明</div>
+      <div class="prd-section-content"><span class="prd-badge prd-badge-core">核心功能</span>本次原型修改涉及<strong>审批流程解耦</strong>功能，覆盖 <strong>系统管理-流程设置</strong>、<strong>系统管理-流程模板管理（新增）</strong>、<strong>项目管理的编辑页面、项目的参研中心</strong>、<strong>智能筛选的患者提交审批、审批记录页面</strong> 模块，还涉及历史数据修改，具体如下：1. 流程配置，2. 项目中流程设置，不能影响已有项目；详情页的审批状态标签需要配置成灵活的，支持显示不同配置的审批状态名称</div>
+    </div>
+    <div class="prd-section">
+      <div class="prd-section-title">默认审核流程示意图（预筛→主知情→入组）</div>
+      <div class="prd-section-content">
+        <div class="flow-zoomable" onclick="openFlowZoom()" title="点击放大查看审核流程"><span class="flow-zoom-hint">🔍 点击放大</span>
+        <div style="margin-top:4px;font-size:12px;line-height:1.5;color:#333;">
+        <div style="background:linear-gradient(135deg,#e6f4ff,#bae0ff);border-left:3px solid #1677ff;padding:6px 10px;border-radius:4px;margin-bottom:10px;font-size:11px;color:#1677ff;">
+          <strong>流程总览（流程只能往前走，不能回退，除了撤销审核的动作之外）：</strong>本次测试：预筛→主知情（跨过去）→入组
+        </div>
+        <!-- 阶段一：患者录入 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#e6f4ff;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#1677ff;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">患者录入</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#f0f7ff;border-radius:0 6px 6px 0;">
+            <div style="background:#1677ff;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">① 新增患者 / 上传病史与资料</div>
+          </div></div>
+        <div style="text-align:center;color:#1677ff;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
+        <!-- 阶段二：预筛匹配 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛匹配</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
+            <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">② 项目匹配（预筛匹配）</div>
+          </div></div>
+        <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
+        <!-- 阶段三：预筛审核 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛审核</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
+            <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">③ 提交审核（预提交）</div>
+            <div style="text-align:center;color:#fa8c16;font-size:12px;line-height:1;">↓</div>
+            <div style="background:#f9f0ff;color:#722ed1;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;border:1px dashed #d3adf7;">④ 选择审核模板 &amp; 选择审核流程 <br/><span style="font-size:10px;font-weight:400;">（默认推荐：中心主流程 / 项目主流程）</span></div>
+            <div style="text-align:center;color:#722ed1;font-size:12px;line-height:1;">↓</div>
+            <div style="background:#13c2c2;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑤ 预筛审核 → ✅ 审核通过</div>
+          </div></div>
+        <div style="text-align:center;color:#13c2c2;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
+        <!-- 阶段四：入组匹配 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组匹配</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
+            <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑥ 项目匹配（预筛阶段）</div>
+          </div></div>
+        <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
+        <!-- 阶段五：入组审核 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组审核</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
+            <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑦ 提交审核/预提交（选择入组审核）</div>
+          </div></div>
+        <div style="text-align:center;color:#fa8c16;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
+        <!-- 阶段六：流程判断 -->
+        <div style="display:flex;align-items:stretch;margin-bottom:6px;">
+          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff2f0;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#ff4d4f;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">流程判断</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fff1f0;border-radius:0 6px 6px 0;">
+            <div style="background:#ff4d4f;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑧ 后端判断：是否进入入组阶段，且无入组匹配结果？</div>
+            <div style="display:flex;gap:6px;">
+              <div style="flex:1;background:#f6ffed;border:2px solid #52c41a;border-radius:6px;padding:6px 8px;text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:#52c41a;margin-bottom:3px;">✅ 是（已入组，无匹配）</div>
+                <div style="font-size:10px;color:#333;line-height:1.6;">确认匹配流程 → 匹配成功后自动提交 → 消息通知审核</div>
+                <div style="font-size:10px;color:#999;margin-top:4px;">【否】→ 提示"您目前还没有点击项目匹配（入组），无法跨阶段提交审核。"</div>
+              </div>
+              <div style="flex:1;background:#fff7e6;border:2px solid #fa8c16;border-radius:6px;padding:6px 8px;text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:#fa8c16;margin-bottom:3px;">❌ 否（未进入入组）</div>
+                <div style="font-size:10px;color:#333;line-height:1.6;">按正常流程提交审核 → 消息通知审核</div>
+              </div>
+            </div>
+          </div></div>
+        <!-- 图例 -->
+        <div style="margin-top:8px;padding:8px 10px;background:#fafafa;border-radius:6px;border:1px solid #eee;">
+          <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">图例：</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#1677ff;display:inline-block;"></span> 患者操作</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#52c41a;display:inline-block;"></span> 项目匹配</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#fa8c16;display:inline-block;"></span> 提交审核</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#722ed1;display:inline-block;"></span> 模板/流程配置</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#13c2c2;display:inline-block;"></span> 审核执行</span>
+            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#ff4d4f;display:inline-block;"></span> 流程判断</span>
+          </div></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 <!-- Detail Overlay -->
 <div class="detail-overlay" id="detailOverlay"></div>
@@ -5263,6 +5390,10 @@
 <div class="audit-record-overlay" id="auditRecordOverlay"></div>
 <!-- Match Detail Overlay (匹配详情全屏页) -->
 <div class="match-detail-overlay" id="matchDetailOverlay"></div>
+<!-- 移动端 PRD 切换按钮 -->
+<button class="mobile-prd-btn" id="mobilePrdBtn" onclick="toggleMobilePRD()" title="查看PRD说明">
+  <i class="fas fa-book-open"></i>
+</button>
 </div>
 
 <!-- 全局通知 (Ant Design TopLeft 风格) -->
@@ -6218,6 +6349,7 @@ function doLogin() {
     document.getElementById('app').classList.add('visible');
     switchModule('audit');
     updatePRDPanel('audit');
+    initMobilePRD();
     showGlobalNotice();
   } else {
     alert('请输入账号和密码');
@@ -6726,29 +6858,50 @@ function updatePRDPanel(mod, sub) {
   });
   
   prdPanel.innerHTML = html;
-  expandPRDDrawer();
+  // 桌面端自动展开，移动端等待用户手动点击
+  if (window.innerWidth > 768) {
+    expandPRDDrawer();
+  }
 }
 
 /* 折叠 PRD 抽屉 */
 function collapsePRDDrawer() {
   const drawer = document.getElementById('prdDrawer');
-  if (drawer) drawer.classList.remove('expanded');
+  const icon = document.getElementById('prdDrawerIcon');
+  if (drawer) drawer.classList.add('collapsed');
+  if (icon) icon.className = 'fas fa-chevron-left';
 }
 
 /* 展开 PRD 抽屉 */
 function expandPRDDrawer() {
   const drawer = document.getElementById('prdDrawer');
-  if (drawer) drawer.classList.add('expanded');
+  const icon = document.getElementById('prdDrawerIcon');
+  if (drawer) drawer.classList.remove('collapsed');
+  if (icon) icon.className = 'fas fa-chevron-right';
 }
 
 /* 切换 PRD 抽屉 展开/折叠 */
 function togglePRDDrawer() {
   const drawer = document.getElementById('prdDrawer');
   if (!drawer) return;
-  if (drawer.classList.contains('expanded')) {
-    drawer.classList.remove('expanded');
+  if (drawer.classList.contains('collapsed')) {
+    expandPRDDrawer();
   } else {
-    drawer.classList.add('expanded');
+    collapsePRDDrawer();
+  }
+}
+
+/* 移动端 PRD 切换 */
+function toggleMobilePRD() {
+  const drawer = document.getElementById('prdDrawer');
+  const btn = document.getElementById('mobilePrdBtn');
+  if (!drawer) return;
+  if (drawer.classList.contains('collapsed')) {
+    expandPRDDrawer();
+    if (btn) btn.innerHTML = '<i class="fas fa-times"></i>';
+  } else {
+    collapsePRDDrawer();
+    if (btn) btn.innerHTML = '<i class="fas fa-book-open"></i>';
   }
 }
 
@@ -7345,28 +7498,22 @@ function scPatientAuditExport() { alert('导出审批记录…（原型演示）
 function scPatientColSettings() { alert('列设置…（原型演示）'); }
 function scPatientAdvancedSearch() { alert('高级搜索…（原型演示）'); }
 
-// 智能筛选患者列表 - 查看详情（复用审批列表的详情页）
+// 智能筛选患者列表 - 查看详情（跳转至新版匹配详情页）
 function openScPatientDetail(patientId, schemeNo) {
   const patients = scPatientData[schemeNo] || [];
   const patient = patients.find(p => p.id === patientId);
   if (!patient) return;
-  // 映射为审批列表 row 格式，复用 buildDetailContent
-  const row = {
-    id: patient.id,
-    screenNo: patient.screenNo,
-    patientNo: patient.patientNo,
-    age: patient.age,
-    gender: patient.gender,
-    centerNo: patient.centerNo,
-    center: patient.center,
-    planNo: patient.planNo,
-    projectName: patient.projectName || '',
-    matchRate: '0.0',
-    submitter: patient.creator || '',
-    reviewStage: patient.reviewStage || '',
-    status: 'pending'
-  };
-  openDetailRow(row);
+  const params = new URLSearchParams();
+  params.set('id', patient.id);
+  params.set('screenNo', patient.screenNo || '');
+  params.set('patientNo', patient.patientNo || '');
+  params.set('schemeNo', schemeNo);
+  params.set('age', patient.age || '');
+  params.set('gender', patient.gender || '');
+  params.set('centerNo', patient.centerNo || '');
+  params.set('center', patient.center || '');
+  params.set('projectName', patient.projectName || '');
+  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
 }
 
 // ==================== 匹配详情全屏页（原 match-detail-new.html） ====================
@@ -7411,21 +7558,22 @@ const mdMatchDetailData = [
   { type: '入选标准3', criteria: '组织学确诊的乳腺癌（浸润性导管癌）、ER阳性（90%）、HER2阴性', source: '【术后病理（安阳市人民医院 2020年10月21日 B202000760）】（右侧乳腺肿物）浸润性导管癌 非特殊型 肿瘤大小...', judge: 'pending', judgeText: '待定 ：患者有组织学确诊的乳腺癌（浸润性导管癌）、ER阳性（90%）、H...' }
 ];
 
+// 筛选表 - 匹配详情（跳转至新版匹配详情页）
 function openMatchDetail(patientId, schemeNo) {
   const patients = scPatientData[schemeNo] || [];
   const p = patients.find(x => x.id === patientId);
   if (!p) return;
-  mdCurrentVersion = 'prescreen';
-  // 保存当前项目状态，确保关闭后能返回患者列表
-  window._mdPrevProject = window._scCurrentProject;
-  const overlay = document.getElementById('matchDetailOverlay');
-  console.log('openMatchDetail: patientId=', patientId, 'schemeNo=', schemeNo);
-  overlay.innerHTML = buildMatchDetailContent(p);
-  overlay._patientData = p;
-  overlay._schemeNo = schemeNo;
-  overlay.classList.add('show');
-  // 初始化渲染版本标签和筛选表
-  initMatchDetailOverlay();
+  const params = new URLSearchParams();
+  params.set('id', p.id);
+  params.set('screenNo', p.screenNo || '');
+  params.set('patientNo', p.patientNo || '');
+  params.set('schemeNo', schemeNo);
+  params.set('age', p.age || '');
+  params.set('gender', p.gender || '');
+  params.set('centerNo', p.centerNo || '');
+  params.set('center', p.center || '');
+  params.set('projectName', p.projectName || '');
+  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
 }
 
 function closeMatchDetail() {
@@ -7445,6 +7593,25 @@ function closeMatchDetail() {
   } else {
     console.warn('No schemeNo found, cannot return to patient list');
   }
+}
+
+// 从旧版匹配详情页切换到新版匹配详情页
+function goToNewMatchDetail() {
+  const overlay = document.getElementById('matchDetailOverlay');
+  const p = overlay ? overlay._patientData : null;
+  const schemeNo = overlay ? overlay._schemeNo : '';
+  if (!p) return;
+  const params = new URLSearchParams();
+  params.set('id', p.id);
+  params.set('screenNo', p.screenNo || '');
+  params.set('patientNo', p.patientNo || '');
+  params.set('schemeNo', schemeNo);
+  params.set('age', p.age || '');
+  params.set('gender', p.gender || '');
+  params.set('centerNo', p.centerNo || '');
+  params.set('center', p.center || '');
+  params.set('projectName', p.projectName || '');
+  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
 }
 
 function switchMdTab(tab) {
@@ -7548,6 +7715,7 @@ function buildMatchDetailContent(p) {
       <div class="md-tab-item" onclick="switchMdTab('prescreen')">筛选表</div>
       <div class="md-tab-item" onclick="switchMdTab('thinkchain')">思维链</div>
     </div>
+    <button class="version-switch-right" onclick="goToNewMatchDetail()"><i class="fas fa-exchange-alt"></i> 新版本 <span class="new-badge">NEW</span></button>
   </div>
 
   <!-- 主内容 -->
@@ -7970,18 +8138,7 @@ function buildMdTcMatching(p) {
     <div class="md-tc-state">
       <div class="md-tc-state-icon matching"><i class="fas fa-brain"></i></div>
       <div class="md-tc-state-title">正在思考中，请稍后再来</div>
-      <div class="md-tc-state-desc">
-        患者 <b>${p.nameAbbr||''}</b>（筛选号 ${p.screenNo||''}）的思维链正在生成，系统与「匹配详情」并行计算，
-        思考完成后将通过站内消息 / 邮件通知您，无需在此等待。
-      </div>
-      <div class="md-tc-state-meta">
-        <span>已等待：<b id="mdTcWaitTime">00:00</b></span>
-        <span>队列位置：第 2 / 5 位</span>
-      </div>
-      <div class="md-tc-state-actions">
-        <button class="btn-sm btn-primary" onclick="mdNotifyMe()">思考完成时通知我</button>
-        <button class="btn-sm" onclick="closeMatchDetail()">返回列表</button>
-      </div>
+     
     </div>`;
 }
 
@@ -17870,6 +18027,36 @@ window.addEventListener('DOMContentLoaded', function() {
     urlParams.delete('logged');
     const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
     window.history.replaceState({}, '', newUrl);
+  }
+});
+
+/* ==================== 移动端 PRD 面板初始化 ==================== */
+function initMobilePRD() {
+  const btn = document.getElementById('mobilePrdBtn');
+  const drawer = document.getElementById('prdDrawer');
+  if (!btn || !drawer) return;
+  if (window.innerWidth <= 768) {
+    btn.classList.add('show');
+    // 移动端默认折叠
+    if (!drawer.classList.contains('collapsed')) {
+      collapsePRDDrawer();
+      btn.innerHTML = '<i class="fas fa-book-open"></i>';
+    }
+  } else {
+    btn.classList.remove('show');
+  }
+}
+
+// 页面加载时初始化移动端 PRD
+document.addEventListener('DOMContentLoaded', initMobilePRD);
+
+// 窗口大小改变时重新检测
+window.addEventListener('resize', function() {
+  initMobilePRD();
+  // PC端从mobile切换到desktop时，重置抽屉状态
+  if (window.innerWidth > 768) {
+    const btn = document.getElementById('mobilePrdBtn');
+    if (btn) btn.innerHTML = '<i class="fas fa-book-open"></i>';
   }
 });
 
