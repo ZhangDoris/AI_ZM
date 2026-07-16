@@ -657,6 +657,53 @@
       margin-left: auto;
     }
     
+    /* 改进方案 Tab 切换 */
+    .improve-tab-bar {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e8e8e8;
+      margin: 8px 0 4px 0;
+    }
+    .improve-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .improve-tab:hover {
+      color: #1677ff;
+    }
+    .improve-tab.active {
+      color: #1677ff;
+      border-bottom-color: #1677ff;
+    }
+    .improve-tab-badge {
+      background: #f0f0f0;
+      color: #999;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .improve-tab.active .improve-tab-badge {
+      background: #e6f7ff;
+      color: #1677ff;
+    }
+    .improve-tab-panel {
+      margin-top: 8px;
+    }
+    .improve-tab-panel .improvements-section-header {
+      margin-top: 16px;
+    }
+    
     /* 病例按钮样式 */
     .case-btn {
       padding: 6px 12px;
@@ -1301,16 +1348,42 @@
               <i class="fas fa-lightbulb" style="color:#faad14"></i> 保存的改进方案将用于下一次AI提示词更新
             </div>
           
-          <div class="improvements-section-header">
-            <span class="section-icon"><i class="fas fa-list-ul"></i></span>
-            <span class="section-title">改进建议列表</span>
-            <span class="section-meta">共 5 条 · 基于 788 条可给出建议的不一致案例</span>
+          <div class="improve-tab-bar">
+            <div class="improve-tab active" id="tabImprove" onclick="switchImproveTab('improve')">
+              <i class="fas fa-list-ul"></i> 改进建议列表
+              <span class="improve-tab-badge">5</span>
+            </div>
+            <div class="improve-tab" id="tabNoSuggestion" onclick="switchImproveTab('nosuggestion')">
+              <i class="fas fa-ban"></i> 无法给出建议
+              <span class="improve-tab-badge">68</span>
+            </div>
           </div>
           
-          <div id="improvementsList">
-            <!-- 动态生成 -->
+          <div id="improveTabPanel" class="improve-tab-panel">
+            <div class="improvements-section-header">
+              <span class="section-icon"><i class="fas fa-list-ul"></i></span>
+              <span class="section-title">改进建议列表</span>
+            </div>
+            
+            <div id="improvementsList">
+              <!-- 动态生成 -->
+            </div>
           </div>
           
+          <div id="noSuggestionTabPanel" class="improve-tab-panel" style="display:none">
+            <div class="improvements-section-header">
+              <span class="section-icon"><i class="fas fa-ban"></i></span>
+              <span class="section-title">无法给出建议列表</span>
+            </div>
+            
+            <div style="background:#fafafa;border:1px dashed #d9d9d9;border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:#999;line-height:1.7">
+              <i class="fas fa-info-circle" style="color:#1677ff;margin-right:4px"></i> 以下为AI判断与人工不一致、但<strong style="color:#666">无法给出改进建议</strong>的案例。
+            </div>
+            
+            <div id="noSuggestionList">
+              <!-- 动态生成 -->
+            </div>
+          </div>
           
         </div>
       </div>
@@ -1653,6 +1726,15 @@
       { id: 5, priority: 'P2', cause: '边界值判断：指标接近下限/上限时缺乏弹性', affectedCount: 50, improvement: '当指标值在标准值的±10%范围内时，不直接判定为不符合', prompt: '当指标值在标准值范围的±10%偏差内时，提示"指标轻微异常，请研究者确认"。', prescreen: false, enrolling: false, modifyStatus: 'pending', modifiedAt: null, runCount: 1, modifiedAtRun: null, version: 'v1.0' }
     ];
     
+    // 无法给出建议的数据（批注过短/不明确/无关，无法提取改进方向，仅展示）
+    const noSuggestionItems = [
+      { id: 1, reason: '批注过短', cause: '入选标准2：批注内容仅为"再看下"，未说明具体判断依据，无法提取改进方向', affectedCount: 21 },
+      { id: 2, reason: '批注不明确', cause: '排除标准27：批注为"不太确定"，缺乏明确结论与可操作关键词', affectedCount: 18 },
+      { id: 3, reason: '与标准无关', cause: '涉及ASCVD风险评估：批注讨论的是患者随访时间，与入排标准判定无关', affectedCount: 12 },
+      { id: 4, reason: '批注过短', cause: '边界值判断：批注仅写"临界值"，未指明具体指标与阈值', affectedCount: 9 },
+      { id: 5, reason: '批注不明确', cause: '排除标准33：批注为"待定"，无明确判定指引', affectedCount: 8 }
+    ];
+    
     // 获取URL参数
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -1694,6 +1776,7 @@
       
       // 填充第二步改进建议
       renderImprovements(item);
+      renderNoSuggestion(item);
     }
     
     // 获取修改状态标签
@@ -1844,7 +1927,45 @@
       }).join('');
     }
     
-    // 切换步骤
+    // 渲染「无法给出建议」列表（仅展示，无提示词、无保存、无开关）
+    function renderNoSuggestion(item) {
+      const container = document.getElementById('noSuggestionList');
+      container.innerHTML = noSuggestionItems.map(ns => {
+        const pct = item.cases ? ((ns.affectedCount / item.cases) * 100).toFixed(1) : '0.0';
+        const reasonClass = ns.reason === '批注过短' ? 'badge-red' : ns.reason === '批注不明确' ? 'badge-yellow' : 'badge-blue';
+        return '<div class="improvement-card" style="border-color:#f0f0f0;background:#fff">' +
+          '<div class="improvement-header">' +
+            '<div class="header-left">' +
+              '<span style="font-size:14px;font-weight:600;color:#333">案例 #' + ns.id + '</span>' +
+              '<span >v1.3</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="improvement-body">' +
+            '<div class="remark-note" style="margin-bottom:12px">' +
+              '<i class="fas fa-database"></i> 入选标准2：此建议对应的标准为 入选标准2，影响 ' + ns.affectedCount + ' 例 (' + pct + '%)，与入排标准数据直接关联' +
+            '</div><div class="cause-text-wrapper">' +
+          '<div class="cause-label-bar">' +
+            '<span class="cause-label-tag"><i class="fas fa-file-alt"></i> 原始入排内容</span>' +
+          '</div>' +
+          '<div class="cause-text-content">入选标准2：病理学确诊的胃癌或胃食管结合部癌的患者，组织学检查证实为腺癌，且未接受过针对胃癌和胃食管结合部癌的抗肿瘤治疗</div>' +
+        '</div>' +
+            '<div class="remark-note" style="margin-top:0">' +
+              '<i class="fas fa-link"></i> <strong>证据来源</strong>：人工复核批注记录 · 项目「' + (item.projName || '') + '」· 不一致案例 #' + ns.id +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    
+    // 切换第二步 Tab（改进建议 / 无法给出建议）
+    function switchImproveTab(tab) {
+      const isImprove = tab === 'improve';
+      document.getElementById('tabImprove').classList.toggle('active', isImprove);
+      document.getElementById('tabNoSuggestion').classList.toggle('active', !isImprove);
+      document.getElementById('improveTabPanel').style.display = isImprove ? 'block' : 'none';
+      document.getElementById('noSuggestionTabPanel').style.display = isImprove ? 'none' : 'block';
+    }
+    
     function switchStep(step) {
       if (step === currentStep) return;
       currentStep = step;
