@@ -16058,6 +16058,20 @@ function buildAdminProjectEdit(isNew) {
         </div>
       </div>
 
+      <!-- 修改流程名称弹窗（项目管理内） -->
+      <div class="modal-overlay" id="editFlowNameModal" style="display:none">
+        <div class="modal-panel" style="width:420px">
+          <div class="modal-header"><h3>修改流程名称</h3><button class="modal-close" onclick="closeEditFlowNameModal()">✕</button></div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">流程名称</label>
+              <input type="text" id="editFlowNameInput" class="form-input" placeholder="请输入流程名称" autocomplete="off" style="width:100%;padding:8px 12px;border:1px solid #d9d9d9;border-radius:6px;font-size:14px;outline:none" onkeydown="if(event.key==='Enter')saveEditFlowName()">
+            </div>
+          </div>
+          <div class="modal-footer"><button class="btn btn-cancel" onclick="closeEditFlowNameModal()">取消</button><button class="btn btn-primary" onclick="saveEditFlowName()">保存</button></div>
+        </div>
+      </div>
+
       <!-- 审核提醒配置抽屉（右侧滑出） -->
       <div class="reminder-drawer-overlay" id="auditReminderDrawerOverlay" onclick="if(event.target===this)closeAuditReminderDrawer()">
         <div class="reminder-drawer">
@@ -16962,7 +16976,7 @@ function renderProjectApprovalRows() {
       const isMainFlowTag = '';
       const acts = [
         '<span class="action-link process" onclick="viewProjectApprovalProcess('+template.id+','+flowIdx+')">查看审批流程</span>',
-     
+        '<span class="action-link process" onclick="editProjectApprovalFlowName('+template.id+','+flowIdx+')">修改名称</span>',
         '<span class="action-link" onclick="openAuditReminderDrawer()">提醒设置</span>',
         '<span class="action-link danger" onclick="deleteProjectApprovalFlow('+template.id+','+flowIdx+')">删除</span>'
       ];
@@ -17437,6 +17451,47 @@ function viewProjectApprovalProcess(templateId, flowIdx) {
   if(!template || !template.flows || !template.flows[flowIdx]) return;
   const flow = template.flows[flowIdx];
   alert('查看审批流程：审批流设置的对应的流程查看，用原有的页面功能');
+}
+
+// 打开修改流程名称弹窗
+function editProjectApprovalFlowName(templateId, flowIdx) {
+  const template = _projectApprovalTemplates.find(t => t.id === templateId);
+  if(!template || !template.flows || !template.flows[flowIdx]) return;
+  const flow = template.flows[flowIdx];
+
+  window._editFlowNameTemplateId = templateId;
+  window._editFlowNameIdx = flowIdx;
+  document.getElementById('editFlowNameInput').value = flow.workflowName || '';
+  document.getElementById('editFlowNameModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // 自动聚焦并选中文本
+  const input = document.getElementById('editFlowNameInput');
+  setTimeout(() => { input.focus(); input.select(); }, 50);
+}
+
+// 保存流程名称
+function saveEditFlowName() {
+  const templateId = window._editFlowNameTemplateId;
+  const flowIdx = window._editFlowNameIdx;
+  const template = _projectApprovalTemplates.find(t => t.id === templateId);
+  if(!template || !template.flows || !template.flows[flowIdx]) { closeEditFlowNameModal(); return; }
+
+  const newName = document.getElementById('editFlowNameInput').value.trim();
+  if(!newName) {
+    showWechatToast('流程名称不能为空');
+    return;
+  }
+  template.flows[flowIdx].workflowName = newName;
+  document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
+  closeEditFlowNameModal();
+}
+
+// 关闭修改流程名称弹窗
+function closeEditFlowNameModal() {
+  document.getElementById('editFlowNameModal').style.display = 'none';
+  document.body.style.overflow = '';
+  window._editFlowNameTemplateId = null;
+  window._editFlowNameIdx = null;
 }
 
 // 引用并生效：动态生成生效设置弹窗（挂到body，z-index高于refTemplateModal）
