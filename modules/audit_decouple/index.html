@@ -2403,6 +2403,13 @@
     .version-select-info { padding: 16px 20px 0; }
     .version-select-info .matching-info-icon { display: flex; align-items: center; justify-content: center; }
 
+    /* 项目匹配确认 - 入排版本选择（嵌入温馨提示弹窗，仅多版本患者显示） */
+    .pm-version { margin-top: 14px; padding: 14px 16px; background: #f5f7fa; border: 1px solid #e8e8e8; border-radius: 8px; }
+    .pm-version-label { display: block; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .pm-version-select { width: 100%; padding: 8px 32px 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; font-size: 14px; color: #1d2129; outline: none; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+    .pm-version-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .pm-version-hint { margin-top: 8px; font-size: 12px; color: #86909c; line-height: 1.6; }
+
     /* 模板新建弹窗 - Tab切换样式 */
     .wf-form-tabs {
       display: flex; align-items: center; gap: 0;
@@ -8393,10 +8400,26 @@ function showProjectMatchConfirm(patientId, schemeNo, patientIndex) {
   const patient = findPatientById(patientId);
   if (!patient) return;
 
+  // 是否多版本入排（李*华为多版本，需在弹窗内选择入排版本；其他单版本患者不显示）
+  const needVersion = patient && patient.nameAbbr === '李*华';
+
   // 避免重复打开
   closeProjectMatchConfirm();
 
-  // 创建确认弹窗（确认语 + 温馨提示 + 三个按钮）
+  // 入排版本选择区（仅多版本患者显示）
+  const versionArea = needVersion ? `
+        <div class="pm-version" id="pmVersionArea">
+          <label class="pm-version-label">入排版本</label>
+          <select class="pm-version-select" id="pmVersionSelect" required>
+            <option value="" disabled selected>请选择入排版本</option>
+            <option value="V1.0">V1.0</option>
+            <option value="V2.0">V2.0</option>
+            <option value="V3.0">V3.0</option>
+          </select>
+          <div class="pm-version-hint">选择入排版本后，系统将按该版本进行匹配</div>
+        </div>` : '';
+
+  // 创建确认弹窗（确认语 + 温馨提示 + 版本选择 + 三个按钮）
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay open';
   overlay.id = 'projectMatchConfirmModal';
@@ -8408,6 +8431,7 @@ function showProjectMatchConfirm(patientId, schemeNo, patientIndex) {
       </div>
       <div class="modal-body" style="font-size:14px;color:#4e5969;line-height:1.8">
         <p>确定要执行项目匹配吗？</p>
+        ${versionArea}
         <div class="matching-info">
           <div class="matching-info-header">
             <span class="matching-info-icon">💡</span>
@@ -8419,6 +8443,7 @@ function showProjectMatchConfirm(patientId, schemeNo, patientIndex) {
             <li><strong style="color:#1677ff">仅项目匹配：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
           </ul>
         </div>
+        
       </div>
       <div class="modal-footer" style="justify-content:flex-end;gap:10px">
         <button class="btn btn-primary" onclick="onlyMatchProject(${patientId})">仅项目匹配</button>
@@ -8443,16 +8468,28 @@ function closeProjectMatchConfirm() {
 
 // 仅执行项目匹配
 function onlyMatchProject(patientId) {
-  closeProjectMatchConfirm();
+  // 多版本患者必须先选择入排版本
+  const versionArea = document.getElementById('pmVersionArea');
   const version = document.getElementById('matchVersionSelect')?.value;
+  if (versionArea && !version) {
+    showWechatToast('请先选择入排版本');
+    return;
+  }
+  closeProjectMatchConfirm();
   executeProjectMatch(patientId, version);
   showWechatToast('已开始项目匹配，请稍后查看结果');
 }
 
 // 预提交：先打开提交审批弹窗，提交时同步执行项目匹配
 function preSubmitProjectMatch(patientId, schemeNo, patientIndex) {
-  closeProjectMatchConfirm();
+  // 多版本患者必须先选择入排版本
+  const versionArea = document.getElementById('pmVersionArea');
   const version = document.getElementById('matchVersionSelect')?.value;
+  if (versionArea && !version) {
+    showWechatToast('请先选择入排版本');
+    return;
+  }
+  closeProjectMatchConfirm();
   // 标记后续提交需要同步执行项目匹配
   window._matchWithSubmit = { patientId, schemeNo, patientIndex, version };
   openSubmitAuditModal(schemeNo, patientIndex, true);

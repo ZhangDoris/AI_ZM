@@ -1064,6 +1064,12 @@
     .tc-step .tc-desc { font-size: 13px; line-height: 1.7; color: #555; }
     .tc-step .tc-evidence { margin-top: 6px; font-size: 12px; color: #1677ff; background: #f5f7fa; padding: 6px 10px; border-radius: 4px; border-left: 2px solid #91caff; }
 
+    /* 思考链步骤输出 */
+    .tc-output-block { margin-top: 14px; padding: 14px; background: #fafafa; border-radius: 8px; border: 1px solid #f0f0f0; }
+    .tc-output-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .tc-output-title i { color: #1677ff; }
+
+
     @media (max-width: 900px) {
       .ai-match-layout { flex-direction: column; }
       .ai-anchor { display: none; }
@@ -1435,8 +1441,7 @@
             <li class="anchor-nav-item" data-anchor="section-basic" onclick="scrollToSection('section-basic')">2. 基本信息</li>
             <li class="anchor-nav-item" data-anchor="section-conclusion" onclick="scrollToSection('section-conclusion')">3. AI判定结论</li>
             <li class="anchor-nav-item" data-anchor="section-detail" onclick="scrollToSection('section-detail')">4. 匹配详情</li>
-            <li class="anchor-nav-item" data-anchor="section-comorbidity" onclick="scrollToSection('section-comorbidity')">5. 合并症AI识别</li>
-            <li class="anchor-nav-item" data-anchor="section-medication" onclick="scrollToSection('section-medication')">6. 合并药物AI识别</li>
+            <li class="anchor-nav-item" data-anchor="section-comorbidity" onclick="scrollToSection('section-comorbidity')">5. 其它</li>
 
           </ul>
         </div>
@@ -1832,10 +1837,21 @@
           { seq: 10, item: 'ALT', value: '' }
         ],
         thinkChain: [
-          { title: '解析入排标准', desc: '系统读取方案 SHR-1918-301 V1.0 的入排标准文本，拆分为可判定的结构化条目（入选 6 条 / 排除 28 条）。', evidence: '来源：SHR-1918-301 方案入排标准 · 版本 V1.0' },
-          { title: '抽取患者信息', desc: '从门诊病历、检验报告中抽取关键字段：男、52岁、TG 2.3、LDL-C 3.8、既往TC 7.8、高血压病史。', evidence: '来源：北京安贞医院 2026-01-20 检验报告' },
-          { title: '逐条匹配判定', desc: '年龄、TG、LDL-C、ASCVD分级均符合；血脂报告超3个月触发筛败；血压、肝功能、传染病未查。', evidence: '入选标准2 → 不匹配（报告超期）' },
-          { title: '生成结论', desc: '综合判定：血脂报告超期是硬性不满足项，建议复查后再评估。其他待定项需补充检查。', evidence: '结论：不符合入排标准（1项）+ 待定（3项）' }
+          { title: '解析入排标准', desc: '系统读取方案 SHR-1918-301 V1.0 的入排标准文本，拆分为可判定的结构化条目（入选 6 条 / 排除 28 条）。', evidence: '来源：SHR-1918-301 方案入排标准 · 版本 V1.0', outputs: [] },
+          { title: '抽取患者信息', desc: '从门诊病历、检验报告、处方记录中抽取关键字段：男、52岁、TG 2.3、LDL-C 3.8、既往TC 7.8、高血压病史；同时自动识别合并症与合并用药。', evidence: '来源：北京安贞医院 2026-01-20 检验报告 / 门诊处方', outputs: [
+            { type: 'comorbidity', title: '合并症AI识别', data: [
+              { name: '原发性高血压（3级，很高危）', evidence: '来源：既往病史记录 · 高血压病史3年' },
+              { name: '脂肪肝', evidence: '来源：腹部超声 2026-01-20' },
+              { name: '胆囊结石', evidence: '来源：腹部超声 2026-01-20' }
+            ]},
+            { type: 'medication', title: '合并药物AI识别', data: [
+              { name: '阿托伐他汀钙片 20mg qd', evidence: '来源：门诊处方 · 2026-01-20 开具' },
+              { name: '苯磺酸氨氯地平片 5mg qd', evidence: '来源：门诊处方 · 2026-01-20 开具' },
+              { name: '阿司匹林肠溶片 100mg qd', evidence: '来源：门诊处方 · 2026-01-20 开具' }
+            ]}
+          ]},
+          { title: '逐条匹配判定', desc: '年龄、TG、LDL-C、ASCVD分级均符合；血脂报告超3个月触发筛败；血压、肝功能、传染病未查。', evidence: '入选标准2 → 不匹配（报告超期）', outputs: [] },
+          { title: '生成结论', desc: '综合判定：血脂报告超期是硬性不满足项，建议复查后再评估。其他待定项需补充检查。', evidence: '结论：不符合入排标准（1项）+ 待定（3项）', outputs: [] }
         ],
         comorbidity: [
           { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：既往病史记录 · 高血压病史3年' },
@@ -1890,10 +1906,22 @@
           { seq: 10, item: 'ALT', value: '68 U/L' }
         ],
         thinkChain: [
-          { title: '更新病历信息', desc: '患者于2026-06-15完成复查：血脂四项、肝功能、传染病筛查、血压测量。血脂报告在3个月有效期内。', evidence: '来源：北京安贞医院 2026-06-15 检验报告' },
-          { title: '血脂指标评估', desc: 'TG 1.65在1.5~1.7边缘范围，虽在入选范围内但提示筛败风险；LDL-C 3.2满足高危≥2.6的标准。', evidence: '入选标准3 → 边缘值，提示筛败风险' },
-          { title: '肝功能评估', desc: 'ALT 68 U/L为1.7xULN，未达排除标准3xULN，但提示注意；需结合病史评估肝酶偏高原因。', evidence: '排除标准23 → 未命中但提示风险' },
-          { title: '生成结论', desc: '主要指标基本符合，TG边缘值和ALT偏高为风险点，建议复查后判断是否可以入组。', evidence: '结论：待定（2项筛选风险）' }
+          { title: '更新病历信息', desc: '患者于2026-06-15完成复查：血脂四项、肝功能、传染病筛查、血压测量。血脂报告在3个月有效期内。', evidence: '来源：北京安贞医院 2026-06-15 检验报告', outputs: [] },
+          { title: '合并症与用药识别', desc: '基于复查病历再次识别患者合并症与合并用药，用于排除标准判定。', evidence: '来源：门诊处方 / 检查报告 2026-06-15', outputs: [
+            { type: 'comorbidity', title: '合并症AI识别', data: [
+              { name: '原发性高血压（3级，很高危）', evidence: '来源：门诊记录 2026-06-15 血压 145/92' },
+              { name: '非酒精性脂肪肝', evidence: '来源：腹部超声 2026-06-15' },
+              { name: '甲状腺结节（TI-RADS 3类）', evidence: '来源：甲状腺超声 2026-06-15' }
+            ]},
+            { type: 'medication', title: '合并药物AI识别', data: [
+              { name: '阿托伐他汀钙片 20mg qd', evidence: '来源：门诊处方 · 2026-06-15 开具' },
+              { name: '苯磺酸氨氯地平片 5mg qd', evidence: '来源：门诊处方 · 2026-06-15 开具' },
+              { name: '阿司匹林肠溶片 100mg qd', evidence: '来源：门诊处方 · 2026-06-15 开具' }
+            ]}
+          ]},
+          { title: '血脂指标评估', desc: 'TG 1.65在1.5~1.7边缘范围，虽在入选范围内但提示筛败风险；LDL-C 3.2满足高危≥2.6的标准。', evidence: '入选标准3 → 边缘值，提示筛败风险', outputs: [] },
+          { title: '肝功能评估', desc: 'ALT 68 U/L为1.7xULN，未达排除标准3xULN，但提示注意；需结合病史评估肝酶偏高原因。', evidence: '排除标准23 → 未命中但提示风险', outputs: [] },
+          { title: '生成结论', desc: '主要指标基本符合，TG边缘值和ALT偏高为风险点，建议复查后判断是否可以入组。', evidence: '结论：待定（2项筛选风险）', outputs: [] }
         ],
         comorbidity: [
           { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：门诊记录 2026-06-15 血压 145/92' },
@@ -1942,10 +1970,22 @@
           { seq: 10, item: 'ALT', value: '42 U/L' }
         ],
         thinkChain: [
-          { title: '多模型交叉验证', desc: 'Claude 3.5 与规则引擎分别输出判定，取一致性结果。对TG边缘和ALT波动进行双重校验。', evidence: '模型一致性：96.4%（26/27条标准一致）' },
-          { title: 'TG复查确认', desc: 'TG 1.82，稳定在1.5以上且超出边缘值1.7，排除筛败风险；LDL-C 3.5满足高危标准。', evidence: '入选标准3 → 匹配（TG稳定）' },
-          { title: '肝功能复查确认', desc: 'ALT回落至42 U/L（1.05xULN），AST、GGT均正常，无持续恶化趋势。', evidence: '排除标准23 → 未命中' },
-          { title: '生成结论', desc: '所有入选标准匹配、排除标准无命中，各项指标稳定，患者可进入筛选。', evidence: '结论：符合入排标准' }
+          { title: '多模型交叉验证', desc: 'Claude 3.5 与规则引擎分别输出判定，取一致性结果。对TG边缘和ALT波动进行双重校验。', evidence: '模型一致性：96.4%（26/27条标准一致）', outputs: [] },
+          { title: '合并症与用药复核', desc: '入组前最后一次复核患者合并症与合并用药，确保无新增排除项。', evidence: '来源：门诊处方 / 检查报告 2026-07-10', outputs: [
+            { type: 'comorbidity', title: '合并症AI识别', data: [
+              { name: '原发性高血压（3级，很高危）', evidence: '来源：门诊记录 2026-07-10 血压 138/88' },
+              { name: '非酒精性脂肪肝', evidence: '来源：检验报告 2026-07-10' },
+              { name: '甲状腺结节（TI-RADS 3类）', evidence: '来源：甲状腺超声 2026-07-10' }
+            ]},
+            { type: 'medication', title: '合并药物AI识别', data: [
+              { name: '瑞舒伐他汀钙片 10mg qd', evidence: '来源：门诊处方 · 2026-07-10 开具' },
+              { name: '苯磺酸氨氯地平片 5mg qd', evidence: '来源：门诊处方 · 2026-07-10 开具' },
+              { name: '阿司匹林肠溶片 100mg qd', evidence: '来源：门诊处方 · 2026-07-10 开具' }
+            ]}
+          ]},
+          { title: 'TG复查确认', desc: 'TG 1.82，稳定在1.5以上且超出边缘值1.7，排除筛败风险；LDL-C 3.5满足高危标准。', evidence: '入选标准3 → 匹配（TG稳定）', outputs: [] },
+          { title: '肝功能复查确认', desc: 'ALT回落至42 U/L（1.05xULN），AST、GGT均正常，无持续恶化趋势。', evidence: '排除标准23 → 未命中', outputs: [] },
+          { title: '生成结论', desc: '所有入选标准匹配、排除标准无命中，各项指标稳定，患者可进入筛选。', evidence: '结论：符合入排标准', outputs: [] }
         ],
         comorbidity: [
           { name: '原发性高血压（3级，很高危）', icon: 'fa-heartbeat', evidence: '来源：门诊记录 2026-07-10 血压 138/88' },
@@ -2086,6 +2126,50 @@
       `).join('');
     }
 
+    // 思考链步骤输出：合并症 / 合并药物表格
+    function renderThinkChainOutputs(outputs) {
+      if (!outputs || outputs.length === 0) return '';
+      return outputs.map(output => {
+        const isMed = output.type === 'medication';
+        const titleName = isMed ? '合并用药' : '合并症';
+        const rows = (output.data || []).map((item, i) => {
+          let name = item.name || '';
+          let dose = '';
+          if (isMed && name.indexOf(' ') > -1) {
+            const parts = name.split(' ');
+            name = parts.shift();
+            dose = parts.join(' ');
+          }
+          return `
+            <tr>
+              <td>${i + 1}</td>
+              <td><span class="rec-name-cell">${name}</span></td>
+              ${isMed ? `<td class="rec-dose-cell">${dose || '—'}</td>` : ''}
+              <td><div class="rec-evidence-cell">${item.evidence || '—'}</div></td>
+            </tr>`;
+        }).join('');
+
+        const headCols = isMed
+          ? `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th style="min-width:140px">规格 / 频次</th><th>证据来源</th>`
+          : `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th>证据来源</th>`;
+
+        return `
+          <div class="tc-output-block">
+            <div class="tc-output-title"><i class="fas ${isMed ? 'fa-pills' : 'fa-notes-medical'}"></i> ${output.title}</div>
+            <div class="recognition-meta">
+              <span class="recognition-count">共识别 ${(output.data || []).length} 项</span>
+              <span class="recognition-note">以下为 AI 从病史与资料中自动抽取，供人工复核</span>
+            </div>
+            <div class="table-container">
+              <table class="detail-table recognition-table">
+                <thead><tr>${headCols}</tr></thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
     // 新版：思考链详情
     function renderThinkChain(data) {
       const box = document.getElementById('thinkChainContainer');
@@ -2097,6 +2181,7 @@
           <div class="tc-title">${step.title}</div>
           <div class="tc-desc">${step.desc}</div>
           <div class="tc-evidence">${step.evidence}</div>
+          ${renderThinkChainOutputs(step.outputs)}
         </div>
       `).join('');
     }
@@ -2337,7 +2422,7 @@ function updatePRDPanel(mod, sub) {
       sections: [
         {
           title: '★ 本次修改',
-          content: '<ul><li><strong style="color:red;">修改摘要</strong></li><li>① 去掉分组和预筛的标签页</li><li>② 匹配详情和预筛表中加历史版本，点击不同的版本刷新当前页面内容</li><li>③ 智能匹配新增「合并症AI识别」「合并药物AI识别」两个区块（第6/7节），自动从病历识别疾病名称与药品名称并展示来源</li></ul>'
+          content: '<ul><li><strong style="color:red;">修改摘要</strong></li><li>① 去掉分组和预筛的标签页</li><li>② 匹配详情和预筛表中加历史版本，点击不同的版本刷新当前页面内容</li><li>③ 智能匹配新增「合并症AI识别」「合并药物AI识别」两个区块（第6/7节），自动从病历识别疾病名称与药品名称并展示来源</li><li>④ 思考链（Tab）支持展示每个步骤的输出结构：合并症 / 合并药物以表格形式嵌套在对应步骤下方，作为「抽取患者信息」等步骤的输出</li></ul>'
         },
         {
           title: '一、页面定位',
