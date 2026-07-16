@@ -242,54 +242,6 @@
       background: #1677ff;
       color: #fff;
     }
-    /* 撤回审核按钮：橙色警示样式，区别于「审核」 */
-    .audit-card .act-btn.withdraw-btn {
-      color: #fa8c16;
-      border-color: #fa8c16;
-    }
-    .audit-card .act-btn.withdraw-btn:active {
-      background: #fff7e6;
-    }
-    /* 按钮提示气泡（data-tip） */
-    [data-tip] {
-      position: relative;
-    }
-    [data-tip]::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1a1a1a;
-      color: #fff;
-      font-size: 11px;
-      line-height: 1.5;
-      padding: 6px 10px;
-      border-radius: 6px;
-      width: 180px;
-      white-space: normal;
-      text-align: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-      z-index: 80;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    [data-tip]::before {
-      content: '';
-      position: absolute;
-      bottom: calc(100% + 2px);
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-top-color: #1a1a1a;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-      z-index: 80;
-    }
-    [data-tip]:hover::after,
-    [data-tip]:hover::before { opacity: 1; }
     .audit-card .files {
       padding: 8px 14px 12px;
       display: flex;
@@ -1743,19 +1695,6 @@
       <li class="note">注：判断逻辑基于患者<b>原始 id</b> 而非列表索引（「待操作」Tab 过滤已提交数据后，RFNE 可能显示为第三条，但逻辑不受影响）。</li>
     </ul>
 
-    <h4 id="prd-pin-5"><span class="pin">5</span>第 5 条：预提交5 - 撤回审核</h4>
-    <ul>
-      <li>预提交5 为<b>本人已提交、尚未进入下一个流程节点</b>的数据，状态标签为「待审核」。该卡片<b>不显示「审核」按钮</b>，改为显示<b>「撤回审核」</b>按钮。</li>
-      <li>「撤回审核」按钮带<b>提示气泡</b>：<span class="hi">当审批结果错误或需要加签时，可撤回审批</span>（鼠标悬停按钮可见）。</li>
-      <li><b>撤回规则</b>：
-        <ul>
-          <li>该数据<b>还没有下一个动作</b>（尚未进入下一个流程节点，含「审批沟通」期间）时，<b>本人可撤回审批</b>。</li>
-          <li>一旦该数据<b>进入下一个流程节点</b>（<b>不含</b>「审批沟通」）后，<b>不可撤回</b>，且「撤回审核」按钮<b>自动隐藏</b>。</li>
-        </ul>
-      </li>
-      <li>点击「撤回审核」→ 撤销本次提交，卡片状态更新为「已撤回」，按钮消失（撤回后提交人可重新发起提交）。</li>
-    </ul>
-
     <h4>使用说明</h4>
     <ul>
       <li>路径：APP 列表 → <b>智能筛选</b> → 项目 → <b>患者列表</b></li>
@@ -1811,18 +1750,6 @@
         submitTime: '2026-07-07 16:45:30',
         thinkStatus: null,
         thinkEnabled: false
-      },
-      {
-        id: 5, code: 5, name: '预提交5', age: 48, gender: '女',
-        pct: '62.0%', status: '待审核',
-        auditType: '预筛审核',
-        planNo: '测试项目5',
-        center: '中国人民解放军73021部队医院',
-        submitter: '刘雪红',
-        submitTime: '2026-07-11 11:05:38',
-        thinkStatus: null,
-        thinkEnabled: false,
-        canWithdraw: true   // 本人已提交、尚未进入下一个流程节点 → 可撤回审批（无「审核」按钮）
       }
     ];
 
@@ -2392,23 +2319,10 @@ HDL-C：1.09 mmol/L
         let statePill = '';
         if (d.status === '驳回') statePill = '<span class="pill pill-red">驳回</span>';
         else if (d.status === '通过') statePill = '<span class="pill pill-green">通过</span>';
-        else if (d.status === '已撤回') statePill = '<span class="pill pill-gray">已撤回</span>';
         else statePill = '<span class="pill pill-orange">待审核</span>';
 
-        // 操作区：canWithdraw 时显示「撤回审核」（无「审核」按钮）；否则显示「审核」
-        let actionBtns = `
-          <div class="act-btn">抄送</div>
-          <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>`;
-        if (d.canWithdraw) {
-          actionBtns += `
-          <div class="act-btn withdraw-btn" data-tip="当审批结果错误或需要加签时，可撤回审批" onclick="event.stopPropagation();withdrawAudit(${d.id})">撤回审核</div>`;
-        } else {
-          actionBtns += `
-          <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>`;
-        }
-
         return `
-          <div class="audit-card" id="auditcard-${d.id}">
+          <div class="audit-card">
             <div class="hd">
               <span class="name">${d.name}</span>
               <span class="meta">${d.gender} | ${d.age}</span>
@@ -2427,7 +2341,9 @@ HDL-C：1.09 mmol/L
               <div class="row" style="padding-left:78px"><span class="val">待操作人：--</span></div>
             </div>
               <div class="action-bar">
-              ${actionBtns}
+              <div class="act-btn">抄送</div>
+              <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>
+              <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>
             </div>
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料
@@ -2436,19 +2352,6 @@ HDL-C：1.09 mmol/L
           </div>
         `;
       }).join('');
-    }
-
-    // ========= 撤回审批（第 5 条 预提交5） =========
-    // 规则：该数据尚未进入下一个流程节点（含「审批沟通」期间），本人可撤回；
-    //       一旦进入下一个流程节点（不含「审批沟通」），不可撤回，按钮自动隐藏。
-    function withdrawAudit(id) {
-      const d = AUDIT_DATA.find(x => x.id === id);
-      if (!d || !d.canWithdraw) return;
-      d.canWithdraw = false;      // 撤回后按钮消失
-      d.status = '已撤回';        // 卡片状态更新
-      toastMini('已撤回审批');
-      renderAuditList();
-      setTimeout(drawLines, 100);
     }
 
     // ========= 进入详情 =========

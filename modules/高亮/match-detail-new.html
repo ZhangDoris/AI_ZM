@@ -9,58 +9,26 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
-      height: 100%;
+      min-height: 100%;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
       background: #f5f7fa;
       color: #333;
-      overflow: hidden;
+      overflow-y: auto;
     }
-  .content-area { display: flex; flex-direction: row; height: calc(100vh - 56px); overflow: hidden; position: relative; }
-  .left-panel { flex: 1; overflow-y: auto; background: #f5f7fa; padding: 24px; min-width: 0; }
-  .right-panel { width: 420px; min-width: 420px; flex-shrink: 0; overflow-y: auto; background: #fff; border-left: 1px solid #e8e8e8; position: relative; z-index: 1; }
-  .right-panel .prd-header { padding: 16px; border-bottom: 1px solid #e8e8e8; background: linear-gradient(135deg, #FAFBFF 0%, #F0F4FF 100%); }
-  .right-panel .prd-body { padding: 14px; }
-  .right-panel .proto-desc { margin-bottom: 10px; }
- @media (max-width: 768px) {
-    .left-panel { width: 100% !important; height: 60vh; }
-    .divider-line { display: none; }
-    .right-panel { width: 100% !important; height: 40vh; border-left: none; border-top: 2px dashed #f59e0b; }
-  
+  /* 主内容区域（单栏布局，参考 audit_decouple） */
+  .main-content {
+    padding: 24px;
   }
+
+ 
    
       
 
-    /* ===== 原型连线交互（参考 match-log） ===== */
-    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
-    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.02); }
-    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.25); background-color: rgba(22,93,255,0.05); }
 
 
-    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
-    .connection-line.active { stroke-width: 3; opacity: 1; }
-    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
-    .connection-label-bg { fill: #165DFF; }
 
-    /* 窄屏：右栏堆叠到下方（仅在极小屏幕生效） */
-    @media (max-width: 600px) {
-      .content-area {
-        flex-direction: column;
-      }
-      .left-panel { flex: auto; height: 55vh; width: 100%; }
-      .divider-line { display: none; }
-      .right-panel {
-        width: 100%;
-        border-left: none;
-        border-top: 2px dashed #f59e0b;
-        flex-shrink: 1;
-      }
-      #connections { display: none; }
-      .proto-element:hover, .proto-desc:hover { box-shadow: none; }
-      .proto-element.active-highlight, .proto-desc.active-highlight { box-shadow: none; }
-    }
 
     /* 顶部导航栏 */
     .top-header {
@@ -174,6 +142,62 @@
     .main-content {
       width: 100%;
     }
+
+    /* PRD 说明面板（参考 match-log，配色用琥珀色系以区分左侧内容区） */
+    .prd-panel {
+      position: fixed;
+      top: 60px;
+      right: 16px;
+      z-index: 999;
+      background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+      color: #78350f;
+      border: 1px solid #FDE68A;
+      border-radius: 10px;
+      padding: 16px 18px;
+      max-width: 340px;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.65;
+      box-shadow: 0 8px 30px rgba(245, 158, 11, 0.25);
+      display: none;
+    }
+    .prd-panel.show { display: block; }
+    .prd-panel h3 {
+      color: #B45309;
+      font-size: 15px;
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #FDE68A;
+    }
+    .prd-panel h4 {
+      color: #D97706;
+      font-size: 13px;
+      font-weight: 600;
+      margin: 12px 0 6px;
+    }
+    .prd-panel ul { margin: 4px 0; padding-left: 18px; }
+    .prd-panel li { margin-bottom: 5px; }
+    .prd-panel strong { color: #92400E; }
+    .prd-toggle-btn {
+      position: fixed;
+      top: 70px;
+      right: 16px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.4);
+      transition: all 0.3s;
+    }
+    .prd-toggle-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.5); }
+    .prd-toggle-btn:active { transform: scale(0.95); }
+    .prd-toggle-btn.active { background: linear-gradient(135deg, #92400E 0%, #78350F 100%); }
 
     /* 卡片样式 */
     .card {
@@ -450,6 +474,37 @@
       text-decoration: underline;
     }
 
+    /* 操作列：统一的小按钮样式，与溯源失败徽章视觉权重协调 */
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      font-size: 12px;
+      line-height: 1.4;
+      border: 1px solid #1677ff;
+      background: #1677ff;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .2s;
+    }
+    .action-btn:hover { background: #4096ff; border-color: #4096ff; }
+    .action-btn.ghost {
+      background: #fff;
+      color: #1677ff;
+      border-color: #d9d9d9;
+    }
+    .action-btn.ghost:hover { border-color: #1677ff; color: #1677ff; }
+    .action-btn.muted {
+      background: #fafafa;
+      color: #999;
+      border-color: #eee;
+    }
+    .action-btn.muted:hover { color: #666; border-color: #d9d9d9; }
+
+
     /* 操作列：溯源状态展示 */
     .trace-loading {
       display: inline-flex;
@@ -461,9 +516,16 @@
     }
     .trace-loading i { color: #165DFF; font-size: 12px; }
     .trace-failed {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #FFF1F0;
+      border: 1px solid #FFA39E;
       color: #F53F3F;
       font-size: 12px;
       font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
     }
 
 
@@ -891,21 +953,47 @@
 
 
 
+  <!-- PRD 说明切换按钮（参考 match-log） -->
+  <button class="prd-toggle-btn" id="prdToggleBtn" onclick="togglePRDPanel()"><i class="fas fa-clipboard-list"></i> PRD 说明</button>
+
+  <!-- PRD 说明面板（琥珀色系，与左侧内容区区分） -->
+  <div class="prd-panel" id="prdPanel">
+    <h3><i class="fas fa-clipboard-list"></i> PRD 需求说明</h3>
+    <h4>页面定位</h4>
+    <ul>
+      <li><strong>涉及页面</strong>：AI 智能预筛系统 - 匹配详情、匹配日志的匹配详情、审核列表的查看页面</li>
+    </ul>
+    <h4>功能</h4>
+    <ul>
+    <li><strong>匹配运行信息加</strong>：OCR用时、溯源用时、总用时=原来的总用时+溯源用时，溯源还没出来的时候先别显示总用时</li>
+      <li><strong>匹配详情</strong>：溯源失败，操作列的溯源按钮，变成溯源失败，溯源中，显示溯源中，溯源失败，匹配详情的右上角有一个重新溯源的按钮</li>
+    </ul>
+    <h4>溯源状态联动</h4>
+    <ul>
+      <li><strong>溯源中</strong>：操作列显示旋转"溯源中"，不可点击</li>
+      <li><strong>溯源成功</strong>："病历溯源"可正常操作。目前的功能</li>
+      <li><strong>溯源失败</strong>：显示红色"溯源失败"，列表右上角出现"智能溯源"按钮</li>
+    </ul>
+   
+  </div>
+
+  <!-- Tab导航 -->
+  <div class="tab-navigation">
+    <div class="tab-nav-inner">
+      <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
+      <div class="tab-item" id="tab-thinkchain-btn" onclick="switchTab('thinkchain')">思考链</div>
+      <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
+    </div>
+  </div>
+
   <!-- 主内容 -->
-  <div class="content-area" id="contentArea">
-    <div class="left-panel">
-    
+  <div class="main-content">
     <!-- Tab 1: 匹配详情 -->
     <div id="tab-match" class="tab-content active">
        <!-- 项目信息 -->
       <div class="card">
-        <div class="project-info proto-element" data-proto-id="1">
-          
+        <div class="project-info">
           <div class="project-details">
-            
-                <!-- 动态生成 -->
-              </div>
-            </div>
             <div class="info-row">
               <div class="label">方案编号：</div>
               <div class="value" id="schemeNo">HRS-8080-303</div>
@@ -921,13 +1009,12 @@
                 <span class="info-time">上次更新时间：2026-06-01 16:43:01</span>
               </div>
             </div>
-          
           </div>
           <button class="btn-sm btn-primary">导出PDF</button>
         </div>
       </div>
       <!-- 匹配运行信息 -->
-      <div class="card proto-element" data-proto-id="3">
+      <div class="card">
         <div class="card-title">匹配运行信息</div>
         <div class="match-info-grid">
           <div class="info-item">
@@ -1020,7 +1107,7 @@
         <div id="traceFailTip" style="display:none;margin-bottom:12px;font-size:12px;color:#fa8c16">
           <i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>上次 AI 溯源未能成功，可重新发起智能溯源
         </div>
-        <div class="table-container proto-element" data-proto-id="2">
+        <div class="table-container">
           <table class="detail-table">
             <thead>
               <tr>
@@ -1100,30 +1187,6 @@
       </div>
     </div>
     </div>
-    </div>
-    <!-- 左侧面板结束 -->
-    <div class="divider-line"></div>
-
-    <!-- 右侧 PRD 面板 -->
-    <div class="right-panel" id="rightPanel">
-      <div class="prd-header">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="padding:2px 8px;background:#f59e0b;color:#fff;font-size:10px;font-weight:bold;border-radius:4px">PRD</span>
-          <span style="font-size:12px;font-weight:600;color:#78350f">修改需求说明</span>
-        </div>
-      </div>
-      <div class="prd-body" id="prdBody">
-        <!-- 动态生成 -->
-      </div>
-    </div>
-
-    <!-- SVG 连线层 -->
-    <svg id="connections"></svg>
-
-    <button class="right-panel-toggle" id="rightPanelToggle" onclick="toggleRightPanel()" title="收起/展开PRD面板">
-      <i class="fas fa-chevron-right" id="toggleIcon"></i>
-    </button>
-  </div>
 
   <!-- 加载遮罩 -->
   <div class="loading-overlay" id="loadingOverlay">
@@ -1131,6 +1194,14 @@
   </div>
 
   <script>
+    // 切换 PRD 面板显示/隐藏（参考 match-log）
+    function togglePRDPanel() {
+      const panel = document.getElementById('prdPanel');
+      const btn = document.getElementById('prdToggleBtn');
+      const show = panel.classList.toggle('show');
+      if (btn) btn.classList.toggle('active', show);
+    }
+
     // 从URL获取参数
     const urlParams = new URLSearchParams(window.location.search);
     const patientId = urlParams.get('id');
@@ -1260,12 +1331,12 @@
               ${traceStatus === 'tracing'
                 ? '<span class="trace-loading" title="溯源中"><i class="fas fa-spinner fa-spin"></i> 溯源中</span>'
                 : traceStatus === 'failed'
-                  ? '<span class="trace-failed">溯源失败</span>'
-                  : '<span class="action-link">病历溯源</span>'}
-              <span class="action-link">结果修正</span>
+                  ? '<span class="trace-failed"><i class="fas fa-circle-exclamation"></i> 溯源失败</span>'
+                  : '<button class="action-btn">病历溯源</button>'}
+              <button class="action-btn ghost">结果修正</button>
             </div>
             <div class="action-links" style="margin-top:4px">
-              <span class="action-link" style="color:#999">清空修正</span>
+              <button class="action-btn muted">清空修正</button>
             </div>
           </td>
         </tr>
@@ -1341,7 +1412,7 @@
     window.addEventListener('DOMContentLoaded', function() {
       renderMatchDetailTable();
       renderPrescreenTable();
-      updatePRDPanel('audit');
+
 
       // 设置当前时间
       const now = new Date();
@@ -1353,145 +1424,6 @@
                      String(now.getSeconds()).padStart(2, '0');
       document.getElementById('endTime').textContent = timeStr;
     });
-
-// ==================== PRD 需求说明面板 ====================
-function updatePRDPanel(mod, sub) {
-  const prdBody = document.getElementById('prdBody');
-  if (!prdBody) return;
-  
-  // 定义各模块的需求说明
-  const prdData = {
-    'audit': {
-      title: '匹配详情',
-      sections: [
-        {
-          id: 1,
-          title: '页面概述',
-          content: '<ul style="margin:0;padding-left:14px;list-style:disc"><li>展示患者项目匹配的完整信息</li><li>包含项目基本信息、匹配运行信息、匹配详情表格</li><li>历史匹配版本已移除，PRD 嵌入右侧可收缩面板</li></ul>'
-        },
-        {
-          id: 2,
-          title: '溯源状态联动 & 智能溯源确认',
-          content: '<ul style="margin:0;padding-left:14px;list-style:disc"><li><strong>溯源中：</strong>操作列显示旋转"溯源中"标识，不可点击</li><li><strong>溯源成功：</strong>"病历溯源"可正常操作</li><li><strong>溯源失败：</strong>操作列显示红色"溯源失败"，列表右上角出现"智能溯源"按钮</li><li><strong>智能溯源：</strong>点击按钮弹出确认弹窗，确认后重新发起溯源</li></ul>'
-        },
-        {
-          id: 3,
-          title: '思考链功能',
-          content: '<ul style="margin:0;padding-left:14px;list-style:disc"><li>新增"思考链"Tab：项目未配置时不显示</li><li>每条为项目配置的思考链返回结果</li><li>所有人可查看，管理员/医学经理/项目经理可编辑</li></ul>'
-        }
-      ]
-    }
-  };
-// 先尝试 sub 级数据（如 admin-projects），再回退到 mod 级（如 admin）
-  const subKey = sub ? mod + '-' + sub : null;
-  const prd = prdData[subKey] || prdData[mod];
-  if (!prd) {
-    prdBody.innerHTML = '';
-    return;
-  }
-  
-  let html = '';
-  prd.sections.forEach(section => {
-    const pid = section.id || 1;
-    html += `
-      <div class="proto-desc" data-proto-id="${pid}">
-        <div style="display:flex;align-items:flex-start;gap:8px">
-          <span style="flex-shrink:0;width:22px;height:22px;background:#f59e0b;color:#fff;border-radius:50%;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center">${pid}</span>
-          <div>
-            <h3 style="font-size:13px;font-weight:600;color:#78350f;margin:0 0 3px">${section.title}</h3>
-            <div style="font-size:12px;color:#57534e;line-height:1.55">${section.content}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-
-  prdBody.innerHTML = html;
-  requestAnimationFrame(drawConnections);
-}
-    
-/* 切换右侧 PRD 面板 */
-function toggleRightPanel() {
-  const panel = document.getElementById('rightPanel');
-  const icon = document.getElementById('toggleIcon');
-  const area = document.getElementById('contentArea');
-  if (!panel) return;
-  if (panel.classList.contains('collapsed')) {
-    panel.classList.remove('collapsed');
-    if (area) area.classList.remove('panel-collapsed');
-    if (icon) icon.className = 'fas fa-chevron-right';
-  } else {
-    panel.classList.add('collapsed');
-    if (area) area.classList.add('panel-collapsed');
-    if (icon) icon.className = 'fas fa-chevron-left';
-  }
-  requestAnimationFrame(drawConnections);
-}
-
-// ==================== SVG 连线（参考 match-log） ====================
-const svgEl = document.getElementById('connections');
-const contentArea = document.getElementById('contentArea');
-
-function drawConnections() {
-  if (!svgEl || !contentArea) return;
-  svgEl.innerHTML = '';
-  const panel = document.getElementById('rightPanel');
-  if (panel && panel.classList.contains('collapsed')) return; // 收起时不绘制
-  const containerRect = contentArea.getBoundingClientRect();
-  document.querySelectorAll('.proto-element[data-proto-id]').forEach(leftEl => {
-    const pid = leftEl.getAttribute('data-proto-id');
-    const rightEl = document.querySelector('.proto-desc[data-proto-id="' + pid + '"]');
-    if (!rightEl) return;
-    const lr = leftEl.getBoundingClientRect();
-    const rr = rightEl.getBoundingClientRect();
-    if (lr.width === 0 || rr.width === 0) return;
-    const x1 = lr.right - containerRect.left;
-    const y1 = lr.top + lr.height / 2 - containerRect.top;
-    const x2 = rr.left - containerRect.left;
-    const y2 = rr.top + rr.height / 2 - containerRect.top;
-    const cp = (x2 - x1) * 0.5;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + cp) + ' ' + y1 + ', ' + (x2 - cp) + ' ' + y2 + ', ' + x2 + ' ' + y2);
-    path.setAttribute('class', 'connection-line');
-    path.setAttribute('data-proto-id', pid);
-    svgEl.appendChild(path);
-    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-    const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    bg.setAttribute('cx', mx); bg.setAttribute('cy', my); bg.setAttribute('r', 11);
-    bg.setAttribute('class', 'connection-label-bg'); svgEl.appendChild(bg);
-    const tx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    tx.setAttribute('x', mx); tx.setAttribute('y', my); tx.setAttribute('class', 'connection-label');
-    tx.textContent = pid; svgEl.appendChild(tx);
-  });
-}
-
-function highlightConnection(pid, active) {
-  const path = svgEl ? svgEl.querySelector('.connection-line[data-proto-id="' + pid + '"]') : null;
-  const left = document.querySelector('.proto-element[data-proto-id="' + pid + '"]');
-  const right = document.querySelector('.proto-desc[data-proto-id="' + pid + '"]');
-  if (path) path.classList.toggle('active', active);
-  if (left) left.classList.toggle('active-highlight', active);
-  if (right) right.classList.toggle('active-highlight', active);
-}
-
-document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
-  const id = el.getAttribute('data-proto-id');
-  el.addEventListener('mouseenter', () => highlightConnection(id, true));
-  el.addEventListener('mouseleave', () => highlightConnection(id, false));
-});
-document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
-  const id = el.getAttribute('data-proto-id');
-  el.addEventListener('mouseenter', () => highlightConnection(id, true));
-  el.addEventListener('mouseleave', () => highlightConnection(id, false));
-});
-
-function redrawConnections() { requestAnimationFrame(drawConnections); }
-window.addEventListener('load', redrawConnections);
-window.addEventListener('resize', redrawConnections);
-window.addEventListener('scroll', redrawConnections, true);
-document.getElementById('rightPanel').addEventListener('scroll', redrawConnections);
-const leftPanel = document.getElementById('leftPanel');
-if (leftPanel) leftPanel.addEventListener('scroll', redrawConnections);
 
 // ==================== 思考链数据与渲染 ====================
 
