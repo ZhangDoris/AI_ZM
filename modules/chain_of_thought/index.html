@@ -17120,9 +17120,17 @@ function renderAuditThinkChainSteps(steps) {
       <div style="margin-bottom:16px;border:1px solid #e8e8e8;border-radius:8px;overflow:hidden">
         <div style="padding:12px 16px;background:#fafafa;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between">
           <span style="font-size:14px;font-weight:600;color:#1677ff">第${stepNum}步</span>
-          <button onclick="editAuditStep(${index})" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:12px;cursor:pointer">
-            <i class="fas fa-edit"></i> 编辑
-          </button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onclick="moveAuditStep(${index}, -1)" ${index === 0 ? 'disabled' : ''} style="padding:4px 8px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:12px;cursor:pointer;${index === 0 ? 'opacity:0.4;cursor:not-allowed;' : ''}" title="向上调整顺序">
+              <i class="fas fa-arrow-up"></i> 
+            </button>
+            <button onclick="moveAuditStep(${index}, 1)" ${index === steps.length - 1 ? 'disabled' : ''} style="padding:4px 8px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:12px;cursor:pointer;${index === steps.length - 1 ? 'opacity:0.4;cursor:not-allowed;' : ''}" title="向下调整顺序">
+              <i class="fas fa-arrow-down"></i> 
+            </button>
+            <button onclick="editAuditStep(${index})" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:12px;cursor:pointer">
+              <i class="fas fa-edit"></i> 编辑
+            </button>
+          </div>
         </div>
         <div style="padding:16px;background:#fff">
           <div id="audit-step-content-${index}" style="font-size:13px;color:#333;line-height:1.8;white-space:pre-wrap;word-break:break-word">${displayContent}</div>
@@ -17356,17 +17364,52 @@ function executeSingleThinking(chainId) {
   }, 3000);
 }
 
+// 新增审批详情步骤
+function addAuditStep() {
+  if (!auditTcCurrentChain) return;
+  if (!auditTcCurrentChain.steps) auditTcCurrentChain.steps = [];
+
+  // 标记为新增模式（-1 表示新增）
+  window.auditCurrentEditingStepIndex = -1;
+
+  // 清空编辑表单
+  document.getElementById('editAuditStepContent').value = '';
+  document.getElementById('editAuditStepModalTitle').textContent = '新增步骤';
+
+  // 显示编辑弹窗
+  document.getElementById('editAuditStepModal').style.display = 'flex';
+}
+
+// 调整审批详情步骤顺序
+function moveAuditStep(stepIndex, direction) {
+  if (!auditTcCurrentChain || !auditTcCurrentChain.steps) return;
+
+  const steps = auditTcCurrentChain.steps;
+  const newIndex = stepIndex + direction;
+
+  if (newIndex < 0 || newIndex >= steps.length) return;
+
+  // 交换位置
+  const temp = steps[stepIndex];
+  steps[stepIndex] = steps[newIndex];
+  steps[newIndex] = temp;
+
+  // 重新渲染步骤列表
+  renderAuditThinkChainSteps(steps);
+}
+
 // 编辑审批详情步骤
 function editAuditStep(stepIndex) {
   const step = auditTcCurrentChain.steps[stepIndex];
   if (!step) return;
-  
+
   // 保存当前编辑的步骤索引
   window.auditCurrentEditingStepIndex = stepIndex;
-  
+
   // 填充编辑表单
   document.getElementById('editAuditStepContent').value = step.content || '';
-  
+  document.getElementById('editAuditStepModalTitle').textContent = '编辑步骤';
+
   // 显示编辑弹窗
   document.getElementById('editAuditStepModal').style.display = 'flex';
 }
@@ -17380,23 +17423,31 @@ function closeEditAuditStepModal() {
 function saveAuditStepEdit() {
   const stepIndex = window.auditCurrentEditingStepIndex;
   if (stepIndex === undefined || !auditTcCurrentChain) return;
-  
+
   const newContent = document.getElementById('editAuditStepContent').value.trim();
-  
+
   if (!newContent) {
     alert('步骤内容不能为空');
     return;
   }
-  
-  // 更新步骤数据
-  auditTcCurrentChain.steps[stepIndex].content = newContent;
-  
+
+  if (stepIndex === -1) {
+    // 新增模式：在末尾追加新步骤
+    auditTcCurrentChain.steps.push({
+      stepId: 'step_' + (auditTcCurrentChain.steps.length + 1),
+      content: newContent
+    });
+  } else {
+    // 编辑模式：更新现有步骤
+    auditTcCurrentChain.steps[stepIndex].content = newContent;
+  }
+
   // 重新渲染步骤列表
   renderAuditThinkChainSteps(auditTcCurrentChain.steps);
-  
+
   // 关闭编辑弹窗
   closeEditAuditStepModal();
-  
+
   // 提示成功
   alert('保存成功！');
 }
@@ -17718,7 +17769,12 @@ function saveAuditStepEdit() {
       </div>
 
       <!-- 步骤列表 -->
-      <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:600;font-size:14px;color:#1a1a1a">📝 思考步骤</div>
+        <button onclick="addAuditStep()" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+          <i class="fas fa-plus"></i> 新增步骤
+        </button>
+      </div>
       <div id="auditTcStepsContainer"></div>
     </div>
     <!-- 底部固定操作区：关闭 / AI思考 -->
@@ -17735,7 +17791,7 @@ function saveAuditStepEdit() {
 <div class="modal-overlay" id="editAuditStepModal" style="display:none;z-index:9999">
   <div class="modal-panel" style="width:700px;max-height:80vh">
     <div class="modal-header">
-      <h3>编辑步骤</h3>
+      <h3 id="editAuditStepModalTitle">编辑步骤</h3>
       <button class="modal-close" onclick="closeEditAuditStepModal()">✕</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;max-height:calc(80vh - 60px);padding:20px 24px">
@@ -17766,7 +17822,12 @@ function saveAuditStepEdit() {
       </div>
 
       <!-- 步骤列表 -->
-      <div style="font-weight:600;font-size:14px;color:#1a1a1a;margin-bottom:12px">📝 思考步骤</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-weight:600;font-size:14px;color:#1a1a1a">📝 思考步骤</div>
+        <button onclick="addAuditStep()" style="padding:4px 12px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px">
+          <i class="fas fa-plus"></i> 新增步骤
+        </button>
+      </div>
       <div id="auditTcStepsContainer"></div>
     </div>
     <!-- 底部固定操作区：关闭 / AI思考 -->
@@ -17783,7 +17844,7 @@ function saveAuditStepEdit() {
 <div class="modal-overlay" id="editAuditStepModal" style="display:none;z-index:9999">
   <div class="modal-panel" style="width:700px;max-height:80vh">
     <div class="modal-header">
-      <h3>编辑步骤</h3>
+      <h3 id="editAuditStepModalTitle">编辑步骤</h3>
       <button class="modal-close" onclick="closeEditAuditStepModal()">✕</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;max-height:calc(80vh - 60px);padding:20px 24px">
