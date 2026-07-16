@@ -250,46 +250,19 @@
     .audit-card .act-btn.withdraw-btn:active {
       background: #fff7e6;
     }
-    /* 按钮提示气泡（data-tip） */
-    [data-tip] {
-      position: relative;
-    }
-    [data-tip]::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1a1a1a;
-      color: #fff;
+    /* 撤回审核 常驻提示（手机端可见，无需 hover） */
+    .withdraw-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
       font-size: 11px;
       line-height: 1.5;
-      padding: 6px 10px;
-      border-radius: 6px;
-      width: 180px;
-      white-space: normal;
-      text-align: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-      z-index: 80;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      color: #d46b08;
+      background: #fff7e6;
+      border-top: 1px solid #ffe7ba;
     }
-    [data-tip]::before {
-      content: '';
-      position: absolute;
-      bottom: calc(100% + 2px);
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-top-color: #1a1a1a;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .2s;
-      z-index: 80;
-    }
-    [data-tip]:hover::after,
-    [data-tip]:hover::before { opacity: 1; }
+    .withdraw-hint i { font-size: 12px; flex-shrink: 0; color: #fa8c16; }
     .audit-card .files {
       padding: 8px 14px 12px;
       display: flex;
@@ -2401,7 +2374,7 @@ HDL-C：1.09 mmol/L
           <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>`;
         if (d.canWithdraw) {
           actionBtns += `
-          <div class="act-btn withdraw-btn" data-tip="当审批结果错误或需要加签时，可撤回审批" onclick="event.stopPropagation();withdrawAudit(${d.id})">撤回审核</div>`;
+          <div class="act-btn withdraw-btn" onclick="event.stopPropagation();withdrawAudit(${d.id})">撤回审核</div>`;
         } else {
           actionBtns += `
           <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>`;
@@ -2429,6 +2402,7 @@ HDL-C：1.09 mmol/L
               <div class="action-bar">
               ${actionBtns}
             </div>
+            ${d.canWithdraw ? `<div class="withdraw-hint"><i class="fas fa-info-circle"></i> 当审批结果错误或需要加签时，可撤回审批</div>` : ''}
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料
               <span style="color:#1677ff;margin-left:auto">5</span>
@@ -2689,6 +2663,7 @@ HDL-C：1.09 mmol/L
       }
       if (filterActive) drawLine(svg, lines[2]);
       if (patientActive) drawLine(svg, lines[3]);
+      if (auditActive) drawLine(svg, lines[4]);
     }
 
     function drawLine(svg, cfg) {
