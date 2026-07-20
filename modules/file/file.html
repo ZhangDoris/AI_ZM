@@ -1019,7 +1019,6 @@
                 <strong>5 修改文件夹之后，整个项目上的文件夹名称都需要同步修改</strong>
               <strong>6 如果要关闭/删除文件夹，判断是否有已经上传的文件，如果有，做一个提示，让选择是否关闭，或者做文件转移</strong>
               <strong>7 根目录（预筛阶段、入组阶段、平级独立文件夹、存档资料、系统）不可关闭，点击关闭开关会提示「根目录为系统核心目录，不可关闭」。随机阶段根目录为<strong>用户可管理</strong>，可修改/删除/关闭</strong>
-              <strong>8 新增「随机阶段」根目录及子文件夹（原始资料、基因检测报告、审批上传附件存档、AI分类资料），所有文件夹均为 configurable 属性，用户可自行管理（修改名称、关闭、删除）</strong>
             </div>
            
           </div>
@@ -1028,11 +1027,11 @@
           <h3><i class="fas fa-tasks"></i> 本周任务</h3>
           <div class="update-list">
             <div class="update-item">
-              <strong>1 根目录可新增可修改</strong>
-              <strong>2 二级目录加 是否参与匹配</strong>
-              <strong>3 新增的文件夹可以删除、关闭</strong>
-              <strong>4 排序问题</strong>
-              <strong>5 每一级别文件夹 名字不可以重复</strong>
+              <strong>1 删除和关闭转移目录</strong>
+              <strong>2 转移资料的  关闭和删除 的动作效果在“随机阶段-原始资料”</strong>
+              <strong>3 根目录的有文件的删除和关闭看“筛选阶段”</strong>
+              <strong>4 根目录的无文件的删除和关闭看“随机阶段”</strong>
+          </div>
           </div>
           </div>
         </section>
@@ -1329,6 +1328,13 @@
       { id: 25, parentId: 22, matchable: true, name: '审批上传附件存档', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除，默认参与AI匹配。', sort: 21 },
       { id: 26, parentId: 22, matchable: false, name: 'AI分类资料', attr: 'configurable', display: 0, tip: '本页数据由AI系统自动识别分类生成，用户可管理显示状态。', sort: 22 },
 
+      // 根目录：筛选阶段（用户可管理，与随机阶段同级，默认关闭）
+      { id: 29, parentId: null, name: '筛选阶段', attr: 'configurable', display: 0, tip: '筛选阶段的根目录文件夹，用户可自行管理。', sort: 23 },
+      { id: 30, parentId: 29, matchable: true, name: '原始资料', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 24 },
+      { id: 31, parentId: 29, matchable: true, name: '基因检测报告', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除。', sort: 25 },
+      { id: 32, parentId: 29, matchable: true, name: '审批上传附件存档', attr: 'configurable', display: 0, tip: '该文件夹由用户管理，可修改名称、关闭或删除，默认参与AI匹配。', sort: 26 },
+      { id: 33, parentId: 29, matchable: false, name: 'AI分类资料', attr: 'configurable', display: 0, tip: '本页数据由AI系统自动识别分类生成，用户可管理显示状态。', sort: 27 },
+
        ];
 
     function generateId() { return ++idCounter; }
@@ -1401,7 +1407,8 @@
       const isRoot = depth === 0;
       const isSystemNoChild = noChildSystemFolderIds.includes(item.id);
       // 开关三态：开启可编辑(蓝) / 开启不可编辑=锁定(绿) / 关闭(灰)
-      const switchDisabled = (isRoot && item.id !== 22) || item.attr === 'fixed-unavailable';
+      // 根目录默认不可关闭，但「用户可管理(configurable)」的根目录（随机阶段、筛选阶段等）可点击关闭
+      const switchDisabled = (isRoot && item.attr !== 'configurable') || item.attr === 'fixed-unavailable';
       const lockedOn = displayOn && switchDisabled;
       const switchCls = 'switch' + (displayOn ? ' on' : '') + (switchDisabled ? (displayOn ? ' locked' : ' disabled') : '');
       const switchOnClick = switchDisabled ? '' : `toggleDisplay(${item.id})`;
@@ -1493,6 +1500,18 @@
         // 基因检测报告(id:3/8)关闭时需二次确认（受「项目基因检测」功能影响）
         if (closeConfirmFolderIds.includes(id)) {
           showGeneTestConfirmModal(id);
+          return;
+        }
+        // 含子目录的父文件夹：根据子目录是否有文件决定弹窗
+        const childCount = tableData.filter(d => d.parentId === id).length;
+        if (childCount > 0) {
+          if (hasSubfolderFiles(id)) {
+            // 子目录下有文件（如筛选阶段）-> 提示需到各子目录完成文件转移
+            showFileCheckModal('close-parent', id, 0);
+          } else {
+            // 子目录下无文件（如随机阶段）-> 子目录将一并关闭
+            showFileCheckModal('close-confirm', id, childCount);
+          }
           return;
         }
         // 检查是否有已上传文件
@@ -1790,6 +1809,18 @@
       }
       const item = tableData.find(d => d.id === id);
       if (!item) return;
+      // 含子目录的父文件夹：根据子目录是否有文件决定弹窗
+      const childCount = tableData.filter(d => d.parentId === id).length;
+      if (childCount > 0) {
+        if (hasSubfolderFiles(id)) {
+          // 子目录下有文件（如筛选阶段）-> 提示需到各子目录完成文件转移
+          showFileCheckModal('delete-parent', id, 0);
+        } else {
+          // 子目录下无文件（如随机阶段）-> 子目录将一并删除
+          showFileCheckModal('delete-confirm', id, childCount);
+        }
+        return;
+      }
       // 先检查是否有已上传文件
       const fileCount = simulateGetFileCount(id);
       if (fileCount > 0) {
@@ -1798,11 +1829,8 @@
       }
       // 无文件，走原来的删除确认弹窗
       deleteTargetId = id;
-      const childCount = tableData.filter(d => d.parentId === id).length;
       document.getElementById('deleteMsg').textContent = `确定要删除文件夹「${item.name}」吗？`;
-      document.getElementById('deleteDetail').textContent = childCount > 0
-        ? `该文件夹下有 ${childCount} 个子目录，将一并删除。删除后不可恢复，已关联的文件将移入「最近删除」。`
-        : '删除后不可恢复，已关联的文件将移入「最近删除」。';
+      document.getElementById('deleteDetail').textContent = '删除后不可恢复，已关联的文件将移入「最近删除」。';
       document.getElementById('deleteModal').classList.add('show');
     }
 
@@ -1831,9 +1859,20 @@
     // 模拟获取文件夹内已上传文件数量（原型演示用，实际应调后端接口）
     function simulateGetFileCount(folderId) {
       // 模拟数据：部分文件夹有已上传文件，用于演示弹窗效果
-      const simulated = { 2: 12, 3: 5, 7: 8, 8: 3, 12: 2, 19: 6 };
+      const simulated = { 2: 12, 3: 5, 7: 8, 8: 3, 12: 2, 19: 6, 30: 7 };
       return simulated[folderId] || 0;
     }
+
+    // 判断父文件夹的子目录（含后代）中是否有已上传文件
+    function hasSubfolderFiles(parentId) {
+      const children = tableData.filter(d => d.parentId === parentId);
+      return children.some(c => simulateGetFileCount(c.id) > 0 || hasSubfolderFiles(c.id));
+    }
+
+    // 父文件夹关闭/删除弹窗采用「数据驱动」判定（见 toggleDisplay / openDeleteModal）：
+    // 若父文件夹的子目录（含后代）中存在已上传文件 -> 弹「文件转移」提示（close-parent / delete-parent）
+    // 若父文件夹的子目录均无文件（如随机阶段） -> 弹「子目录一并关闭/删除」提示（close-confirm / delete-confirm）
+    // 筛选阶段(id:29) 的子目录（如原始资料 id:30）有模拟文件，故走「文件转移」提示；随机阶段(id:22) 子目录无文件，故走「一并关闭/删除」提示。
 
     // 显示文件检查确认弹窗
     function showFileCheckModal(action, id, fileCount) {
@@ -1849,6 +1888,9 @@
       const transferBtn = document.getElementById('fileCheckTransferBtn');
       const transferGroup = document.getElementById('transferGroup');
 
+      // 每次打开前先复位「转移并删除」按钮（父目录专用弹窗会隐藏它）
+      transferBtn.style.display = '';
+
       if (action === 'close') {
         titleEl.textContent = '关闭确认';
         msgEl.textContent = `文件夹「${item.name}」中已有 ${fileCount} 个已上传文件。`;
@@ -1858,6 +1900,42 @@
         transferBtn.textContent = '转移并关闭';
         transferBtn.style.background = 'var(--primary)';
         transferGroup.style.display = 'block';
+      } else if (action === 'close-parent') {
+        // 含子目录且子目录有文件的父文件夹关闭：提示需到每个子目录下完成文件转移
+        titleEl.textContent = '关闭确认';
+        msgEl.textContent = `本目录下已有文件上传，若需要转移目录，请到每个子目录下完成文件转移。`;
+        detailEl.textContent = '如果点击「直接关闭」，文件将保留（文件夹不再显示，但文件仍在系统中）。';
+        confirmBtn.textContent = '直接关闭';
+        confirmBtn.style.background = 'var(--warning)';
+        transferBtn.style.display = 'none';
+        transferGroup.style.display = 'none';
+      } else if (action === 'close-confirm') {
+        // 含子目录但子目录无文件的父文件夹关闭：子目录将一并关闭
+        titleEl.textContent = '关闭确认';
+        msgEl.textContent = `该文件夹下有 ${fileCount} 个子目录，将一并关闭。`;
+        detailEl.textContent = '关闭后该文件夹及子目录将一并不再显示。';
+        confirmBtn.textContent = '直接关闭';
+        confirmBtn.style.background = 'var(--warning)';
+        transferBtn.style.display = 'none';
+        transferGroup.style.display = 'none';
+      } else if (action === 'delete-parent') {
+        // 含子目录且子目录有文件的父文件夹删除：提示需到每个子目录下完成文件转移
+        titleEl.textContent = '删除确认';
+        msgEl.textContent = `本目录下已有文件上传，若需要转移目录，请到每个子目录下完成文件转移。`;
+        detailEl.textContent = '如果点击「直接删除」，文件将移入到「最近删除」中。';
+        confirmBtn.textContent = '直接删除';
+        confirmBtn.style.background = 'var(--danger)';
+        transferBtn.style.display = 'none';
+        transferGroup.style.display = 'none';
+      } else if (action === 'delete-confirm') {
+        // 含子目录但子目录无文件的父文件夹删除：子目录将一并删除
+        titleEl.textContent = '删除确认';
+        msgEl.textContent = `该文件夹下有 ${fileCount} 个子目录，将一并删除。删除后不可恢复。`;
+        detailEl.textContent = '删除后该文件夹及子目录将一并移除，不可恢复。';
+        confirmBtn.textContent = '直接删除';
+        confirmBtn.style.background = 'var(--danger)';
+        transferBtn.style.display = 'none';
+        transferGroup.style.display = 'none';
       } else {
         titleEl.textContent = '删除确认';
         msgEl.textContent = `文件夹「${item.name}」中已有 ${fileCount} 个已上传文件。`;
@@ -1969,13 +2047,13 @@
         }
       }
 
-      if (fileCheckAction === 'close') {
+      if (fileCheckAction === 'close' || fileCheckAction === 'close-parent' || fileCheckAction === 'close-confirm') {
         // 执行关闭
         item.display = 0;
         closeFileCheckModal();
         showToast(withTransfer ? '文件已转移，文件夹已关闭' : '文件夹已关闭', 'success');
         renderTable();
-      } else if (fileCheckAction === 'delete') {
+      } else if (fileCheckAction === 'delete' || fileCheckAction === 'delete-parent' || fileCheckAction === 'delete-confirm') {
         // 执行删除
         closeFileCheckModal();
         deleteTargetId = fileCheckTargetId;

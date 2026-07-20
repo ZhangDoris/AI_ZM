@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品原型 - TESH 文件管理系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* 连线元素高亮 */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.03); }
+    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.05); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    /* 仅展示“最近删除”PRD，其余说明隐藏 */
+    .proto-desc:not([data-proto-id="6"]) { display: none !important; }
+
+    /* SVG 连线层 */
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* 左侧菜单样式 */
+    .sidebar-menu-item { transition: all 0.2s; cursor: pointer; border-radius: 6px; margin: 2px 8px; padding: 10px 16px !important; }
+    .sidebar-menu-item:hover { background-color: rgba(22,93,255,0.06); color: #165DFF; }
+    .sidebar-menu-item.active { background-color: rgba(22,93,255,0.1); color: #165DFF; font-weight: 600; }
+    .sidebar-menu-item.trash-item:hover { background-color: rgba(245,63,63,0.06); color: #F53F3F; }
+    .sidebar-menu-item.trash-item.active { background-color: rgba(245,63,63,0.08); color: #F53F3F; font-weight: 600; }
+
+    /* 文件列表行 */
+    .file-row { transition: all 0.15s ease; border-bottom: 1px solid #f0f0f0; }
+    .file-row:hover { background-color: rgba(22,93,255,0.04); }
+    .file-row.selected { background-color: rgba(22,93,255,0.06); }
+
+    /* 标签 */
+    .tag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .tag-blue { background-color: rgba(22,93,255,0.1); color: #165DFF; }
+    .tag-green { background-color: rgba(0,180,42,0.1); color: #00B42A; }
+    .tag-orange { background-color: rgba(237,99,44,0.1); color: #ED7B2C; }
+    .tag-red { background-color: rgba(245,63,63,0.1); color: #F53F3F; }
+    .tag-gray { background-color: #F5F7FA; color: #666; }
+    .tag-purple { background-color: rgba(122,60,249,0.1); color: #7A38F9; }
+
+    /* 模态框 */
+    .modal-overlay { transition: opacity 0.3s ease; }
+    .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .modal-hidden { opacity: 0; pointer-events: none; }
+    .modal-hidden .modal-content { transform: scale(0.95) translateY(20px); opacity: 0; }
+
+    /* 操作按钮组 - 中文文本按钮 */
+    .text-action-btn { display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 4px; transition: all 0.15s; cursor: pointer; border: 1px solid transparent; background: transparent; color: #4E5969; font-size: 12px; white-space: nowrap; }
+    .text-action-btn:hover { background-color: rgba(22,93,255,0.06); color: #165DFF; border-color: rgba(22,93,255,0.2); }
+    .text-action-btn.btn-delete-text:hover { background-color: rgba(245,63,63,0.06); color: #F53F3F; border-color: rgba(245,63,63,0.2); }
+    .text-action-btn.btn-restore-text:hover { background-color: rgba(0,180,42,0.06); color: #00B42A; border-color: rgba(0,180,42,0.2); }
+    .text-action-btn.btn-perm-delete-text:hover { background-color: rgba(245,63,63,0.08); color: #F53F3F; border-color: rgba(245,63,63,0.25); }
+
+    /* 倒计时进度条 */
+    .countdown-bar { height: 4px; border-radius: 2px; background-color: #E5E6EB; overflow: hidden; }
+    .countdown-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+    /* 响应式 */
+    @media (max-width: 1024px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 65vh; }
+      #divider { display: none; }
+      #right-panel { width: 100% !important; height: 35vh; border-top: 1px solid #e5e7eb; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+
+    .btn-click:active { transform: scale(0.96); }
+    .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
+    .form-input { transition: all 0.15s; }
+
+    /* 文件类型图标颜色 */
+    .icon-pdf { color: #F53F3F; }
+    .icon-word { color: #165DFF; }
+    .icon-excel { color: #00B42A; }
+    .icon-image { color: #ED7B2C; }
+    .icon-video { color: #7A38F9; }
+    .icon-zip { color: #86909C; }
+    .icon-other { color: #86909C; }
+
+    /* 复选框自定义 */
+    .custom-checkbox { width: 18px; height: 18px; border: 2px solid #c9cdd4; border-radius: 4px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .custom-checkbox.checked { background-color: #165DFF; border-color: #165DFF; }
+    .custom-checkbox.checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: white; font-size: 10px; }
+
+    /* 面包屑 */
+    .breadcrumb-item { color: #86909C; transition: color 0.15s; cursor: pointer; }
+    .breadcrumb-item:hover { color: #165DFF; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <!-- 主容器 -->
+  <div id="app" class="flex h-screen relative">
+
+    <!-- 左侧：产品界面 -->
+    <div id="left-panel" class="w-[78%] lg:w-[80%] overflow-y-auto bg-gray-50 relative">
+
+      <!-- 顶部导航栏 -->
+      <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-chevron-left text-gray-400 cursor-pointer hover:text-gray-600 mr-2"></i>
+          <span class="text-gray-400">TESH</span>
+          <span class="text-gray-300 mx-1">/</span>
+          <span class="text-gray-800 font-medium" id="breadcrumbTitle">病史与资料</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="text-[#165DFF] hover:text-blue-700 btn-click text-sm font-medium"><i class="fas fa-user-circle mr-1 text-lg"></i> 詹齐 <i class="fas fa-chevron-down ml-1 text-xs"></i></button>
+        </div>
+      </header>
+
+      <div class="flex">
+        <!-- 左侧文件夹导航 -->
+        <aside class="w-[200px] bg-white border-r border-gray-200 min-h-[calc(100vh-52px)] py-3">
+          <nav>
+            <div class="mb-1">
+              <!-- 病史与资料（根节点） -->
+              <div class="sidebar-menu-item flex items-center gap-3 text-gray-500 text-xs font-semibold uppercase tracking-wider px-4 py-2">
+                <i class="fas fa-folder-tree w-5 text-center text-gray-400"></i>
+                <span>全部文件</span>
+              </div>
+
+              <!-- ★ 连线 1：预筛阶段 -->
+              <div class="mt-1">
+                <div class="proto-element sidebar-menu-item active flex items-center gap-3 text-gray-700 text-sm" data-proto-id="1" data-folder="screening" onclick="switchFolder(this, 'screening')">
+                  <i class="fas fa-inbox w-5 text-center text-[#165DFF]"></i>
+                  <span>预筛阶段</span>
+                  <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(7)</span>
+                  <i class="fas fa-chevron-down text-xs text-gray-300" id="screeningArrow"></i>
+                </div>
+                <!-- 预筛阶段的子集 -->
+                <div class="pl-6 mt-0.5 space-y-0.5" id="screeningSubmenu">
+                  <!-- 原始资料（预筛阶段的子集） -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="raw" onclick="switchFolder(this, 'raw')">
+                    <i class="fas fa-folder-open w-5 text-center text-[#ED7B2C]"></i>
+                    <span>原始资料</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(2)</span>
+                  </div>
+                  <!-- 基因检测报告（与原始资料平级） - 配置项控制 -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="gene_report" onclick="switchFolder(this, 'gene_report')" id="menuGeneReport">
+                    <i class="fas fa-dna w-5 text-center text-[#0EA5E9]"></i>
+                    <span>基因检测报告</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(1)</span>
+                  </div>
+                  <!-- 审批上传附件存档（在AI分类资料上方） -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="approval_attachment" onclick="switchFolder(this, 'approval_attachment')" id="menuApprovalAttachment">
+                    <i class="fas fa-paperclip w-5 text-center text-[#0EA5E9]"></i>
+                    <span>审批上传附件存档</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(3)</span>
+                  </div>
+                  <!-- AI分类资料 -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="ai" onclick="switchFolder(this, 'ai')">
+                    <i class="fas fa-robot w-5 text-center text-[#7A38F9]"></i>
+                    <span>AI分类资料</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(4)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 入组阶段（与预筛阶段平级） -->
+              <div class="mt-1">
+                <div class="sidebar-menu-item flex items-center gap-3 text-gray-700 text-sm" data-folder="group" onclick="switchFolder(this, 'group')">
+                  <i class="fas fa-users w-5 text-center text-[#00B42A]"></i>
+                  <span>入组阶段</span>
+                  <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(5)</span>
+                  <i class="fas fa-chevron-down text-xs text-gray-300" id="groupArrow"></i>
+                </div>
+                <!-- 入组阶段的子集 -->
+                <div class="pl-6 mt-0.5 space-y-0.5" id="groupSubmenu">
+                  <!-- 原始资料（入组阶段的子集） -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="group_raw" onclick="switchFolder(this, 'group_raw')">
+                    <i class="fas fa-folder-open w-5 text-center text-[#ED7B2C]"></i>
+                    <span>原始资料</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(3)</span>
+                  </div>
+                  <!-- 导入期资料 - 配置项控制 -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="import_period" onclick="switchFolder(this, 'import_period')" id="menuImportPeriod">
+                    <i class="fas fa-file-import w-5 text-center text-[#0EA5E9]"></i>
+                    <span>导入期资料</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(2)</span>
+                  </div>
+                  <!-- 审批上传附件存档（入组阶段下） -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="approval_attachment_group" onclick="switchFolder(this, 'approval_attachment_group')" id="menuApprovalAttachmentGroup">
+                    <i class="fas fa-paperclip w-5 text-center text-[#0EA5E9]"></i>
+                    <span>审批上传附件存档</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(2)</span>
+                  </div>
+                  <!-- AI分类资料（入组阶段下） - 配置项控制，位于最底层 -->
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="ai_group" onclick="switchFolder(this, 'ai_group')" id="menuAiGroup">
+                    <i class="fas fa-robot w-5 text-center text-[#7A38F9]"></i>
+                    <span>AI分类资料</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(3)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ★ 连线 4：不参与AI匹配资料（与预筛阶段、入组阶段平级） -->
+              <div class="mt-1" id="menuNoAiMatch">
+                <div class="proto-element sidebar-menu-item flex items-center gap-3 text-gray-700 text-sm" data-proto-id="4" data-folder="noai" onclick="switchFolder(this, 'noai')">
+                  <i class="fas fa-ban w-5 text-center text-[#F53F3F]"></i>
+                  <span>不参与AI匹配资料</span>
+                  <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(2)</span>
+                </div>
+              </div>
+
+              <!-- 存档资料（与预筛、入组阶段平级） -->
+              <div class="mt-1">
+                <div class="sidebar-menu-item flex items-center gap-3 text-gray-500 text-xs font-semibold uppercase tracking-wider" style="cursor:default; padding:8px 16px !important;">
+                  <i class="fas fa-archive w-5 text-center text-gray-400"></i>
+                  <span>存档资料</span>
+                </div>
+                <!-- 存档资料子集 -->
+                <div class="pl-6 mt-0.5 space-y-0.5" id="archiveSubmenu">
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="ai_prescreening_archive" onclick="switchFolder(this, 'ai_prescreening_archive')" id="menuArchiveAiPrescreening">
+                    <i class="fas fa-brain w-5 text-center text-[#7A38F9]"></i>
+                    <span>AI预筛结果存档</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(3)</span>
+                  </div>
+                  <div class="sidebar-menu-item flex items-center gap-3 text-gray-600 text-sm" data-folder="extraction_archive" onclick="switchFolder(this, 'extraction_archive')" id="menuArchiveExtraction">
+                    <i class="fas fa-table w-5 text-center text-[#00B42A]"></i>
+                    <span>预筛表提取结果存档</span>
+                    <span class="ml-auto text-xs text-gray-400 bg-gray-100 px-1.5 rounded-full">(2)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ★ 连线 6：最近删除 -->
+              <div class="proto-element sidebar-menu-item trash-item flex items-center gap-3 text-gray-500 text-sm mt-1" data-proto-id="6" data-folder="trash" onclick="switchFolder(this, 'trash')" id="menuTrash">
+                <i class="fas fa-trash-alt w-5 text-center"></i>
+                <span>最近删除</span>
+                <span class="ml-auto text-xs bg-red-50 text-red-400 px-1.5 rounded-full">(3)</span>
+              </div>
+            </div>
+          </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-5 min-w-0">
+
+          <!-- 工具栏 -->
+          <div class="bg-white rounded-xl border border-gray-200 mb-4">
+            <div class="p-4 flex items-center justify-between">
+              <div class="flex items-center gap-3 flex-wrap">
+                <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                  <div class="custom-checkbox" id="selectAllCheckbox" onclick="toggleSelectAll()"></div>
+                  全选
+                </label>
+                <span class="text-gray-300 mx-1">|</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-gray-500">文件名称</span>
+                  <input type="text" placeholder="输入关键词搜索..." class="form-input border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-56">
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="form-input bg-white hover:bg-blue-50 text-[#165DFF] border border-[#165DFF] px-4 py-1.5 rounded-lg text-sm font-medium btn-click flex items-center gap-1.5">
+                  <i class="fas fa-search"></i> 查询
+                </button>
+                <button class="form-input bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 px-4 py-1.5 rounded-lg text-sm btn-click flex items-center gap-1.5" id="btnAddFile" onclick="markFileChanged(); alert('文件上传成功！')">
+                  <i class="fas fa-upload"></i> 新增文件
+                </button>
+                <button class="form-input bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 px-4 py-1.5 rounded-lg text-sm btn-click flex items-center gap-1.5" id="btnUploadMasked">
+                  <i class="fas fa-file-import"></i> 已脱敏文件上传
+                </button>
+                <button class="form-input bg-white hover:bg-gray-50 text-gray-600 border border-gray-300 px-4 py-1.5 rounded-lg text-sm btn-click flex items-center gap-1.5" id="btnDownload" title="下载当前页面选中的文件" onclick="handleDownload()">
+                  <i class="fas fa-download"></i> 下载
+                </button>
+                <button class="form-input bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium btn-click flex items-center gap-1.5" id="batchExportBtn" title="批量导出本病例所有资料" onclick="handleBatchExport()">
+                  <i class="fas fa-file-export"></i> 批量导出
+                </button>
+                <button class="proto-element form-input bg-white hover:bg-blue-50 text-[#165DFF] border border-[#165DFF] px-4 py-1.5 rounded-lg text-sm font-medium btn-click flex items-center gap-1.5" data-proto-id="9" onclick="handleRematch()">
+                  <i class="fas fa-sync-alt"></i> 重新匹配
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 文件列表区域 -->
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden" id="fileListContainer">
+
+            <!-- 列表头部 - 正常文件视图 -->
+            <div id="normalFileView">
+
+              <!-- AI智能筛选提示横幅（预筛阶段-原始资料、基因检测报告、入组阶段-原始资料、导入期资料） -->
+              <div id="aiTriggerBanner" class="mx-4 mt-4 mb-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3" style="display:none;">
+                <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-robot text-amber-600 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-amber-800 font-bold mb-1"><i class="fas fa-exclamation-circle mr-1"></i> AI智能筛选提醒</p>
+                  <p class="text-xs text-amber-600 leading-relaxed">当您关闭病史与资料页面，在本页面中新增或删除了任何文件，均会触发AI智能筛选。还请注意使用规则。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-orange text-xs whitespace-nowrap"><i class="fas fa-bell mr-1"></i>注意</span>
+                </div>
+              </div>
+
+              <!-- AI分类资料提示横幅（预筛阶段-AI分类资料、入组阶段-AI分类资料） -->
+              <div id="aiClassifyBanner" class="mx-4 mt-4 mb-3 bg-gradient-to-r from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3" style="display:none;">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-robot text-purple-500 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-purple-800 font-bold mb-1"><i class="fas fa-exclamation-triangle mr-1"></i> AI自动分类提示</p>
+                  <p class="text-xs text-purple-600 leading-relaxed mb-1">本页面数据由AI系统自动拆分和归类生成，分类结果可能存在一定误差，请注意甄别。</p>
+                  <p class="text-xs text-purple-500 leading-relaxed">建议您在使用前核对文件分类是否准确，如发现分类异常，可将文件手动移至对应文件夹。AI分类资料由系统自动管理，不支持手动上传。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-purple text-xs whitespace-nowrap"><i class="fas fa-magic mr-1"></i>AI分类</span>
+                </div>
+              </div>
+
+              <!-- 假文件夹提示视图（预筛阶段/入组阶段点击时显示） -->
+              <div id="dummyFolderView" class="mx-4 mt-6 mb-4" style="display:none;">
+                <div class="bg-white border-2 border-dashed border-gray-300 rounded-xl p-10 text-center">
+                  <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <i class="fas fa-folder-open text-gray-400 text-4xl"></i>
+                  </div>
+                  <h3 class="text-lg font-bold text-gray-700 mb-2" id="dummyFolderTitle">预筛阶段</h3>
+                  <p class="text-sm text-gray-500 mb-1" id="dummyFolderDesc">此文件夹为分组容器，不直接存放文件。</p>
+                  <p class="text-xs text-gray-400 mb-6">请点击下方子文件夹查看和管理对应阶段的文件资料。</p>
+                  <div class="flex items-center justify-center gap-3 flex-wrap" id="dummyFolderLinks">
+                    <!-- 动态生成子文件夹快捷入口 -->
+                  </div>
+                </div>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-gray-50/80">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">序号</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">文件名</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件类型</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件大小</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">脱敏状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">匹配状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-20">操作人</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-36">上传时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600" style="min-width:280px">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="fileTableBody">
+                  <!-- 文件行 1 - 已脱敏上传 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">TESH_000-30理赔.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-25 19:44:19 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-red"><i class="fas fa-file-pdf mr-1"></i>PDF</span></td>
+                    <td class="py-3 text-gray-500 text-xs">2.4 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-cloud-upload-alt mr-1"></i>已脱敏上传</span>
+                    </td>
+                    <td class="py-3">
+                      <span class="tag tag-blue text-xs"><i class="fas fa-check-circle mr-1"></i>已参与AI预筛</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-25 19:44</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容" onclick="openModal('previewModal')">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('TESH_000-30理赔.pdf')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 文件行 2 - 已脱敏 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center icon-word">
+                          <i class="fas fa-file-word text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">患者入院记录表.docx</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-23 14:20:33 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-blue"><i class="fas fa-file-word mr-1"></i>Word</span></td>
+                    <td class="py-3 text-gray-500 text-xs">156 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-shield-alt mr-1"></i>已脱敏</span>
+                    </td>
+                    <td class="py-3">
+                      <span class="tag tag-blue text-xs"><i class="fas fa-check-circle mr-1"></i>已参与AI预筛</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">李医生</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-23 14:20</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('患者入院记录表.docx')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 文件行 3 - 脱敏中 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">3</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center icon-excel">
+                          <i class="fas fa-file-excel text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">费用明细汇总表.xlsx</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-22 09:15:07 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-green"><i class="fas fa-file-excel mr-1"></i>Excel</span></td>
+                    <td class="py-3 text-gray-500 text-xs">89 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-orange text-xs"><i class="fas fa-spinner fa-pulse mr-1"></i>脱敏中</span>
+                    </td>
+                    <td class="py-3">
+                      <span class="tag tag-gray text-xs"><i class="fas fa-minus-circle mr-1"></i>暂未用于AI预筛</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">系统自动</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-22 09:15</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('费用明细汇总表.xlsx')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 文件行 4 - 已脱敏 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">4</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center icon-image">
+                          <i class="fas fa-image text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">CT影像扫描图.png</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-20 16:30:45 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-orange"><i class="fas fa-image mr-1"></i>图片</span></td>
+                    <td class="py-3 text-gray-500 text-xs">5.8 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-shield-alt mr-1"></i>已脱敏</span>
+                    </td>
+                    <td class="py-3">
+                      <span class="tag tag-blue text-xs"><i class="fas fa-check-circle mr-1"></i>已参与AI预筛</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">张放射科</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-20 16:30</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('CT影像扫描图.png')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 文件行 5 - 脱敏中 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">5</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-purple-50 rounded-lg flex items-center justify-center icon-video">
+                          <i class="fas fa-video text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">手术过程录像.mp4</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-18 11:00:21 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-purple"><i class="fas fa-video mr-1"></i>视频</span></td>
+                    <td class="py-3 text-gray-500 text-xs">128 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-orange text-xs"><i class="fas fa-spinner fa-pulse mr-1"></i>脱敏中</span>
+                    </td>
+                    <td class="py-3">
+                      <span class="tag tag-gray text-xs"><i class="fas fa-minus-circle mr-1"></i>暂未用于AI预筛</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">王手术室</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-18 11:00</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('手术过程录像.mp4')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">5</strong> 个文件</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click">2</button>
+                  <span class="text-gray-300 text-sm px-1">...</span>
+                  <input type="text" value="1" class="w-11 h-8 text-center border border-gray-200 rounded-md text-sm focus:border-[#165DFF] outline-none">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 列表视图 - 审批上传附件存档（默认隐藏） -->
+            <div id="approvalAttachmentView" style="display:none;">
+              <!-- 审批上传附件存档 提示横幅 -->
+              <div class="mx-4 mt-4 mb-3 bg-gradient-to-r from-cyan-50 to-blue-50 border border-cyan-200 rounded-lg p-4 flex items-start gap-3">
+                <div class="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-robot text-cyan-600 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-cyan-800 font-bold mb-1"><i class="fas fa-exclamation-circle mr-1"></i> AI智能筛选提醒</p>
+                  <p class="text-xs text-cyan-600 leading-relaxed">本文件夹中文件是审核过程中上传的附件存档。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-blue text-xs whitespace-nowrap"><i class="fas fa-archive mr-1"></i>审批存档</span>
+                </div>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-cyan-50/30">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">序号</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">文件名</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件类型</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件大小</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">文件状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-20">操作人</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-36">上传时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600" style="min-width:200px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">审批附件_初审意见.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-26 09:30:15 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-red"><i class="fas fa-file-pdf mr-1"></i>PDF</span></td>
+                    <td class="py-3 text-gray-500 text-xs">1.8 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">审核员A</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-26 09:30</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center icon-word">
+                          <i class="fas fa-file-word text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">审核记录_专家评审.docx</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-27 14:22:08 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-blue"><i class="fas fa-file-word mr-1"></i>Word</span></td>
+                    <td class="py-3 text-gray-500 text-xs">256 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">审核员B</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-27 14:22</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">3</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center icon-image">
+                          <i class="fas fa-image text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">签章文件扫描件.png</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-28 16:05:33 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-orange"><i class="fas fa-image mr-1"></i>图片</span></td>
+                    <td class="py-3 text-gray-500 text-xs">4.2 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">审核员A</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-28 16:05</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">3</strong> 个文件（审批过程中上传的附件存档）</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 列表视图 - 不参与AI匹配资料（默认隐藏） -->
+            <div id="noaiFileView" style="display:none;">
+              <!-- 不参与AI匹配资料 提示横幅 -->
+              <div class="mx-4 mt-4 mb-3 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-exclamation-triangle text-red-500 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-red-700 font-bold mb-1">上传到本文件夹的文件，不参与AI判定</p>
+                  <p class="text-xs text-red-400 leading-relaxed mb-1">请注意甄别：此文件夹内的文件不会被提交至AI系统进行自动匹配与分析，也不会进行脱敏，请注意隐私保护。</p>
+                  <p class="text-xs text-red-400 leading-relaxed">如果您需要AI辅助判定，请将文件上传至「预筛阶段」或「入组阶段」文件夹。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-red text-xs whitespace-nowrap"><i class="fas fa-ban mr-1"></i>不参与AI匹配</span>
+                </div>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-red-50/20">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">序号</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">文件名</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件类型</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件大小</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">文件状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-20">操作人</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-36">上传时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600" style="min-width:280px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 不参与AI 文件 1 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center icon-other">
+                          <i class="fas fa-file-alt text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">个人笔记-参考文档.txt</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-26 10:15:32 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-gray"><i class="fas fa-file-alt mr-1"></i>文本</span></td>
+                    <td class="py-3 text-gray-500 text-xs">12 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-gray text-xs">未处理</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-26 10:15</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('个人笔记-参考文档.txt')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 不参与AI 文件 2 -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">内部培训材料-非病例.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">2026-05-24 15:40:11 上传</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-red"><i class="fas fa-file-pdf mr-1"></i>PDF</span></td>
+                    <td class="py-3 text-gray-500 text-xs">3.6 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-gray text-xs">未处理</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-24 15:40</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览文件内容">预览</button>
+                        <button class="text-action-btn" title="编辑文件信息" onclick="openModal('editFileModal')">编辑</button>
+                        <button class="text-action-btn" title="下载文件到本地">下载</button>
+                        <button class="text-action-btn" title="手动打码处理" onclick="openModal('maskModal')">手动打码</button>
+                        <button class="text-action-btn btn-delete-text" title="删除文件" onclick="confirmDelete('内部培训材料-非病例.pdf')">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">2</strong> 个文件（不参与AI匹配）</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 列表视图 - AI预筛结果存档（默认隐藏） -->
+            <div id="aiPrescreeningArchiveView" style="display:none;">
+              <!-- AI预筛结果存档提示横幅 -->
+              <div class="mx-4 mt-4 mb-3 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4 flex items-start gap-3">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-brain text-purple-500 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-purple-700 font-bold mb-1">AI预筛结果存档</p>
+                  <p class="text-xs text-purple-400 leading-relaxed">AI预筛结果由系统自动归档生成，记录每次AI预筛分析的完整报告。存档资料为只读状态，仅支持预览和下载。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-purple text-xs whitespace-nowrap"><i class="fas fa-lock mr-1"></i>系统存档</span>
+                </div>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-purple-50/30">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">序号</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">存档名称</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">存档类型</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件大小</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-20">触发人员</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-36">归档时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600" style="min-width:160px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">AI预筛结果_20260525.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">TESH-000-30 预筛报告</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-purple"><i class="fas fa-brain mr-1"></i>AI预筛结果</span></td>
+                    <td class="py-3 text-gray-500 text-xs">3.2 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-25 20:30</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览存档文件">预览</button>
+                        <button class="text-action-btn" title="下载存档文件">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">AI预筛结果_20260523.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">TESH-000-28 预筛报告</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-purple"><i class="fas fa-brain mr-1"></i>AI预筛结果</span></td>
+                    <td class="py-3 text-gray-500 text-xs">2.8 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">李医生</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-23 18:15</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览存档文件">预览</button>
+                        <button class="text-action-btn" title="下载存档文件">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">3</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center icon-pdf">
+                          <i class="fas fa-file-pdf text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">AI预筛结果_20260520.pdf</div>
+                          <div class="text-xs text-gray-400 mt-0.5">TESH-000-25 预筛报告</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-purple"><i class="fas fa-brain mr-1"></i>AI预筛结果</span></td>
+                    <td class="py-3 text-gray-500 text-xs">3.5 MB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-20 14:50</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览存档文件">预览</button>
+                        <button class="text-action-btn" title="下载存档文件">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">3</strong> 条AI预筛结果存档（系统自动归档，只读）</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 列表视图 - 预筛表提取结果存档（默认隐藏） -->
+            <div id="extractionArchiveView" style="display:none;">
+              <!-- 预筛表提取结果存档提示横幅 -->
+              <div class="mx-4 mt-4 mb-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <i class="fas fa-table text-green-500 text-lg"></i>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-green-700 font-bold mb-1">预筛表提取结果存档</p>
+                  <p class="text-xs text-green-500 leading-relaxed">预筛表提取结果由系统自动归档生成，记录每次结构化提取的数据表格。存档资料为只读状态，仅支持预览和下载。</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="tag tag-green text-xs whitespace-nowrap"><i class="fas fa-lock mr-1"></i>系统存档</span>
+                </div>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-green-50/30">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">序号</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">存档名称</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">存档类型</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">文件大小</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">状态</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-20">触发人员</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-36">归档时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600" style="min-width:160px">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center icon-excel">
+                          <i class="fas fa-file-excel text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">预筛提取表_20260525.xlsx</div>
+                          <div class="text-xs text-gray-400 mt-0.5">TESH-000-30 结构化提取</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-green"><i class="fas fa-table mr-1"></i>预筛提取结果</span></td>
+                    <td class="py-3 text-gray-500 text-xs">128 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">詹齐</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-25 20:30</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览存档文件">预览</button>
+                        <button class="text-action-btn" title="下载存档文件">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center icon-excel">
+                          <i class="fas fa-file-excel text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">预筛提取表_20260523.xlsx</div>
+                          <div class="text-xs text-gray-400 mt-0.5">TESH-000-28 结构化提取</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3"><span class="tag tag-green"><i class="fas fa-table mr-1"></i>预筛提取结果</span></td>
+                    <td class="py-3 text-gray-500 text-xs">96 KB</td>
+                    <td class="py-3">
+                      <span class="tag tag-green text-xs"><i class="fas fa-check-circle mr-1"></i>已归档</span>
+                    </td>
+                    <td class="py-3 text-xs text-gray-600">李医生</td>
+                    <td class="py-3 text-gray-500 text-xs">2026-05-23 18:15</td>
+                    <td class="py-3">
+                      <div class="flex items-center justify-center gap-1 flex-wrap">
+                        <button class="text-action-btn" title="预览存档文件">预览</button>
+                        <button class="text-action-btn" title="下载存档文件">下载</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">2</strong> 条预筛表提取结果存档（系统自动归档，只读）</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 列表视图 - 最近删除（默认隐藏） -->
+            <div id="trashFileView" style="display:none;">
+              <!-- 最近删除提示横幅 -->
+              <div class="mx-4 mt-4 mb-3 bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 rounded-lg p-3 flex items-start gap-3">
+                <i class="fas fa-info-circle text-red-400 mt-0.5"></i>
+                <div class="flex-1">
+      <p class="text-sm text-red-700 font-medium">最近删除的文件夹最多保留 <strong>30天</strong>，到期后将永久清除且无法恢复。</p>
+      <p class="text-xs text-red-400 mt-1">如需恢复文件夹，请在倒计时结束前点击「恢复」并选择恢复到的目标目录。</p>
+                </div>
+                <button class="text-xs text-red-500 hover:text-red-700 font-medium btn-click" onclick="confirmEmptyTrash()">清空回收站</button>
+              </div>
+
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-gray-200 bg-red-50/30">
+                    <th class="pl-5 pr-2 py-3 w-10"></th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-12">#</th>
+                    <th class="py-3 text-left font-semibold text-gray-600">文件夹名</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-24">原位置</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-28">删除时间</th>
+                    <th class="py-3 text-left font-semibold text-gray-600 w-40">剩余时间</th>
+                    <th class="py-3 text-center font-semibold text-gray-600 w-44">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- 删除文件夹 1 - 即将过期（红色警告） -->
+                  <tr class="file-row bg-red-50/40">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">1</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center" style="color:#F53F3F;">
+                          <i class="fas fa-folder text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">旧版原始资料备份</div>
+                          <div class="text-xs text-gray-400 mt-0.5">3 个文件 · 12.4 MB · 文件夹</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-500"><i class="fas fa-folder text-gray-300 mr-1"></i>预筛阶段 / 原始资料</td>
+                    <td class="py-3 text-xs text-gray-500">2026-05-02 10:30</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="countdown-bar w-24 flex-1">
+                          <div class="countdown-bar-fill bg-red-500" style="width: 4%;"></div>
+                        </div>
+                        <span class="text-xs font-bold text-red-500 whitespace-nowrap">剩余 1 天</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        <button class="text-action-btn btn-restore-text" title="恢复文件夹" onclick="restoreFolder('旧版原始资料备份')">恢复</button>
+                        <button class="text-action-btn btn-perm-delete-text" title="永久删除" onclick="permDeleteFolder('旧版原始资料备份')">直接删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 删除文件夹 2 - 即将过期（橙色警告） -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">2</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-orange-50 rounded-lg flex items-center justify-center" style="color:#FF7D00;">
+                          <i class="fas fa-folder text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">早期导入期资料</div>
+                          <div class="text-xs text-gray-400 mt-0.5">8 个文件 · 24.1 MB · 文件夹</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-500"><i class="fas fa-folder text-gray-300 mr-1"></i>入组阶段 / 导入期资料</td>
+                    <td class="py-3 text-xs text-gray-500">2026-05-15 14:22</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="countdown-bar w-24 flex-1">
+                          <div class="countdown-bar-fill bg-orange-400" style="width: 43%;"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-orange-500 whitespace-nowrap">剩余 17 天</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        <button class="text-action-btn btn-restore-text" title="恢复文件夹" onclick="restoreFolder('早期导入期资料')">恢复</button>
+                        <button class="text-action-btn btn-perm-delete-text" title="永久删除" onclick="permDeleteFolder('早期导入期资料')">直接删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 删除文件夹 3 - 正常状态（绿色） -->
+                  <tr class="file-row">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
+                    </td>
+                    <td class="py-3 text-gray-400 text-xs">3</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-green-50 rounded-lg flex items-center justify-center" style="color:#00B42A;">
+                          <i class="fas fa-folder text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-800 text-[13px]">基因检测存档-2025</div>
+                          <div class="text-xs text-gray-400 mt-0.5">15 个文件 · 48.6 MB · 文件夹</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-500"><i class="fas fa-folder text-gray-300 mr-1"></i>预筛阶段 / 基因检测报告</td>
+                    <td class="py-3 text-xs text-gray-500">2026-05-20 08:55</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="countdown-bar w-24 flex-1">
+                          <div class="countdown-bar-fill bg-green-500" style="width: 73%;"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-green-600 whitespace-nowrap">剩余 22 天</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center">
+                      <div class="flex items-center justify-center gap-1">
+                        <button class="text-action-btn btn-restore-text" title="恢复文件夹" onclick="restoreFolder('基因检测存档-2025')">恢复</button>
+                        <button class="text-action-btn btn-perm-delete-text" title="永久删除" onclick="permDeleteFolder('基因检测存档-2025')">直接删除</button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- 删除文件夹 4 - 超过30天，已过期，留痕不可操作 -->
+                  <tr class="file-row bg-gray-100 opacity-60">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" style="pointer-events:none; opacity:0.4;"></div>
+                    </td>
+                    <td class="py-3 text-gray-300 text-xs">4</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center" style="color:#bbb;">
+                          <i class="fas fa-folder text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-400 text-[13px] line-through">审批附件归档-old</div>
+                          <div class="text-xs text-gray-300 mt-0.5">6 个文件 · 9.3 MB · 文件夹</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-300"><i class="fas fa-folder text-gray-200 mr-1"></i>预筛阶段 / 审批上传附件存档</td>
+                    <td class="py-3 text-xs text-gray-300">2026-04-15 16:20</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="countdown-bar w-24 flex-1">
+                          <div class="countdown-bar-fill bg-gray-400" style="width: 0%;"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 whitespace-nowrap"><i class="fas fa-clock mr-1"></i>已过期</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center">
+                      <span class="tag tag-gray text-xs"><i class="fas fa-trash-alt mr-1"></i>文件夹已删除</span>
+                    </td>
+                  </tr>
+
+                  <!-- 删除文件夹 5 - 超过30天，已过期，留痕不可操作 -->
+                  <tr class="file-row bg-gray-100 opacity-60">
+                    <td class="pl-5 pr-2 py-3">
+                      <div class="custom-checkbox" style="pointer-events:none; opacity:0.4;"></div>
+                    </td>
+                    <td class="py-3 text-gray-300 text-xs">5</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center" style="color:#bbb;">
+                          <i class="fas fa-folder text-lg"></i>
+                        </div>
+                        <div>
+                          <div class="font-medium text-gray-400 text-[13px] line-through">X光片存档</div>
+                          <div class="text-xs text-gray-300 mt-0.5">11 个文件 · 33.0 MB · 文件夹</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="py-3 text-xs text-gray-300"><i class="fas fa-folder text-gray-200 mr-1"></i>入组阶段 / 原始资料</td>
+                    <td class="py-3 text-xs text-gray-300">2026-03-28 09:10</td>
+                    <td class="py-3">
+                      <div class="flex items-center gap-2">
+                        <div class="countdown-bar w-24 flex-1">
+                          <div class="countdown-bar-fill bg-gray-400" style="width: 0%;"></div>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 whitespace-nowrap"><i class="fas fa-clock mr-1"></i>已过期</span>
+                      </div>
+                    </td>
+                    <td class="py-3 text-center">
+                      <span class="tag tag-gray text-xs"><i class="fas fa-trash-alt mr-1"></i>文件夹已删除</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- 回收站分页 -->
+              <div class="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+                <span class="text-xs text-gray-500">共 <strong class="text-gray-700">5</strong> 个文件夹（其中 <strong class="text-red-400">3</strong> 个可操作，<strong class="text-gray-400">2</strong> 个已过期）</span>
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-400 hover:border-gray-300 hover:text-gray-600 text-sm btn-click disabled:opacity-40" disabled><i class="fas fa-chevron-left"></i></button>
+                  <button class="w-8 h-8 flex items-center justify-center bg-[#165DFF] text-white rounded-md text-sm font-medium">1</button>
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click">2</button>
+                  <span class="text-gray-300 text-sm px-1">...</span>
+                  <input type="text" value="1" class="w-11 h-8 text-center border border-gray-200 rounded-md text-sm focus:border-[#165DFF] outline-none">
+                  <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="flex items-center gap-3">
+                  <button class="text-xs text-[#165DFF] hover:text-blue-700 font-medium btn-click" onclick="alert('批量恢复选中文件')"><i class="fas fa-undo-alt mr-1"></i>批量恢复</button>
+                  <button class="text-xs text-red-500 hover:text-red-700 font-medium btn-click" onclick="alert('永久删除选中文件')"><i class="fas fa-times-circle mr-1"></i>批量彻底删除</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 底部提示（无连线） -->
+          <div class="mt-3 text-center text-sm text-gray-400">
+            <i class="fas fa-lightbulb text-amber-400 mr-1"></i>
+            提示：点击文件名可快速预览，支持拖拽排序
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div id="divider" class="w-px bg-gray-300"></div>
+
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[22%] lg:w-[20%] overflow-y-auto bg-amber-50 border-l-2 border-dashed border-amber-300">
+      <div class="p-4">
+        <!-- 原型说明标识 -->
+        <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">Prototype</span>
+            <span class="text-xs font-semibold text-amber-800">最近删除 · 文件夹恢复说明</span>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            本原型对文件管理页面进行了重构优化，主要变更：移除「病例资料」目录、新增「不参与AI匹配资料」「存档资料」和「最近删除」文件夹、文件改为列表式布局。预筛阶段与入组阶段为平级结构。预筛阶段下含原始资料、基因检测报告、审批上传附件存档和AI分类资料四个子目录；入组阶段下含原始资料、导入期资料和审批上传附件存档三个子目录。存档资料包含AI预筛结果存档和预筛表提取结果存档两个子目录。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200">
+          <i class="fas fa-map-signs text-amber-600"></i>
+          <h2 class="text-sm font-bold text-amber900">功能说明</h2>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 说明 1 -->
+          <div class="proto-desc p-3 active-highlight" data-proto-id="1">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">左侧目录树</h3>
+                <p class="text-xs text-gray-500 mt-1"><b>结构说明：</b>「预筛阶段」和「入组阶段」为<b>平级分组容器（假文件夹）</b>，不直接存放文件，仅用于展开/收起子文件夹。预筛阶段下含<b>原始资料</b>、<b>基因检测报告</b>、<b>审批上传附件存档</b>和<b>AI分类资料</b>四个子目录。入组阶段下含<b>原始资料</b>、<b>导入期资料</b>、<b>审批上传附件存档</b>和<b>AI分类资料</b>四个子目录。新增平级文件夹<b>「不参与AI匹配资料」</b>。已移除「病例资料」目录，新增独立的<b>「最近删除」</b>入口。</p>
+                <p class="text-xs text-amber-600 mt-1.5"><i class="fas fa-lightbulb mr-1"></i><b>交互说明：</b>点击「预筛阶段」或「入组阶段」不会展示文件列表，而是显示分组提示页面及子文件夹快捷入口。用户默认进入系统时，自动定位到<b>最后上传文件</b>（以上传时间为准）所在的文件夹。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 2 -->
+          <div class="proto-desc p-3" data-proto-id="2">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">基因检测报告（新增）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>位于<b>预筛阶段</b>下，与原始资料<b>平级</b></li>
+                  <li>专门存放患者的基因检测相关报告文件</li>
+                  <li>支持预览、编辑、下载、手动打码、删除等全部文件操作</li>
+                  <li>文件可移动到其他可操作文件夹</li>
+                </ul>
+                <p class="text-[11px] text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>出现规则沿用历史显示逻辑</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 3 -->
+          <div class="proto-desc p-3" data-proto-id="3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">导入期资料（新增）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>位于<b>入组阶段</b>下，与原始资料<b>平级</b></li>
+                  <li>专门存放在导入期内产生的相关资料文件</li>
+                  <li>支持预览、编辑、下载、手动打码、删除等全部文件操作</li>
+                  <li>文件可移动到其他可操作文件夹</li>
+                </ul>
+                <p class="text-[11px] text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>出现规则沿用历史显示逻辑</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 4 -->
+          <div class="proto-desc p-3" data-proto-id="4">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">不参与AI匹配资料（新增）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>上传到本文件夹的文件<b>不参与AI判定</b></li>
+                  <li>此文件夹内的文件不会被提交至AI系统进行自动匹配与分析，<b>也不会进行脱敏</b></li>
+                  <li>请注意隐私保护</li>
+                  <li>页面顶部显示醒目的红色提示横幅</li>
+                  <li><b>取消新增文件功能</b>，保留<b>已脱敏文件上传</b>按钮</li>
+                  <li>如需AI辅助判定，请将文件上传至「预筛阶段」或「入组阶段」文件夹</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 5 -->
+          <div class="proto-desc p-3" data-proto-id="5">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">5</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">存档资料（新增）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>与预筛阶段、入组阶段为<b>平级</b>文件夹</li>
+                  <li>包含两个子目录：<b>AI预筛结果存档</b>和<b>预筛表提取结果存档</b></li>
+                  <li>存档资料由系统自动归档生成，用户不可手动上传</li>
+                  <li>存档文件为<b>只读</b>状态，仅支持预览和下载</li>
+                  <li>不支持编辑和删除操作</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 6 -->
+          <div class="proto-desc p-3" data-proto-id="6">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold flex items-center justify-center">6</span>
+              <div class="w-full">
+                <h3 class="text-sm font-semibold text-gray-800">最近删除（文件夹恢复）</h3>
+                <p class="text-xs text-gray-500 mt-1">回收站视图用于管理已被删除的<b>文件夹</b>，其原位置为随机阶段目录（预筛阶段 / 入组阶段下的子目录）。</p>
+                <ul class="text-xs text-gray-500 mt-2 space-y-1.5 list-disc ml-4">
+                  <li>每个文件夹设有 <b>30 天倒计时</b>，到期将永久清除且无法恢复</li>
+                  <li>文件夹删除后<b>原目录标签已不存在</b>，因此恢复时需<b>手动选择恢复到的目标目录</b></li>
+                  <li>点击行内 <b>「恢复」</b> 弹出提示：<b>“没有这个文件夹，请选择恢复的文件夹目录”</b>，在下拉中选择目标目录后再次点击 <b>「恢复」</b> 完成还原</li>
+                  <li>在恢复弹窗中也可直接点击 <b>「直接删除」</b> 彻底清除该文件夹</li>
+                  <li>行内 <b>「直接删除」</b> 可立即永久删除，操作不可撤销</li>
+                  <li>已过期文件夹显示为灰色「文件夹已删除」状态，不可再操作</li>
+                  <li>顶部 <b>「清空回收站」</b> 支持批量彻底删除</li>
+                </ul>
+                <p class="text-[11px] text-amber-500 mt-2"><i class="fas fa-exclamation-triangle mr-1"></i>30 天后自动永久清除，且原目录已失效，恢复前请务必先选择目标目录</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 7 -->
+          <div class="proto-desc p-3" data-proto-id="7">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">7</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">脱敏状态与匹配状态</h3>
+                <p class="text-xs text-gray-500 mt-1 font-semibold">脱敏状态：</p>
+                <ul class="text-xs text-gray-500 mt-0.5 space-y-0.5 list-disc ml-4">
+                  <li><b>脱敏中</b> - 文件正在进行脱敏处理（橙色旋转图标）</li>
+                  <li><b>已脱敏</b> - 脱敏处理已完成（绿色盾牌图标）</li>
+                  <li><b>已脱敏上传</b> - 通过接口传输的已脱敏文件（绿色云上传图标）</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">匹配状态：</p>
+                <ul class="text-xs text-gray-500 mt-0.5 space-y-0.5 list-disc ml-4">
+                  <li><b>已参与AI预筛</b> - 文件已用于AI智能匹配筛选（蓝色标签）</li>
+                  <li><b>暂未用于AI预筛</b> - 文件尚未参与AI匹配（灰色标签）</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 8 -->
+          <div class="proto-desc p-3" data-proto-id="8">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">8</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">文件操作按钮</h3>
+                <p class="text-xs text-gray-500 mt-1">每行文件右侧提供以下操作按钮（全中文标识）：</p>
+                <ul class="text-xs text-gray-500 mt-1 space-y-0.5 ml-4 list-disc">
+                  <li><b>预览</b> - 在线查看文件内容</li>
+                  <li><b>编辑</b> - 修改文件元信息</li>
+                  <li><b>下载</b> - 下载到本地</li>
+                  <li><b>手动打码</b> - 手动对文件敏感信息进行脱敏</li>
+                  <li><b>删除</b> - 移入最近删除</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 8.1 - 审批上传附件存档 -->
+          <div class="proto-desc p-3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-cyan-500 text-white rounded-full text-xs font-bold flex items-center justify-center">新</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">审批上传附件存档（新增）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>分别位于<b>预筛阶段</b>和<b>入组阶段</b>下，在AI分类资料上方</li>
+                  <li>存放审核过程中上传的附件存档</li>
+                  <li>页面顶部显示「AI智能筛选提醒」横幅</li>
+                  <li><b>无新增文件功能</b>、<b>无已脱敏文件上传</b>按钮</li>
+                  <li>仅支持预览和下载操作</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 8.2 - AI分类资料 -->
+          <div class="proto-desc p-3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full text-xs font-bold flex items-center justify-center">AI</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">AI分类资料（功能调整）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>位于<b>预筛阶段</b>下，由系统自动分类管理</li>
+                  <li>点开后<b>无新增文件功能</b>、<b>无已脱敏文件上传</b>按钮</li>
+                  <li>仅支持预览和下载操作</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 8.3 - 下载与批量导出 -->
+          <div class="proto-desc p-3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full text-xs font-bold flex items-center justify-center">D</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">下载与批量导出（新增说明）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li><b>下载</b>：每个页面的下载按钮用于下载<b>当前页面</b>的文件，支持多选文件后统一下载</li>
+                  <li><b>批量导出</b>：点击后提示「批量导出会将本病例所有资料全部下载，包含预筛结果、预筛表结果等，请注意选择」</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 9 -->
+          <div class="proto-desc p-3" data-proto-id="9">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full text-xs font-bold flex items-center justify-center">9</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">重新匹配</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li>位于页面顶部工具栏中</li>
+                  <li>用于对当前文件夹内文件<b>重新执行AI智能匹配</b></li>
+                  <li>当用户<b>关闭「病史与资料」页面</b>时，如果检测到对应文件夹中有<b>文件变化</b>（新增或删除），浏览器会弹出确认提示，<b>用户确认后才能离开</b></li>
+                  <li>如果<b>没有文件变化</b>，则正常关闭，不弹出任何提示</li>
+                  <li>正常使用过程中，点击按钮直接执行重新匹配，<b>不弹出提示</b></li>
+                </ul>
+                <p class="text-[11px] text-amber-500 mt-2"><i class="fas fa-exclamation-triangle mr-1"></i>关闭页面时检测到文件变化会阻止关闭，需用户确认</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 10 - 假文件夹与默认进入 -->
+          <div class="proto-desc p-3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-gray-500 text-white rounded-full text-xs font-bold flex items-center justify-center">10</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">分组容器（假文件夹）</h3>
+                <ul class="text-xs text-gray-500 mt-1 space-y-1 list-disc ml-4">
+                  <li><b>预筛阶段</b>和<b>入组阶段</b>为分组容器，不直接存放文件</li>
+                  <li>点击后显示虚线边框提示页面，不展示文件列表</li>
+                  <li>提示页提供<b>子文件夹快捷入口按钮</b>，方便快速跳转</li>
+                  <li>工具栏中的上传、下载等操作在分组容器页面中<b>自动隐藏</b></li>
+                </ul>
+                <p class="text-[11px] text-gray-500 mt-2 font-semibold">默认进入逻辑：</p>
+                <ul class="text-xs text-gray-500 mt-0.5 space-y-0.5 list-disc ml-4">
+                  <li>用户进入系统时，<b>默认定位到最后上传文件</b>（以上传时间为准）所在的文件夹</li>
+                  <li>避免用户看到空的分组容器页面，直接展示最近操作的文件</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 11 - PDF编辑保存 -->
+          <div class="proto-desc p-3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-indigo-500 text-white rounded-full text-xs font-bold flex items-center justify-center">11</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">PDF 编辑与保存机制（新增）</h3>
+                <p class="text-xs text-gray-500 mt-1 font-semibold">操作支持：</p>
+                <ul class="text-xs text-gray-500 mt-0.5 space-y-0.5 list-disc ml-4">
+                  <li>PDF预览页面提供<b>旋转</b>、<b>标记</b>等编辑操作</li>
+                  <li>工具栏提供<b>「保存」按钮</b>，用户可随时保存当前编辑结果</li>
+                  <li>保存成功后按钮变为<b>已保存</b>状态（绿色），文件修改标记清除</li>
+                </ul>
+                <p class="text-xs text-gray-500 mt-1.5 font-semibold">关闭检测机制：</p>
+                <ul class="text-xs text-gray-500 mt-0.5 space-y-0.5 list-disc ml-4">
+                  <li>用户进行旋转、标记等操作后，系统记录<b>「文件有修改」</b>状态</li>
+                  <li>点击关闭按钮时，若检测到<b>文件有修改且未保存</b>，弹出确认提示：<b>「检测到文件有修改，是否保存？」</b></li>
+                  <li>用户可选择<b>「保存并关闭」</b>（保存修改后关闭）、<b>「不保存」</b>（放弃修改直接关闭）或<b>「取消」</b>（返回继续编辑）</li>
+                  <li>若用户<b>已通过保存按钮保存</b>，或<b>没有任何新增操作</b>，则直接关闭，不弹出任何提示</li>
+                </ul>
+                <p class="text-[11px] text-amber-500 mt-2"><i class="fas fa-exclamation-triangle mr-1"></i>防止用户因误关闭而丢失PDF编辑结果</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+
+  <!-- ========== 模态框：确认删除 ========== -->
+  <div id="deleteConfirmModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">确认删除</h3>
+        <p class="text-sm text-gray-500 mb-1" id="deleteFileName"></p>
+        <p class="text-xs text-gray-400">删除后可在「最近删除」中恢复，30天后将永久清除。</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('deleteConfirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('deleteConfirmModal'); markFileChanged(); alert('文件已移至最近删除')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：恢复成功 ========== -->
+  <div id="restoreSuccessModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">恢复成功</h3>
+        <p class="text-sm text-gray-500" id="restoredFileName"></p>
+        <p class="text-xs text-gray-400 mt-1">文件已恢复至原始位置。</p>
+      </div>
+      <div class="flex items-center justify-center px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('restoreSuccessModal')" class="px-6 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：文件预览 ========== -->
+  <div id="previewModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden" style="max-height: 90vh;">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-file-pdf text-red-500 text-xl"></i>
+          <div>
+            <h3 class="text-base font-semibold text-gray-800">TESH_000-30理赔.pdf</h3>
+            <p class="text-xs text-gray-400">2.4 MB · PDF文档 · 2026-05-25 上传</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <!-- PDF编辑操作按钮 -->
+          <button class="text-gray-500 hover:text-[#165DFF] btn-click text-sm px-2 py-1 rounded hover:bg-blue-50" title="旋转" onclick="pdfRotate()"><i class="fas fa-sync-alt mr-1"></i>旋转</button>
+          <button class="text-gray-500 hover:text-[#165DFF] btn-click text-sm px-2 py-1 rounded hover:bg-blue-50" title="标记/批注" onclick="pdfMark()"><i class="fas fa-highlighter mr-1"></i>标记</button>
+          <button id="btnPdfSave" class="text-gray-400 btn-click text-sm px-2 py-1 rounded" title="保存修改" onclick="pdfSave()" disabled style="opacity:0.5;cursor:not-allowed;"><i class="fas fa-save mr-1"></i>保存</button>
+          <button id="btnPdfSaved" class="text-green-500 btn-click text-sm px-2 py-1 rounded" title="已保存" style="display:none;"><i class="fas fa-check-circle mr-1"></i>已保存</button>
+          <span class="text-gray-300 mx-1">|</span>
+          <button class="text-gray-500 hover:text-[#165DFF] btn-click text-sm" title="放大"><i class="fas fa-search-plus"></i></button>
+          <button class="text-gray-500 hover:text-[#165DFF] btn-click text-sm" title="缩小"><i class="fas fa-search-minus"></i></button>
+          <button class="text-gray-500 hover:text-[#165DFF] btn-click text-sm" title="全屏"><i class="fas fa-expand"></i></button>
+          <button onclick="handlePdfClose()" class="text-gray-400 hover:text-gray-600 btn-click ml-2"><i class="fas fa-times text-lg"></i></button>
+        </div>
+      </div>
+      <div class="p-8 bg-gray-100 flex items-center justify-center" style="min-height: 400px;">
+        <div class="bg-white shadow-lg rounded-lg p-12 w-full max-w-2xl text-center">
+          <i class="fas fa-file-pdf text-6xl text-red-400 mb-4" id="pdfPreviewIcon"></i>
+          <p class="text-gray-600 font-medium">PDF 文件预览区域</p>
+          <p class="text-xs text-gray-400 mt-2">实际项目中将集成 PDF.js 或在线预览组件</p>
+          <div id="pdfEditHint" class="mt-3 text-xs text-blue-500 hidden">
+            <i class="fas fa-pen mr-1"></i><span id="pdfEditHintText">文件已被旋转</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：PDF保存确认 ========== -->
+  <div id="pdfSaveConfirmModal" class="modal-overlay modal-hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/50">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-exclamation-triangle text-amber-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">检测到文件有修改</h3>
+        <p class="text-sm text-gray-500 mb-1">是否保存当前文件的修改？</p>
+        <p class="text-xs text-gray-400">如果不保存，所有未保存的修改将会丢失。</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('pdfSaveConfirmModal'); pdfDontSave(); closeModal('previewModal');" class="px-4 py-2 text-sm text-red-500 hover:text-red-700 btn-click">不保存</button>
+        <button onclick="closeModal('pdfSaveConfirmModal'); pdfSave(); closeModal('previewModal');" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存并关闭</button>
+        <button onclick="closeModal('pdfSaveConfirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：编辑文件 ========== -->
+  <div id="editFileModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-edit text-[#165DFF] mr-2"></i>编辑文件</h3>
+        <button onclick="closeModal('editFileModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <!-- 编辑交互说明 -->
+      <div class="mx-6 mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div class="flex items-start gap-2">
+          <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+          <div>
+            <p class="text-xs text-blue-700 font-medium mb-1">编辑文件交互说明</p>
+            <ul class="text-[11px] text-blue-600 space-y-0.5 list-disc ml-4">
+              <li>可修改文件名称和备注说明</li>
+              <li>可更换文件所属文件夹（仅限用户可操作的文件夹）</li>
+              <li>修改后点击「保存更改」立即生效</li>
+              <li>AI分类资料不可作为移动目标（由系统自动管理）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">文件名称 <span class="text-red-500">*</span></label>
+          <input type="text" value="TESH_000-30理赔.pdf" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">所属文件夹</label>
+          <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <optgroup label="预筛阶段">
+              <option selected>原始资料</option>
+              <option>基因检测报告</option>
+            </optgroup>
+            <optgroup label="入组阶段">
+              <option>原始资料</option>
+              <option>导入期资料</option>
+            </optgroup>
+            <option>不参与AI匹配资料</option>
+          </select>
+          <p class="text-[11px] text-gray-400 mt-1"><i class="fas fa-lock mr-1"></i>AI分类资料由系统自动管理，不支持手动移入</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">操作人</label>
+          <input type="text" value="詹齐" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50" readonly>
+          <p class="text-[11px] text-gray-400 mt-1">操作人由系统自动记录，不可修改</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">备注说明</label>
+          <textarea rows="3" placeholder="添加备注信息..." class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('editFileModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('editFileModal'); alert('文件信息已更新！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存更改</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：重命名 ========== -->
+  <div id="renameModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-pen-fancy text-[#165DFF] mr-2"></i>重命名文件</h3>
+        <button onclick="closeModal('renameModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1">新文件名 <span class="text-red-500">*</span></label>
+        <input type="text" value="TESH_000-30理赔.pdf" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" id="renameInput" autofocus>
+        <p class="text-xs text-gray-400 mt-2">请输入新的文件名，保留原有扩展名</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('renameModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('renameModal'); alert('文件重命名成功！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：分享文件 ========== -->
+  <div id="shareModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-share-alt text-[#165DFF] mr-2"></i>分享文件</h3>
+        <button onclick="closeModal('shareModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">分享方式</label>
+          <div class="flex gap-2">
+            <label class="flex items-center gap-2 px-4 py-2 border border-[#165DFF] bg-blue-50 rounded-lg cursor-pointer text-sm">
+              <input type="radio" name="shareType" checked class="text-[#165DFF]"> <i class="fas fa-link text-[#165DFF]"></i> 链接分享
+            </label>
+            <label class="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm hover:bg-gray-50">
+              <input type="radio" name="shareType" class="text-[#165DFF]"> <i class="fas fa-user-plus text-gray-400"></i> 指定人员
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">分享链接</label>
+          <div class="flex gap-2">
+            <input type="text" value="https://tesh.example.com/s/xK9nQpL2" readonly class="form-input flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 text-gray-500">
+            <button class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click whitespace-nowrap" onclick="alert('链接已复制！')"><i class="fas fa-copy mr-1"></i>复制</button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">有效期设置</label>
+          <div class="flex gap-2">
+            <select class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1">
+              <option>7天内有效</option>
+              <option>30天内有效</option>
+              <option selected>永久有效</option>
+              <option>自定义</option>
+            </select>
+            <label class="flex items-center gap-2 px-3 py-2 text-sm text-gray-600">
+              <input type="checkbox" class="rounded text-[#165DFF]"> 密码保护
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('shareModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：恢复文件夹 - 选择目标目录 ========== -->
+  <div id="restoreFolderModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-2">
+        <i class="fas fa-folder-plus text-[#165DFF]"></i>
+        <h3 class="text-lg font-semibold text-gray-800">恢复文件夹</h3>
+      </div>
+      <div class="p-6">
+        <div class="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+          <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
+          <p class="text-sm text-amber-700">没有这个文件夹，请选择恢复的文件夹目录。</p>
+        </div>
+        <p class="text-sm text-gray-600">待恢复文件夹：<span id="restoreFolderName" class="font-semibold text-gray-800"></span></p>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">恢复到以下目录</label>
+          <select id="restoreTargetSelect" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white">
+            <optgroup label="预筛阶段">
+              <option>原始资料</option>
+              <option>基因检测报告</option>
+              <option>审批上传附件存档</option>
+              <option>AI分类资料</option>
+            </optgroup>
+            <optgroup label="入组阶段">
+              <option>原始资料</option>
+              <option>导入期资料</option>
+              <option>审批上传附件存档</option>
+            </optgroup>
+            <option>不参与AI匹配资料</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="doPermDeleteFromRestore()" class="px-4 py-2 text-sm text-red-500 hover:text-red-700 btn-click">直接删除</button>
+        <button onclick="doRestoreFolder()" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">恢复</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：文件夹恢复成功 ========== -->
+  <div id="restoreFolderSuccessModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">恢复成功</h3>
+        <p class="text-sm text-gray-500" id="restoredFolderName"></p>
+        <p class="text-xs text-gray-400 mt-1">文件夹已恢复至：<span id="restoredFolderTarget" class="font-medium text-gray-600"></span></p>
+      </div>
+      <div class="flex items-center justify-center px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('restoreFolderSuccessModal')" class="px-6 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：清空回收站 ========== -->
+  <div id="emptyTrashModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-trash-alt text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">清空回收站？</h3>
+        <p class="text-sm text-gray-500">此操作将永久删除回收站中的 <strong>5</strong> 个文件夹，且无法恢复。</p>
+        <p class="text-xs text-red-400 mt-2 font-medium"><i class="fas fa-exclamation-triangle mr-1"></i>此操作不可撤销！</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('emptyTrashModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('emptyTrashModal'); alert('回收站已清空');" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认清空</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：手动打码（PDF预览 + 打码工具） ========== -->
+  <div id="maskModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full mx-4 overflow-hidden" style="max-width:1100px; max-height:92vh;">
+      <!-- 顶部工具栏 -->
+      <div class="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-gray-50">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-file-pdf text-red-500 text-xl"></i>
+          <div>
+            <h3 class="text-base font-semibold text-gray-800">手动打码 - TESH_000-30理赔.pdf</h3>
+            <p class="text-xs text-gray-400">2.4 MB · PDF文档 · 2026-05-25 上传</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="tag tag-orange text-xs"><i class="fas fa-pen mr-1"></i>打码模式</span>
+          <button onclick="closeModal('maskModal')" class="text-gray-400 hover:text-gray-600 btn-click ml-1"><i class="fas fa-times text-lg"></i></button>
+        </div>
+      </div>
+
+      <!-- 打码工具说明横幅 -->
+      <div class="mx-5 mt-3 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3 flex items-start gap-3">
+        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-mask text-purple-600 text-sm"></i>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs text-purple-700 font-medium mb-1">手动打码交互说明</p>
+          <p class="text-[11px] text-purple-500 leading-relaxed">在PDF预览区域使用下方工具栏中的画笔、涂抹或矩形打码工具，对文件中的敏感信息进行手动遮盖处理。打码区域将被黑色或马赛克覆盖，处理后保存为新版本。</p>
+        </div>
+      </div>
+
+      <!-- 打码工具栏 -->
+      <div class="mx-5 mt-3 mb-3 flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div class="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
+          <button class="px-3 py-1.5 rounded-md text-xs font-medium bg-white shadow-sm text-gray-800" title="画笔涂抹打码" id="maskPenTool">
+            <i class="fas fa-paint-brush mr-1 text-[#165DFF]"></i>画笔涂抹
+          </button>
+          <button class="px-3 py-1.5 rounded-md text-xs text-gray-600 hover:bg-white hover:shadow-sm transition-all" title="矩形框选打码" id="maskRectTool">
+            <i class="fas fa-vector-square mr-1"></i>矩形框选
+          </button>
+          <button class="px-3 py-1.5 rounded-md text-xs text-gray-600 hover:bg-white hover:shadow-sm transition-all" title="马赛克打码" id="maskMosaicTool">
+            <i class="fas fa-th mr-1"></i>马赛克
+          </button>
+        </div>
+        <span class="w-px h-6 bg-gray-300"></span>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500">画笔粗细:</label>
+          <select class="form-input border border-gray-200 rounded px-2 py-1 text-xs">
+            <option>细 (4px)</option>
+            <option selected>中 (8px)</option>
+            <option>粗 (16px)</option>
+            <option>超粗 (24px)</option>
+          </select>
+        </div>
+        <span class="w-px h-6 bg-gray-300"></span>
+        <div class="flex items-center gap-1">
+          <label class="text-xs text-gray-500">打码颜色:</label>
+          <div class="flex gap-1">
+            <span class="w-5 h-5 rounded-full bg-black border-2 border-[#165DFF] cursor-pointer" title="黑色"></span>
+            <span class="w-5 h-5 rounded-full bg-white border border-gray-300 cursor-pointer" title="白色"></span>
+            <span class="w-5 h-5 rounded-full bg-gray-400 border border-gray-300 cursor-pointer" title="灰色"></span>
+          </div>
+        </div>
+        <span class="w-px h-6 bg-gray-300"></span>
+        <button class="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded transition-all" title="撤销"><i class="fas fa-undo-alt mr-1"></i>撤销</button>
+        <button class="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded transition-all" title="清除全部"><i class="fas fa-eraser mr-1"></i>清除全部</button>
+        <div class="flex-1"></div>
+        <span class="text-xs text-gray-400"><i class="fas fa-mouse-pointer mr-1"></i>在PDF页面上拖拽进行打码操作</span>
+      </div>
+
+      <!-- PDF 预览区域（含模拟打码效果） -->
+      <div class="mx-5 mb-4 bg-gray-100 rounded-lg border border-gray-200 overflow-auto" style="min-height: 380px; max-height: 50vh;">
+        <div class="relative bg-white shadow-md mx-auto my-6" style="width: 750px; min-height: 500px; padding: 40px 50px;">
+          <!-- 模拟PDF文档内容 -->
+          <div class="text-center mb-8 pb-6 border-b-2 border-gray-300">
+            <h2 class="text-xl font-bold text-gray-800 mb-1">理赔申请单</h2>
+            <p class="text-xs text-gray-500">编号：TESH-000-30 | 日期：2026年5月25日</p>
+          </div>
+
+          <table class="w-full text-sm mb-6">
+            <tbody>
+              <tr>
+                <td class="py-2 pr-4 text-gray-600 font-medium w-28">患者姓名：</td>
+                <td class="py-2">
+                  <span class="relative inline-block px-2 py-0.5 bg-black rounded" style="color:transparent; user-select:none;">张小明</span>
+                  <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-white" title="已打码"></span>
+                </td>
+                <td class="py-2 pr-4 text-gray-600 font-medium w-28 pl-8">身份证号：</td>
+                <td class="py-2">
+                  <span class="relative inline-block px-2 py-0.5 bg-gray-400 rounded" style="color:transparent; user-select:none;">320102199001011234</span>
+                  <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-white" title="已打码"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-2 pr-4 text-gray-600 font-medium">联系电话：</td>
+                <td class="py-2">
+                  <span class="relative inline-block px-2 py-0.5 bg-black rounded" style="color:transparent; user-select:none;">138****5678</span>
+                  <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-white" title="已打码"></span>
+                </td>
+                <td class="py-2 pr-4 text-gray-600 font-medium pl-8">家庭住址：</td>
+                <td class="py-2">
+                  <span class="relative inline-block px-2 py-0.5 bg-gray-400 rounded" style="color:transparent; user-select:none;">江苏省南京市鼓楼区XX路XX号</span>
+                  <span class="absolute -top-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border border-white" title="已打码"></span>
+                </td>
+              </tr>
+              <tr>
+                <td class="py-2 pr-4 text-gray-600 font-medium">就诊医院：</td>
+                <td class="py-2 text-gray-800">南京市第一人民医院</td>
+                <td class="py-2 pr-4 text-gray-600 font-medium pl-8">科室：</td>
+                <td class="py-2 text-gray-800">心血管内科</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mb-6">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-200">病情描述</h3>
+            <p class="text-xs text-gray-600 leading-relaxed">
+              患者于2026年5月20日因胸闷、心悸等症状入院检查。经心电图和冠状动脉造影检查，确诊为冠状动脉粥样硬化性心脏病。建议进行冠状动脉支架植入术，术后需长期服用抗血小板药物，定期复查。
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2 pb-1 border-b border-gray-200">费用明细</h3>
+            <table class="w-full text-xs border border-gray-200">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="py-1.5 px-3 text-left border-b">项目</th>
+                  <th class="py-1.5 px-3 text-right border-b">金额（元）</th>
+                  <th class="py-1.5 px-3 text-center border-b">备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="py-1.5 px-3 border-b">住院费</td><td class="py-1.5 px-3 text-right border-b">3,200.00</td><td class="py-1.5 px-3 text-center border-b">5天</td></tr>
+                <tr><td class="py-1.5 px-3 border-b">检查费</td><td class="py-1.5 px-3 text-right border-b">8,500.00</td><td class="py-1.5 px-3 text-center border-b">含造影</td></tr>
+                <tr><td class="py-1.5 px-3 border-b">手术费</td><td class="py-1.5 px-3 text-right border-b">45,000.00</td><td class="py-1.5 px-3 text-center border-b">支架植入</td></tr>
+                <tr class="bg-gray-50 font-semibold"><td class="py-1.5 px-3">合计</td><td class="py-1.5 px-3 text-right">56,700.00</td><td class="py-1.5 px-3 text-center"></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 底部操作提示覆盖层 -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="bg-purple-500/10 border-2 border-dashed border-purple-400 rounded-lg px-8 py-4 text-center pointer-events-auto" style="margin-top: 200px;">
+              <i class="fas fa-hand-pointer text-purple-500 text-2xl mb-2"></i>
+              <p class="text-sm text-purple-700 font-medium">选中打码工具后，在PDF页面上拖拽即可涂抹打码</p>
+              <p class="text-xs text-purple-400 mt-1">已打码区域：<span class="inline-block w-3 h-3 bg-black rounded align-middle mx-1"></span> 黑色遮盖 · <span class="inline-block w-3 h-3 bg-gray-400 rounded align-middle mx-1"></span> 灰色遮盖</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部操作栏 -->
+      <div class="flex items-center justify-between px-5 py-3 border-t border-gray-200 bg-gray-50">
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-500"><i class="fas fa-check-circle text-green-500 mr-1"></i>已打码 <strong class="text-gray-700">4</strong> 处敏感信息</span>
+          <span class="text-xs text-gray-400">|</span>
+          <span class="text-xs text-gray-500"><i class="fas fa-eye-slash mr-1"></i>打码后将生成新版本文件</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="closeModal('maskModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click border border-gray-300 rounded-lg">取消</button>
+          <button onclick="alert('预览打码效果（将生成打码后的文件预览）')" class="px-4 py-2 text-sm text-[#165DFF] border border-[#165DFF] rounded-lg hover:bg-blue-50 btn-click">预览效果</button>
+          <button onclick="closeModal('maskModal'); alert('手动打码已保存！文件已生成打码版本。')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存打码</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：重新匹配提示 ========== -->
+  <div id="rematchPromptModal" class="modal-overlay modal-hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-sync-alt text-blue-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">检测到文件变化</h3>
+        <p class="text-sm text-gray-500 mb-1">检测到有文件变化，请问是否立即开始匹配？</p>
+        <p class="text-xs text-gray-400">系统将对该文件夹内的文件重新执行AI智能匹配。</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('rematchPromptModal'); clearRematchFlag();" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click border border-gray-300 rounded-lg">暂不匹配</button>
+        <button onclick="closeModal('rematchPromptModal'); startRematch();" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click flex items-center gap-1.5">
+          <i class="fas fa-sync-alt"></i> 立即匹配
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 文件夹显示配置 ==========
+    // 默认配置（可通过 文件夹配置管理.html 页面修改）
+    const defaultConfig = {
+      geneReport: true,           // 基因检测报告（预筛阶段下）
+      importPeriod: true,        // 导入期资料（入组阶段下）
+      aiInGroup: true,           // AI分类资料（入组阶段下）
+      approvalAttachment: true,  // 审批上传附件存档（预筛阶段下）
+      approvalAttachmentGroup: true, // 审批上传附件存档（入组阶段下）
+      noAiMatch: true,           // 不参与AI匹配资料
+      archiveAiPrescreening: true, // AI预筛结果存档
+      archiveExtraction: true,   // 预筛表提取结果存档
+      trash: true                // 最近删除
+    };
+
+    // 从 localStorage 读取配置（优先），否则使用默认配置
+    function getFolderConfig() {
+      try {
+        const saved = localStorage.getItem('tesh_folder_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return { ...defaultConfig, ...parsed };
+        }
+      } catch (e) {}
+      return { ...defaultConfig };
+    }
+
+    // 根据配置初始化菜单显示/隐藏
+    function applyFolderConfig() {
+      const folderConfig = getFolderConfig();
+      const elements = {
+        geneReport: document.getElementById('menuGeneReport'),
+        importPeriod: document.getElementById('menuImportPeriod'),
+        aiInGroup: document.getElementById('menuAiGroup'),
+        approvalAttachment: document.getElementById('menuApprovalAttachment'),
+        approvalAttachmentGroup: document.getElementById('menuApprovalAttachmentGroup'),
+        noAiMatch: document.getElementById('menuNoAiMatch'),
+        archiveAiPrescreening: document.getElementById('menuArchiveAiPrescreening'),
+        archiveExtraction: document.getElementById('menuArchiveExtraction'),
+        trash: document.getElementById('menuTrash')
+      };
+      for (const [key, el] of Object.entries(elements)) {
+        if (el && folderConfig[key] !== undefined) {
+          el.style.display = folderConfig[key] ? '' : 'none';
+        }
+      }
+    }
+
+    // ========== 视图切换 ==========
+    function switchFolder(el, folder) {
+      // 更新菜单激活状态
+      document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+
+      const normalView = document.getElementById('normalFileView');
+      const trashView = document.getElementById('trashFileView');
+      const noaiView = document.getElementById('noaiFileView');
+      const aiPrescreeningView = document.getElementById('aiPrescreeningArchiveView');
+      const extractionView = document.getElementById('extractionArchiveView');
+      const approvalView = document.getElementById('approvalAttachmentView');
+      const breadcrumbTitle = document.getElementById('breadcrumbTitle');
+
+      // 工具栏按钮
+      const btnAddFile = document.getElementById('btnAddFile');
+      const btnUploadMasked = document.getElementById('btnUploadMasked');
+
+      // 先隐藏所有特殊视图
+      normalView.style.display = 'none';
+      trashView.style.display = 'none';
+      noaiView.style.display = 'none';
+      aiPrescreeningView.style.display = 'none';
+      extractionView.style.display = 'none';
+      approvalView.style.display = 'none';
+
+      // 默认显示所有工具栏按钮
+      if (btnAddFile) btnAddFile.style.display = '';
+      if (btnUploadMasked) btnUploadMasked.style.display = '';
+
+      // 默认隐藏AI分类提示横幅（各分支按需显示）
+      const aiClassifyBanner3 = document.getElementById('aiClassifyBanner');
+      if (aiClassifyBanner3) aiClassifyBanner3.style.display = 'none';
+
+      if (folder === 'trash') {
+        trashView.style.display = '';
+        breadcrumbTitle.textContent = '最近删除';
+        // 回收站隐藏上传按钮
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+      } else if (folder === 'noai') {
+        noaiView.style.display = '';
+        breadcrumbTitle.textContent = '不参与AI匹配资料';
+        // 不参与AI匹配资料：取消新增文件功能，保留已脱敏文件上传按钮
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = '';
+      } else if (folder === 'ai_prescreening_archive') {
+        aiPrescreeningView.style.display = '';
+        breadcrumbTitle.textContent = 'AI预筛结果存档';
+        // 存档资料隐藏上传按钮
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+      } else if (folder === 'extraction_archive') {
+        extractionView.style.display = '';
+        breadcrumbTitle.textContent = '预筛表提取结果存档';
+        // 存档资料隐藏上传按钮
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+      } else if (folder === 'approval_attachment' || folder === 'approval_attachment_group') {
+        approvalView.style.display = '';
+        breadcrumbTitle.textContent = '审批上传附件存档';
+        // 审批上传附件存档：无新增文件、无已脱敏文件上传
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+      } else if (folder === 'ai' || folder === 'ai_group') {
+        normalView.style.display = '';
+        breadcrumbTitle.textContent = 'AI分类资料';
+        // AI分类资料：无新增文件、无已脱敏文件上传
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+        // 隐藏AI智能筛选横幅，显示AI分类提示横幅
+        const aiTriggerBanner = document.getElementById('aiTriggerBanner');
+        const aiClassifyBanner = document.getElementById('aiClassifyBanner');
+        if (aiTriggerBanner) aiTriggerBanner.style.display = 'none';
+        if (aiClassifyBanner) aiClassifyBanner.style.display = '';
+      } else if (folder === 'screening' || folder === 'group') {
+        // 预筛阶段/入组阶段：假文件夹，不展示文件列表，显示提示视图
+        normalView.style.display = '';
+        const dummyView = document.getElementById('dummyFolderView');
+        const dummyTitle = document.getElementById('dummyFolderTitle');
+        const dummyDesc = document.getElementById('dummyFolderDesc');
+        const dummyLinks = document.getElementById('dummyFolderLinks');
+        const tableEl = normalView.querySelector('table');
+
+        // 隐藏表格和横幅
+        if (tableEl) tableEl.style.display = 'none';
+        const aiBannerH = document.getElementById('aiTriggerBanner');
+        const aiClassifyH = document.getElementById('aiClassifyBanner');
+        if (aiBannerH) aiBannerH.style.display = 'none';
+        if (aiClassifyH) aiClassifyH.style.display = 'none';
+
+        // 隐藏分页
+        const paginations = normalView.querySelectorAll('.flex.items-center.justify-between');
+        paginations.forEach(p => { if (p.querySelector('.custom-checkbox') === null && !p.closest('#dummyFolderView')) p.style.display = 'none'; });
+
+        if (folder === 'screening') {
+          dummyTitle.textContent = '预筛阶段';
+          dummyDesc.textContent = '此文件夹为分组容器，不直接存放文件。请展开下方子文件夹查看和管理预筛阶段的资料。';
+          breadcrumbTitle.textContent = '预筛阶段';
+          dummyLinks.innerHTML = `
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" onclick="document.querySelector('[data-folder=\\'raw\\']').click()">
+              <i class="fas fa-folder-open text-[#ED7B2C]"></i>原始资料
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" id="dummyGeneReport">
+              <i class="fas fa-dna text-[#0EA5E9]"></i>基因检测报告
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" id="dummyApprovalScreening">
+              <i class="fas fa-paperclip text-[#0EA5E9]"></i>审批上传附件存档
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" onclick="document.querySelector('[data-folder=\\'ai\\']').click()">
+              <i class="fas fa-robot text-[#7A38F9]"></i>AI分类资料
+            </button>
+          `;
+          // 配置项控制快捷入口
+          setTimeout(() => {
+            const cfg = getFolderConfig();
+            const btnGene = document.getElementById('dummyGeneReport');
+            const btnApproval = document.getElementById('dummyApprovalScreening');
+            if (btnGene) btnGene.style.display = cfg.geneReport ? '' : 'none';
+            if (btnApproval) btnApproval.style.display = cfg.approvalAttachment ? '' : 'none';
+            if (btnGene && cfg.geneReport) btnGene.onclick = () => document.querySelector('[data-folder="gene_report"]').click();
+            if (btnApproval && cfg.approvalAttachment) btnApproval.onclick = () => document.querySelector('[data-folder="approval_attachment"]').click();
+          }, 50);
+        } else {
+          dummyTitle.textContent = '入组阶段';
+          dummyDesc.textContent = '此文件夹为分组容器，不直接存放文件。请展开下方子文件夹查看和管理入组阶段的资料。';
+          breadcrumbTitle.textContent = '入组阶段';
+          dummyLinks.innerHTML = `
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" onclick="document.querySelector('[data-folder=\\'group_raw\\']').click()">
+              <i class="fas fa-folder-open text-[#ED7B2C]"></i>原始资料
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" id="dummyImportPeriod">
+              <i class="fas fa-file-import text-[#0EA5E9]"></i>导入期资料
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" id="dummyApprovalGroup">
+              <i class="fas fa-paperclip text-[#0EA5E9]"></i>审批上传附件存档
+            </button>
+            <button class="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#165DFF] hover:text-[#165DFF] btn-click flex items-center gap-2" id="dummyAiGroup">
+              <i class="fas fa-robot text-[#7A38F9]"></i>AI分类资料
+            </button>
+          `;
+          setTimeout(() => {
+            const cfg = getFolderConfig();
+            const btnImp = document.getElementById('dummyImportPeriod');
+            const btnApproval = document.getElementById('dummyApprovalGroup');
+            const btnAi = document.getElementById('dummyAiGroup');
+            if (btnImp) btnImp.style.display = cfg.importPeriod ? '' : 'none';
+            if (btnApproval) btnApproval.style.display = cfg.approvalAttachmentGroup ? '' : 'none';
+            if (btnAi) btnAi.style.display = cfg.aiInGroup ? '' : 'none';
+            if (btnImp && cfg.importPeriod) btnImp.onclick = () => document.querySelector('[data-folder="import_period"]').click();
+            if (btnApproval && cfg.approvalAttachmentGroup) btnApproval.onclick = () => document.querySelector('[data-folder="approval_attachment_group"]').click();
+            if (btnAi && cfg.aiInGroup) btnAi.onclick = () => document.querySelector('[data-folder="ai_group"]').click();
+          }, 50);
+        }
+        if (dummyView) dummyView.style.display = '';
+        if (btnAddFile) btnAddFile.style.display = 'none';
+        if (btnUploadMasked) btnUploadMasked.style.display = 'none';
+      } else {
+        normalView.style.display = '';
+
+        // 恢复正常表格和分页显示
+        const dummyView2 = document.getElementById('dummyFolderView');
+        if (dummyView2) dummyView2.style.display = 'none';
+        const tableEl2 = normalView.querySelector('table');
+        if (tableEl2) tableEl2.style.display = '';
+        const paginations2 = normalView.querySelectorAll('.flex.items-center.justify-between');
+        paginations2.forEach(p => { if (p.querySelector('.custom-checkbox') === null && !p.closest('#dummyFolderView')) p.style.display = ''; });
+
+        // 根据不同文件夹更新面包屑标题
+        const folderNames = {
+          'screening': '预筛阶段',
+          'raw': '原始资料',
+          'gene_report': '基因检测报告',
+          'ai': 'AI分类资料',
+          'group': '入组阶段',
+          'group_raw': '原始资料',
+          'import_period': '导入期资料'
+        };
+        breadcrumbTitle.textContent = folderNames[folder] || '病史与资料';
+
+        // 隐藏AI分类提示横幅
+        const aiClassifyBanner2 = document.getElementById('aiClassifyBanner');
+        if (aiClassifyBanner2) aiClassifyBanner2.style.display = 'none';
+
+        // AI智能筛选提示横幅：仅对 raw, gene_report, group_raw, import_period 显示
+        const aiBanner = document.getElementById('aiTriggerBanner');
+        const rematchFolders = ['raw', 'gene_report', 'group_raw', 'import_period'];
+        if (aiBanner) {
+          if (rematchFolders.includes(folder)) {
+            aiBanner.style.display = '';
+          } else {
+            aiBanner.style.display = 'none';
+          }
+        }
+
+      }
+      // 重绘连线
+      setTimeout(drawConnections, 50);
+    }
+
+    // ========== 下载功能 ==========
+    function handleDownload() {
+      // 检查是否有选中文件
+      const visibleView = document.querySelector('#fileListContainer > div[style*="display:"]') 
+        || document.querySelector('#fileListContainer > div:not([style*="display: none"])');
+      if (!visibleView) { alert('请先选择需要下载的文件'); return; }
+      const checkedBoxes = visibleView.querySelectorAll('.custom-checkbox.checked');
+      if (checkedBoxes.length === 0) {
+        alert('请先勾选需要下载的文件，支持多选文件后统一下载');
+      } else {
+        alert(`已选中 ${checkedBoxes.length} 个文件，开始下载当前页面文件...`);
+      }
+    }
+
+    // ========== 批量导出功能 ==========
+    function handleBatchExport() {
+      alert('批量导出会将本病例所有资料全部下载，包含预筛结果、预筛表结果等，请注意选择。\n\n确定要继续吗？');
+    }
+    let selectAllState = false;
+    function toggleSelectAll() {
+      selectAllState = !selectAllState;
+      const checkbox = document.getElementById('selectAllCheckbox');
+      if (selectAllState) {
+        checkbox.classList.add('checked');
+      } else {
+        checkbox.classList.remove('checked');
+      }
+    }
+
+    // ========== 删除确认 ==========
+    function confirmDelete(fileName) {
+      document.getElementById('deleteFileName').textContent = `是否删除文件「${fileName}」？`;
+      openModal('deleteConfirmModal');
+    }
+
+    // ========== 恢复文件 ==========
+    function restoreFile(fileName) {
+      document.getElementById('restoredFileName').textContent = `「${fileName}」`;
+      openModal('restoreSuccessModal');
+    }
+
+    // ========== 恢复文件夹（需选择目标目录） ==========
+    let pendingRestoreFolder = '';
+
+    function restoreFolder(folderName) {
+      pendingRestoreFolder = folderName;
+      document.getElementById('restoreFolderName').textContent = `「${folderName}」`;
+      openModal('restoreFolderModal');
+    }
+
+    function doRestoreFolder() {
+      const target = document.getElementById('restoreTargetSelect').value;
+      closeModal('restoreFolderModal');
+      document.getElementById('restoredFolderName').textContent = `文件夹「${pendingRestoreFolder}」已恢复。`;
+      document.getElementById('restoredFolderTarget').textContent = target;
+      openModal('restoreFolderSuccessModal');
+    }
+
+    function doPermDeleteFromRestore() {
+      closeModal('restoreFolderModal');
+      if (confirm(`确定要永久删除文件夹「${pendingRestoreFolder}」吗？\n\n此操作不可撤销！`)) {
+        alert(`文件夹「${pendingRestoreFolder}」已被永久删除。`);
+      }
+    }
+
+    function permDeleteFolder(folderName) {
+      if (confirm(`确定要永久删除文件夹「${folderName}」吗？\n\n此操作不可撤销！`)) {
+        alert(`文件夹「${folderName}」已被永久删除。`);
+      }
+    }
+
+    // ========== 永久删除 ==========
+    function permDeleteFile(fileName) {
+      if (confirm(`确定要永久删除「${fileName}」吗？\n\n此操作不可撤销！`)) {
+        alert(`「${fileName}」已被永久删除`);
+      }
+    }
+
+    // ========== 清空回收站 ==========
+    function confirmEmptyTrash() {
+      openModal('emptyTrashModal');
+    }
+
+    // ========== 连线绘制 ==========
+    const svg = document.getElementById('connections');
+    const connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+
+      const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(leftEl => {
+        const protoId = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${protoId}"]`);
+        if (!rightEl) return;
+
+        // 如果元素不可见则跳过
+        const leftRect = leftEl.getBoundingClientRect();
+        if (leftRect.width === 0 || leftRect.height === 0) return;
+
+        const rightRect = rightEl.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        const x1 = leftRect.right - svgRect.left;
+        const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        const x2 = rightRect.left - svgRect.left;
+        const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        const cp1x = x1 + (x2 - x1) * 0.5;
+        const cp1y = y1;
+        const cp2x = x1 + (x2 - x1) * 0.5;
+        const cp2y = y2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        svg.appendChild(path);
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX);
+        bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('class', 'connection-label');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId, path, leftEl, rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      const conn = connections.find(c => c.protoId === protoId);
+      if (!conn) return;
+      if (active) {
+        conn.path.classList.add('active');
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.classList.remove('active');
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // ========== 模态框 ==========
+    function openModal(id) { document.getElementById(id).classList.remove('modal-hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('modal-hidden'); }
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('modal-hidden'); });
+    });
+
+    // ========== PDF 编辑保存状态管理 ==========
+    let pdfHasUnsavedChanges = false;
+    let pdfLastOperation = '';
+
+    function pdfRotate() {
+      pdfHasUnsavedChanges = true;
+      pdfLastOperation = '文件已被旋转';
+      updatePdfSaveState();
+      // 旋转预览图标示意
+      const icon = document.getElementById('pdfPreviewIcon');
+      const currentDeg = parseInt(icon.style.transform?.replace('rotate(', '').replace('deg)', '') || '0');
+      icon.style.transform = 'rotate(' + (currentDeg + 90) + 'deg)';
+      icon.style.transition = 'transform 0.3s ease';
+      showPdfEditHint();
+    }
+
+    function pdfMark() {
+      pdfHasUnsavedChanges = true;
+      pdfLastOperation = '文件已添加标记/批注';
+      updatePdfSaveState();
+      showPdfEditHint();
+    }
+
+    function pdfSave() {
+      pdfHasUnsavedChanges = false;
+      pdfLastOperation = '';
+      updatePdfSaveState();
+      hidePdfEditHint();
+      // 短暂显示"已保存"状态后恢复
+      const savedBtn = document.getElementById('btnPdfSaved');
+      savedBtn.style.display = 'inline-flex';
+      setTimeout(() => {
+        savedBtn.style.display = 'none';
+        updatePdfSaveState();
+      }, 1500);
+    }
+
+    function pdfDontSave() {
+      pdfHasUnsavedChanges = false;
+      pdfLastOperation = '';
+      updatePdfSaveState();
+      hidePdfEditHint();
+      // 恢复旋转角度
+      const icon = document.getElementById('pdfPreviewIcon');
+      icon.style.transform = 'rotate(0deg)';
+    }
+
+    function updatePdfSaveState() {
+      const saveBtn = document.getElementById('btnPdfSave');
+      const savedBtn = document.getElementById('btnPdfSaved');
+      if (pdfHasUnsavedChanges) {
+        saveBtn.style.opacity = '1';
+        saveBtn.style.cursor = 'pointer';
+        saveBtn.disabled = false;
+        saveBtn.classList.add('text-[#165DFF]');
+        saveBtn.classList.remove('text-gray-400');
+        savedBtn.style.display = 'none';
+      } else {
+        saveBtn.style.opacity = '0.5';
+        saveBtn.style.cursor = 'not-allowed';
+        saveBtn.disabled = true;
+        saveBtn.classList.remove('text-[#165DFF]');
+        saveBtn.classList.add('text-gray-400');
+      }
+    }
+
+    function showPdfEditHint() {
+      const hint = document.getElementById('pdfEditHint');
+      const hintText = document.getElementById('pdfEditHintText');
+      hintText.textContent = pdfLastOperation;
+      hint.classList.remove('hidden');
+    }
+
+    function hidePdfEditHint() {
+      document.getElementById('pdfEditHint').classList.add('hidden');
+    }
+
+    function handlePdfClose() {
+      if (pdfHasUnsavedChanges) {
+        openModal('pdfSaveConfirmModal');
+      } else {
+        closeModal('previewModal');
+      }
+    }
+
+    // ========== 移动端切换 ==========
+    let mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      const leftPanel = document.getElementById('left-panel');
+      const rightPanel = document.getElementById('right-panel');
+      const btn = document.getElementById('mobileToggle');
+      if (mobileShowDesc) {
+        leftPanel.style.display = 'none'; rightPanel.style.height = '100vh'; btn.innerHTML = '<i class="fas fa-desktop"></i>';
+      } else {
+        leftPanel.style.display = ''; rightPanel.style.height = ''; btn.innerHTML = '<i class="fas fa-info"></i>';
+      }
+    }
+
+    // ========== 重新匹配 ==========
+    let fileChangeFlag = false;        // 文件变化标记
+
+    // 模拟文件变化（新增/删除操作时调用）
+    function markFileChanged() {
+      fileChangeFlag = true;
+    }
+
+    // 清除重新匹配标记
+    function clearRematchFlag() {
+      fileChangeFlag = false;
+    }
+
+    // 处理重新匹配按钮点击（正常使用中，直接匹配不弹提示）
+    function handleRematch() {
+      alert('正在对当前文件夹执行AI智能重新匹配…');
+      fileChangeFlag = false;
+    }
+
+    // 开始重新匹配
+    function startRematch() {
+      alert('AI智能匹配已启动，正在重新匹配当前文件夹内的文件…');
+      fileChangeFlag = false;
+    }
+
+    // 用户关闭页面时检测：如果有文件变化，弹出确认提示阻止关闭
+    window.addEventListener('beforeunload', (e) => {
+      if (fileChangeFlag) {
+        e.preventDefault();
+        e.returnValue = '检测到有文件变化，请问是否立即开始匹配？';
+        return e.returnValue;
+      }
+    });
+    function init() {
+      applyFolderConfig();
+      drawConnections();
+      bindHoverEvents();
+      // 默认进入系统时，自动跳转到最后上传文件所在的文件夹（原始资料）
+      setTimeout(() => {
+        const defaultFolder = document.querySelector('[data-folder="raw"]');
+        if (defaultFolder) {
+          // 先移除预筛阶段的 active 状态
+          document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+          // 激活原始资料
+          defaultFolder.classList.add('active');
+          switchFolder(defaultFolder, 'raw');
+        }
+      }, 200);
+    }
+    document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 150); });
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+    document.getElementById('right-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+  </script>
+</body>
+</html>
