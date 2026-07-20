@@ -17926,11 +17926,16 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
   const project = scProjectData.find(p => p.schemeNo === schemeNo);
   const projectName = project ? project.name : schemeNo;
 
-  // 标题：预提交进入显示「预提交审批」，否则显示「提交审批」
-  const auditTitle = isPreSubmit ? '预提交审批' : '提交审批';
+  // 补充审核场景：非预提交且患者已入组通过
+  const isSupplementAudit = !isPreSubmit && !!patient.isEnrolled;
+
+  // 标题：预提交进入显示「预提交审批」，补充审核显示「补充审核」，否则显示「提交审批」
+  const auditTitle = isPreSubmit ? '预提交审批' : (isSupplementAudit ? '补充审核' : '提交审批');
 
   // 记录是否来自预提交，供提交时校验
   window._submitIsPreSubmit = !!isPreSubmit;
+  // 记录是否为补充审核，供提交时校验补充审核原因
+  window._submitIsSupplement = isSupplementAudit;
 
   // 智能推荐审批流程
   const recommended = getRecommendedFlow(patient.patientStatus);
@@ -17954,21 +17959,7 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
         <button class="submit-audit-close" onclick="closeSubmitAuditModal()">&times;</button>
       </div>
        <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 加了审批流程的选择，可以从项目已配置的生效的流程中选择 提交哪个流程</div>
-            <div>② 下面提示把目前的审批流程展示出来</div>
-            <div>③ 审批流程 默认选中 应该去执行的流程，就是目前系统现行的固定死的流程</div>
-            <div>④ 当选择了审批流程之后，审批人也需要随着变动，跟流程绑定</div>
-            <div>⑤ 如果还没开始走流程，或者是 主流程没有开始，那么可以选择其他流程（1.还没有提交过审批；2. 第一次提交了审批，被驳回了；这两种情况 可以换流程模板），如果已经再走 主流程审批，走了一半了，不允许换流程模板</div>
-            <div>⑥ 审批流程默认选中 模板下的该走的流程，如果这个流程提交审批，被驳回，还可以选择其他流程（假设初始提交应该是预筛审批，但是被CRA驳回了，再次提交的时候，还可以选择 主知情审批或者其他审批）</div>
-            <div>⑦ 预提交场景下，弹窗新增【筛选号】和【知情时间】两个字段（标记为必填）；<strong>仅当审核类型为「主知情通过-入组预提交（入组审批）」或「提交导入期审核（导入审批）」时，这两个字段才真正必填，提交时需校验不能为空</strong>。</div>
-            <div>⑧ 预提交场景下，点击提交审核 需要同时触发项目匹配和 预提交的动作设置</strong>。</div>
-
-            </div>
-        </div>
+       
       <div class="submit-audit-body">
         <div class="submit-audit-form-row">
           <label class="submit-audit-form-label required">方案编码</label>
@@ -18064,6 +18055,14 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
           </div>
         </div>
         
+        ${isSupplementAudit ? `
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label required">补充审核原因</label>
+          <div class="submit-audit-form-control">
+            <textarea class="submit-audit-textarea" id="supplementAuditReason" placeholder="该患者已入组通过，请填写本次补充审核的原因"></textarea>
+          </div>
+        </div>
+        ` : ''}
         <div class="submit-audit-form-row">
           <label class="submit-audit-form-label">重点关注</label>
           <div class="submit-audit-form-control" style="line-height:34px;display:flex;align-items:center">
@@ -18081,7 +18080,7 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
       <div class="submit-audit-footer">
         <button class="submit-audit-btn submit-audit-btn-cancel" onclick="closeSubmitAuditModal()">取消</button>
         <button class="submit-audit-btn submit-audit-btn-submit" onclick="submitAudit('${schemeNo}', ${patientIndex})">
-          <i class="fa-solid fa-check"></i> 提交审批
+          <i class="fa-solid fa-check"></i> ${isSupplementAudit ? '提交补充审核' : '提交审批'}
         </button>
       </div>
     </div>
@@ -18233,8 +18232,23 @@ function submitAudit(schemeNo, patientIndex) {
     return;
   }
 
-  // 检查是否选择了非推荐流程
   let finalRemark = remark;
+
+  // 补充审核场景：校验补充审核原因（必填）
+  if(window._submitIsSupplement) {
+    const supReason = document.getElementById('supplementAuditReason')?.value.trim();
+    if(!supReason) {
+      showWechatToast('请填写补充审核原因');
+      setTimeout(() => {
+        const textarea = document.getElementById('supplementAuditReason');
+        if(textarea) textarea.focus();
+      }, 100);
+      return;
+    }
+    finalRemark = finalRemark ? '【补充审核原因】' + supReason + '\n\n' + finalRemark : '【补充审核原因】' + supReason;
+  }
+
+  // 检查是否选择了非推荐流程
   if(currentRecommendedFlow && flow !== currentRecommendedFlow) {
     const reason = document.getElementById('nonRecommendedReasonInline')?.value.trim();
     if(!reason) {

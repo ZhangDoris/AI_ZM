@@ -410,7 +410,6 @@
       flex-shrink: 0;
       transition: width 0.3s ease, min-width 0.3s ease, border 0.3s ease, padding 0.3s ease;
       position: relative;
-      overflow: hidden;
     }
     .prd-drawer.collapsed {
       width: 0 !important;
@@ -422,6 +421,7 @@
     .prd-drawer.collapsed .prd-drawer-body {
       opacity: 0;
       pointer-events: none;
+      overflow: hidden;
     }
     /* Drawer 把手 — 在面板左侧 */
     .prd-drawer-handle {
@@ -811,7 +811,77 @@
 
     /* 编辑项目页面样式 */
     .edit-project-page {
-      max-width: 1200px;
+      max-width: 100%;
+    }
+    .edit-project-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+    .edit-page-nav {
+      position: sticky;
+      top: 76px;
+      flex: 0 0 200px;
+      width: 200px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      padding: 12px 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+    .edit-nav-title {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 4px 10px 8px;
+    }
+    .edit-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 2px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #555;
+      text-decoration: none;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.18s;
+    }
+    .edit-nav-item i {
+      width: 16px;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+    }
+    .edit-nav-item:hover {
+      background: #f0f5ff;
+      color: #1677ff;
+    }
+    .edit-nav-item.active {
+      background: #e6f0ff;
+      color: #1677ff;
+      border-left-color: #1677ff;
+      font-weight: 600;
+    }
+    .edit-nav-item.active i {
+      color: #1677ff;
+    }
+    .edit-project-content {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    @media (max-width: 768px) {
+      .edit-project-layout {
+        display: block;
+      }
+      .edit-page-nav {
+        display: none;
+      }
     }
     .edit-section-card {
       background: #fff;
@@ -1080,7 +1150,7 @@
       background: #f5f7fa;
       border-radius: 8px 8px 0 0;
       padding: 0;
-      overflow: hidden;
+      overflow-x: auto;
     }
     .criteria-version-tab {
       padding: 10px 18px;
@@ -1090,7 +1160,7 @@
       background: #f5f7fa;
       border-right: 1px solid #e8e8e8;
       transition: all 0.2s;
-      font-weight: 500;
+      min-width: 132px;
     }
     .criteria-version-tab:hover {
       background: #e8f0ff;
@@ -1102,13 +1172,97 @@
       font-weight: 600;
       border-bottom: 2px solid #1677ff;
     }
+    .criteria-version-tab.disabled-ver { opacity: 0.62; }
+    .criteria-version-tab .ver-top { display: flex; align-items: center; gap: 6px; }
+    .criteria-version-tab .ver-name { font-weight: 600; font-size: 14px; }
+    .criteria-version-tab .ver-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .criteria-version-tab .ver-dot.on { background: #52c41a; }
+    .criteria-version-tab .ver-dot.off { background: #bbb; }
+    .criteria-version-tab .ver-date { font-size: 11px; color: #999; margin-top: 2px; }
     .criteria-content-area {
       background: #fff;
       border: 1px solid #e8e8e8;
       border-top: none;
       border-radius: 0 0 8px 8px;
       padding: 16px;
+      overflow-x: auto;
     }
+    .proj-criteria-table { min-width: 720px; }
+    .proj-criteria-group { min-width: 720px; margin-bottom: 24px; }
+    .proj-criteria-table .stage-enable-th { width: 100px; text-align: center; }
+    .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
+    .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
+    .proj-criteria-table .stage-select-all input { width: 14px; height: 14px; cursor: pointer; }
+    .stage-enable-td { min-width: 100px; vertical-align: middle; text-align: center; }
+    .stage-enable-td .stage-enabled-check { width: 16px; height: 16px; cursor: pointer; }
+    .sub-remark-row td { background: #f8faff !important; padding: 0; }
+    .sub-remark-title { font-size: 12px; color: #1677ff; font-weight: 600; padding: 8px 12px 0; display: inline-flex; align-items: center; gap: 6px; }
+    .sub-remark-list { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+    .sub-remark-card { border: 1px solid #e6efff; border-radius: 8px; background: #fff; overflow: hidden; }
+    .sub-remark-card-head { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #f0f6ff; border-bottom: 1px solid #e6efff; }
+    .sub-remark-stage { font-size: 13px; font-weight: 600; color: #1677ff; display: inline-flex; align-items: center; gap: 6px; }
+    .sub-remark-ops { display: inline-flex; align-items: center; gap: 14px; }
+    .sub-remark-edit { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
+    .sub-remark-edit:hover { text-decoration: underline; }
+    .sub-remark-del { color: #ff4d4f; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
+    .sub-remark-del:hover { text-decoration: underline; }
+    .sub-remark-body { padding: 10px 12px; font-size: 13px; line-height: 1.7; color: #333; white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow-y: auto; }
+    .config-action { color: #1677ff; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+    .config-action:hover { text-decoration: underline; }
+    .criteria-version-status {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 16px;
+      border: 1px solid #e8e8e8; background: #fafbfc;
+    }
+    .criteria-version-status.on { background: #f0f9eb; border-color: #b7eb8f; }
+    .criteria-version-status.off { background: #fafafa; border-color: #e8e8e8; }
+    .criteria-version-status .cvs-left { display: flex; align-items: center; gap: 10px; }
+    .criteria-version-status .cvs-label { font-size: 12px; color: #999; }
+    .criteria-version-status .cvs-name { font-weight: 700; font-size: 15px; color: #1677ff; }
+    .criteria-version-status .cvs-rename-btn {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border: 1px solid #91caff; border-radius: 6px;
+      background: #f0f5ff; color: #1677ff; font-size: 12px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .criteria-version-status .cvs-rename-btn:hover { background: #e0ecff; border-color: #1677ff; }
+    .criteria-version-status .cvs-meta { font-size: 12px; color: #999; }
+    .criteria-version-status .cvs-right { display: flex; align-items: center; gap: 12px; }
+    .criteria-version-status .cvs-status-text {
+      font-size: 13px; font-weight: 600;
+    }
+    .criteria-version-status.on .cvs-status-text { color: #389e0d; }
+    .criteria-version-status.off .cvs-status-text { color: #999; }
+    .criteria-version-status .cvs-right { display: flex; align-items: center; gap: 12px; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; border-radius: 22px; transition: .2s;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; border-radius: 50%; transition: .2s;
+    }
+    .switch input:checked + .slider { background-color: #52c41a; }
+    .switch input:checked + .slider:before { transform: translateX(22px); }
+    .group-title-left { display: inline-flex; align-items: center; gap: 6px; }
+    .group-title-right {
+      margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 500; color: #666;
+    }
+    .group-title-right .group-weight-label { font-size: 12px; }
+    .group-title-right .group-weight-pct { font-size: 12px; color: #999; }
+
+    .btn-xs { padding: 3px 10px; font-size: 12px; line-height: 1.4; }
+    .criteria-stage-modal-tip { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #999; margin-bottom: 14px; }
+    .criteria-stage-modal-list { display: flex; flex-direction: column; gap: 14px; }
+    .stage-remark-block { border: 1px solid #e6efff; border-radius: 10px; overflow: hidden; background: #fff; }
+    .stage-remark-block-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: linear-gradient(90deg, #f0f6ff, #eef4ff); border-bottom: 1px solid #e6efff; }
+    .stage-remark-block-index { width: 22px; height: 22px; border-radius: 50%; background: #1677ff; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; }
+    .stage-remark-block-name { font-size: 14px; font-weight: 600; color: #1677ff; }
+    .stage-remark-block-body { padding: 12px 14px; }
+    .stage-remark-block .criteria-textarea { min-height: 96px; }
     /* 标签 */
     .edit-tag {
       display: inline-flex;
@@ -2519,11 +2673,75 @@
     .form-textarea { width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #333; outline: none; resize: vertical; transition: border-color 0.2s; font-family: inherit; }
     .form-textarea:focus { border-color: #1677ff; }
     .required { color: #ff4d4f; margin-left: 2px; }
+    /* 阶段配置：包含的审核类型（横向可折行多选） */
+    .sc-audit-chip:hover { border-color: #1677ff; background: #f0f7ff; }
+    .sc-audit-chip:has(input:checked) { border-color: #1677ff; background: #e6f0ff; color: #1677ff; font-weight: 500; }
+    /* 阶段配置：启用/停用单选 */
+    .sc-status-radio { display: flex; align-items: center; gap: 24px; }
+    .sc-status-radio input[type="radio"] { display: none; }
+    .sc-status-radio label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; color: #8c8c8c; transition: color .15s; }
+    .sc-status-radio label::before { content: ''; width: 16px; height: 16px; border-radius: 50%; border: 1px solid #d9d9d9; background: #fff; transition: all .15s; box-sizing: border-box; }
+    .sc-status-radio input[type="radio"]:checked + label { color: #1677ff; }
+    .sc-status-radio input[type="radio"]:checked + label::before { border: 5px solid #1677ff; }
     .radio-group { display: flex; gap: 20px; }
     .radio-item { font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .radio-item input[type="radio"] { accent-color: #1677ff; }
-
-    /* 智能筛选 - 机构Tab */
+    /* 项目管理：阶段设置 */
+    .proj-stage-box { background: #fafbfc; border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .proj-stage-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .proj-stage-title .required { color: #ff4d4f; }
+    .proj-stage-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .proj-stage-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 16px; font-size: 13px; color: #666; background: #fff; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .proj-stage-chip:hover { border-color: #1677ff; color: #1677ff; background: #f0f7ff; }
+    .proj-stage-chip input[type="checkbox"] { width: 14px; height: 14px; accent-color: #1677ff; margin: 0; cursor: pointer; }
+    .proj-stage-chip.selected { border-color: #1677ff; color: #1677ff; background: #e6f0ff; font-weight: 500; }
+    .proj-stage-empty { color: #999; font-size: 13px; padding: 8px 0; }
+    .proj-stage-add { border-style: dashed; color: #1677ff; border-color: #91b8ff; background: #f5f9ff; }
+    .proj-stage-add:hover { background: #e6f0ff; }
+    .proj-stage-add-form { display: inline-flex; align-items: center; gap: 8px; }
+    .proj-stage-hint { margin-top: 10px; font-size: 12px; color: #999; line-height: 1.6; }
+    .proj-stage-audit-panel { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fff; margin-bottom: 12px; }
+    .proj-stage-audit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .proj-stage-audit-name { font-size: 13px; font-weight: 600; color: #1677ff; display: flex; align-items: center; gap: 6px; }
+    .proj-stage-audit-types { display: flex; flex-wrap: wrap; gap: 8px; }
+    .proj-audit-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid #e5e6eb; border-radius: 14px; font-size: 12px; color: #555; background: #fafbfc; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .proj-audit-chip:hover { border-color: #1677ff; background: #f0f7ff; }
+    .proj-audit-chip input[type="checkbox"] { width: 13px; height: 13px; accent-color: #1677ff; margin: 0; cursor: pointer; }
+    .proj-audit-chip.selected { border-color: #1677ff; background: #e6f0ff; color: #1677ff; font-weight: 500; }
+    /* 项目管理：入排标准按阶段拆分 */
+    .proj-criteria-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .proj-criteria-table th { background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+    .proj-criteria-table td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+    .proj-criteria-table tr:hover td { background: #fafbff; }
+    .proj-criteria-table .num-cell { width: 36px; color: #999; padding-top: 18px; }
+    .proj-criteria-table .content-cell { min-width: 280px; }
+    .proj-criteria-table .content-th { min-width: 280px; }
+    .criteria-textarea { width: 100%; min-height: 84px; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+    .criteria-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .criteria-textarea::placeholder { color: #bbb; }
+    .proj-criteria-table .action-cell { width: 92px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .thinking-chain-row td { background: #fffdf7 !important; padding: 0; }
+    .thinking-chain-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px 6px; }
+    .thinking-chain-title { font-size: 12px; color: #d48806; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+    .thinking-chain-hint { font-size: 11px; color: #bbb; }
+    .proj-criteria-table .thinking-chain-textarea { width: calc(100% - 24px); margin: 0 12px 12px; min-height: 76px; background: #fffdf7; border-color: #ffe7ba; }
+    .proj-criteria-table .thinking-chain-textarea:focus { border-color: #faad14; box-shadow: 0 0 0 2px rgba(250,173,20,0.12); }
+    .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
+    .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
+    .proj-criteria-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+    .criteria-add-btn:hover { background: #0958d9; }
+    .proj-criteria-table .stage-enable-th { width: 100px; text-align: center; }
+    .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
+    .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
+    .proj-criteria-table .stage-select-all input { width: 14px; height: 14px; cursor: pointer; }
+    .stage-enable-td { min-width: 100px; vertical-align: middle; text-align: center; }
+    .stage-enable-td .stage-enabled-check { width: 16px; height: 16px; cursor: pointer; }
+    .proj-criteria-group { margin-bottom: 24px; }
+    .proj-criteria-group-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .proj-criteria-group-title.inclusion { color: #52c41a; }
+    .proj-criteria-group-title.exclusion { color: #ff4d4f; }
+    .proj-criteria-no-stage { background: #fff7e6; border: 1px dashed #faad14; border-radius: 6px; padding: 16px; color: #d48806; font-size: 13px; text-align: center; }
     .sc-org-tabs {
       display: flex; align-items: center; gap: 0;
       background: #f5f7fa; border-radius: 10px; padding: 4px;
@@ -3530,6 +3748,31 @@
       border: 6px solid transparent; border-right-color: #1a1a1a;
     }
     .anno-badge:hover .anno-tip { display: block; }
+    /* 侧边栏菜单项 overflow:hidden 会裁切向右溢出的 tooltip，统一翻转到左侧显示 */
+    .sidebar-item .anno-badge .anno-tip,
+    .sidebar-item-l3 .anno-badge .anno-tip { left: auto; right: calc(100% + 8px); white-space: normal; max-width: 240px; }
+    .sidebar-item .anno-badge .anno-tip::before,
+    .sidebar-item-l3 .anno-badge .anno-tip::before { left: auto; right: -6px; border-right-color: transparent; border-left-color: #1a1a1a; }
+    /* 顶部主菜单标注徽标：右对齐 + tooltip 向下展开避免横向溢出 */
+    .nav-item .anno-badge, .nav-item .anno-badge-multi { position: relative; margin-left: auto; }
+    .nav-item .anno-badge .anno-tip,
+    .nav-item .anno-badge-multi .anno-tip {
+      left: 50%; right: auto; top: calc(100% + 8px); transform: translateX(-50%);
+      white-space: normal; max-width: 250px; line-height: 1.5;
+    }
+    .nav-item .anno-badge .anno-tip::before,
+    .nav-item .anno-badge-multi .anno-tip::before {
+      left: 50%; right: auto; top: -6px; transform: translateX(-50%);
+      border: 6px solid transparent; border-right-color: transparent; border-bottom-color: #1a1a1a;
+    }
+    .anno-badge-multi {
+      display: inline-flex; align-items: center; gap: 1px;
+      padding: 3px 9px; border-radius: 12px;
+      background: linear-gradient(135deg, #ff4d4f, #cf1322);
+      color: #fff; font-size: 11px; font-weight: 700; line-height: 1;
+      box-shadow: 0 2px 8px rgba(255,77,79,0.4); flex-shrink: 0;
+    }
+    .anno-badge-multi.pulse { animation: annoPulse 2s ease-in-out infinite; }
     .anno-inline {
       display: inline-flex; align-items: center; gap: 0; position: relative;
       margin-left: 4px; vertical-align: middle;
@@ -5309,25 +5552,13 @@
 </div>
 <div class="nav-menu">
 
-      <!-- 标注4 -->
-<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
- <div class="nav-item active" id="nav-audit" onclick="switchModule('audit')">
-<span class="nav-icon">📋</span> 审批列表
-      </div>
-  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-    <div class="anno-badge pulse">6
-    </div>
-  </div>
+<div class="nav-item active" id="nav-audit" onclick="switchModule('audit')">
+  <span class="nav-icon">📋</span> 审批列表
+  <span class="anno-badge pulse">5<span class="anno-tip">修改点 5 · 审批列表（审核列表）<br>本菜单为「阶段可配置」相关审批 / 审核入口，审批状态与流程随项目配置的阶段动态展示。</span></span>
 </div>
-<!-- 标注4 -->
-<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
-  <div class="nav-item" id="nav-ai" onclick="switchModule('ai')">
-    <span class="nav-icon">✨</span> 智能筛选
-  </div>
-  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-    <div class="anno-badge pulse">5
-    </div>
-  </div>
+<div class="nav-item" id="nav-ai" onclick="switchModule('ai')">
+  <span class="nav-icon">✨</span> 智能筛选
+  <span class="anno-badge pulse">4<span class="anno-tip">修改点 4 · 智能筛选<br>① 列表页面暂不修改；② 患者列表可自主选择下一步的审批流程（由项目配置的阶段决定）。</span></span>
 </div>
 
 
@@ -5341,16 +5572,8 @@
 <span class="nav-icon">🤖</span> AI改进分析
       </div>
 <div class="nav-item" id="nav-admin" onclick="switchModule('admin')">
-      </div>
-      <!-- 标注4 -->
-<div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
-  <div class="nav-item" id="nav-ai" onclick="switchModule('admin')">
-<span class="nav-icon">⚙️</span> 后台管理
-  </div>
-  <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-    <div class="anno-badge pulse">1
-    </div>
-  </div>
+  <span class="nav-icon">⚙️</span> 后台管理
+  <span class="anno-badge-multi pulse">①②③<span class="anno-tip">含修改点 ①②③，请从此菜单进入：<br>① 字典管理（审核类型字典化）<br>② 项目阶段配置（阶段可配置）<br>③ 项目管理（项目中配置）</span></span>
 </div>
 <div class="nav-item" id="nav-desensitize" onclick="switchModule('desensitize')">
 <span class="nav-icon">🔒</span> 脱敏管理
@@ -5380,90 +5603,14 @@
   </button>
   <div class="prd-drawer-body" id="prdPanel">
     <div class="prd-panel-header">
-      <div class="prd-panel-title">📋 本次修改说明</div>
+      <div class="prd-panel-title">📋 本次修改说明 · 阶段可配置</div>
       <button class="prd-panel-close" onclick="collapsePRDDrawer()" title="折叠面板">✕</button>
     </div>
     <div class="prd-section">
-      <div class="prd-section-title">审批流程解耦 · 原型修改说明</div>
-      <div class="prd-section-content"><span class="prd-badge prd-badge-core">核心功能</span>本次原型修改涉及<strong>审批流程解耦</strong>功能，覆盖 <strong>系统管理-流程设置</strong>、<strong>系统管理-流程模板管理（新增）</strong>、<strong>项目管理的编辑页面、项目的参研中心</strong>、<strong>智能筛选的患者提交审批、审批记录页面</strong> 模块，还涉及历史数据修改，具体如下：1. 流程配置，2. 项目中流程设置，不能影响已有项目；详情页的审批状态标签需要配置成灵活的，支持显示不同配置的审批状态名称</div>
+      <div class="prd-section-title">阶段灵活可配置 · 本次修改说明</div>
+      <div class="prd-section-content"><span class="prd-badge prd-badge-core">核心功能</span>本次修改将「预筛」「入组」两个阶段从写死模式改造为<strong>可配置、可自定义</strong>模式，不再局限于固定的"预筛 + 入组"两阶段。围绕「字典 → 阶段 → 项目」三层配置模型展开，详见下方「一、修改范围总览」至「五、原型演示说明」（登录后由对应模块 PRD 动态渲染）。</div>
     </div>
-    <div class="prd-section">
-      <div class="prd-section-title">默认审核流程示意图（预筛→主知情→入组）</div>
-      <div class="prd-section-content">
-        <div class="flow-zoomable" onclick="openFlowZoom()" title="点击放大查看审核流程"><span class="flow-zoom-hint">🔍 点击放大</span>
-        <div style="margin-top:4px;font-size:12px;line-height:1.5;color:#333;">
-        <div style="background:linear-gradient(135deg,#e6f4ff,#bae0ff);border-left:3px solid #1677ff;padding:6px 10px;border-radius:4px;margin-bottom:10px;font-size:11px;color:#1677ff;">
-          <strong>流程总览（流程只能往前走，不能回退，除了撤销审核的动作之外）：</strong>本次测试：预筛→主知情（跨过去）→入组
-        </div>
-        <!-- 阶段一：患者录入 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#e6f4ff;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#1677ff;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">患者录入</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#f0f7ff;border-radius:0 6px 6px 0;">
-            <div style="background:#1677ff;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">① 新增患者 / 上传病史与资料</div>
-          </div></div>
-        <div style="text-align:center;color:#1677ff;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-        <!-- 阶段二：预筛匹配 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛匹配</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
-            <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">② 项目匹配（预筛匹配）</div>
-          </div></div>
-        <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-        <!-- 阶段三：预筛审核 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛审核</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
-            <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">③ 提交审核（预提交）</div>
-            <div style="text-align:center;color:#fa8c16;font-size:12px;line-height:1;">↓</div>
-            <div style="background:#f9f0ff;color:#722ed1;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;border:1px dashed #d3adf7;">④ 选择审核模板 &amp; 选择审核流程 <br/><span style="font-size:10px;font-weight:400;">（默认推荐：中心主流程 / 项目主流程）</span></div>
-            <div style="text-align:center;color:#722ed1;font-size:12px;line-height:1;">↓</div>
-            <div style="background:#13c2c2;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑤ 预筛审核 → ✅ 审核通过</div>
-          </div></div>
-        <div style="text-align:center;color:#13c2c2;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-        <!-- 阶段四：入组匹配 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组匹配</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
-            <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑥ 项目匹配（预筛阶段）</div>
-          </div></div>
-        <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-        <!-- 阶段五：入组审核 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组审核</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
-            <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑦ 提交审核/预提交（选择入组审核）</div>
-          </div></div>
-        <div style="text-align:center;color:#fa8c16;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-        <!-- 阶段六：流程判断 -->
-        <div style="display:flex;align-items:stretch;margin-bottom:6px;">
-          <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff2f0;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#ff4d4f;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">流程判断</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fff1f0;border-radius:0 6px 6px 0;">
-            <div style="background:#ff4d4f;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑧ 后端判断：是否进入入组阶段，且无入组匹配结果？</div>
-            <div style="display:flex;gap:6px;">
-              <div style="flex:1;background:#f6ffed;border:2px solid #52c41a;border-radius:6px;padding:6px 8px;text-align:center;">
-                <div style="font-size:11px;font-weight:700;color:#52c41a;margin-bottom:3px;">✅ 是（已入组，无匹配）</div>
-                <div style="font-size:10px;color:#333;line-height:1.6;">确认匹配流程 → 匹配成功后自动提交 → 消息通知审核</div>
-                <div style="font-size:10px;color:#999;margin-top:4px;">【否】→ 提示"您目前还没有点击项目匹配（入组），无法跨阶段提交审核。"</div>
-              </div>
-              <div style="flex:1;background:#fff7e6;border:2px solid #fa8c16;border-radius:6px;padding:6px 8px;text-align:center;">
-                <div style="font-size:11px;font-weight:700;color:#fa8c16;margin-bottom:3px;">❌ 否（未进入入组）</div>
-                <div style="font-size:10px;color:#333;line-height:1.6;">按正常流程提交审核 → 消息通知审核</div>
-              </div>
-            </div>
-          </div></div>
-        <!-- 图例 -->
-        <div style="margin-top:8px;padding:8px 10px;background:#fafafa;border-radius:6px;border:1px solid #eee;">
-          <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">图例：</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#1677ff;display:inline-block;"></span> 患者操作</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#52c41a;display:inline-block;"></span> 项目匹配</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#fa8c16;display:inline-block;"></span> 提交审核</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#722ed1;display:inline-block;"></span> 模板/流程配置</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#13c2c2;display:inline-block;"></span> 审核执行</span>
-            <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#ff4d4f;display:inline-block;"></span> 流程判断</span>
-          </div></div></div></div>
-      </div>
-    </div>
+
   </div>
 </div>
 </div>
@@ -6019,7 +6166,7 @@ function buildAuditRecordContent(row) {
 // Full match details data (22 rows)
 const matchDetailData = [
   { type: '入选标准1', criteria: '男性或女性，签署知情同意书当日，年龄>18且<80岁', source: '【门诊病历】姓名： 性别：男 年龄：25岁\n【知情同意】参与者及研究者在2026年04月09日10时05分同时签署了知情同意书', judge: 'matched', judgeText: '匹配 ：患者性别为男（符合男性或女性要求）；签署知情同意书日期为2026年04月09日，当日年龄25岁 > 18 → 成立，25 < 80 → 成立，年龄满足标准' },
-  { type: '入选标准2', criteria: '诊断为慢性肾脏病，且筛选期和导入期：\na) eGFR≥60且<90 mL/min/1.73 m2，且UACR≥300 mg/g；或\nb) eGFR≥30且<60 mL/min/1.73 m2，且UACR≥30 mg/g；或\nc) eGFR≥25且<30 mL/min/1.73 m2；\n（eGFR＞60的参与者不超过10%，不合并T2DM的参与者UACR≤3500 mg/g）', source: '【诊断】诊断:慢性肾炎 慢性肾脏病2期\n【现病史】于2008.11确诊为CKD，病因慢性肾炎。目前CKD分期为2期。\n【2026年04月13日记录】中心实验室UACR结果：124mg/g，本地实验室eGFR按CKD-EPI 2009公式：69.6mL/min/1.73m2，按方案不符合入选标准第2条，告知筛选失败。\n【既往史】否认"糖尿病"病史。', judge: 'unmatched', judgeText: '不匹配 ：eGFR=69.6（符合a条件范围），但UACR=124 mg/g（<300 mg/g，不满足a条件）；eGFR不在b条件(30-60)或c条件(25-30)范围。患者无T2DM但主要数值条件不匹配。' },
+  { type: '入选标准2', criteria: '诊断为慢性肾脏病，且筛选阶段和导入期：\na) eGFR≥60且<90 mL/min/1.73 m2，且UACR≥300 mg/g；或\nb) eGFR≥30且<60 mL/min/1.73 m2，且UACR≥30 mg/g；或\nc) eGFR≥25且<30 mL/min/1.73 m2；\n（eGFR＞60的参与者不超过10%，不合并T2DM的参与者UACR≤3500 mg/g）', source: '【诊断】诊断:慢性肾炎 慢性肾脏病2期\n【现病史】于2008.11确诊为CKD，病因慢性肾炎。目前CKD分期为2期。\n【2026年04月13日记录】中心实验室UACR结果：124mg/g，本地实验室eGFR按CKD-EPI 2009公式：69.6mL/min/1.73m2，按方案不符合入选标准第2条，告知筛选失败。\n【既往史】否认"糖尿病"病史。', judge: 'unmatched', judgeText: '不匹配 ：eGFR=69.6（符合a条件范围），但UACR=124 mg/g（<300 mg/g，不满足a条件）；eGFR不在b条件(30-60)或c条件(25-30)范围。患者无T2DM但主要数值条件不匹配。' },
   { type: '入选标准3', criteria: '随机前稳定使用ACEI/ARB/ARNI至少4周（除非不能耐受）', source: '【2026-04-13门诊病历】药品：尿毒清颗粒、达格列净片\n【2024-07-29门诊病历】药品：百令片、尿毒清颗粒、复方肾炎片、中药配方颗粒（黄芪、太子参、黄芩等）', judge: 'unmatched', judgeText: '不匹配 ：病历中未发现使用ACEI、ARB或ARNI类药物的记录，且无不能耐受的表述。' },
   { type: '入选标准4', criteria: '若使用SGLT2i，随机前至少稳定使用8周', source: '【药品记录（2024-07-29）】达格列净片 10mg/次\n【药品记录（2026-04-09）】达格列净片 10mg/次\n【治疗史（2026-04-09）】百令片2023.10起持续；尿毒清颗粒2023.10起持续；\n【嘱托（2024-07-29）】加用达格列净1# QD', judge: 'matched', judgeText: '匹配 ：患者使用达格列净（SGLT2i类），首次处方时间2024年7月29日，最近处方2026年4月9日，使用超过8周，满足稳定使用要求' },
   { type: '排除标准1', criteria: '筛选时存在以下检查异常：ALT>3×ULN；AST>3×ULN；总胆红素>2.0×ULN', source: '【2026-04-09肝功能报告】ALT 10 U/L；AST 16 U/L；D-BIL 3.4 μmol/L；I-BIL 11.0 μmol/L\n【其他报告】所有涉及ALT/AST/胆红素指标均在正常范围内', judge: 'matched', judgeText: '匹配 ：ALT 10 U/L < 3×ULN(150 U/L)；AST 16 U/L < 3×ULN(120 U/L)；总胆红素（D-BIL+I-BIL=14.4）< 2×ULN(约46.4)。' },
@@ -6279,7 +6426,7 @@ function buildDetailContent(row) {
           <div>该患者不符合该项目入选要求，排除。</div>
           <br/>
           <div>排除原因如下:</div>
-          <div class="reason-item"><i>1. 患者诊断为慢性肾脏病（符合诊断要求）。筛选期检查显示：eGFR=69.6 mL/min/1.73m²，但UACR=124 mg/g（<300 mg/g）；eGFR值不在b)或c)条件范围。患者无T2DM但主要数值条件不匹配。【入选标准2】<span class="locate-btn">定位</span></i></div>
+          <div class="reason-item"><i>1. 患者诊断为慢性肾脏病（符合诊断要求）。筛选阶段检查显示：eGFR=69.6 mL/min/1.73m²，但UACR=124 mg/g（<300 mg/g）；eGFR值不在b)或c)条件范围。患者无T2DM但主要数值条件不匹配。【入选标准2】<span class="locate-btn">定位</span></i></div>
           <div class="reason-item"><i>2. 病历中未发现使用ACEI、ARB或ARNI类药物的记录。【入选标准3】<span class="locate-btn">定位</span></i></div>
           <div class="reason-item"><i>3. 患者于2026年4月9日处方中使用黄芩配方颗粒、土茯苓配方颗粒等具有免疫抑制作用的中药（共15剂），该用药时间在随机前90天内，符合排除标准定义的全身性免疫抑制治疗。【排除标准16】<span class="locate-btn">定位</span></i></div>
           <br/>
@@ -6523,6 +6670,7 @@ function switchModule(mod, sub) {
       else sidebar.classList.remove('collapsed');
       sidebar.innerHTML = buildAdminSidebar(currentSub);
       panel.innerHTML = buildAdminContent(currentSub);
+      if(currentSub === 'project-new' || currentSub === 'project-edit') initProjectNavSpy();
     } else if(mod === 'aiimprove') {
       currentSub = sub || 'settings';
       sidebar.classList.remove('hidden');
@@ -6574,133 +6722,62 @@ function updatePRDPanel(mod, sub) {
   // 定义各模块的需求说明
   const prdData = {
     'audit': {
-      title: '本次修改说明',
+      title: '本次修改说明 · 阶段可配置',
       sections: [
         {
-          title: '审批流程解耦 · 原型修改说明',
-          content: '<span class="prd-badge prd-badge-core">本次原型修改涉及<strong>审批流程解耦</strong>功能，覆盖 <strong>系统管理-流程设置</strong>、<strong>系统管理-流程模板管理（新增）</strong>、<strong>项目管理的编辑页面、项目的参研中心</strong>、<strong>智能筛选的患者提交审批、审批记录页面</strong> 模块，还涉及历史数据修改，具体如下：1. 流程配置，2. 项目中流程设置，不能影响已有项目；详情页的  审批状态标签需要配置成灵活的，支持显示不同配置的审批状态名称</div>'
+          title: '阶段灵活可配置 · 本次修改说明',
+          content: `
+            <span class="prd-badge prd-badge-core">核心功能</span>
+            本次修改将「预筛」「入组」两个阶段从<strong>写死模式</strong>改造为<strong>可配置、可自定义</strong>模式，不再局限于固定的"预筛 + 入组"两阶段。改造围绕「字典 → 阶段 → 项目」三层配置模型展开，覆盖系统管理、项目管理、智能筛选/匹配与匹配详情等模块。
+            <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">一、修改范围总览</h4>
+            <ol class="prd-list">
+              <li><strong>审核类型字典化</strong>：审核类型（如预筛审批、入组审批）做成字典，支持后台配置维护。</li>
+              <li><strong>阶段可配置</strong>：阶段（预筛阶段、入组阶段……）可配置，并可设置每个阶段默认包含哪些审核类型。</li>
+              <li><strong>项目中配置</strong>：① 项目可配置所需阶段（默认预筛+入组，可增删调整）；② 入排时每个阶段可设置备注、选择是否启用，历史数据刷新为各阶段备注一致。</li>
+              <li><strong>匹配改造</strong>：① 项目匹配不再写死，由项目配置的阶段决定；② 匹配详情不再仅展示预筛/入组，改为按配置动态展示。</li>
+              <li><strong>定制化页面</strong>：匹配详情新增定制化 <code>1918-305</code> 页面展示。</li>
+            </ol>
+            <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">二、配置模型（字典 → 阶段 → 项目）</h4>
+            <div style="margin:8px 0;padding:10px;border:1px dashed #1677ff;border-radius:8px;background:#f0f7ff;">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#1677ff;color:#fff;border-radius:6px;font-size:12px;font-weight:600;"><span style="background:#fff;color:#1677ff;padding:1px 6px;border-radius:4px;font-size:10px;">字典层</span> 审核类型字典（预筛审批 / 入组审批 / 自定义…）— 可增删改</div>
+              <div style="text-align:center;color:#1677ff;font-size:14px;margin:4px 0;">↓ 被引用</div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#52c41a;color:#fff;border-radius:6px;font-size:12px;font-weight:600;"><span style="background:#fff;color:#52c41a;padding:1px 6px;border-radius:4px;font-size:10px;">阶段层</span> 阶段定义（预筛阶段 / 入组阶段 / 自定义）— 每阶段勾选默认审核类型</div>
+              <div style="text-align:center;color:#52c41a;font-size:14px;margin:4px 0;">↓ 被引用</div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;background:#fa8c16;color:#fff;border-radius:6px;font-size:12px;font-weight:600;"><span style="background:#fff;color:#fa8c16;padding:1px 6px;border-radius:4px;font-size:10px;">项目层</span> 项目配置所选阶段（默认预筛+入组）+ 每阶段备注/启用开关</div>
+            </div>
+            <p class="prd-text">下层变更影响上层<strong>默认取值</strong>，但<strong>不影响已配置完成的项目</strong>（历史项目保持原配置，仅备注按规则刷新）。</p>
+            <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">三、各修改点详述</h4>
+            <p class="prd-text"><strong>1. 审核类型字典</strong>：系统管理-字典管理中新增「审核类型」字典，支持新增/编辑，原写死的"预筛"、"主知情"、"导入"、"入组"改为字典引用。</p>
+            <p class="prd-text"><strong>2. 阶段可配置</strong>：系统管理新增独立菜单<strong>「项目阶段配置」</strong>（见下方交互），可新增/编辑/删除阶段（预筛阶段、筛选阶段、入组阶段、随机阶段等），每个阶段维护其<strong>包含的审核类型</strong>（引用「审核类型字典」）并支持<strong>启用/停用</strong>；新建项目时默认带入所选阶段的审核类型。</p>
+            <p class="prd-text"><strong>3. 项目中配置</strong>：<br/>
+              <span class="prd-badge prd-badge-admin">项目</span>① 项目编辑页「阶段设置」默认勾选预筛+入组，可增删阶段；<br/>
+              <span class="prd-badge prd-badge-data">历史</span>② 入排（入选/排除）页面，每个阶段可填写<strong>备注</strong>并开关<strong>是否启用</strong>；历史项目数据刷新后，三个阶段的备注自动保持一致（统一默认备注）。</p>
+            <p class="prd-text"><strong>4. 匹配改造</strong>：<br/>
+              <span class="prd-badge prd-badge-core">匹配</span>① 「项目匹配」入口由<strong>项目配置的阶段</strong>决定，不再硬编码为预筛/入组；<br/>
+              <span class="prd-badge prd-badge-core">匹配详情</span>② 匹配详情页改为按项目所配置阶段<strong>动态生成展示区块</strong>，而非固定"预筛区块 + 入组区块"。</p>
+            <p class="prd-text"><strong>5. 定制化页面</strong>：匹配详情新增 <code>1918-305</code> 专属定制化展示页（特定项目/方案的差异化展示），入口随项目配置出现。</p>
+            <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">四、兼容性与历史数据</h4>
+            <ul class="prd-list">
+              <li>已存在项目：阶段配置保持不变（默认仍为预筛+入组），刷新历史数据。</li>
+              <li>历史入排备注：统一刷新为<strong>三个阶段备注一致</strong>（取统一默认备注），启用状态跟之前保持一致。</li>
+            </ul>
+            <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">五、原型演示说明</h4>
+            <p class="prd-text">本原型演示：① 阶段/类型的可配置效果；② 项目配置页阶段与备注开关；③ 项目匹配随配置变化；④ 匹配详情动态区块 + <code>1918-305</code> 定制化页。详见各模块交互与右侧连线说明。</p>
+          `
         },
-        {
-          title: '默认审核流程示意图（预筛→主知情→入组）',
-          content: `<div class="flow-zoomable" onclick="openFlowZoom()" title="点击放大查看审核流程"><span class="flow-zoom-hint">🔍 点击放大</span>
-            <div style="margin-top:4px;font-size:12px;line-height:1.5;color:#333;">
-            <div style="background:linear-gradient(135deg,#e6f4ff,#bae0ff);border-left:3px solid #1677ff;padding:6px 10px;border-radius:4px;margin-bottom:10px;font-size:11px;color:#1677ff;">
-              <strong>流程总览（流程只能往前走，不能回退，除了撤销审核的动作之外）：</strong>本次测试：预筛→主知情（跨过去）→入组
-            </div>
-            <!-- 阶段一：患者录入 -->
-            <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#e6f4ff;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#1677ff;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">患者录入</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#f0f7ff;border-radius:0 6px 6px 0;">
-                <div style="background:#1677ff;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">① 新增患者 / 上传病史与资料</div>
-              </div>
-            </div>
-            <div style="text-align:center;color:#1677ff;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-            <!-- 阶段二：预筛匹配 -->
-            <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛匹配</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
-                <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">② 项目匹配（预筛匹配）</div>
-              </div>
-            </div>
-            <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-            <!-- 阶段三：预筛审核提交与配置 -->
-            <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">预筛审核</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:3px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
-                <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">③ 提交审核（预提交）</div>
-                <div style="text-align:center;color:#fa8c16;font-size:12px;line-height:1;">↓</div>
-                <div style="background:#f9f0ff;color:#722ed1;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;border:1px dashed #d3adf7;">④ 选择审核模板 &amp; 选择审核流程 <br/><span style="font-size:10px;font-weight:400;">（默认推荐：中心主流程 / 项目主流程）</span></div>
-                <div style="text-align:center;color:#722ed1;font-size:12px;line-height:1;">↓</div>
-                <div style="background:#13c2c2;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑤ 预筛审核 → ✅ 审核通过</div>
-              </div>
-            </div>
-            <div style="text-align:center;color:#13c2c2;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-            <!-- 阶段四：入组匹配 -->
-            <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#f6ffed;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#52c41a;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组匹配</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fcffe6;border-radius:0 6px 6px 0;">
-                <div style="background:#52c41a;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑥ 项目匹配（预筛阶段）</div>
-              </div>
-            </div>
-            <div style="text-align:center;color:#52c41a;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-            <!-- 阶段五：入组审核提交 -->
-            <div style="display:flex;align-items:stretch;margin-bottom:8px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff7e6;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#fa8c16;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">入组审核</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fffbe6;border-radius:0 6px 6px 0;">
-                <div style="background:#fa8c16;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑦ 提交审核/预提交（选择入组审核）</div>
-              </div>
-            </div>
-            <div style="text-align:center;color:#fa8c16;font-size:16px;margin:-2px 0;line-height:1;">↓</div>
-            <!-- 阶段六：后端判断（分支） -->
-            <div style="display:flex;align-items:stretch;margin-bottom:6px;">
-              <div style="width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff2f0;border-radius:6px 0 0 6px;font-size:11px;font-weight:700;color:#ff4d4f;padding:6px 4px;writing-mode:vertical-rl;letter-spacing:2px;">流程判断</div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:4px;padding:6px 8px;background:#fff1f0;border-radius:0 6px 6px 0;">
-                <div style="background:#ff4d4f;color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:4px;text-align:center;">⑧ 后端判断：是否进入入组阶段，且无入组匹配结果？</div>
-                <div style="display:flex;gap:6px;">
-                  <!-- 是：已入组但无匹配结果 -->
-                  <div style="flex:1;background:#f6ffed;border:2px solid #52c41a;border-radius:6px;padding:6px 8px;text-align:center;">
-                    <div style="font-size:11px;font-weight:700;color:#52c41a;margin-bottom:3px;">✅ 是（已入组，无匹配）</div>
-                    <div style="font-size:10px;color:#333;line-height:1.6;">
-                      <span style="color:#999;">↓</span><br/>
-                      <span style="background:#fff1f0;color:#ff4d4f;padding:1px 6px;border-radius:3px;font-weight:600;">返回前端，弹出确认框</span><br/>
-                      <span style="color:#999;">↓</span><br/>
-                      <span style="background:#fff7e6;border:1px solid #ffd591;padding:2px 6px;border-radius:3px;display:inline-block;margin:2px 0;font-size:10px;text-align:left;line-height:1.5;max-width:100%;">"检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交"</span><br/>
-                      <span style="color:#999;">↓</span><br/>
-                      <span style="background:#52c41a;color:#fff;padding:1px 8px;border-radius:3px;font-weight:600;">确认匹配</span>
-                      <span style="color:#999;margin:0 2px;">|</span>
-                      <span style="background:#d9d9d9;color:#666;padding:1px 8px;border-radius:3px;font-weight:600;">否</span><br/>
-                      <span style="color:#999;">↓</span><br/>
-                      <div style="font-size:9px;line-height:1.4;margin-top:2px;">
-                        <div style="border-bottom:1px dashed #b7eb8f;padding-bottom:2px;margin-bottom:2px;">【确认匹配】→ 后端自动匹配</div>
-                        <div style="border-bottom:1px dashed #b7eb8f;padding-bottom:2px;margin-bottom:2px;">→ 匹配成功，自动提交</div>
-                        <div style="border-bottom:1px dashed #b7eb8f;padding-bottom:2px;margin-bottom:2px;">→ <span style="background:#52c41a;color:#fff;padding:0 5px;border-radius:3px;">消息通知审核</span></div>
-                        <div style="color:#ff4d4f;margin-top:3px;">【否】→ "您目前还没有点击项目匹配（入组），无法跨阶段提交审核。"</div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- 否：未进入入组阶段 -->
-                  <div style="flex:1;background:#fff7e6;border:2px solid #fa8c16;border-radius:6px;padding:6px 8px;text-align:center;">
-                    <div style="font-size:11px;font-weight:700;color:#fa8c16;margin-bottom:3px;">❌ 否（未进入入组）</div>
-                    <div style="font-size:10px;color:#333;line-height:1.6;">
-                      <span style="color:#999;">↓</span><br/>
-                      按正常流程<br/>
-                      提交审核<br/>
-                      <span style="color:#999;">↓</span><br/>
-                      <span style="color:#999;">&nbsp;</span><br/>
-                      <span style="color:#999;">&nbsp;</span><br/>
-                      <span style="background:#fa8c16;color:#fff;padding:1px 6px;border-radius:3px;">消息通知审核</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- 图例 -->
-            <div style="margin-top:8px;padding:8px 10px;background:#fafafa;border-radius:6px;border:1px solid #eee;">
-              <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:6px;">图例：</div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:10px;">
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#1677ff;display:inline-block;"></span> 患者操作</span>
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#52c41a;display:inline-block;"></span> 项目匹配</span>
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#fa8c16;display:inline-block;"></span> 提交审核</span>
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#722ed1;display:inline-block;"></span> 模板/流程配置</span>
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#13c2c2;display:inline-block;"></span> 审核执行</span>
-                <span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;border-radius:2px;background:#ff4d4f;display:inline-block;"></span> 流程判断</span>
-              </div>
-            </div>
-          </div>
-          </div>`
-        }
+
       ]
     },
     
     'ai': {
-      title: '智能筛选 - 项目列表',
+      title: '修改点④ 智能筛选',
       sections: [
         {
           title: '模块定位',
           content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>智能筛选项目列表页，支持按机构切换查看临床试验项目，提供多维度筛选查询，快速定位目标项目并查看其下患者列表。'
         },
         {
-          title: '★ 智能筛选（本次修改）',
+          title: '★ 修改点④ 智能筛选（本次修改）',
           content: `<ul>
             <li><strong>修改摘要</strong>：
               <ul style="margin-top:6px">
@@ -6754,63 +6831,15 @@ function updatePRDPanel(mod, sub) {
       title: '项目管理设置',
       sections: [
         {
-          title: '★ 项目管理（本次修改）',
-          content: `<ul>
-            <li><strong>功能定位</strong>：项目管理设置，包含新建项目和编辑项目页面</li>
-            <li><strong>修改摘要</strong>：
-              <ul style="margin-top:6px">
-                <li><strong style="color:#1677ff">审批模板配置</strong>：项目中引用流程模板，设置主流程，管理模板生效/停用时间，没有默认的流程了，让每次都选择</li>
-              </ul>
-            </li>
-          </ul>`
-        },
-        {
-          title: '【1】引用流程模板',
-          content: `<ul>
-             <li><strong>入口</strong>：项目编辑 / 新建页面 → 审批模板配置 → 点击「<i class="fa-solid fa-link"></i> 引用模板」按钮</li>
-             <li><strong>弹窗内容</strong>：列出<strong>流程模板管理中所有已启用的模板</strong>（状态为「已启用」的模板），每条模板可展开查看其下所有审批流程节点</li>
-             <li><strong>查看流程详情</strong>：点击模板行的「查看审批流程」可跳转到对应的审批流设置页面，查看该流程的完整节点配置（使用原有流程查看功能）</li>
-             <li><strong>勾选逻辑</strong>：支持勾选多个模板（多选），模板行可勾选/取消勾选；子节点不可单独勾选，仅跟随父级模板</li>
-             <li><strong>筛选能力</strong>：弹窗顶部支持按模板名称筛选，帮助快速定位目标模板</li>
-             <li><strong>操作按钮</strong>：
-               <ul style="margin-top:4px">
-                 <li><strong>引用</strong>：将选中的模板引入项目，模板状态保持「未生效」，需手动点击「生效」激活</li>
-                 <li><strong>引用并生效</strong>：将选中的模板引入项目，同时批量设置为「生效」状态，并记录生效开始时间</li>
-               </ul>
-            </li>
-          </ul>`
-        },
-        {
-          title: '【2】主流程模板设置（核心规则）',
-          content: `<ul>
-            <li><strong>规则</strong>：每个项目<strong style="color:#F53F3F">必须设置一个主流程模板</strong>，且<strong style="color:#F53F3F">主流程模板有且只有一个</strong></li>
-            <li><strong>设置入口</strong>：审批模板配置列表 → 模板行操作列 → 点击「主流程模板设置」</li>
-            <li><strong>操作流程</strong>：选择一个已生效的流程模板作为主流程模板；弹窗提示「主流程模板只能有一个」，将主流程模板切换为新选流程模板</li>
-            <li><strong>校验时机</strong>：
-              <ul style="margin-top:4px">
-                <li><strong>保存/上架</strong>：点击「保存」/「上架」按钮时校验，若项目无主流程，提示「必须设置一个主流程模板才能上架」</li>
-                <li><strong>保存并上架</strong>：点击「保存并上架」按钮时校验，若项目无主流程，提示「必须设置一个主流程模板才能上架」</li>
-              </ul>
-            </li>
-            <li><strong>视觉标识</strong>：主流程在列表中显示 <span class="edit-tag edit-tag-purple">★ 主流程模板</span> 紫色标签</li>
-          </ul>`
-        },
-        {
-          title: '【3】模板生效/停用与时间记录',
-          content: `<ul>
-            <li><strong>生效操作</strong>：点击模板行的「生效」按钮，该模板下所有流程节点全部设为生效，<strong>记录生效开始时间</strong>（当前时间）。若列表存在其他生效中的流程，则提醒主流程应当调整</li>
-            <li><strong>停用操作</strong>：点击模板行的「停用」按钮，该模板下所有流程节点全部设为停用，<strong>记录生效结束时间</strong>（当前时间）。只有这个模板没有正在用的时候才可以，还有正在进行的流程就不可以解除生效</li>
-           <li><strong>删除操作：</dtrong>如果有模板 原来已经被用了，现在没有人再用了，那就不能删除，只能让取消生效，要不然 就找不到留痕了</li>
-            <li><strong>单个流程控制</strong>：展开模板后，每个流程节点行也可通过「编辑」按钮独立控制是否生效，影响该流程节点的生效状态但不影响同级其他节点</li>
-            <li><strong>列表展示</strong>：
-              <ul style="margin-top:4px">
-                <li>模板行：显示整体生效状态（生效 / 未生效）</li>
-                <li>流程节点行：显示各自生效状态（● 生效中 / ● 未生效）</li>
-                <li>生效开始时间 / 生效结束时间：记录模板级别最早生效时间和最后停用时间</li>
-              </ul>
-            </li>
+          title: '★ 修改点③ 项目中配置（本次修改）',
+          content: `<ul class="prd-list">
+            <li><strong>阶段设置</strong>：项目编辑/新建页新增「阶段设置」模块，默认勾选 <strong>预筛 + 入组</strong>；可增删项目所需阶段，只能选择「系统管理 → 项目阶段配置」中已启用的阶段。</li>
+            <li><strong>阶段审核类型</strong>：每个已选阶段独立勾选本项目需要的审核类型，默认带入该阶段在阶段配置中维护的审核类型；审核类型来源为「系统管理 → 字典管理 → 审核类型字典」。</li>
+            <li><strong>入排按阶段配置</strong>：「项目入排标准」按版本管理；入选/排除标准的每一行，针对每个已选阶段提供 <strong>备注</strong> 输入和 <strong>是否启用</strong> 开关。</li>
+            <li><strong>历史数据刷新</strong>：旧项目刷新后，各阶段的备注自动保持一致（统一默认备注），启用状态保持原状。</li>
           </ul>`
         }
+      
       ]
     },
     'admin': {
@@ -6919,6 +6948,63 @@ function updatePRDPanel(mod, sub) {
           content: `<ul>
             <li><strong>成功</strong>：showToast 提示「流程模板设置成功，本中心以后主流程已更改」</li>
             <li><strong>失败</strong>：showToast(error) 红色错误提示「✕ 流程模板设置失败，请重试」</li>
+          </ul>`
+        }
+      ]
+    },
+
+    'admin-dict': {
+      title: '字典管理 · 修改点① 审核类型字典化',
+      sections: [
+        {
+          title: '📚 功能说明',
+          content: '<span class="prd-badge prd-badge-admin">系统管理</span><br/>字典管理用于维护系统公共字典数据。本次新增「审核类型」字典，将原本写死的审核类型改为可配置的字典引用。'
+        },
+        {
+          title: '★ 修改点① 审核类型字典化',
+          content: `<ul class="prd-list">
+            <li><strong>新增字典</strong>：在「系统管理 → 字典管理」中新增 <strong>「审核类型」</strong> 字典项，支持新增 / 编辑 维护。</li>
+            <li><strong>字典引用</strong>：原本写死的 <strong>预筛、主知情、导入、入组</strong> 四类审核，全部改为引用「审核类型」字典；可以手动维护新增修改删除 审核类型。</li>
+            <li><strong>影响范围</strong>：项目阶段配置中各阶段所包含的「审核类型」、审批流中的审批类型，均从此字典取值。</li>
+          </ul>`
+        }
+      ]
+    },
+
+    'admin-stage-config': {
+      title: '项目阶段配置 · 修改点② 阶段可配置',
+      sections: [
+        {
+          title: '⚙️ 功能说明',
+          content: '<span class="prd-badge prd-badge-admin">系统管理</span><br/>项目阶段配置用于统一定义临床试验可使用的「阶段」（如预筛阶段、筛选阶段、入组阶段、随机阶段等），并配置每个阶段默认包含的审核类型。'
+        },
+        {
+          title: '★ 修改点② 阶段可配置',
+          content: `<ul class="prd-list">
+            <li><strong>独立菜单</strong>：在「系统管理」下新增独立菜单 <strong>「项目阶段配置」</strong>。</li>
+            <li><strong>增删改阶段</strong>：可新增 / 编辑 / 删除阶段（预筛阶段、筛选阶段、入组阶段、随机阶段等），每个阶段可维护其 <strong>包含的审核类型</strong>（引用「审核类型字典」）。</li>
+            <li><strong>启用 / 停用</strong>：每个阶段支持启用、停用开关；停用的阶段不会出现在项目配置的可选项中。</li>
+            <li><strong>动态带入</strong>：新建项目时，默认带入所选阶段的审核类型，减少重复配置。</li>
+            <li><strong>审核类型来源</strong>：取自「系统管理 → 字典管理 → 审核类型字典」，支持<strong>多选</strong>；</li>
+            <li><strong>引用保护</strong>：审核类型字典中<strong>已启用且在项目中实际引用</strong>的类型，<strong>不允许删除或停用</strong>（已配置该类型的项目不含已删除项目）；如需停用，须先解除相关项目的引用。</li>
+          </ul>`
+        }
+      ]
+    },
+
+    'admin-matching': {
+      title: '匹配管理 · 匹配改造（随项目阶段配置）',
+      sections: [
+        {
+          title: '🔀 功能说明',
+          content: '<span class="prd-badge prd-badge-core">核心功能</span><br/>匹配管理维护各项目的智能匹配规则与模型。本次改造使「项目匹配」与「匹配详情」由项目配置的阶段动态决定，而非写死为预筛 / 入组。'
+        },
+        {
+          title: '★ 修改点④ 匹配改造',
+          content: `<ul class="prd-list">
+            <li><strong>① 入口动态化</strong>：「项目匹配」入口由 <strong>项目配置的阶段</strong> 决定，不再硬编码为统一的预筛 / 入组。</li>
+            <li><strong>② 详情动态化</strong>：匹配详情页改为按项目所配置阶段 <strong>动态生成展示区块</strong>，而非固定「预筛区块 + 入组区块」。</li>
+            <li><strong>③ 定制化页</strong>：匹配详情新增 <code>1918-305</code> 专属定制化展示页，入口随项目配置出现。</li>
           </ul>`
         }
       ]
@@ -9157,21 +9243,23 @@ function buildAdminSidebar(active) {
   const sidebarActive = (active === 'project-edit' || active === 'project-new') ? 'projects' : active;
 
   // 判断系统管理的三级菜单是否有激活项
-  const sysItems = ['users','roles','dict','disease-dict','hospitals','workflow','sys-config','sys-text','menus'];
+  const sysItems = ['users','roles','dict','disease-dict','hospitals','workflow','stage-config','flow-template','sys-config','sys-text','menus'];
   const sysActive = sysItems.includes(active);
 
   // 判断各分组是否展开
   const sysOpen = adminGroupState.sysmanage || sysActive;
 
-  const renderL3 = (key, label) => `
+  const renderL3 = (key, label, annoNum='', annoTip='') => `
     <div class="sidebar-item-l3 ${sidebarActive===key?'active':''}" data-label="${label}" onclick="switchModule('admin','${key}')">
       <span style="font-size:12px;color:${sidebarActive===key?'#1677ff':'#ccc'}">•</span>
       <span class="s-label">${label}</span>
+      ${annoNum ? `<span class="anno-badge pulse" style="margin-left:auto;margin-right:4px">${annoNum}<span class="anno-tip">${annoTip}</span></span>` : ''}
     </div>`;
 
-  const renderL2 = (key, icon, label, extra='', onClick=null) => `
+  const renderL2 = (key, icon, label, extra='', onClick=null, annoNum='', annoTip='') => `
     <div class="sidebar-item ${sidebarActive===key?'active':''}" data-label="${label}" onclick="${onClick || `switchModule('admin','${key}')`}">
       <span class="s-icon">${icon}</span><span class="s-label">${label}</span>${extra}
+      ${annoNum ? `<span class="anno-badge pulse" style="margin-left:auto;margin-right:4px">${annoNum}<span class="anno-tip">${annoTip}</span></span>` : ''}
     </div>`;
 
   return `
@@ -9179,14 +9267,7 @@ function buildAdminSidebar(active) {
     <div class="sidebar-title">后台管理</div>
 
     
- <!-- 标注1：用户管理拆分为租户管理和用户管理 -->
-    <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
-         ${renderL2('projects','📁','项目管理')}
-          <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-            <div class="anno-badge pulse">4
-            </div>
-          </div>
-        </div>
+     ${renderL2('projects','📁','项目管理', '', null, '3', '修改点 3 · 项目中配置<br>项目可配置所需阶段（默认预筛+入组，可增删）；入排页面每阶段可填备注、开关是否启用。')}
     <!-- 系统管理（可展开的分组） -->
     <div class="sidebar-group">
       <div class="sidebar-group-header ${sysActive?'active':''}" onclick="toggleAdminGroup('sysmanage')" data-label="系统管理">
@@ -9195,36 +9276,22 @@ function buildAdminSidebar(active) {
         <span class="sidebar-group-arrow ${sysOpen?'open':'closed'}">▼</span>
       </div>
       <div class="sidebar-group-body" style="max-height:${sysOpen?'800px':'0'}">
-       
         ${renderL3('roles','租户管理')}
         ${renderL3('roles','用户管理')}
         ${renderL3('roles','角色管理')}
-        ${renderL3('dict','字典管理')}
+        ${renderL3('dict','字典管理', '1', '修改点 1 · 审核类型字典化<br>系统管理-字典管理新增「审核类型」字典，原写死的预筛/主知情/导入/入组改为字典引用。')}
         ${renderL3('disease-dict','疾病领域字典管理')}
         ${renderL3('hospitals','医院管理')}
-         <!-- 标注1：用户管理拆分为租户管理和用户管理 -->
-      <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
-          ${renderL3('workflow','审批流设置')} 
-          <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-            <div class="anno-badge pulse">2
-            </div>
-          </div>
-        </div>
-        <div style="position:relative;padding:2px 3px 0 0;margin:0 4px 0 0;border:2px solid #ff4d4f;border-radius:0">
-          ${renderL3('flow-template','流程模板管理')}
-          <div class="anno-inline" style="position:absolute;left:-14px;top:50%;transform:translateY(-50%)">
-            <div class="anno-badge pulse">3
-            </div>
-          </div>
-        </div>
-       
+        ${renderL3('stage-config','项目阶段配置', '2', '修改点 2 · 阶段可配置<br>系统管理新增「项目阶段配置」，可增删改阶段（预筛阶段/筛选阶段/入组阶段/随机阶段等）并配置其包含的审核类型、启用停用。')}
+        ${renderL3('workflow','审批流设置')}
+        ${renderL3('flow-template','流程模板管理')}
         ${renderL3('sys-config','系统设置')}
         ${renderL3('sys-text','系统文案设置')}
         ${renderL3('menus','菜单管理')}
       </div>
     </div>
 
-    ${renderL2('matching','🔀','匹配管理',`<span class="sidebar-group-arrow" onclick="event.stopPropagation();toggleMatchSubMenu()">▼</span>`,'toggleMatchSubMenu()')}
+    ${renderL2('matching','🔀','匹配管理',`<span class="sidebar-group-arrow" onclick="event.stopPropagation();toggleMatchSubMenu()">▼</span>`,'toggleMatchSubMenu();switchModule(\'admin\',\'matching\')')}
     <div class="sidebar-submenu" id="matchSubMenu" style="max-height:${matchSubMenuState.matchLog || matchSubMenuState.screenTableLog || matchSubMenuState.screenTableHistory ? '300px' : '0'};overflow:hidden;transition:max-height 0.3s ease">
       <div class="sidebar-item-l3 ${window._adminActiveSub === 'match-log' ? 'active' : ''}" data-label="匹配日志" onclick="switchModule('admin','match-log')">
         <span style="font-size:12px;color:${window._adminActiveSub === 'match-log' ? '#1677ff' : '#ccc'}">•</span>
@@ -9256,6 +9323,7 @@ function buildAdminContent(sub) {
   if(sub === 'disease-dict') return buildAdminPlaceholder('🩺','疾病领域字典管理','管理疾病领域分类及对应字典数据');
   if(sub === 'hospitals') return buildAdminHospitals();
   if(sub === 'workflow') return buildAdminWorkflow();
+  if(sub === 'stage-config') return buildStageConfig();
   if(sub === 'flow-template') return buildFlowTemplateManagement();
   if(sub === 'sys-config') return buildAdminPlaceholder('🔧','系统设置','配置系统全局参数与环境变量');
   if(sub === 'sys-text') return buildAdminPlaceholder('✏️','系统文案设置','管理前端展示的可配置文案内容');
@@ -9282,6 +9350,189 @@ let _workflowData = [
   { ver:'v1.2.0', name:'入组审批流程V1.2', type:'入组审批', status:'cancelled', creator:'系统', updater:'张管理', time:'2026-04-20 10:00', isDefault:false },
   { ver:'v1.0.0', name:'入组审批流程V1.0', type:'入组审批', status:'cancelled', creator:'系统', updater:'系统', time:'2026-04-15 08:00', isDefault:false },
 ];
+
+// ==================== 项目阶段配置 ====================
+// 项目阶段（阶段层）：引用「审核类型字典」决定每个阶段默认包含的审核类型
+let _stageConfigData = [
+  { id:'ST01', name:'预筛阶段', order:1, auditTypes:['预筛审批','主知情审批'], status:'enabled', remark:'患者筛选与初步资格判定阶段', updater:'张管理', time:'2026-06-22 10:30' },
+  { id:'ST02', name:'筛选阶段', order:2, auditTypes:['筛选审批','导入审批'], status:'enabled', remark:'正式筛选入组资格阶段', updater:'李明', time:'2026-06-18 14:20' },
+  { id:'ST03', name:'入组阶段', order:3, auditTypes:['入组审批'], status:'enabled', remark:'患者入组确认阶段', updater:'张管理', time:'2026-06-15 09:15' },
+  { id:'ST04', name:'随机阶段', order:4, auditTypes:['随机化审批'], status:'disabled', remark:'随机化分组阶段（默认停用）', updater:'李明', time:'2026-06-08 11:00' },
+];
+// 审核类型字典（引用自 系统管理-字典管理-审核类型；此处为原型内置示例）
+let _stageConfigAuditTypes = ['预筛审批','主知情审批','导入审批','入组审批','筛选审批','随机化审批'];
+function stageTypeTag(name){
+  const map = {'预筛审批':['#e6f4ff','#1677ff'],'主知情审批':['#fff7e6','#fa8c16'],'导入审批':['#e6fffb','#13c2c2'],'入组审批':['#f6ffed','#52c41a'],'筛选审批':['#f9f0ff','#722ed1'],'随机化审批':['#fff1f0','#ff4d4f']};
+  const c = map[name] || ['#f0f0f0','#666'];
+  return '<span style="display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;line-height:1.6;background:'+c[0]+';color:'+c[1]+';border:1px solid '+c[1]+'33;margin:2px 3px 2px 0">'+name+'</span>';
+}
+
+function buildStageConfig() {
+  return `
+    <div class="breadcrumb">当前位置：<span onclick="switchModule('admin','projects')">后台管理</span> / 系统管理 / 项目阶段配置</div>
+    <div class="table-card">
+      <!-- 查询条件 -->
+      <div style="display:flex;flex-wrap:wrap;gap:12px 20px;padding:14px 20px;background:#fafbfc;border-bottom:1px solid #f0f0f0;align-items:center">
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">阶段名称：</label>
+          <input class="filter-input" id="scNameFilter" placeholder="请输入阶段名称" style="width:150px" oninput="filterStageConfigTable()"/>
+        </div>
+        <div class="form-row-item" style="margin:0">
+          <label class="form-lbl">状态：</label>
+          <select class="filter-select" id="scStatusFilter" style="width:120px" onchange="filterStageConfigTable()">
+            <option value="">全部</option>
+            <option value="enabled">启用</option>
+            <option value="disabled">停用</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="filterStageConfigTable()">查询</button>
+        <button class="btn btn-default btn-sm" onclick="document.getElementById('scNameFilter').value='';document.getElementById('scStatusFilter').value='';filterStageConfigTable()" style="margin-left:4px">重置</button>
+      </div>
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary" onclick="openStageConfigForm()"><i class="fa-solid fa-plus"></i> 新建阶段</button>
+        </div>
+        <div class="toolbar-right"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr>
+            <th style="width:50px">序号</th>
+            <th style="width:120px">阶段名称</th>
+            <th style="width:70px">排序</th>
+            <th>包含的审核类型</th>
+            <th style="width:90px">状态</th>
+            <th style="width:90px">更新人</th>
+            <th style="width:140px">更新时间</th>
+            <th style="width:220px">操作</th>
+          </tr></thead>
+          <tbody id="stageConfigTableBody">${renderStageConfigRows('')}</tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="pagination-info">共 <strong id="scTotalCount">${_stageConfigData.length}</strong> 条记录</div>
+        <div class="pagination-controls">
+          <button class="page-btn" disabled><i class="fa-solid fa-angles-left"></i></button>
+          <button class="page-btn" disabled><i class="fa-solid fa-angle-left"></i></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn"><i class="fa-solid fa-angle-right"></i></button>
+          <button class="page-btn"><i class="fa-solid fa-angles-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <!-- 新建/编辑弹窗 -->
+    <div class="modal-overlay" id="stageConfigFormModal" style="display:none">
+      <div class="modal-panel" style="width:620px;max-height:90vh">
+        <div class="modal-header"><h3 id="stageConfigFormTitle">新建阶段</h3><button class="modal-close" onclick="closeStageConfigForm()">✕</button></div>
+        <div class="modal-body" style="overflow-y:auto;max-height:calc(90vh - 120px)">
+          <input type="hidden" id="scId"/>
+          <div class="form-group"><label class="form-label">阶段名称 <span class="required">*</span></label><input type="text" class="form-input" id="scName" placeholder="如：预筛阶段 / 筛选阶段 / 入组阶段 / 随机阶段"/></div>
+          <div class="form-group"><label class="form-label">排序 <span class="required">*</span></label><input type="number" class="form-input" id="scOrder" placeholder="数字越小越靠前" min="1" style="width:140px"/></div>
+          <div class="form-group">
+            <label class="form-label">包含的审核类型 <span class="required">*</span></label>
+            <div style="border:1px solid #e5e6eb;border-radius:8px;padding:12px 14px;max-height:200px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+              ${_stageConfigAuditTypes.map(t=>`<label class="sc-audit-chip" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #e5e6eb;border-radius:16px;font-size:13px;cursor:pointer;user-select:none;background:#fafbfc;transition:all .15s"><input type="checkbox" class="sc-audit-type" value="${t}" style="width:15px;height:15px;accent-color:#1677ff;margin:0"/> <span>${t}</span></label>`).join('')}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">状态</label>
+            <div class="sc-status-radio">
+              <input type="radio" name="scStatus" id="scStatusEnabled" value="enabled" checked/>
+              <label for="scStatusEnabled">启用</label>
+              <input type="radio" name="scStatus" id="scStatusDisabled" value="disabled"/>
+              <label for="scStatusDisabled">停用</label>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">备注</label><textarea class="form-textarea" id="scRemark" placeholder="选填，阶段说明"></textarea></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-cancel" onclick="closeStageConfigForm()">取消</button><button class="btn btn-primary" onclick="saveStageConfigForm()">保存</button></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderStageConfigRows(filters){
+  let rows = _stageConfigData.slice();
+  if(filters){
+    if(filters.name) rows = rows.filter(d=>d.name.toLowerCase().includes(filters.name.toLowerCase()));
+    if(filters.status) rows = rows.filter(d=>d.status===filters.status);
+  }
+  rows.sort((a,b)=>a.order-b.order);
+  return rows.map((d,i)=>{
+    const st = d.status==='enabled'
+      ? '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#52c41a"></span><span style="color:#52c41a;font-weight:500">启用</span></span>'
+      : '<span style="display:inline-flex;align-items:center;gap:5px;"><span style="width:7px;height:7px;border-radius:50%;background:#bbb"></span><span style="color:#999">停用</span></span>';
+    const typesHtml = (d.auditTypes && d.auditTypes.length) ? d.auditTypes.map(stageTypeTag).join('') : '<span style="color:#bbb">未配置</span>';
+    const acts = [];
+    acts.push('<a href="javascript:void(0)" onclick="openStageConfigForm(\''+d.id+'\')" class="table-action">编辑</a>');
+    acts.push(d.status==='enabled'
+      ? '<a href="javascript:void(0)" onclick="toggleStageConfigStatus(\''+d.id+'\')" class="table-action table-action-warn">停用</a>'
+      : '<a href="javascript:void(0)" onclick="toggleStageConfigStatus(\''+d.id+'\')" class="table-action" style="color:#52c41a">启用</a>');
+    acts.push('<a href="javascript:void(0)" onclick="deleteStageConfig(\''+d.id+'\')" class="table-action table-action-danger">删除</a>');
+    return '<tr><td>'+(i+1)+'</td><td><strong>'+d.name+'</strong></td><td>'+d.order+'</td><td>'+typesHtml+'</td><td>'+st+'</td><td>'+d.updater+'</td><td>'+d.time+'</td><td style="white-space:nowrap">'+acts.join(' <span style="color:#e0e0e0">|</span> ')+'</td></tr>';
+  }).join('');
+}
+function filterStageConfigTable(){
+  const filters = { name: document.getElementById('scNameFilter').value.trim(), status: document.getElementById('scStatusFilter').value };
+  const html = renderStageConfigRows(filters);
+  document.getElementById('stageConfigTableBody').innerHTML = html;
+  const countEl = document.getElementById('scTotalCount');
+  if(countEl) countEl.textContent = (html.match(/<tr>/g)||[]).length;
+}
+function openStageConfigForm(id){
+  const modal = document.getElementById('stageConfigFormModal');
+  modal.style.display='flex'; document.body.style.overflow='hidden';
+  document.querySelectorAll('.sc-audit-type').forEach(c=>c.checked=false);
+  document.querySelector('input[name="scStatus"][value="enabled"]').checked=true;
+  if(id){
+    const d = _stageConfigData.find(x=>x.id===id);
+    document.getElementById('stageConfigFormTitle').textContent='编辑阶段 - '+d.name;
+    document.getElementById('scId').value=d.id;
+    document.getElementById('scName').value=d.name;
+    document.getElementById('scOrder').value=d.order;
+    document.getElementById('scRemark').value=d.remark||'';
+    (d.auditTypes||[]).forEach(t=>{ const c=document.querySelector('.sc-audit-type[value="'+t+'"]'); if(c)c.checked=true; });
+    document.querySelector('input[name="scStatus"][value="'+d.status+'"]').checked=true;
+  } else {
+    document.getElementById('stageConfigFormTitle').textContent='新建阶段';
+    document.getElementById('scId').value='';
+    document.getElementById('scName').value='';
+    document.getElementById('scOrder').value=_stageConfigData.length+1;
+    document.getElementById('scRemark').value='';
+  }
+}
+function closeStageConfigForm(){ document.getElementById('stageConfigFormModal').style.display='none'; document.body.style.overflow=''; }
+function saveStageConfigForm(){
+  const id = document.getElementById('scId').value;
+  const name = document.getElementById('scName').value.trim();
+  const order = parseInt(document.getElementById('scOrder').value)||_stageConfigData.length+1;
+  const types = Array.from(document.querySelectorAll('.sc-audit-type:checked')).map(c=>c.value);
+  const status = document.querySelector('input[name="scStatus"]:checked').value;
+  const remark = document.getElementById('scRemark').value.trim();
+  if(!name){alert('请输入阶段名称');return;}
+  if(!types.length){alert('请至少选择一个包含的审核类型');return;}
+  const now = new Date().toISOString().slice(0,16).replace('T',' ');
+  if(id){
+    const d=_stageConfigData.find(x=>x.id===id);
+    Object.assign(d,{name,order,auditTypes:types,status,remark,updater:'当前用户',time:now});
+  } else {
+    const newId='ST'+String(_stageConfigData.length+1).padStart(2,'0');
+    _stageConfigData.push({id:newId,name,order,auditTypes:types,status,remark,updater:'当前用户',time:now});
+  }
+  closeStageConfigForm();
+  filterStageConfigTable();
+}
+function toggleStageConfigStatus(id){
+  const d=_stageConfigData.find(x=>x.id===id); if(!d)return;
+  d.status = d.status==='enabled'?'disabled':'enabled';
+  filterStageConfigTable();
+}
+function deleteStageConfig(id){
+  const d=_stageConfigData.find(x=>x.id===id); if(!d)return;
+  if(!confirm('确认删除阶段「'+d.name+'」？\n删除后该阶段不再出现在「项目配置」可选阶段列表中，历史已配置项目不受影响。'))return;
+  _stageConfigData=_stageConfigData.filter(x=>x.id!==id);
+  filterStageConfigTable();
+}
 
 function buildAdminWorkflow() {
   return `
@@ -15820,19 +16071,75 @@ function showWechatToast(msg, type) {
   toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
 }
 
-// ==================== 编辑项目页面 ====================
-let uploadedFiles = ['方案v3-临床试验方案.pdf'];
-let criteriaVersions = [
-  { version:'v2.0', date:'2026-06-20', status:'已发布', editor:'张管理' },
-  { version:'v1.0', date:'2026-05-15', status:'已发布', editor:'张管理' }
+// 项目阶段设置（项目管理新增/编辑页）：默认勾选预筛+入组
+const _defaultProjectSelectedStages = [
+  { id:'ST01', name:'预筛阶段', auditTypes:['预筛审批','主知情审批'] },
+  { id:'ST03', name:'入组阶段', auditTypes:['入组审批'] }
 ];
+let _projectSelectedStages = JSON.parse(JSON.stringify(_defaultProjectSelectedStages));
+
+// 项目入排标准数据：每个版本含入选/排除，每条标准支持按阶段配置备注与启用状态
+const _defaultProjectCriteriaData = {
+  'v2.0': {
+    inclusionWeight:50, exclusionWeight:50,
+    inclusion: [
+      { id:'I01', content:'年龄≥18周岁且≤75周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I04', content:'ECOG体力状况评分0或1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I06', content:'主要器官功能基本正常', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+    ],
+    exclusion: [
+      { id:'E01', content:'既往接受过抗HER2靶向治疗（辅助治疗除外）', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E07', content:'研究者判断不适合参加本研究的其他情况', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+    ]
+  },
+  'v1.0': {
+    inclusionWeight:50, exclusionWeight:50,
+    inclusion: [
+      { id:'I01', content:'年龄≥18周岁且≤70周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I02', content:'经组织学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I04', content:'ECOG体力状况评分0-1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+    ],
+    exclusion: [
+      { id:'E01', content:'既往接受过抗HER2靶向治疗', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
+      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+    ]
+  }
+};
+let _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData));
+
+// 试验方案上传文件列表（项目管理新增/编辑页）
+let uploadedFiles = [];
+
+// 入排标准版本列表（与 _projectCriteriaData 的版本一一对应）
 let activeCriteriaVersion = 'v2.0';
+let criteriaVersions = [
+  { version:'v2.0', name:'入排标准 v2.0', date:'2026-06-22', status:'生效', editor:'张管理', enabled:true },
+  { version:'v1.0', name:'入排标准 v1.0', date:'2026-05-15', status:'历史', editor:'系统', enabled:false }
+];
 
 function buildAdminProjectEdit(isNew) {
   const pageTitle = isNew ? '新建项目' : '编辑项目';
 
-  // 新建项目演示：预填已引用但未设主流程的模板，方便测试「保存并上架」校验效果
+  // 新建项目：重置阶段与入排默认数据
   if(isNew) {
+    uploadedFiles = [];
+    _projectSelectedStages = JSON.parse(JSON.stringify(_defaultProjectSelectedStages));
+    _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData));
+    activeCriteriaVersion = 'v2.0';
     const enabledTemplates = _flowTemplateData.filter(t => t.status === 'enabled');
     _projectApprovalTemplates = enabledTemplates.map(t => {
       const tpl = JSON.parse(JSON.stringify(t));
@@ -15844,9 +16151,23 @@ function buildAdminProjectEdit(isNew) {
   return `
     <div class="edit-project-page">
       <div class="breadcrumb">当前位置：<span onclick="switchModule('admin','projects')" style="cursor:pointer;color:#1677ff">项目管理</span> / ${pageTitle}</div>
-      
+
+      <div class="edit-project-layout">
+        <aside class="edit-page-nav" id="editPageNav">
+          <div class="edit-nav-title">页面导航</div>
+          <a class="edit-nav-item ${isNew ? 'active' : ''}" href="javascript:void(0)" data-target="sec-protocol" onclick="scrollToProjectSection('sec-protocol', this)"><i class="fa-solid fa-file-lines"></i> 试验方案</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-basic" onclick="scrollToProjectSection('sec-basic', this)"><i class="fa-solid fa-clipboard-list"></i> 项目基本信息</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-stage" onclick="scrollToProjectSection('sec-stage', this)"><i class="fa-solid fa-puzzle-piece"></i> 阶段设置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-criteria" onclick="scrollToProjectSection('sec-criteria', this)"><i class="fa-solid fa-scale-balanced"></i> 项目入排标准</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-screening" onclick="scrollToProjectSection('sec-screening', this)"><i class="fa-solid fa-magnifying-glass"></i> 筛选表配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-approval" onclick="scrollToProjectSection('sec-approval', this)"><i class="fa-solid fa-circle-check"></i> 审批模板配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-thinkchain" onclick="scrollToProjectSection('sec-thinkchain', this)"><i class="fa-solid fa-brain"></i> 思考链配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-qa" onclick="scrollToProjectSection('sec-qa', this)"><i class="fa-solid fa-comments"></i> 问答知识库</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-knowledge" onclick="scrollToProjectSection('sec-knowledge', this)"><i class="fa-solid fa-book"></i> 项目知识库</a>
+        </aside>
+        <div class="edit-project-content">
       <!-- 试验方案 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-protocol">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">📄</span> 试验方案
@@ -15878,7 +16199,7 @@ function buildAdminProjectEdit(isNew) {
       </div>
 
       <!-- 项目基本信息 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-basic">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">📋</span> 项目基本信息
@@ -15967,26 +16288,45 @@ function buildAdminProjectEdit(isNew) {
         </div>
       </div>
 
+      <!-- 阶段设置 -->
+      <div class="edit-section-card" id="sec-stage">
+        <div class="edit-section-header" onclick="toggleEditSection(this)">
+          <div class="edit-section-title">
+            <span class="section-icon">🧩</span> 阶段设置
+          </div>
+          <span class="edit-section-arrow" id="stageSettingArrow">▼</span>
+        </div>
+        <div class="edit-section-body" id="stageSettingBody">
+          ${renderProjectStageSettings()}
+        </div>
+      </div>
+
       <!-- 项目入排标准 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-criteria">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">⚖️</span> 项目入排标准
           </div>
           <div style="display:flex;align-items:center;gap:10px">
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addCriteriaVersion()">
-              <i class="fa-solid fa-plus"></i> 新增入排标准版本
+              <i class="fa-solid fa-plus"></i> 新增版本
+            </button>
+            <button class="btn btn-default btn-sm" onclick="event.stopPropagation();copyCriteriaVersion(activeCriteriaVersion)">
+              <i class="fa-solid fa-copy"></i> 复制当前版本
+            </button>
+            <button class="btn btn-default btn-sm" onclick="event.stopPropagation();deleteCriteriaVersion(activeCriteriaVersion)">
+              <i class="fa-solid fa-trash"></i> 删除版本
             </button>
             <span class="edit-section-arrow" id="criteriaArrow">▼</span>
           </div>
         </div>
         <div class="edit-section-body" id="criteriaBody">
-          设计中
+          ${renderProjectCriteriaBody()}
         </div>
       </div>
 
       <!-- 筛选表配置 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-screening">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">🔍</span> 筛选表配置
@@ -16002,7 +16342,7 @@ function buildAdminProjectEdit(isNew) {
       </div>
 
       <!-- 审批模板配置 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-approval">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">✅</span> 审批模板配置
@@ -16179,7 +16519,7 @@ function buildAdminProjectEdit(isNew) {
       </div>
 
       <!-- 思考链配置 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-thinkchain">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">🧠</span> 思考链配置
@@ -16247,7 +16587,7 @@ function buildAdminProjectEdit(isNew) {
       </div>
 
       <!-- 问答知识库 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-qa">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">💬</span> 问答知识库
@@ -16277,7 +16617,7 @@ function buildAdminProjectEdit(isNew) {
       </div>
 
       <!-- 项目知识库 -->
-      <div class="edit-section-card">
+      <div class="edit-section-card" id="sec-knowledge">
         <div class="edit-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">📚</span> 项目知识库
@@ -16360,6 +16700,10 @@ function buildAdminProjectEdit(isNew) {
           </table>
         </div>
       </div>
+      </div>
+      <!-- /.edit-project-content -->
+      </div>
+      <!-- /.edit-project-layout -->
 
       <!-- 底部操作栏 -->
       <div class="edit-bottom-bar">
@@ -16379,66 +16723,622 @@ function buildAdminProjectEdit(isNew) {
   `;
 }
 
-function renderCriteriaVersionContent(ver) {
-  const isV2 = ver === 'v2.0';
-  const inclusionItems = isV2 ? [
-    { id:'I01', content:'年龄≥18周岁且≤75周岁，男女不限' },
-    { id:'I02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌' },
-    { id:'I03', content:'新辅助治疗后存在浸润癌残留' },
-    { id:'I04', content:'ECOG体力状况评分0或1分' },
-    { id:'I05', content:'预期生存时间≥3个月' },
-    { id:'I06', content:'主要器官功能基本正常' }
-  ] : [
-    { id:'I01', content:'年龄≥18周岁且≤70周岁，男女不限' },
-    { id:'I02', content:'经组织学确诊的HER2阳性乳腺癌' },
-    { id:'I03', content:'新辅助治疗后存在浸润癌残留' },
-    { id:'I04', content:'ECOG体力状况评分0-1分' },
-    { id:'I05', content:'预期生存时间≥3个月' }
-  ];
-
-  const exclusionItems = isV2 ? [
-    { id:'E01', content:'既往接受过抗HER2靶向治疗（辅助治疗除外）' },
-    { id:'E02', content:'有症状的脑转移或脑膜转移' },
-    { id:'E03', content:'入组前4周内接受过大手术' },
-    { id:'E04', content:'活动性自身免疫性疾病' },
-    { id:'E05', content:'妊娠期或哺乳期女性' },
-    { id:'E06', content:'已知对试验药物成分过敏' },
-    { id:'E07', content:'研究者判断不适合参加本研究的其他情况' }
-  ] : [
-    { id:'E01', content:'既往接受过抗HER2靶向治疗' },
-    { id:'E02', content:'有症状的脑转移或脑膜转移' },
-    { id:'E03', content:'入组前4周内接受过大手术' },
-    { id:'E04', content:'活动性自身免疫性疾病' },
-    { id:'E05', content:'妊娠期或哺乳期女性' },
-    { id:'E06', content:'已知对试验药物成分过敏' }
-  ];
-
-  return `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#52c41a;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          <i class="fa-solid fa-circle-check"></i> 纳入标准（${inclusionItems.length}条）
+function renderProjectStageSettings() {
+  const availableStages = _stageConfigData.filter(s => s.status === 'enabled');
+  const selectedIds = _projectSelectedStages.map(s => s.id);
+  const stageChips = availableStages.map(stage => {
+    const isSelected = selectedIds.includes(stage.id);
+    return `
+      <label class="proj-stage-chip ${isSelected ? 'selected' : ''}" onclick="event.preventDefault(); toggleProjectStage('${stage.id}')">
+        <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.preventDefault(); event.stopPropagation()"/>
+        <span>${stage.name}</span>
+      </label>
+    `;
+  }).join('');
+  const auditPanels = _projectSelectedStages.map(stage => {
+    const allAuditTypes = _stageConfigAuditTypes;
+    return `
+      <div class="proj-stage-audit-panel">
+        <div class="proj-stage-audit-header">
+          <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> ${stage.name}</div>
+          <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审核类型</span>
         </div>
-        ${inclusionItems.map((item,i) => `
-          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px;color:#333">
-            <span style="background:#f6ffed;color:#52c41a;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px">${item.id}</span>
-            <span>${item.content}</span>
-          </div>
-        `).join('')}
+        <div class="proj-stage-audit-types">
+          ${allAuditTypes.map(t => {
+            const checked = stage.auditTypes.includes(t);
+            return `
+              <label class="proj-audit-chip ${checked ? 'selected' : ''}" onclick="event.preventDefault(); toggleProjectStageAuditType('${stage.id}', '${t}')">
+                <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.preventDefault(); event.stopPropagation()"/>
+                <span>${t}</span>
+              </label>
+            `;
+          }).join('')}
+        </div>
       </div>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:#ff4d4f;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          <i class="fa-solid fa-circle-xmark"></i> 排除标准（${exclusionItems.length}条）
+    `;
+  }).join('');
+  return `
+    <div class="proj-stage-box">
+      <div class="proj-stage-title"><span class="required">*</span> 选择项目阶段（可多选）</div>
+      <div class="proj-stage-chips">
+        ${availableStages.length ? stageChips : ''}
+        <label class="proj-stage-chip proj-stage-add" onclick="showAddProjectStageInput()">
+          <i class="fa-solid fa-plus"></i><span>新增项目阶段</span>
+        </label>
+        <div class="proj-stage-add-form" id="projStageAddForm" style="display:none">
+          <input class="filter-input" id="projStageAddName" placeholder="输入阶段名称，如：随访期" style="width:180px" onkeydown="if(event.key==='Enter')confirmAddProjectStage()"/>
+          <button class="btn btn-primary btn-sm" onclick="confirmAddProjectStage()">确定</button>
+          <button class="btn btn-default btn-sm" onclick="cancelAddProjectStage()">取消</button>
         </div>
-        ${exclusionItems.map((item,i) => `
-          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px;color:#333">
-            <span style="background:#fff2f0;color:#ff4d4f;padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px">${item.id}</span>
-            <span>${item.content}</span>
-          </div>
-        `).join('')}
+      </div>
+      ${availableStages.length ? '' : '<div class="proj-stage-empty">暂无可选阶段，可点击下方「新增项目阶段」直接添加。</div>'}
+      <div class="proj-stage-hint">支持从「系统管理 → 项目阶段配置」已有的启用阶段中多选；如本项目叫法不同，可直接「新增项目阶段」，新增后自动选中并进入下方审核类型配置。</div>
+    </div>
+    ${auditPanels}
+    ${_projectSelectedStages.length === 0 ? '<div class="proj-stage-empty">请至少选择一个阶段。</div>' : ''}
+  `;
+}
+
+function refreshProjectStageSettings() {
+  const body = document.getElementById('stageSettingBody');
+  if(body) body.innerHTML = renderProjectStageSettings();
+}
+
+function renderCriteriaVersionTabs() {
+  return criteriaVersions.map(v => `
+    <div class="criteria-version-tab ${v.version === activeCriteriaVersion ? 'active' : ''} ${v.enabled ? '' : 'disabled-ver'}" onclick="switchCriteriaVersion('${v.version}')">
+      <div class="ver-top">
+        <span class="ver-name">${v.name || v.version}</span>
+        <span class="ver-dot ${v.enabled ? 'on' : 'off'}" title="${v.enabled ? '已启用' : '已停用'}"></span>
+      </div>
+   
+    </div>
+  `).join('');
+}
+
+function renderProjectCriteriaBody() {
+  return `
+    <div class="criteria-version-tabs" id="criteriaVersionTabs">
+      ${renderCriteriaVersionTabs()}
+    </div>
+    <div class="criteria-content-area" id="criteriaContentArea">
+      ${renderCriteriaVersionContent(activeCriteriaVersion)}
+    </div>
+    <div class="modal-overlay" id="criteriaStageConfigModal" style="display:none">
+      <div class="modal-panel" style="width:600px;max-height:88vh">
+        <div class="modal-header"><h3 id="criteriaStageModalTitle">阶段配置</h3><button class="modal-close" onclick="closeCriteriaStageModal()">✕</button></div>
+        <div class="modal-body" id="criteriaStageModalBody" style="overflow-y:auto;max-height:calc(88vh - 120px)"></div>
+        <div class="modal-footer"><button class="btn btn-primary" onclick="closeCriteriaStageModal()">完成</button></div>
+      </div>
+    </div>
+    <div class="modal-overlay" id="criteriaVersionNameModal" style="display:none">
+      <div class="modal-panel" style="width:420px">
+        <div class="modal-header"><h3 id="criteriaVersionNameTitle">新增版本</h3><button class="modal-close" onclick="closeCriteriaVersionNameModal()">✕</button></div>
+        <div class="modal-body">
+          <label style="display:block;font-size:13px;color:#333;font-weight:600;margin-bottom:8px">版本名称</label>
+          <input type="text" id="criteriaVersionNameInput" style="width:100%;padding:10px 12px;border:1px solid #d9d9d9;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box" placeholder="请输入版本名称，如：入排标准 v3.0" onkeydown="if(event.key==='Enter'){confirmCriteriaVersionName()}" />
+          <div style="margin-top:8px;font-size:12px;color:#86909c;line-height:1.6">版本名称用于区分不同版本的入排标准配置，可自定义填写。</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" onclick="closeCriteriaVersionNameModal()">取消</button>
+          <button class="btn btn-primary" onclick="confirmCriteriaVersionName()">确定</button>
+        </div>
       </div>
     </div>
   `;
+}
+
+function renderCriteriaVersionContent(ver) {
+  if(!_projectSelectedStages.length) {
+    return '<div class="proj-criteria-no-stage">请先完成上方「阶段设置」，选择至少一个阶段后再配置入排标准。</div>';
+  }
+  const verMeta = criteriaVersions.find(v => v.version === ver);
+  const enabled = verMeta ? !!verMeta.enabled : true;
+  const statusBar = `
+    <div class="criteria-version-status ${enabled ? 'on' : 'off'}">
+      <div class="cvs-left">
+        <span class="cvs-label">当前版本</span>
+        <span class="cvs-name">${verMeta && verMeta.name ? verMeta.name : ver}</span>
+        <button class="cvs-rename-btn" onclick="openCriteriaVersionNameModal('rename','${ver}')" title="修改版本名称"><i class="fa-solid fa-pen"></i> 重命名</button>
+        <span class="cvs-meta">${verMeta ? verMeta.date + ' · ' + verMeta.editor : ''}</span>
+      </div>
+      <div class="cvs-right">
+        <span class="cvs-status-text">${enabled ? '已启用' : '已停用'}</span>
+        <label class="switch">
+          <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleCriteriaVersionEnabled('${ver}')"/>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  `;
+  const data = _projectCriteriaData[ver] || { inclusion: [], exclusion: [] };
+  const renderTable = (type, items, title, colorClass) => {
+    const weightVal = (data[type + 'Weight'] != null) ? data[type + 'Weight'] : 50;
+    const stageThs = _projectSelectedStages.map(s => `
+      <th class="stage-enable-th">
+        <div class="stage-th-name">${s.name}</div>
+        <label class="stage-select-all">
+          <input type="checkbox" title="勾选/取消「${s.name}」全部" onchange="toggleProjectCriteriaStageAll('${ver}','${type}','${s.id}',this.checked)"/>
+          <span>全选</span>
+        </label>
+      </th>
+    `).join('');
+    const rows = items.map((item, idx) => {
+      const stageTds = _projectSelectedStages.map(s => {
+        const cfg = item.stageConfig[s.id] || { enabled: false };
+        return `
+          <td class="stage-enable-td">
+            <input type="checkbox" class="stage-enabled-check" ${cfg.enabled ? 'checked' : ''} onchange="updateProjectCriteriaStageEnabled('${ver}', '${type}', ${idx}, '${s.id}', this.checked)"/>
+          </td>
+        `;
+      }).join('');
+      const remarkRows = _projectSelectedStages.filter(s => {
+        const cfg = item.stageConfig[s.id] || {};
+        return cfg.remark && cfg.remark.trim();
+      });
+      const colSpan = 3 + _projectSelectedStages.length;
+      const subTable = remarkRows.length ? `
+        <tr class="sub-remark-row">
+          <td colspan="${colSpan}">
+            <div class="sub-remark-title"><i class="fa-regular fa-note-sticky"></i> 阶段备注（${remarkRows.length}）</div>
+            <div class="sub-remark-list">
+              ${remarkRows.map(s => {
+                const cfg = item.stageConfig[s.id] || { remark: '' };
+                return `
+                  <div class="sub-remark-card">
+                    <div class="sub-remark-card-head">
+                      <span class="sub-remark-stage"><i class="fa-solid fa-layer-group"></i> ${s.name}</span>
+                      <span class="sub-remark-ops">
+                        <span class="sub-remark-edit" onclick="openCriteriaRemarkModal('${ver}','${type}',${idx})"><i class="fa-regular fa-pen-to-square"></i> 修改</span>
+                        <span class="sub-remark-del" onclick="deleteProjectCriteriaStageRemark('${ver}','${type}',${idx},'${s.id}')"><i class="fa-regular fa-trash-can"></i> 删除</span>
+                      </span>
+                    </div>
+                    <div class="sub-remark-body">${cfg.remark}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </td>
+        </tr>
+      ` : '';
+      const thinkingChainRow = `
+        <tr class="thinking-chain-row">
+          <td colspan="${colSpan}">
+            <div class="thinking-chain-head">
+              <span class="thinking-chain-title"><i class="fa-solid fa-brain"></i> 思考链</span>
+              <span class="thinking-chain-hint">说明该标准纳入 / 排除的判断逻辑与推理过程</span>
+            </div>
+            <textarea class="criteria-textarea thinking-chain-textarea" rows="3" placeholder="请输入该标准的思考链 / 判断推理过程……" onchange="updateProjectCriteriaThinkingChain('${ver}','${type}',${idx},this.value)">${item.thinkingChain || ''}</textarea>
+          </td>
+        </tr>
+      `;
+      return `
+        <tr>
+          <td class="num-cell">${idx + 1}</td>
+          <td class="content-cell">
+            <textarea class="criteria-textarea" rows="3" placeholder="请输入标准内容" onchange="updateProjectCriteriaContent('${ver}', '${type}', ${idx}, this.value)">${item.content}</textarea>
+          </td>
+          ${stageTds}
+          <td class="action-cell">
+            <span class="config-action" onclick="openCriteriaRemarkModal('${ver}','${type}',${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注</span>
+            ${items.length > 1 ? `<span class="delete-action" onclick="deleteProjectCriteriaRow('${ver}', '${type}', ${idx})">删除</span>` : ''}
+          </td>
+        </tr>
+        ${thinkingChainRow}
+        ${subTable}
+      `;
+    }).join('');
+    return `
+      <div class="proj-criteria-group">
+        <div class="proj-criteria-group-title ${colorClass}">
+          <span class="group-title-left"><i class="fa-solid ${type === 'inclusion' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${title}（${items.length}条）</span>
+          <span class="group-title-right">
+            <span class="group-weight-label">权重</span>
+            <input type="number" class="criteria-input weight-input" value="${weightVal}" min="0" max="100" onchange="updateProjectCriteriaGroupWeight('${ver}', '${type}', this.value)"/>
+            <span class="group-weight-pct">%</span>
+          </span>
+        </div>
+        <div class="proj-criteria-toolbar">
+          <button type="button" class="criteria-add-btn" onclick="addProjectCriteriaRow('${ver}','${type}', ${items.length - 1})"><i class="fa-solid fa-plus"></i> 新增${type === 'inclusion' ? '入选' : '排除'}标准</button>
+        </div>
+        <table class="proj-criteria-table">
+          <thead>
+            <tr>
+              <th class="num-cell">序号</th>
+              <th class="content-th">${type === 'inclusion' ? '入选标准内容' : '排除标准内容'}</th>
+              ${stageThs}
+              <th class="action-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  };
+  return `
+    ${statusBar}
+    ${renderTable('inclusion', data.inclusion, '入选标准', 'inclusion')}
+    ${renderTable('exclusion', data.exclusion, '排除标准', 'exclusion')}
+  `;
+}
+
+function ensureProjectCriteriaStageConfig(stageId) {
+  Object.values(_projectCriteriaData).forEach(version => {
+    ['inclusion', 'exclusion'].forEach(type => {
+      (version[type] || []).forEach(item => {
+        if(!item.stageConfig[stageId]) {
+          item.stageConfig[stageId] = { remark: '', enabled: true };
+        }
+      });
+    });
+  });
+}
+
+function toggleProjectStage(stageId) {
+  const idx = _projectSelectedStages.findIndex(s => s.id === stageId);
+  if(idx >= 0) {
+    _projectSelectedStages.splice(idx, 1);
+  } else {
+    const stageDef = _stageConfigData.find(s => s.id === stageId);
+    if(stageDef) {
+      _projectSelectedStages.push({
+        id: stageId,
+        name: stageDef.name,
+        auditTypes: (stageDef.auditTypes || []).slice()
+      });
+      ensureProjectCriteriaStageConfig(stageId);
+    }
+  }
+  // 按阶段配置里的顺序排序
+  const orderMap = new Map(_stageConfigData.map((s, i) => [s.id, i]));
+  _projectSelectedStages.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
+  refreshProjectStageSettings();
+  refreshCriteriaSection();
+  showWechatToast(idx >= 0 ? '已取消选择该阶段' : '阶段已添加，可在入排标准中配置');
+}
+
+// 项目编辑页内联新增项目阶段：写入阶段配置并自动选中
+function showAddProjectStageInput() {
+  const form = document.getElementById('projStageAddForm');
+  if(form) {
+    form.style.display = 'inline-flex';
+    const input = document.getElementById('projStageAddName');
+    if(input) input.focus();
+  }
+}
+
+function cancelAddProjectStage() {
+  const form = document.getElementById('projStageAddForm');
+  if(form) form.style.display = 'none';
+  const input = document.getElementById('projStageAddName');
+  if(input) input.value = '';
+}
+
+function confirmAddProjectStage() {
+  const input = document.getElementById('projStageAddName');
+  const name = (input && input.value || '').trim();
+  if(!name) { showWechatToast('请输入阶段名称'); if(input) input.focus(); return; }
+  // 避免与已有阶段（含停用）重名
+  if(_stageConfigData.some(s => s.name === name)) {
+    showWechatToast('已存在同名阶段，请直接勾选');
+    return;
+  }
+  // 生成唯一 ID：ST + 自增序号
+  let maxNo = 0;
+  _stageConfigData.forEach(s => {
+    const m = /^ST(\d+)$/.exec(s.id);
+    if(m) maxNo = Math.max(maxNo, parseInt(m[1], 10));
+  });
+  const newId = 'ST' + String(maxNo + 1).padStart(2, '0');
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const timeStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  _stageConfigData.push({
+    id: newId, name: name, order: _stageConfigData.length + 1,
+    auditTypes: [], status: 'enabled', remark: '项目编辑页内联新增', updater: '当前用户', time: timeStr
+  });
+  // 自动选中该阶段
+  if(!_projectSelectedStages.some(s => s.id === newId)) {
+    _projectSelectedStages.push({ id: newId, name: name, auditTypes: [] });
+    ensureProjectCriteriaStageConfig(newId);
+  }
+  const orderMap = new Map(_stageConfigData.map((s, i) => [s.id, i]));
+  _projectSelectedStages.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
+  refreshProjectStageSettings();
+  refreshCriteriaSection();
+  showWechatToast('已新增「' + name + '」并选中');
+}
+
+function toggleProjectStageAuditType(stageId, auditType) {
+  const stage = _projectSelectedStages.find(s => s.id === stageId);
+  if(!stage) return;
+  const tIdx = stage.auditTypes.indexOf(auditType);
+  if(tIdx >= 0) stage.auditTypes.splice(tIdx, 1);
+  else stage.auditTypes.push(auditType);
+  refreshProjectStageSettings();
+}
+
+function updateProjectCriteriaContent(ver, type, idx, value) {
+  const items = _projectCriteriaData[ver][type];
+  if(items && items[idx]) items[idx].content = value;
+}
+
+function updateProjectCriteriaThinkingChain(ver, type, idx, value) {
+  const items = _projectCriteriaData[ver][type];
+  if(items && items[idx]) items[idx].thinkingChain = value;
+}
+
+function updateProjectCriteriaGroupWeight(ver, type, value) {
+  const version = _projectCriteriaData[ver];
+  if(version) version[type + 'Weight'] = parseFloat(value) || 0;
+}
+
+function updateProjectCriteriaStageRemark(ver, type, idx, stageId, value) {
+  const items = _projectCriteriaData[ver][type];
+  if(items && items[idx] && items[idx].stageConfig[stageId]) {
+    items[idx].stageConfig[stageId].remark = value;
+  }
+}
+
+function updateProjectCriteriaStageEnabled(ver, type, idx, stageId, enabled) {
+  const items = _projectCriteriaData[ver][type];
+  if(items && items[idx] && items[idx].stageConfig[stageId]) {
+    items[idx].stageConfig[stageId].enabled = enabled;
+  }
+}
+
+function toggleProjectCriteriaStageAll(ver, type, stageId, checked) {
+  const items = _projectCriteriaData[ver][type];
+  if(items) {
+    items.forEach(item => {
+      if(item.stageConfig[stageId]) item.stageConfig[stageId].enabled = checked;
+    });
+  }
+  refreshCriteriaSection();
+  showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
+}
+
+function addProjectCriteriaRow(ver, type, idx) {
+  const items = _projectCriteriaData[ver][type];
+  if(!items) return;
+  const base = items[idx] || items[items.length - 1];
+  const newId = (type === 'inclusion' ? 'I' : 'E') + String(items.length + 1).padStart(2, '0');
+  const stageConfig = {};
+  _projectSelectedStages.forEach(s => {
+    stageConfig[s.id] = { remark: (base.stageConfig[s.id] && base.stageConfig[s.id].remark) || '', enabled: true };
+  });
+  items.splice(idx + 1, 0, {
+    id: newId,
+    content: '',
+    thinkingChain: '',
+    stageConfig: stageConfig
+  });
+  refreshCriteriaSection();
+  showWechatToast('已新增一条' + (type === 'inclusion' ? '入选' : '排除') + '标准');
+}
+
+function deleteProjectCriteriaRow(ver, type, idx) {
+  const items = _projectCriteriaData[ver][type];
+  if(!items || items.length <= 1) return;
+  items.splice(idx, 1);
+  refreshCriteriaSection();
+  showWechatToast('已删除该条' + (type === 'inclusion' ? '入选' : '排除') + '标准');
+}
+
+function refreshCriteriaSection() {
+  const tabsContainer = document.getElementById('criteriaVersionTabs');
+  const contentArea = document.getElementById('criteriaContentArea');
+  if(tabsContainer) {
+    tabsContainer.innerHTML = renderCriteriaVersionTabs();
+  }
+  if(contentArea) {
+    contentArea.innerHTML = renderCriteriaVersionContent(activeCriteriaVersion);
+  }
+}
+
+function nextCriteriaVersionName() {
+  let maxNo = 1;
+  criteriaVersions.forEach(v => {
+    const m = /^v(\d+)\./.exec(v.version);
+    if(m) maxNo = Math.max(maxNo, parseInt(m[1], 10));
+  });
+  return 'v' + (maxNo + 1) + '.0';
+}
+
+// 版本名称弹窗状态
+let _criteriaVersionNameMode = 'add';
+let _criteriaVersionRenameTarget = null;
+
+function addCriteriaVersion() {
+  openCriteriaVersionNameModal('add', null);
+}
+
+function openCriteriaVersionNameModal(mode, ver) {
+  _criteriaVersionNameMode = mode;
+  _criteriaVersionRenameTarget = ver || null;
+  const titleEl = document.getElementById('criteriaVersionNameTitle');
+  const input = document.getElementById('criteriaVersionNameInput');
+  if(mode === 'rename') {
+    const v = criteriaVersions.find(x => x.version === ver);
+    if(titleEl) titleEl.textContent = '修改版本名称';
+    if(input) input.value = (v && v.name) ? v.name : (v ? v.version : '');
+  } else {
+    if(titleEl) titleEl.textContent = '新增版本';
+    if(input) input.value = '入排标准 ' + nextCriteriaVersionName();
+  }
+  const modal = document.getElementById('criteriaVersionNameModal');
+  if(modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  if(input) setTimeout(() => { input.focus(); input.select(); }, 50);
+}
+
+function closeCriteriaVersionNameModal() {
+  const modal = document.getElementById('criteriaVersionNameModal');
+  if(modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+}
+
+function confirmCriteriaVersionName() {
+  const input = document.getElementById('criteriaVersionNameInput');
+  const name = (input ? input.value : '').trim();
+  if(!name) { showWechatToast('请输入版本名称'); return; }
+  if(_criteriaVersionNameMode === 'rename') {
+    const v = criteriaVersions.find(x => x.version === _criteriaVersionRenameTarget);
+    if(v) v.name = name;
+    closeCriteriaVersionNameModal();
+    refreshCriteriaSection();
+    showWechatToast('版本名称已修改为「' + name + '」');
+    return;
+  }
+  const newVer = nextCriteriaVersionName();
+  const today = new Date().toISOString().split('T')[0];
+  // 新增空白版本，从空行开始配置
+  _projectCriteriaData[newVer] = {
+    inclusionWeight:50, exclusionWeight:50,
+    inclusion: [{ id:'I01', content:'', thinkingChain:'', stageConfig:{} }],
+    exclusion: [{ id:'E01', content:'', thinkingChain:'', stageConfig:{} }]
+  };
+  ensureProjectCriteriaStageConfigForAllStages();
+  criteriaVersions.unshift({ version:newVer, name:name, date:today, status:'草稿', editor:'当前用户', enabled:true });
+  activeCriteriaVersion = newVer;
+  closeCriteriaVersionNameModal();
+  refreshCriteriaSection();
+  showWechatToast('已新增版本「' + name + '」');
+}
+
+function copyCriteriaVersion(srcVer) {
+  const newVer = nextCriteriaVersionName();
+  const today = new Date().toISOString().split('T')[0];
+  const source = _projectCriteriaData[srcVer] || { inclusion: [], exclusion: [] };
+  const srcMeta = criteriaVersions.find(v => v.version === srcVer);
+  const newName = (srcMeta && srcMeta.name ? srcMeta.name : srcVer) + ' 副本';
+  // 深拷贝源版本数据
+  _projectCriteriaData[newVer] = JSON.parse(JSON.stringify(source));
+  ensureProjectCriteriaStageConfigForAllStages();
+  criteriaVersions.unshift({ version:newVer, name:newName, date:today, status:'草稿(复制' + srcVer + ')', editor:'当前用户', enabled:true });
+  activeCriteriaVersion = newVer;
+  refreshCriteriaSection();
+  showWechatToast('已复制为「' + newName + '」');
+}
+
+function toggleCriteriaVersionEnabled(ver) {
+  const v = criteriaVersions.find(x => x.version === ver);
+  if(v) {
+    v.enabled = !v.enabled;
+    refreshCriteriaSection();
+    showWechatToast(v.enabled ? '版本 ' + ver + ' 已启用' : '版本 ' + ver + ' 已停用');
+  }
+}
+
+function deleteCriteriaVersion(ver) {
+  if(criteriaVersions.length <= 1) {
+    showWechatToast('至少需保留一个入排标准版本');
+    return;
+  }
+  if(!confirm('确定删除版本 ' + ver + ' 吗？该操作不可恢复。')) return;
+  criteriaVersions = criteriaVersions.filter(v => v.version !== ver);
+  delete _projectCriteriaData[ver];
+  if(activeCriteriaVersion === ver) activeCriteriaVersion = (criteriaVersions[0] || {}).version || '';
+  refreshCriteriaSection();
+  showWechatToast('已删除版本 ' + ver);
+}
+
+// 入排标准：阶段备注与启用配置弹窗
+function deleteProjectCriteriaStageRemark(ver, type, idx, stageId) {
+  const items = _projectCriteriaData[ver][type];
+  if(items && items[idx] && items[idx].stageConfig[stageId]) {
+    items[idx].stageConfig[stageId].remark = '';
+  }
+  refreshCriteriaSection();
+  showWechatToast('已删除该阶段备注');
+}
+
+function openCriteriaRemarkModal(ver, type, idx) {
+  const item = _projectCriteriaData[ver] && _projectCriteriaData[ver][type] && _projectCriteriaData[ver][type][idx];
+  if(!item) return;
+  const titleEl = document.getElementById('criteriaStageModalTitle');
+  if(titleEl) titleEl.textContent = '配置阶段备注 · ' + (type === 'inclusion' ? '入选标准' : '排除标准') + ' 第' + (idx + 1) + '条';
+  const body = document.getElementById('criteriaStageModalBody');
+  if(body) {
+    body.innerHTML = `
+      <div class="criteria-stage-modal-tip"><i class="fa-solid fa-circle-info"></i> 为「${type === 'inclusion' ? '入选' : '排除'}标准 第${idx + 1}条」分别填写各阶段的备注说明</div>
+      <div class="criteria-stage-modal-list">
+        ${_projectSelectedStages.map((s, si) => {
+          const cfg = item.stageConfig[s.id] || { remark: '', enabled: true };
+          return `
+            <div class="stage-remark-block">
+              <div class="stage-remark-block-head">
+                <span class="stage-remark-block-index">${si + 1}</span>
+                <span class="stage-remark-block-name"><i class="fa-solid fa-layer-group"></i> ${s.name}</span>
+              </div>
+              <div class="stage-remark-block-body">
+                <textarea class="criteria-textarea" rows="3" placeholder="请输入「${s.name}」下的备注说明" onchange="updateProjectCriteriaStageRemark('${ver}','${type}',${idx},'${s.id}',this.value)">${cfg.remark}</textarea>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+  const modal = document.getElementById('criteriaStageConfigModal');
+  if(modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+
+function closeCriteriaStageModal() {
+  const modal = document.getElementById('criteriaStageConfigModal');
+  if(modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+  refreshCriteriaSection(); // 关闭后刷新备注子表
+}
+
+function ensureProjectCriteriaStageConfigForAllStages() {
+  _projectSelectedStages.forEach(s => ensureProjectCriteriaStageConfig(s.id));
+}
+
+function switchCriteriaVersion(ver) {
+  activeCriteriaVersion = ver;
+  refreshCriteriaSection();
+}
+
+// 编辑页左侧导航：点击滚动 + 滚动联动高亮
+function scrollToProjectSection(targetId, el) {
+  const nav = document.getElementById('editPageNav');
+  if(nav) {
+    nav.querySelectorAll('.edit-nav-item').forEach(n => n.classList.remove('active'));
+  }
+  if(el) el.classList.add('active');
+  const target = document.getElementById(targetId);
+  if(target) {
+    // 若区块处于折叠状态，自动展开，避免跳转后看不到内容
+    const body = target.querySelector(':scope > .edit-section-body');
+    const header = target.querySelector(':scope > .edit-section-header');
+    if(body && body.classList.contains('collapsed') && header) {
+      toggleEditSection(header);
+    }
+    const top = target.getBoundingClientRect().top + window.pageYOffset - 70;
+    window.scrollTo({ top: top, behavior: 'smooth' });
+  }
+}
+
+let _projectNavScrollBound = false;
+function initProjectNavSpy() {
+  if(_projectNavScrollBound) return;
+  _projectNavScrollBound = true;
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('editPageNav');
+    if(!nav) return;
+    const items = nav.querySelectorAll('.edit-nav-item');
+    if(!items.length) return;
+    let currentId = items[0].getAttribute('data-target');
+    items.forEach(item => {
+      const id = item.getAttribute('data-target');
+      const sec = document.getElementById(id);
+      if(sec) {
+        const rect = sec.getBoundingClientRect();
+        if(rect.top - 90 <= 0) currentId = id;
+      }
+    });
+    items.forEach(item => {
+      item.classList.toggle('active', item.getAttribute('data-target') === currentId);
+    });
+  }, { passive: true });
 }
 
 // 编辑项目交互函数
@@ -16446,7 +17346,6 @@ function toggleEditSection(header) {
   const card = header.parentElement;
   const arrow = header.querySelector('.edit-section-arrow');
   const body = card.querySelector('.edit-section-body');
-  
   if (body.classList.contains('collapsed')) {
     body.classList.remove('collapsed');
     if(arrow) arrow.classList.remove('collapsed');
@@ -16460,7 +17359,6 @@ function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   uploadedFiles.push(file.name);
-  // 重新渲染文件列表区域
   const fileList = document.getElementById('fileList');
   if(fileList) {
     fileList.innerHTML = uploadedFiles.map((f,i)=>`
@@ -16473,7 +17371,6 @@ function handleFileUpload(event) {
       </div>
     `).join('');
   }
-  // 隐藏上传区域或在有文件时保留它
   event.target.value = '';
   showWechatToast('文件上传成功');
 }
@@ -16503,36 +17400,6 @@ function analyzeAndInput() {
   setTimeout(() => {
     showWechatToast('分析完成！项目信息已自动填充');
   }, 2000);
-}
-
-function addCriteriaVersion() {
-  const newVer = `v${(criteriaVersions.length + 1)}.0`;
-  const today = new Date().toISOString().split('T')[0];
-  criteriaVersions.unshift({ version:newVer, date:today, status:'草稿', editor:'当前用户' });
-  activeCriteriaVersion = newVer;
-  // 刷新入排标准区域
-  refreshCriteriaSection();
-  showWechatToast('新版本 ' + newVer + ' 已创建');
-}
-
-function switchCriteriaVersion(ver) {
-  activeCriteriaVersion = ver;
-  refreshCriteriaSection();
-}
-
-function refreshCriteriaSection() {
-  const tabsContainer = document.getElementById('criteriaVersionTabs');
-  const contentArea = document.getElementById('criteriaContentArea');
-  if(tabsContainer) {
-    tabsContainer.innerHTML = criteriaVersions.map((v,i)=>`
-      <div class="criteria-version-tab ${v.version===activeCriteriaVersion?'active':''}" onclick="switchCriteriaVersion('${v.version}')">
-        ${v.version} <span style="font-size:11px;color:#aaa;margin-left:4px">(${v.date})</span>
-      </div>
-    `).join('');
-  }
-  if(contentArea) {
-    contentArea.innerHTML = renderCriteriaVersionContent(activeCriteriaVersion);
-  }
 }
 
 function addApprovalStep() {
