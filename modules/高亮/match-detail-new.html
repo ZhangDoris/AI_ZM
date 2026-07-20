@@ -966,13 +966,13 @@
     <h4>功能</h4>
     <ul>
     <li><strong>匹配运行信息加</strong>：OCR用时、溯源用时、总用时=原来的总用时+溯源用时，溯源还没出来的时候先别显示总用时</li>
-      <li><strong>匹配详情</strong>：溯源失败，操作列的溯源按钮，变成溯源失败，溯源中，显示溯源中，溯源失败，匹配详情的右上角有一个重新溯源的按钮</li>
+      <li><strong>匹配详情 &amp; 筛选表</strong>：溯源失败，操作列的溯源按钮变成"溯源失败"；溯源中显示"溯源中"；溯源成功"病历溯源"可正常操作；匹配详情与筛选表两个列表的右上角均有"智能溯源"（重新溯源）按钮</li>
     </ul>
-    <h4>溯源状态联动</h4>
+    <h4>溯源状态联动（匹配详情与筛选表一致）</h4>
     <ul>
       <li><strong>溯源中</strong>：操作列显示旋转"溯源中"，不可点击</li>
       <li><strong>溯源成功</strong>："病历溯源"可正常操作。目前的功能</li>
-      <li><strong>溯源失败</strong>：显示红色"溯源失败"，列表右上角出现"智能溯源"按钮</li>
+      <li><strong>溯源失败</strong>：显示红色"溯源失败"，匹配详情与筛选表列表右上角均出现"智能溯源"（重新溯源）按钮</li>
     </ul>
    
   </div>
@@ -1159,6 +1159,17 @@
     <!-- Tab 2: 筛选表 -->
     <div id="tab-prescreen" class="tab-content" style="display:none;">
       <div class="card" id="prescreenCard">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>筛选表</span>
+          <!-- 智能溯源按钮：溯源失败时显示在列表右上角（与匹配详情一致） -->
+          <button id="psSmartTraceBtn" class="btn-sm" onclick="openSmartTraceConfirm()" style="display:none;background:#d46b08;border-color:#d46b08;color:#fff;white-space:nowrap">
+            <i class="fas fa-magnifying-glass-location" style="margin-right:4px"></i>智能溯源
+          </button>
+        </div>
+        <!-- 溯源失败提示 -->
+        <div id="psTraceFailTip" style="display:none;margin-bottom:12px;font-size:12px;color:#fa8c16">
+          <i class="fas fa-exclamation-triangle" style="margin-right:4px"></i>上次 AI 溯源未能成功，可重新发起智能溯源
+        </div>
         <div style="display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 16px;">
           <span style="padding: 4px 12px; background: #f6ffed; color: #52c41a; border-radius: 4px; font-size: 12px;">提取成功</span>
           <button class="btn-sm btn-primary">智能提取</button>
@@ -1269,7 +1280,13 @@
       const tbody = document.getElementById('prescreenTable');
       if (!tbody) return;
       
-      const isTracingPS = traceStatus === 'tracing';
+      // 操作列中的"病历溯源"根据溯源状态展示，与匹配详情保持一致
+      const traceCell = traceStatus === 'tracing'
+        ? '<span class="trace-loading" title="溯源中"><i class="fas fa-spinner fa-spin"></i> 溯源中</span>'
+        : traceStatus === 'failed'
+          ? '<span class="trace-failed"><i class="fas fa-circle-exclamation"></i> 溯源失败</span>'
+          : '<span class="action-link">病历溯源</span>';
+
       tbody.innerHTML = prescreenData.map(item => `
         <tr>
           <td>${item.seq}</td>
@@ -1278,12 +1295,19 @@
           <td>
             <div class="action-links">
               <span class="action-link">编辑</span>
-              <span class="action-link" ${isTracingPS ? 'style="color:#ccc;cursor:not-allowed;pointer-events:none"' : ''}>病历溯源</span>
+              ${traceCell}
               <span class="action-link" style="color:#999">思考链</span>
             </div>
           </td>
         </tr>
       `).join('');
+
+      // 溯源失败：筛选表卡片右上角显示智能溯源按钮 + 失败提示（与匹配详情一致）
+      const showSmartPS = traceStatus === 'failed';
+      const psSmartTraceBtn = document.getElementById('psSmartTraceBtn');
+      const psTraceFailTip = document.getElementById('psTraceFailTip');
+      if (psSmartTraceBtn) psSmartTraceBtn.style.display = showSmartPS ? 'inline-flex' : 'none';
+      if (psTraceFailTip) psTraceFailTip.style.display = showSmartPS ? 'block' : 'none';
     }
 
     // 模拟匹配详情数据
