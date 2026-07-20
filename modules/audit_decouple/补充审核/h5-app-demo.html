@@ -874,7 +874,13 @@
       border-radius: 4px; background: #e6f7ff; color: #1677ff; margin-bottom: 8px;
     }
     .record-status.revoke { background: #fff2f0; color: #ff4d4f; }
+    .record-status.orange { background: #fff7e6; color: #d46b08; }
     .record-time { font-size: 12px; color: #999; line-height: 1.8; }
+    .record-stage {
+      display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 4px;
+      background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; margin-bottom: 8px; margin-right: 6px;
+    }
+    .record-stage.prescreen { background: #e8f3ff; color: #165dff; border-color: #bcd4ff; }
 
     .record-abnormal {
       background: linear-gradient(135deg, #fff8f6 0%, #fff 100%);
@@ -919,7 +925,7 @@
     .record-abnormal .abnormal-label { color: #ff4d4f; font-size: 13px; font-weight: 600; white-space: nowrap; }
     .record-abnormal .abnormal-text { color: #595959; font-size: 13px; line-height: 1.6; }
 
-    /* ====== 智能筛选 - 提交审批（参考 h5-patient-list.html） ====== */
+    /* ====== 智能筛选 - 补充审批（参考 h5-patient-list.html） ====== */
     .pt-card .pt-btn.primary {
       background: #1677ff;
       color: #fff;
@@ -928,7 +934,7 @@
     }
     .pt-card .pt-btn.primary:active { background: #0958d9; }
 
-    /* 提交审批 底部弹窗（限制在手机框内） */
+    /* 补充审批 底部弹窗（限制在手机框内） */
     .audit-overlay {
       display: none;
       position: absolute; inset: 0;
@@ -1451,18 +1457,17 @@
           <div class="record-screen">
             <div class="record-subtitle" id="recordSubtitle">DDD-审核记录</div>
 
-            <!-- 非正常流程提示 -->
+            <!-- 补充审核提示 -->
             <div class="record-abnormal" id="recordAbnormalNotice">
               <div class="abnormal-hd">
                 <div class="abnormal-icon"><i class="fas fa-exclamation"></i></div>
                 <div style="flex:1">
-                  <span class="abnormal-tag">非正常流程</span>
-                  <div class="abnormal-tip">提示：若需要走正常流程，请驳回重新提交审批</div>
+                  <span class="abnormal-tag">补充审核</span>
                 </div>
               </div>
               <div class="abnormal-reason">
                 <span class="abnormal-label">原因：</span>
-                <span class="abnormal-text">该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程</span>
+                <span class="abnormal-text" id="recordAbnormalReason">该患者比较特殊，经过跟医学经理沟通，需要补充审核</span>
               </div>
             </div>
 
@@ -1486,11 +1491,11 @@
 
       </div>
 
-      <!-- ====== 提交审批 底部弹窗（智能筛选 - 患者列表，参考 h5-patient-list.html） ====== -->
+      <!-- ====== 补充审批 底部弹窗（智能筛选 - 患者列表，参考 h5-patient-list.html） ====== -->
       <div class="audit-overlay" id="auditOverlay" onclick="closeAudit()"></div>
       <div class="audit-sheet" id="auditSheet">
         <div class="sh">
-          <span class="sh-title" id="auditSheetTitle">提交审批</span>
+          <span class="sh-title" id="auditSheetTitle">补充审批</span>
           <div class="sh-close" onclick="closeAudit()"><i class="fas fa-times"></i></div>
         </div>
         
@@ -1551,7 +1556,7 @@
               <option>陈医生</option>
             </select>
           </div>
-          <div class="fg" id="auditSupplementWrap" style="display:none">
+          <div class="fg" >
             <label class="fg-label"><span class="req">*</span>补充审核原因</label>
             <textarea class="fg-textarea" id="auditSupplementReason" placeholder="该患者已入组通过，请填写本次补充审核的原因"></textarea>
           </div>
@@ -1601,18 +1606,17 @@
           <div class="sh-close" onclick="closeApprove()"><i class="fas fa-times"></i></div>
         </div>
         <div class="sh-body">
-          <!-- 非正常流程提示 -->
+          <!-- 补充审核提示 -->
           <div class="abnormal-flow">
             <div class="abnormal-hd">
               <div class="abnormal-icon"><i class="fas fa-exclamation"></i></div>
               <div style="flex:1">
-                <span class="abnormal-tag">非正常流程</span>
-                <div class="abnormal-tip">提示：若需要走正常流程，请驳回重新提交审批</div>
+                <span class="abnormal-tag">补充审核</span>
               </div>
             </div>
             <div class="abnormal-reason">
               <span class="abnormal-label">原因：</span>
-              <span class="abnormal-text">该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程</span>
+              <span class="abnormal-text">该患者比较特殊，经过跟医学经理沟通，需要补充审核</span>
             </div>
           </div>
           <div class="fg">
@@ -1655,7 +1659,7 @@
               <ul>
                 <li><b>取消</b>：暂时不操作。</li>
                 <li><b>匹配并预提交</b>：先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
-                <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，等您看完再决定。</li>
+                <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不补充审批，等您看完再决定。</li>
               </ul>
             </div>
            
@@ -1673,13 +1677,13 @@
 
   <!-- 右侧：PRD 说明 -->
   <aside class="prd-panel">
-    <h3>APP 端  提交审核改造</h3>
-    <p class="tip"><b>审核列表的审核页面</b> / <b>智能筛选的提交审核和审核记录页面</b> </p>
+    <h3>APP 端  提交补充审核改造</h3>
+    <p class="tip"><b>审核列表的审核页面</b> / <b>智能筛选的提交补充审核和审核记录页面</b> </p>
 
     <h4 id="prd-pin-1"><span class="pin">1</span>第一屏：APP 列表</h4>
     <ul>
     
-      <li>两个入口：<b>审核列表</b> / <b>智能筛选</b></li>
+      <li>两个入口：<b>审核列表（审核）</b> / <b>智能筛选（审核记录，补充审核，项目匹配）</b></li>
     </ul>
 
     <h4 id="prd-pin-2"><span class="pin">2</span>入口：智能筛选</h4>
@@ -1692,45 +1696,14 @@
       <li>4 个项目卡片：<b>0302-305（血液/风湿）</b>、<b>SHR-A2102-I-102（肺癌）</b>、<b>HRS-1167-I-101（妇科肿瘤）</b>、<b>SHR-2019-nCoV-001（呼吸）</b></li>
       <li>点击第一个项目 → 进入该项目下的患者列表</li>
     </ul>
+<h4 id="prd-pin-4"><span class="pin">4</span>补充审核 · 需求说明</h4>
 
-    <h4 id="prd-pin-4"><span class="pin">4</span>患者列表 - 提交审核</h4>
-    <ul>
-      <li>患者卡片操作区含「提交审批」按钮；<b>ZWMS / HGKD</b> 卡片额外显示「项目匹配」按钮（原型为展示效果临时放在患者列表）。</li>
-      <li>点击「提交审批」→ 底部弹出提交审批表单（方案编码 / 参研中心 / 审批模板 / 审批流程 / 审批人 / 备注）；审批流程默认推荐「预筛审批」，并展示项目审批链路（预筛→主知情→入组），选非推荐流程需填写原因。</li>
-      <li><b>ZWMS\HGKD</b>（跨阶段，强制非正常流程）：点击「项目匹配」→ 弹出 <b>项目匹配确认</b> 弹窗。
-        HGKD 额外需选择<b>入排版本</b>（V1.0 / V2.0 / V3.0），ZWMS 无此步骤。
-        <ul>
-          <li><b>匹配并预提交</b>：选择入排版本后 → 直接进入提交审批页，此时点击「提交审核」直接提交，无需后端再次校验。</li>
-          <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，患者卡片状态更新为「匹配完成」。</li>
-          <li><b>取消</b>：关闭弹窗，不执行任何操作。</li>
-        </ul>
-      </li>
-      <li><b>RFNE</b>（入组通过，可以补充审核）：操作按钮显示为「补充审核」（与提交审批功能一致），点击后弹窗标题为「补充审核」→ 校验必填项通过 → 直接提交 → Toast「提交审批成功」→ 关闭弹窗。补充审核适用于已入组通过的患者追加审核流程的场景。</li>
-      <li><b>其他数据</b>：提交 → 校验必填项通过 → 正常提交 → Toast「提交审批成功」→ 关闭提交审核弹窗</li>
-      <li class="note">注：判断逻辑基于患者<b>原始 id</b> 而非列表索引（「待操作」Tab 过滤已提交数据后，RFNE 可能显示为第三条，但逻辑不受影响）。</li>
-    </ul>
-
-    <h4 id="prd-pin-5"><span class="pin">5</span>第 5 条：预提交5 - 撤回审核</h4>
-    <ul>
-      <li>预提交5 为<b>本人已提交、尚未进入下一个流程节点</b>的数据，状态标签为「待审核」。该卡片<b>不显示「审核」按钮</b>，改为显示<b>「撤回审核」</b>按钮。</li>
-      <li>「撤回审核」按钮带<b>提示气泡</b>：<span class="hi">当审批结果错误或需要加签时，可撤回审批</span>（鼠标悬停按钮可见）。</li>
-      <li><b>撤回规则</b>：
-        <ul>
-          <li>该数据<b>还没有下一个动作</b>（尚未进入下一个流程节点，含「审批沟通」期间）时，<b>本人可撤回审批</b>。</li>
-          <li>一旦该数据<b>进入下一个流程节点</b>（<b>不含</b>「审批沟通」）后，<b>不可撤回</b>，且「撤回审核」按钮<b>自动隐藏</b>。</li>
-        </ul>
-      </li>
-      <li>点击「撤回审核」→ 撤销本次提交，卡片状态更新为「已撤回」，按钮消失（撤回后提交人可重新发起提交）。</li>
-    </ul>
-
-    <!-- 补充审核 PRD（仅在补充审核弹窗打开时显示） -->
-    <div id="prd-supplement" style="display:none;margin-top:14px;padding-top:12px;border-top:2px dashed #f0d9a8;">
-      <h3 style="margin-bottom:8px;">补充审核 · 需求说明</h3>
+  
 
       <h4 id="prd-supp-1"><span class="pin">A</span>场景与入口</h4>
       <ul>
         <li>已<b>入组通过</b>的患者（如 RFNE）操作按钮显示为「<b>补充审核</b>」，点击后弹出补充审核表单，标题为「补充审核」。</li>
-        <li>适用于已入组通过的患者<b>追加审核流程</b>的场景，与提交审批共用同一表单。</li>
+        <li>适用于已入组通过的患者<b>追加审核流程</b>的场景，与补充审批共用同一表单。</li>
       </ul>
 
       <h4 id="prd-supp-2"><span class="pin">B</span>审批模板（默认上次主流程模板）</h4>
@@ -1754,7 +1727,7 @@
     <h4>使用说明</h4>
     <ul>
       <li>路径：APP 列表 → <b>智能筛选</b> → 项目 → <b>患者列表</b></li>
-      <li>点击卡片「提交审批 / 补充审核」体验提交流程，重点体验 <b>ZWMS</b> 的跨阶段 AI 匹配与 <b>RFNE</b> 的补充审核</li>
+      <li>点击卡片「补充审批 / 补充审核」体验提交流程，重点体验 <b>ZWMS</b> 的跨阶段 AI 匹配与 <b>RFNE</b> 的补充审核</li>
     </ul>
   </aside>
 
@@ -1961,7 +1934,7 @@ HDL-C：1.09 mmol/L
     const PATIENT_DATA = [
       {
         id: 1, code: 9, name: 'ZWMS', age: 43, gender: '女',
-        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '预筛审核中', cls: 'pill-orange' }],
+        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '已通过', cls: 'pill-green' }],
         center: '复旦大学附属华山医院',
         operator: 'CRA专员188',
         submitStatus: 'unsubmit',
@@ -1969,13 +1942,13 @@ HDL-C：1.09 mmol/L
         pct: '78.5%',
         thinkStatus: 'success',
         thinkEnabled: true,
-        crossStage: true,   // 强制非正常流程：从预筛跨到入组阶段 → 触发 AI 智能匹配
+        crossStage: true,   // 强制补充审核：从预筛跨到入组阶段 → 触发 AI 智能匹配
         aiMatch: true
         // ZWMS 不显示入排版本选择
       },
       {
         id: 2, code: 8, name: 'HGKD', age: 36, gender: '男',
-        tags: [{ txt: '未匹配', cls: 'pill-red' }, { txt: '未提交', cls: 'pill-gray' }],
+         tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '已通过', cls: 'pill-green' }],
         center: '北京协和医院',
         operator: 'CRA专员1881',
         submitStatus: 'unsubmit',
@@ -1983,7 +1956,7 @@ HDL-C：1.09 mmol/L
         pct: '32.0%',
         thinkStatus: 'failed',
         thinkEnabled: true,
-        aiMatch: true,            // 强制非正常流程：需先进行 AI 智能匹配
+        aiMatch: true,            // 强制补充审核：需先进行 AI 智能匹配
         inExVersions: ['V1.0', 'V2.0', 'V3.0']   // 可选入排版本
       },
       {
@@ -2055,7 +2028,7 @@ HDL-C：1.09 mmol/L
               ${matchTag}
             </div>
             <div class="pt-actions">
-              <div class="pt-btn primary" onclick="event.stopPropagation();openAudit(${d.id})">${d.submitStatus === 'enrolled' ? '补充审核' : '提交审批'}</div>
+              <div class="pt-btn primary" onclick="event.stopPropagation();openAudit(${d.id})">${d.submitStatus === 'enrolled' ? '补充审核' : '补充审批'}</div>
               <div class="pt-btn" onclick="event.stopPropagation();openAuditRecord(${d.id})">审核记录</div>
               <div class="pt-btn" onclick="event.stopPropagation();openPtDetail(${d.id})">匹配详情</div>
             </div>
@@ -2097,7 +2070,7 @@ HDL-C：1.09 mmol/L
       document.getElementById('pttab-' + name).classList.add('active');
     }
 
-    // ========= 智能筛选 - 提交审批（参考 h5-patient-list.html） =========
+    // ========= 智能筛选 - 补充审批（参考 h5-patient-list.html） =========
     let currentAuditPatientId = null;
     let currentMatchPatientId = null;
     let preSubmitMode = false;
@@ -2118,14 +2091,14 @@ HDL-C：1.09 mmol/L
       t._timer = setTimeout(() => t.classList.remove('show'), 1800);
     }
 
-    // 打开提交审批弹窗
+    // 打开补充审批弹窗
     function openAudit(ptId) {
       currentAuditPatientId = ptId;
       const d = PATIENT_DATA.find(x => x.id === ptId);
       const isSupplement = !!(d && d.submitStatus === 'enrolled') && !preSubmitMode;
       supplementMode = isSupplement;
       const titleEl = document.getElementById('auditSheetTitle');
-      if (titleEl) titleEl.textContent = isSupplement ? '补充审核' : '提交审批';
+      if (titleEl) titleEl.textContent = isSupplement ? '补充审核' : '补充审批';
       // 补充审核原因字段：仅补充审核场景显示，每次打开清空
       const supWrap = document.getElementById('auditSupplementWrap');
       const supReason = document.getElementById('auditSupplementReason');
@@ -2151,9 +2124,9 @@ HDL-C：1.09 mmol/L
       }
       // 根据默认流程刷新非标准流程提示
       onAuditProcessChange();
-      // 预提交模式下提交按钮显示为“提交审核”
+      // 预提交模式下提交按钮显示为“提交补充审核”
       const submitBtn = document.getElementById('auditSubmitBtn');
-      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交审核' : (isSupplement ? '提交补充审核' : '确定');
+      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交补充审核' : (isSupplement ? '提交补充审核' : '确定');
       // 方案编码带入当前项目名
       const planEl = document.getElementById('auditPlanNo');
       if (planEl && currentProject) planEl.value = currentProject.name;
@@ -2205,7 +2178,7 @@ HDL-C：1.09 mmol/L
     function onProjectMatchOnly() {
       const cur = PATIENT_DATA.find(x => x.id === currentMatchPatientId);
       if (cur) {
-        // 仅项目匹配：更新为匹配完成状态，但不提交审批
+        // 仅项目匹配：更新为匹配完成状态，但不补充审批
         cur.matchLabel = '匹配完成';
         const idx = cur.tags.findIndex(t => t.txt === '未匹配');
         if (idx !== -1) cur.tags[idx] = { txt: '匹配完成', cls: 'pill-green' };
@@ -2233,40 +2206,46 @@ HDL-C：1.09 mmol/L
 
     // 审核记录页
     const AUDIT_RECORDS = [
-      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-17 17:11:16', duration: '', active: true },
-      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-22 16:21:58', duration: '', active: false },
-      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-22 16:22:24', duration: '', active: true },
-      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-24 15:38:32', duration: '', active: false },
-      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-25 10:50:17', duration: '', active: true }
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-17 17:11:16', duration: '', active: true, stage: '预筛审核' },
+      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-22 16:21:58', duration: '', active: false, stage: '预筛审核' },
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-22 16:22:24', duration: '', active: true, stage: '预筛审核' },
+      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-24 15:38:32', duration: '', active: false, stage: '预筛审核' },
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-25 10:50:17', duration: '', active: true, stage: '预筛审核' },
+      { operator: '补充审核员张三', role: '补充审核员', status: '补充审核发起', statusClass: 'orange', time: '2026-07-20 09:30:45', duration: '', active: true, stage: '入组审核（补充审核）' }
     ];
 
     function openAuditRecord(patientId) {
       const d = PATIENT_DATA.find(x => x.id === patientId);
       document.getElementById('recordSubtitle').textContent = (d ? d.name : 'DDD') + '-审核记录';
       const notice = document.getElementById('recordAbnormalNotice');
-      if (d && (d.aiMatch || d.crossStage)) {
-        notice.style.display = 'block';
-      } else {
-        notice.style.display = 'none';
-      }
+      // 补充审核提示：已入组补充审核 / 交叉阶段 / 文件变动 / 跨阶段提交
+      const showAbnormal = !!(d && (d.aiMatch || d.crossStage || d.submitStatus === 'enrolled'));
+      notice.style.display = showAbnormal ? 'block' : 'none';
+      const reasonEl = document.getElementById('recordAbnormalReason');
+      if (reasonEl) reasonEl.textContent = showAbnormal ? (d.supplementReason || '该患者比较特殊，经过跟医学经理沟通，需要补充审核') : '';
       renderRecordTimeline();
       goScreen('record');
     }
 
     function renderRecordTimeline() {
       const wrap = document.getElementById('recordTimeline');
-      wrap.innerHTML = AUDIT_RECORDS.map((r) => `
+      wrap.innerHTML = AUDIT_RECORDS.map((r) => {
+        const isSupplement = r.stage === '入组审核（补充审核）';
+        return `
         <div class="record-item ${r.active ? 'active' : ''}">
           <div class="record-dot"></div>
           <div class="record-card">
             <div class="record-role">${r.operator}&lt;${r.role}&gt;</div>
+            <span class="record-stage ${isSupplement ? '' : 'prescreen'}">${r.stage}</span>
             <span class="record-status ${r.statusClass}">${r.status}</span>
             <div class="record-time">提交时间：${r.time}</div>
             <div class="record-time">操作时间：${r.time}</div>
             <div class="record-time">操作耗时：${r.duration}</div>
+            ${isSupplement && r.reason ? `<div class="record-time" style="color:#ad6800;margin-top:4px;">原因：${r.reason}</div>` : ''}
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function toggleRecordSection(header) {
@@ -2344,19 +2323,19 @@ HDL-C：1.09 mmol/L
         }
       }
       document.getElementById('aiModalOverlay').classList.remove('show');
-      toastMini('匹配中，匹配完成后系统将自动帮您提交审批');
+      toastMini('匹配中，匹配完成后系统将自动帮您补充审批');
       pendingAudit = false;
       // 继续提交
       if (currentAuditPatientId != null) {
-        toastMini('匹配中，匹配完成后系统将自动帮您提交审批');
+        toastMini('匹配中，匹配完成后系统将自动帮您补充审批');
         closeAudit();
       }
     }
     function onAiClose() {
       document.getElementById('aiModalOverlay').classList.remove('show');
-      toastMini('您目前还没有点击项目匹配(入组)，无法跨阶段提交审核');
+      toastMini('您目前还没有点击项目匹配(入组)，无法跨阶段提交补充审核');
       pendingAudit = false;
-      // 保持提交审批弹窗不关闭
+      // 保持补充审批弹窗不关闭
     }
 
     // 真正提交
@@ -2364,7 +2343,13 @@ HDL-C：1.09 mmol/L
       // 记录本次使用的模板，作为下次打开（含补充审核）的「上次审核模板」
       const tplSel = document.getElementById('auditTemplate');
       if (tplSel && tplSel.value) lastAuditTemplate = tplSel.value;
-      toastMini(msg || '提交审批成功');
+      // 补充审核：记录原因到患者，便于审核记录页展示
+      if (supplementMode) {
+        const d = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
+        const supReason = document.getElementById('auditSupplementReason');
+        if (d && supReason) d.supplementReason = supReason.value.trim();
+      }
+      toastMini(msg || '补充审批成功');
       closeAudit();
     }
 
@@ -2372,7 +2357,7 @@ HDL-C：1.09 mmol/L
     function submitAudit() {
       // 预提交模式：点击后直接提交，不再校验必填项/版本/流程
       if (preSubmitMode) {
-        doSubmitAudit('提交审批成功');
+        doSubmitAudit('补充审批成功');
         preSubmitMode = false;
         return;
       }
@@ -2411,7 +2396,7 @@ HDL-C：1.09 mmol/L
       }
 
       // 其他数据正常提交（含 RFNE 补充审核 / 其他）
-      doSubmitAudit('提交审批成功');
+      doSubmitAudit('补充审批成功');
     }
 
     // ========= 审核列表 - 审核操作 底部弹窗 =========
