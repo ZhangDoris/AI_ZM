@@ -1441,6 +1441,23 @@
       display: flex; justify-content: flex-end; gap: 10px;
       padding: 14px 24px; border-top: 1px solid #f0f0f0; background: #fafbfc; flex-shrink: 0;
     }
+    /* 提交审批弹窗内嵌 PRD 侧边栏（左侧表单 + 右侧说明） */
+    .submit-audit-panel.with-prd { width: 920px; max-width: 96vw; }
+    .submit-audit-content { display: flex; flex: 1; min-height: 0; }
+    .submit-audit-content > .submit-audit-body { flex: 1; min-width: 0; }
+    .submit-audit-prd {
+      width: 360px; flex-shrink: 0;
+      border-left: 2px solid #ffd591;
+      background: linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);
+      padding: 20px; overflow-y: auto; max-height: 85vh;
+    }
+    @media (max-width: 768px) {
+      .submit-audit-content { flex-direction: column; }
+      .submit-audit-prd {
+        width: auto; border-left: none;
+        border-top: 2px solid #ffd591; max-height: 42vh;
+      }
+    }
     .submit-audit-form-row {
       display: flex; align-items: flex-start; margin-bottom: 16px;
     }
@@ -6136,6 +6153,52 @@ function buildTimeline(row) {
         </div>
         `).join('')}
         <div class="timeline-view-all" onclick="openAuditRecordModal(currentDetailRow.patientNo)">查看全部审批记录 &gt;</div>
+      </div>
+    </div>`;
+}
+
+// 提交审批 / 补充审核 弹窗内嵌 PRD 说明（右侧）
+function getSubmitAuditPrdHtml(isPreSubmit, isSupplement) {
+  if (isSupplement) {
+    return `
+    <div class="submit-audit-prd prd-sidebar">
+      <h3 class="prd-title">📋 补充审核 · 需求说明</h3>
+      <div class="prd-section">
+        <h3 class="prd-section-title">场景与入口</h3>
+        <p class="prd-text">已<b>入组通过</b>的患者操作按钮显示为「<b>补充审核</b>」，点击后弹出补充审核表单，用于对其<b>追加审核流程</b>。</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">审批模板（默认上次主流程模板）</h3>
+        <p class="prd-text">补充审核默认选中<b>上次选中的主流程模板</b>（如常规审批模板-主流程），可<b>切换</b>为快速审批模板等其它已启用模板。</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">审批流程（默认入组审核，可选其它）</h3>
+        <p class="prd-text">补充审核默认推荐<b>入组审批</b>（即上次流程模板的最后一个审核），可<b>选择其它流程</b>（预筛/主知情等）。补充审核场景下无需填写「非标准流程原因」。</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">补充审核原因（必填）</h3>
+        <p class="prd-text">补充审核必须填写<b>补充审核原因</b>方可提交，原因为空将拦截并提示。</p>
+      </div>
+    </div>`;
+  }
+  return `
+    <div class="submit-audit-prd prd-sidebar">
+      <h3 class="prd-title">📋 提交审批 · 需求说明</h3>
+      <div class="prd-section">
+        <h3 class="prd-section-title">场景与入口</h3>
+        <p class="prd-text">未入组患者点击「<b>提交审批</b>」弹出表单；${isPreSubmit ? '预提交则在编辑页仅填写筛选号/知情时间后即发起。' : '填写筛选号/知情时间等信息后发起审批。'}</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">审批模板</h3>
+        <p class="prd-text">默认选中<b>上次审核模板</b>，可切换为其它已启用模板（如快速审批模板）。</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">审批流程（智能推荐）</h3>
+        <p class="prd-text">系统按患者状态推荐默认流程（通常为<b>预筛审批</b>）。选择<b>其它流程</b>视为非标准流程，需填写原因以便审批人确认。</p>
+      </div>
+      <div class="prd-section">
+        <h3 class="prd-section-title">审批人 / 重点关注 / 备注</h3>
+        <p class="prd-text">审批人支持姓名/拼音模糊搜索；重点关注可引用关键关注项；备注可填写补充说明。</p>
       </div>
     </div>`;
 }
@@ -17729,12 +17792,20 @@ const submitAuditFlows = [
 
 // 当前提交审批弹窗的推荐流程（用于判断是否选择非推荐流程）
 let currentRecommendedFlow = null;
+// 上次审核使用的审批模板，补充审核时默认选中
+let lastAuditTemplate = '常规模板';
 
 // 检查是否选择了非推荐流程
 function checkNonRecommendedFlow() {
   const selectedFlow = document.getElementById('submitAuditFlow')?.value;
   const warningDiv = document.getElementById('nonRecommendedWarning');
-  
+
+  // 补充审核场景：无需填写「非标准审批流程原因」，始终隐藏提示
+  if (window._submitIsSupplement) {
+    if (warningDiv) warningDiv.style.display = 'none';
+    return;
+  }
+
   if(selectedFlow && currentRecommendedFlow && selectedFlow !== currentRecommendedFlow) {
     // 显示警告区域
     if(warningDiv) {
@@ -17938,8 +18009,13 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
   window._submitIsSupplement = isSupplementAudit;
 
   // 智能推荐审批流程
-  const recommended = getRecommendedFlow(patient.patientStatus);
-  
+  let recommended = getRecommendedFlow(patient.patientStatus);
+
+  // 补充审核场景：默认推荐「入组审批」（入组审核），模板默认选中上次审核模板
+  if (isSupplementAudit) {
+    recommended = { flow:'enroll', label:'入组审批', hint:'该患者已入组通过，补充审核建议选择入组审批' };
+    // 补充原因卡片文案（仅补充审核）
+  }
   // 保存当前推荐的流程，用于提交时判断
   currentRecommendedFlow = recommended.flow;
 
@@ -17950,14 +18026,18 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
   modal = document.createElement('div');
   modal.id = 'submitAuditModal';
   modal.className = 'submit-audit-overlay open';
+  // 右侧 PRD 说明（按场景区分提交审批 / 补充审核）
+  const prdHtml = getSubmitAuditPrdHtml(isPreSubmit, isSupplementAudit);
+
   modal.innerHTML = `
-    <div class="submit-audit-panel">
+    <div class="submit-audit-panel with-prd">
       <div class="submit-audit-header">
         <span class="submit-audit-title">
           <i class="fa-solid fa-paper-plane" style="color:#165DFF;margin-right:8px"></i>${auditTitle}
         </span>
         <button class="submit-audit-close" onclick="closeSubmitAuditModal()">&times;</button>
       </div>
+      <div class="submit-audit-content">
        <!-- 开发提示 -->
        
       <div class="submit-audit-body">
@@ -17997,8 +18077,8 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
           <label class="submit-audit-form-label required">审批模板：</label>
           <div class="submit-audit-form-control">
             <select class="submit-audit-select" id="submitAuditTemplate">
-              <option value="常规模板" selected>常规审批模板-主流程</option>
-              <option value="快速审批模板">快速审批模板</option>
+              <option value="常规模板" ${lastAuditTemplate === '常规模板' ? 'selected' : ''}>常规审批模板-主流程</option>
+              <option value="快速审批模板" ${lastAuditTemplate === '快速审批模板' ? 'selected' : ''}>快速审批模板</option>
             </select>
           </div>
         </div>
@@ -18076,6 +18156,8 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
             <textarea class="submit-audit-textarea" id="submitAuditRemark" placeholder="请输入备注"></textarea>
           </div>
         </div>
+      </div>
+      ${prdHtml}
       </div>
       <div class="submit-audit-footer">
         <button class="submit-audit-btn submit-audit-btn-cancel" onclick="closeSubmitAuditModal()">取消</button>
@@ -18202,6 +18284,10 @@ function submitAudit(schemeNo, patientIndex) {
   const flow = document.getElementById('submitAuditFlow')?.value;
   const remark = document.getElementById('submitAuditRemark')?.value || '';
 
+  // 记录本次使用的审批模板，作为下次打开（含补充审核）的「上次审核模板」
+  const tplVal = document.getElementById('submitAuditTemplate')?.value;
+  if (tplVal) lastAuditTemplate = tplVal;
+
   // 预提交场景下，校验筛选号与知情时间
   if(window._submitIsPreSubmit) {
     const patients = scPatientData[schemeNo] || [];
@@ -18248,8 +18334,8 @@ function submitAudit(schemeNo, patientIndex) {
     finalRemark = finalRemark ? '【补充审核原因】' + supReason + '\n\n' + finalRemark : '【补充审核原因】' + supReason;
   }
 
-  // 检查是否选择了非推荐流程
-  if(currentRecommendedFlow && flow !== currentRecommendedFlow) {
+  // 检查是否选择了非推荐流程（补充审核场景无需填写）
+  if(!window._submitIsSupplement && currentRecommendedFlow && flow !== currentRecommendedFlow) {
     const reason = document.getElementById('nonRecommendedReasonInline')?.value.trim();
     if(!reason) {
       showWechatToast('检测到您选择的是非标准审批流程，请填写原因');

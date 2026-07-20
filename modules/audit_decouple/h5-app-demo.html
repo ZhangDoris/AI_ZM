@@ -1493,17 +1493,7 @@
           <span class="sh-title" id="auditSheetTitle">提交审批</span>
           <div class="sh-close" onclick="closeAudit()"><i class="fas fa-times"></i></div>
         </div>
-        <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 12px;margin:0 16px 12px;font-size:11px;color:#333;line-height:1.8">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:2px;flex-shrink:0"></i>
-          <div>
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 加了审批流程选择，可从项目已配置的流程中选择提交哪个流程</div>
-            <div>② 审批流程默认选中应执行的流程（系统现行固定流程）</div>
-            <div>③ 选择审批流程后，审批人随流程变动</div>
-            <div>④ 选了非推荐流程，必须填写原因</div>
-          </div>
-        </div>
+        
         <div class="sh-body">
           <div class="fg">
             <label class="fg-label"><span class="req">*</span>方案编码</label>
@@ -1539,11 +1529,11 @@
               <div class="reco-hd"><i class="fas fa-lightbulb"></i> 推荐：预筛审批</div>
               <div class="reco-chain">
                 <span class="chain-label">项目审批链路：</span>
-                <span class="chain-item chain-active">预筛审批</span>
+                <span class="chain-item chain-active" id="auditChainPrescreen">预筛审批</span>
                 <span class="chain-arrow">→</span>
-                <span class="chain-item">主知情审批</span>
+                <span class="chain-item" id="auditChainInformed">主知情审批</span>
                 <span class="chain-arrow">→</span>
-                <span class="chain-item">入组审批</span>
+                <span class="chain-item" id="auditChainEnroll">入组审批</span>
               </div>
             </div>
             <!-- 非标准流程提示 -->
@@ -1560,6 +1550,10 @@
               <option>王医生</option>
               <option>陈医生</option>
             </select>
+          </div>
+          <div class="fg" id="auditSupplementWrap" style="display:none">
+            <label class="fg-label"><span class="req">*</span>补充审核原因</label>
+            <textarea class="fg-textarea" id="auditSupplementReason" placeholder="该患者已入组通过，请填写本次补充审核的原因"></textarea>
           </div>
           <div class="fg">
             <label class="fg-label">重点关注：<a style="color:#1677ff;cursor:pointer">引用</a></label>
@@ -1728,6 +1722,34 @@
       </li>
       <li>点击「撤回审核」→ 撤销本次提交，卡片状态更新为「已撤回」，按钮消失（撤回后提交人可重新发起提交）。</li>
     </ul>
+
+    <!-- 补充审核 PRD（仅在补充审核弹窗打开时显示） -->
+    <div id="prd-supplement" style="display:none;margin-top:14px;padding-top:12px;border-top:2px dashed #f0d9a8;">
+      <h3 style="margin-bottom:8px;">补充审核 · 需求说明</h3>
+
+      <h4 id="prd-supp-1"><span class="pin">A</span>场景与入口</h4>
+      <ul>
+        <li>已<b>入组通过</b>的患者（如 RFNE）操作按钮显示为「<b>补充审核</b>」，点击后弹出补充审核表单，标题为「补充审核」。</li>
+        <li>适用于已入组通过的患者<b>追加审核流程</b>的场景，与提交审批共用同一表单。</li>
+      </ul>
+
+      <h4 id="prd-supp-2"><span class="pin">B</span>审批模板（默认上次主流程模板）</h4>
+      <ul>
+        <li>补充审核默认选中<b>上次选中的主流程模板</b>（如「常规审批模板-主流程」），无需重复选择。</li>
+        <li>支持<b>切换模板</b>：可改为「快速审批模板」等其它已启用模板。</li>
+      </ul>
+
+      <h4 id="prd-supp-3"><span class="pin">C</span>审批流程（默认入组审核，可选其它）</h4>
+      <ul>
+        <li>补充审核默认推荐<b>入组审批</b>，即「上次选中主流程的入组审核」，推荐链路高亮「入组审批」。</li>
+        <li>支持<b>选择其它流程</b>：可切回「预筛审批 / 主知情审批」等；选非推荐流程不需填写原因。</li>
+      </ul>
+
+      <h4 id="prd-supp-4"><span class="pin">D</span>补充审核原因（必填）</h4>
+      <ul>
+        <li>补充审核必须填写<b>补充审核原因</b>方可提交，原因为空将拦截并提示。</li>
+      </ul>
+    </div>
 
     <h4>使用说明</h4>
     <ul>
@@ -2079,7 +2101,12 @@ HDL-C：1.09 mmol/L
     let currentAuditPatientId = null;
     let currentMatchPatientId = null;
     let preSubmitMode = false;
+    let supplementMode = false;
     const RECOMMENDED_FLOW = '预筛审批';
+    // 当前推荐流程（补充审核时为「入组审批」），供非标准流程校验与推荐展示使用
+    let currentRecommendedFlow = RECOMMENDED_FLOW;
+    // 上次审核使用的模板，补充审核时默认选中
+    let lastAuditTemplate = '常规审批模板-主流程';
 
     // 轻提示 Toast
     function toastMini(msg) {
@@ -2095,21 +2122,56 @@ HDL-C：1.09 mmol/L
     function openAudit(ptId) {
       currentAuditPatientId = ptId;
       const d = PATIENT_DATA.find(x => x.id === ptId);
+      const isSupplement = !!(d && d.submitStatus === 'enrolled') && !preSubmitMode;
+      supplementMode = isSupplement;
       const titleEl = document.getElementById('auditSheetTitle');
-      if (titleEl) titleEl.textContent = (d && d.submitStatus === 'enrolled') ? '补充审核' : '提交审批';
+      if (titleEl) titleEl.textContent = isSupplement ? '补充审核' : '提交审批';
+      // 补充审核原因字段：仅补充审核场景显示，每次打开清空
+      const supWrap = document.getElementById('auditSupplementWrap');
+      const supReason = document.getElementById('auditSupplementReason');
+      if (supWrap) supWrap.style.display = isSupplement ? 'block' : 'none';
+      if (supReason) supReason.value = '';
+      // 流程与模板默认值
+      const tplSel = document.getElementById('auditTemplate');
+      const flowSel = document.getElementById('auditProcessFlow');
+      const recoHd = document.querySelector('#auditSheet .reco-hd');
+      if (isSupplement) {
+        // 补充审核：默认选中「上次审核模板」+「入组审批」
+        currentRecommendedFlow = '入组审批';
+        if (tplSel) tplSel.value = lastAuditTemplate;
+        if (flowSel) flowSel.value = '入组审批';
+        if (recoHd) recoHd.innerHTML = '<i class="fas fa-lightbulb"></i> 推荐：入组审批';
+        setAuditChainActive('auditChainEnroll');
+      } else {
+        currentRecommendedFlow = RECOMMENDED_FLOW;
+        if (tplSel) tplSel.value = lastAuditTemplate;
+        if (flowSel) flowSel.value = RECOMMENDED_FLOW;
+        if (recoHd) recoHd.innerHTML = '<i class="fas fa-lightbulb"></i> 推荐：预筛审批';
+        setAuditChainActive('auditChainPrescreen');
+      }
+      // 根据默认流程刷新非标准流程提示
+      onAuditProcessChange();
       // 预提交模式下提交按钮显示为“提交审核”
       const submitBtn = document.getElementById('auditSubmitBtn');
-      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交审核' : '确定';
+      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交审核' : (isSupplement ? '提交补充审核' : '确定');
       // 方案编码带入当前项目名
       const planEl = document.getElementById('auditPlanNo');
       if (planEl && currentProject) planEl.value = currentProject.name;
       document.getElementById('auditSheet').classList.add('show');
       document.getElementById('auditOverlay').classList.add('show');
+      // 补充审核场景：右侧展示补充审核 PRD，并重绘连线
+      const suppPrd = document.getElementById('prd-supplement');
+      if (suppPrd) suppPrd.style.display = isSupplement ? 'block' : 'none';
+      setTimeout(drawLines, 360);
     }
     function closeAudit() {
       document.getElementById('auditSheet').classList.remove('show');
       document.getElementById('auditOverlay').classList.remove('show');
       preSubmitMode = false;
+      supplementMode = false;
+      const suppPrd = document.getElementById('prd-supplement');
+      if (suppPrd) suppPrd.style.display = 'none';
+      setTimeout(drawLines, 60);
     }
 
     // 项目匹配确认弹窗
@@ -2220,11 +2282,25 @@ HDL-C：1.09 mmol/L
         : '展开 <i class="fas fa-chevron-down" style="font-size:11px"></i>';
     }
 
+    // 切换推荐链路高亮节点
+    function setAuditChainActive(activeId) {
+      ['auditChainPrescreen', 'auditChainInformed', 'auditChainEnroll'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('chain-active', id === activeId);
+      });
+    }
+
     // 审批流程切换 -> 非标准流程提示
     function onAuditProcessChange() {
       const val = document.getElementById('auditProcessFlow').value;
       const warn = document.getElementById('auditNonstd');
-      if (val && val !== RECOMMENDED_FLOW) {
+      // 补充审核场景：无需填写「非标准审批流程原因」，始终隐藏提示
+      if (supplementMode) {
+        warn.classList.remove('show');
+        document.getElementById('auditNonstdReason').value = '';
+        return;
+      }
+      if (val && val !== currentRecommendedFlow) {
         warn.classList.add('show');
       } else {
         warn.classList.remove('show');
@@ -2285,6 +2361,9 @@ HDL-C：1.09 mmol/L
 
     // 真正提交
     function doSubmitAudit(msg) {
+      // 记录本次使用的模板，作为下次打开（含补充审核）的「上次审核模板」
+      const tplSel = document.getElementById('auditTemplate');
+      if (tplSel && tplSel.value) lastAuditTemplate = tplSel.value;
       toastMini(msg || '提交审批成功');
       closeAudit();
     }
@@ -2304,8 +2383,17 @@ HDL-C：1.09 mmol/L
         toastMini('请填写必填项');
         return;
       }
-      // 非标准流程必须填写原因
-      if (flow !== RECOMMENDED_FLOW) {
+      // 补充审核场景：补充审核原因必填
+      if (supplementMode) {
+        const supReason = document.getElementById('auditSupplementReason').value.trim();
+        if (!supReason) {
+          toastMini('请填写补充审核原因');
+          document.getElementById('auditSupplementReason').focus();
+          return;
+        }
+      }
+      // 非标准流程必须填写原因（补充审核场景无需填写）
+      if (!supplementMode && flow !== currentRecommendedFlow) {
         const reason = document.getElementById('auditNonstdReason').value.trim();
         if (!reason) {
           toastMini('选择非标准流程需填写原因');
@@ -2650,20 +2738,36 @@ HDL-C：1.09 mmol/L
         { fromSel: '#auditcard-5 .withdraw-btn', toId: 'prd-pin-5', label: '5' }
       ];
 
+      // 补充审核弹窗打开时的连线（A=场景 B=模板 C=流程 D=原因）
+      const suppLines = [
+        { fromSel: '#auditSheetTitle', toId: 'prd-supp-1', label: 'A' },
+        { fromSel: '#auditTemplate', toId: 'prd-supp-2', label: 'B' },
+        { fromSel: '#auditProcessFlow', toId: 'prd-supp-3', label: 'C' },
+        { fromSel: '#auditSupplementReason', toId: 'prd-supp-4', label: 'D' }
+      ];
+
       // 仅在当前屏幕激活时画对应连线
       const appActive = document.getElementById('screen-app').classList.contains('active');
       const auditActive = document.getElementById('screen-audit').classList.contains('active');
       const filterActive = document.getElementById('screen-filter').classList.contains('active');
       const patientActive = document.getElementById('screen-patient').classList.contains('active');
       const detailActive = document.getElementById('screen-detail').classList.contains('active');
+      // 补充审核弹窗是否打开
+      const auditSheetOpen = document.getElementById('auditSheet')?.classList.contains('show');
 
       if (appActive) {
         drawLine(svg, lines[0]);
         drawLine(svg, lines[1]);
       }
       if (filterActive) drawLine(svg, lines[2]);
-      if (patientActive) drawLine(svg, lines[3]);
+      // 患者列表连线：补充审核弹窗打开时让位给补充审核连线
+      if (patientActive && !auditSheetOpen) drawLine(svg, lines[3]);
       if (auditActive) drawLine(svg, lines[4]);
+
+      // 补充审核弹窗打开（且为补充审核场景）时，绘制补充审核连线
+      if (auditSheetOpen && supplementMode) {
+        suppLines.forEach(l => drawLine(svg, l));
+      }
     }
 
     function drawLine(svg, cfg) {
