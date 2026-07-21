@@ -743,7 +743,7 @@
     }
     .pt-card {
       background: #fff;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 14px;
       margin: 10px 12px;
     }
@@ -1239,6 +1239,36 @@
       pointer-events: none; max-width: 340px; text-align: center; line-height: 1.4;
     }
     .toast-mini.show { opacity: 1; }
+
+    /* ====== 患者标签（与 h5-patient-list.html / PC 一致） ====== */
+    /* 患者卡片操作按钮统一为蓝边框白底胶囊，与 h5-patient-list.html 一致 */
+    .pt-card .pt-btn, .pt-card .pt-btn.primary {
+      flex: 1; text-align: center; padding: 7px 4px;
+      border: 1px solid #1677ff; border-radius: 16px;
+      font-size: 12px; font-weight: 500; color: #1677ff; background: #fff; cursor: pointer;
+      transition: background .15s;
+    }
+    .pt-card .pt-btn:active, .pt-card .pt-btn.primary:active { background: #f0f5ff; }
+
+    .patient-tags-area { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 2px 0 4px; }
+    .pta-label { font-size: 12px; color: #999; flex-shrink: 0; }
+    .pta-empty { font-size: 12px; color: #bbb; }
+    .tag-ptag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; background: #E8F5FE; color: #1976D2; font-size: 12px; }
+
+    .ptag-mismatch-hint { display: none; margin-top: 8px; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffccc7; border-radius: 8px; color: #cf1322; font-size: 13px; line-height: 1.6; }
+
+    .pt-group { margin-bottom: 16px; }
+    .pt-group-label { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .pt-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pt-chip { padding: 8px 14px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #555; background: #fff; cursor: pointer; }
+    .pt-chip.selected { background: #e8f3ff; border-color: #1677ff; color: #1677ff; font-weight: 600; }
+
+    /* 审核列表：标签修改按钮（蓝边框）与卡片标签显示 */
+    .act-btn.outline { border: 1px solid #1677ff; color: #1677ff; background: #fff; border-radius: 16px; }
+    .act-btn.outline:active { background: #f0f5ff; }
+    .audit-card .patient-tags-area { padding: 8px 0 2px; }
+    .audit-card .action-bar { flex-wrap: wrap; }
+
   </style>
 </head>
 <body>
@@ -1575,8 +1605,29 @@
         </div>
       </div>
 
-      <!-- ====== Toast 轻提示 ====== -->
-      <div class="toast-mini" id="toastMini"></div>
+  <!-- ====== Toast 轻提示 ====== -->
+  <div class="toast-mini" id="toastMini"></div>
+
+  <!-- ====== 患者标签弹窗（与 PC / h5-patient-list.html 一致） ====== -->
+  <div class="audit-overlay" id="ptagOverlay" onclick="closePatientTagModal()"></div>
+  <div class="audit-sheet" id="ptagSheet">
+    <div class="sh">
+      <span class="sh-title">患者标签</span>
+      <div class="sh-close" onclick="closePatientTagModal()"><i class="fas fa-times"></i></div>
+    </div>
+    <div class="sh-body">
+      <div class="fg">
+        <label class="fg-label">患者</label>
+        <select class="fg-select" id="ptPatient" onchange="renderPatientTagBody()"></select>
+      </div>
+      <div id="ptBody"></div>
+      <div id="ptMismatchHint" class="ptag-mismatch-hint"></div>
+    </div>
+    <div class="sh-footer">
+      <button class="cancel-btn" onclick="closePatientTagModal()">取消</button>
+      <button class="submit-btn" onclick="confirmPatientTag()">确定</button>
+    </div>
+  </div>
 
       <!-- ====== 审核列表 - 审核操作 底部弹窗 ====== -->
       <div class="approve-overlay" id="approveOverlay" onclick="closeApprove()"></div>
@@ -1663,42 +1714,26 @@
 
     <h4 id="prd-pin-1"><span class="pin">1</span>第一屏：APP 列表</h4>
     <ul>
-    
       <li>两个入口：<b>审核列表</b> / <b>智能筛选</b></li>
     </ul>
 
     <h4 id="prd-pin-2"><span class="pin">2</span>入口：智能筛选</h4>
     <ul>
-      <li>点击「智能筛选」入口进入项目列表</li>
+      <li>点击「智能筛选」入口进入项目列表（沿用原有项目列表流程）。</li>
     </ul>
 
-    <h4 id="prd-pin-3"><span class="pin">3</span>项目列表</h4>
+    <h4 id="prd-pin-3"><span class="pin">3</span>患者标签（标签修改）</h4>
     <ul>
-      <li>4 个项目卡片：<b>0302-305（血液/风湿）</b>、<b>SHR-A2102-I-102（肺癌）</b>、<b>HRS-1167-I-101（妇科肿瘤）</b>、<b>SHR-2019-nCoV-001（呼吸）</b></li>
-      <li>点击第一个项目 → 进入该项目下的患者列表</li>
-    </ul>
-
-    <h4 id="prd-pin-4"><span class="pin">4</span>患者列表 - 提交审核</h4>
-    <ul>
-      <li>患者卡片操作区含「提交审批」按钮；<b>ZWMS / HGKD</b> 卡片额外显示「项目匹配」按钮（原型为展示效果临时放在患者列表）。</li>
-      <li>点击「提交审批」→ 底部弹出提交审批表单（方案编码 / 参研中心 / 审批模板 / 审批流程 / 审批人 / 备注）；审批流程默认推荐「预筛审批」，并展示项目审批链路（预筛→主知情→入组），选非推荐流程需填写原因。</li>
-      <li><b>ZWMS\HGKD</b>（跨阶段，强制非正常流程）：点击「项目匹配」→ 弹出 <b>项目匹配确认</b> 弹窗。
-        HGKD 额外需选择<b>入排版本</b>（V1.0 / V2.0 / V3.0），ZWMS 无此步骤。
-        <ul>
-          <li><b>匹配并预提交</b>：选择入排版本后 → 直接进入提交审批页，此时点击「提交审核」直接提交，无需后端再次校验。</li>
-          <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，患者卡片状态更新为「匹配完成」。</li>
-          <li><b>取消</b>：关闭弹窗，不执行任何操作。</li>
-        </ul>
-      </li>
-      <li><b>RFNE</b>（入组通过，可以补充审核）：操作按钮显示为「补充审核」（与提交审批功能一致），点击后弹窗标题为「补充审核」→ 校验必填项通过 → 直接提交 → Toast「提交审批成功」→ 关闭弹窗。补充审核适用于已入组通过的患者追加审核流程的场景。</li>
-      <li><b>其他数据</b>：提交 → 校验必填项通过 → 正常提交 → Toast「提交审批成功」→ 关闭提交审核弹窗</li>
-      <li class="note">注：判断逻辑基于患者<b>原始 id</b> 而非列表索引（「待操作」Tab 过滤已提交数据后，RFNE 可能显示为第三条，但逻辑不受影响）。</li>
+      <li>在<b>智能筛选</b>的患者列表与<b>审核列表</b>中，<b>若项目配置了「标签修改」</b>，则每个患者卡片均显示「标签修改」按钮（由 <code>LABEL_MODIFY_ENABLED</code> 控制，默认开启）。</li>
+      <li>点击「标签修改」→ 底部弹出患者标签，<b>逻辑与 PC 端「修改患者标签」一致</b>：</li>
+      <li>选中「已签署知情」后即时提示：<b>「已签署知情」：知情时间值与选择的状态不匹配</b>（联动校验效果）。</li>
+      <li>确定后所选标签显示在该患者卡片上（如「已签署知情」「符合入组条件」）。</li>
     </ul>
 
     <h4>使用说明</h4>
     <ul>
-      <li>路径：APP 列表 → <b>智能筛选</b> → 项目 → <b>患者列表</b></li>
-      <li>点击卡片「提交审批 / 补充审核」体验提交流程，重点体验 <b>ZWMS</b> 的跨阶段 AI 匹配与 <b>RFNE</b> 的补充审核</li>
+      <li>路径：APP 列表 → 智能筛选 / 审核列表 → 患者卡片「标签修改」</li>
+      <li>点击「标签修改」→ 选「已签署知情」→ 查看联动效果提示。</li>
     </ul>
   </aside>
 
@@ -1963,13 +1998,92 @@ HDL-C：1.09 mmol/L
       renderPatientList();
     }
 
+    // ============ 患者标签（与 PC / h5-patient-list.html 一致） ============
+    let LABEL_MODIFY_ENABLED = true; // 项目是否配置了「标签修改」
+    const PT_GROUPS = [
+      { key:'consent', label:'知情状态', options:['待确认知情意向','待签署知情','已签署知情'] },
+      { key:'enroll',  label:'入组条件审核', options:['符合入组条件','已有资料符合，仍需补充材料','不符合（驳回）'] }
+    ];
+    const patientTagStore = {};
+
+    function renderPatientTagArea(name){
+      const tags = patientTagStore[name] || {};
+      const keys = Object.keys(tags);
+      if(!keys.length) return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span><span class="pta-empty">未设置</span></div>';
+      return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span>' + keys.map(function(k){ return '<span class="tag-ptag">' + tags[k] + '</span>'; }).join('') + '</div>';
+    }
+    function renderTagModifyBtn(name, source){
+      if(!LABEL_MODIFY_ENABLED) return '';
+      const cls = source === 'audit' ? 'act-btn outline' : 'pt-btn';
+      return '<div class="' + cls + '" onclick="event.stopPropagation();openPatientTagModal(\'' + name + '\',\'' + source + '\')">标签修改</div>';
+    }
+    function renderPatientTagBody(){
+      const name = (document.getElementById('ptPatient') || {}).value;
+      const saved = patientTagStore[name] || {};
+      let html = PT_GROUPS.map(function(g){
+        const chips = g.options.map(function(o){
+          const sel = saved[g.key] === o ? ' selected' : '';
+          return '<div class="pt-chip' + sel + '" data-group="' + g.key + '" data-name="' + o + '" onclick="selectPatientTag(\'' + g.key + '\',\'' + o + '\',this)">' + o + '</div>';
+        }).join('');
+        return '<div class="pt-group" data-group="' + g.key + '"><div class="pt-group-label">' + g.label + '</div><div class="pt-chips">' + chips + '</div></div>';
+      }).join('');
+      document.getElementById('ptBody').innerHTML = html;
+      checkPatientTagMismatch();
+    }
+    function selectPatientTag(group, name, el){
+      const parent = el.parentElement;
+      parent.querySelectorAll('.pt-chip').forEach(function(c){ c.classList.remove('selected'); });
+      el.classList.add('selected');
+      checkPatientTagMismatch();
+    }
+    function checkPatientTagMismatch(){
+      const hint = document.getElementById('ptMismatchHint');
+      const current = {};
+      document.querySelectorAll('#ptBody .pt-group').forEach(function(grp){
+        const key = grp.getAttribute('data-group');
+        const sel = grp.querySelector('.pt-chip.selected');
+        if(sel) current[key] = sel.getAttribute('data-name');
+      });
+      const msgs = [];
+      if(current['consent'] === '已签署知情') msgs.push('「已签署知情」：知情时间值与选择的状态不匹配');
+      if(current['enroll'] === '符合入组条件') msgs.push('「符合入组条件」：审核结论与选择的状态不匹配');
+      if(msgs.length){
+        hint.innerHTML = '<i class="fas fa-circle-exclamation" style="margin-right:6px"></i>' + msgs.join('；');
+        hint.style.display = 'block';
+      } else { hint.style.display = 'none'; hint.innerHTML = ''; }
+    }
+    function openPatientTagModal(patientName, source){
+      const names = source === 'audit' ? AUDIT_DATA.map(function(d){ return d.name; }) : PATIENT_DATA.map(function(d){ return d.name; });
+      const sel = document.getElementById('ptPatient');
+      sel.innerHTML = names.map(function(n){ return '<option value="' + n + '">' + n + '</option>'; }).join('');
+      if(patientName) sel.value = patientName;
+      renderPatientTagBody();
+      document.getElementById('ptagSheet').classList.add('show');
+      document.getElementById('ptagOverlay').classList.add('show');
+    }
+    function closePatientTagModal(){
+      document.getElementById('ptagSheet').classList.remove('show');
+      document.getElementById('ptagOverlay').classList.remove('show');
+    }
+    function confirmPatientTag(){
+      const name = (document.getElementById('ptPatient') || {}).value;
+      const res = {};
+      document.querySelectorAll('#ptBody .pt-group').forEach(function(grp){
+        const key = grp.getAttribute('data-group');
+        const sel = grp.querySelector('.pt-chip.selected');
+        if(sel) res[key] = sel.getAttribute('data-name');
+      });
+      patientTagStore[name] = res;
+      closePatientTagModal();
+      renderPatientList();
+      renderAuditList();
+    }
+
     function renderPatientList() {
       const wrap = document.getElementById('patientList');
       wrap.innerHTML = PATIENT_DATA.map(d => {
         const tags = d.tags.map(t => `<span class="pill ${t.cls}">${t.txt}</span>`).join('');
-        const matchTag = d.aiMatch
-          ? `<span class="pt-match-tag" onclick="event.stopPropagation();openProjectMatch(${d.id})">项目匹配</span>`
-          : '';
+        const matchTag ='';
         return `
           <div class="pt-card" id="ptcard-${d.id}">
             <div class="pt-hd">
@@ -1981,6 +2095,7 @@ HDL-C：1.09 mmol/L
               </div>
             </div>
             <div class="pt-tags">${tags}</div>
+            ${renderPatientTagArea(d.name)}
             <div class="pt-row"><span class="lbl">中心名称：</span>${d.center}</div>
             <div class="pt-row" style="display:flex;justify-content:space-between;align-items:center">
               <span><span class="lbl">待操作人：</span>${d.operator}</span>
@@ -1990,6 +2105,7 @@ HDL-C：1.09 mmol/L
               <div class="pt-btn primary" onclick="event.stopPropagation();openAudit(${d.id})">${d.submitStatus === 'enrolled' ? '补充审核' : '提交审批'}</div>
               <div class="pt-btn" onclick="event.stopPropagation();openAuditRecord(${d.id})">审核记录</div>
               <div class="pt-btn" onclick="event.stopPropagation();openPtDetail(${d.id})">匹配详情</div>
+              ${renderTagModifyBtn(d.name, 'patient')}
             </div>
             <div class="pt-files">
               <i class="far fa-folder"></i>
@@ -2340,10 +2456,12 @@ HDL-C：1.09 mmol/L
               <div class="row" style="padding-left:78px"><span class="val">审核人：-</span></div>
               <div class="row" style="padding-left:78px"><span class="val">待操作人：--</span></div>
             </div>
+            ${renderPatientTagArea(d.name)}
               <div class="action-bar">
               <div class="act-btn">抄送</div>
               <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>
               <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>
+              ${renderTagModifyBtn(d.name, 'audit')}
             </div>
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料

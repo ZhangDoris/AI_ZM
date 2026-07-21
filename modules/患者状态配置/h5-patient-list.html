@@ -285,6 +285,10 @@
     .pt-chip { padding: 8px 14px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #555; background: #fff; cursor: pointer; }
     .pt-chip.selected { background: #e8f3ff; border-color: #165DFF; color: #165DFF; font-weight: 600; }
     .tag-ptag { background: #E8F5FE; color: #1976D2; }
+    /* 患者标签专用区（与系统状态区分开，自适应多标签） */
+    .patient-tags-area { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 16px 0; }
+    .pta-label { font-size: 12px; color: #999; flex-shrink: 0; }
+    .pta-empty { font-size: 12px; color: #bbb; }
     .pt-mismatch-hint { display: none; margin-top: 6px; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffccc7; border-radius: 8px; color: #cf1322; font-size: 13px; line-height: 1.6; }
     /* 病史与资料 可展开区 */
     .expand-section {
@@ -1008,10 +1012,10 @@
   <div class="bottom-spacer"></div>
   </div><!-- /screen-patients -->
 
-  <!-- 患者标签弹窗 - H5手机端底部弹出 -->
+  <!-- 标签修改弹窗 - H5手机端底部弹出 -->
   <div class="audit-modal" id="patientTagModal">
     <div class="audit-header">
-      <span class="audit-header-title">患者标签</span>
+      <span class="audit-header-title">标签修改</span>
       <div class="audit-close" onclick="closePatientTagModal()"><i class="fas fa-times"></i></div>
     </div>
     <div class="audit-form">
@@ -1367,6 +1371,14 @@
             '</div>' +
           '</div>' +
           '<div class="status-tags">' + matchedTag + submitTag + '</div>' +
+          (function(){
+            const tags = patientTagStore[p.name] || {};
+            const keys = Object.keys(tags);
+            if(!keys.length) return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span><span class="pta-empty">未设置</span></div>';
+            return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span>' +
+              keys.map(function(k){ return '<span class="status-tag tag-ptag">' + tags[k] + '</span>'; }).join('') +
+            '</div>';
+          })() +
           '<div class="card-info-rows">' +
             '<div class="card-info-row"><i class="fas fa-hospital"></i><span>' + p.center + '</span></div>' +
             '<div class="card-info-row"><i class="fas fa-user-md"></i><span>待操作人：' + p.operator + '</span></div>' +
@@ -1376,7 +1388,7 @@
               ? '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">补充审核</button>'
               : '<button class="action-btn btn-primary" onclick="openAuditModal(\'' + p.name + '\', ' + idx + ')">提交审批</button>') +
             '<button class="action-btn btn-outline" onclick="toastMsg(\'审批记录 - ' + p.name + '\')">审批记录</button>' +
-            '<button class="action-btn btn-outline" onclick="openPatientTagModal(\'' + p.name + '\')">患者标签</button>' +
+            '<button class="action-btn btn-outline" onclick="openPatientTagModal(\'' + p.name + '\')">标签修改</button>' +
             '<button class="action-btn btn-ghost" onclick="toastMsg(\'匹配详情 - ' + p.name + '\')">匹配详情</button>' +
           '</div>' +
           '<div class="expand-section">' +
@@ -1591,7 +1603,7 @@
       executeSubmitAudit();
     }
 
-    // ============ 患者标签（H5 手机端） ============
+    // ============ 标签修改（H5 手机端） ============
     const PT_GROUPS = [
       { key:'consent', label:'知情状态', options:['待确认知情意向','待签署知情','已签署知情'] }
     ];
@@ -1687,7 +1699,8 @@ function updatePRDPanel(mod, sub) {
           title: '★ 本次修改',
           content: `<ul>
             <li><strong style= "color: red">修改摘要：</li>
-              <li>在智能筛选和审核列表中，给每个患者加一个 患者标签的按钮，逻辑跟PC保持一致</li>
+              <li>在智能筛选和审核列表中，如果项目配置了标签修改，需要给每个患者显示 标签修改的按钮，逻辑跟PC保持一致</li>
+               <li>点击【标签修改】，点击 已签署知情，看联动效果提示</li>
             </ul>`
         },
        
