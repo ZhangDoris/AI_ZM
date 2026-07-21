@@ -1254,6 +1254,7 @@
     .pta-label { font-size: 12px; color: #999; flex-shrink: 0; }
     .pta-empty { font-size: 12px; color: #bbb; }
     .tag-ptag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 10px; background: #E8F5FE; color: #1976D2; font-size: 12px; }
+    .tag-more { font-size: 12px; color: #1677ff; cursor: pointer; flex-shrink: 0; padding: 2px 4px; }
 
     .ptag-mismatch-hint { display: none; margin-top: 8px; padding: 10px 12px; background: #fff1f0; border: 1px solid #ffccc7; border-radius: 8px; color: #cf1322; font-size: 13px; line-height: 1.6; }
 
@@ -2012,6 +2013,50 @@ HDL-C：1.09 mmol/L
       if(!keys.length) return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span><span class="pta-empty">未设置</span></div>';
       return '<div class="patient-tags-area"><span class="pta-label">患者标签：</span>' + keys.map(function(k){ return '<span class="tag-ptag">' + tags[k] + '</span>'; }).join('') + '</div>';
     }
+
+    // 患者标签：最多显示两行，超出折叠为「更多 N」
+    function layoutPatientTags(){
+      document.querySelectorAll('.patient-tags-area').forEach(function(area){
+        if(area.dataset.expanded === undefined) area.dataset.expanded = '0';
+        const tags = Array.prototype.slice.call(area.querySelectorAll('.tag-ptag'));
+        const existing = area.querySelector('.tag-more');
+        if(existing) existing.remove();
+        area.classList.remove('collapsed');
+        area.style.maxHeight = '';
+        if(tags.length === 0) return;
+        // 先全部显示，测量完整高度
+        tags.forEach(function(t){ t.style.display = ''; });
+        if(area.dataset.expanded === '1'){
+          const m = document.createElement('span');
+          m.className = 'tag-more';
+          m.textContent = '收起';
+          m.onclick = function(e){ e.stopPropagation(); area.dataset.expanded = '0'; layoutPatientTags(); };
+          area.appendChild(m);
+          return;
+        }
+        const lineH = tags[0].offsetHeight + 6; // 6 = gap
+        const maxH = lineH * 2;
+        if(area.scrollHeight <= maxH + 1) return; // 两行内，无需折叠
+        // 逐行计算需要隐藏的数量
+        let line = 0, curTop = null, hidden = 0;
+        tags.forEach(function(t){
+          const top = t.offsetTop;
+          if(curTop === null || top !== curTop){ line++; curTop = top; }
+          if(line >= 2){ t.style.display = 'none'; hidden++; }
+        });
+        area.classList.add('collapsed');
+        area.style.maxHeight = maxH + 'px';
+        if(hidden > 0){
+          const m = document.createElement('span');
+          m.className = 'tag-more';
+          m.textContent = '更多 ' + hidden;
+          m.onclick = function(e){ e.stopPropagation(); area.dataset.expanded = '1'; layoutPatientTags(); };
+          area.appendChild(m);
+        }
+      });
+    }
+    window.addEventListener('resize', layoutPatientTags);
+
     function renderTagModifyBtn(name, source){
       if(!LABEL_MODIFY_ENABLED) return '';
       const cls = source === 'audit' ? 'act-btn outline' : 'pt-btn';

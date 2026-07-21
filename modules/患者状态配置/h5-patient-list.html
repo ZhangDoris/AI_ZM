@@ -285,6 +285,7 @@
     .pt-chip { padding: 8px 14px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; color: #555; background: #fff; cursor: pointer; }
     .pt-chip.selected { background: #e8f3ff; border-color: #165DFF; color: #165DFF; font-weight: 600; }
     .tag-ptag { background: #E8F5FE; color: #1976D2; }
+    .tag-more { font-size: 12px; color: #165DFF; cursor: pointer; flex-shrink: 0; padding: 2px 4px; }
     /* 患者标签专用区（与系统状态区分开，自适应多标签） */
     .patient-tags-area { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 16px 0; }
     .pta-label { font-size: 12px; color: #999; flex-shrink: 0; }
@@ -1411,7 +1412,52 @@
           toggleExpand(Number(id));
         });
       });
+
+      layoutPatientTags();
     }
+
+    // 患者标签：最多显示两行，超出折叠为「更多 N」
+    function layoutPatientTags(){
+      document.querySelectorAll('.patient-tags-area').forEach(function(area){
+        if(area.dataset.expanded === undefined) area.dataset.expanded = '0';
+        const tags = Array.prototype.slice.call(area.querySelectorAll('.tag-ptag'));
+        const existing = area.querySelector('.tag-more');
+        if(existing) existing.remove();
+        area.classList.remove('collapsed');
+        area.style.maxHeight = '';
+        if(tags.length === 0) return;
+        // 先全部显示，测量完整高度
+        tags.forEach(function(t){ t.style.display = ''; });
+        if(area.dataset.expanded === '1'){
+          const m = document.createElement('span');
+          m.className = 'tag-more';
+          m.textContent = '收起';
+          m.onclick = function(e){ e.stopPropagation(); area.dataset.expanded = '0'; layoutPatientTags(); };
+          area.appendChild(m);
+          return;
+        }
+        const lineH = tags[0].offsetHeight + 6; // 6 = gap
+        const maxH = lineH * 2;
+        if(area.scrollHeight <= maxH + 1) return; // 两行内，无需折叠
+        // 逐行计算需要隐藏的数量
+        let line = 0, curTop = null, hidden = 0;
+        tags.forEach(function(t){
+          const top = t.offsetTop;
+          if(curTop === null || top !== curTop){ line++; curTop = top; }
+          if(line >= 2){ t.style.display = 'none'; hidden++; }
+        });
+        area.classList.add('collapsed');
+        area.style.maxHeight = maxH + 'px';
+        if(hidden > 0){
+          const m = document.createElement('span');
+          m.className = 'tag-more';
+          m.textContent = '更多 ' + hidden;
+          m.onclick = function(e){ e.stopPropagation(); area.dataset.expanded = '1'; layoutPatientTags(); };
+          area.appendChild(m);
+        }
+      });
+    }
+    window.addEventListener('resize', layoutPatientTags);
 
     // 展开/收起 病史与资料
     function toggleExpand(id) {
