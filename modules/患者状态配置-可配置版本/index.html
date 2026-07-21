@@ -6774,17 +6774,17 @@ function updatePRDPanel(mod, sub) {
             <span class="prd-badge prd-badge-admin">新增</span> 在「后台管理 → 项目管理」的<strong>项目列表中</strong>进入，对本项目配置患者状态维度与选项。
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">一、可配置内容</h4>
             <ol class="prd-list">
-              <li><strong>知情状态</strong>：待确认知情意向 / 待签署知情 / 已签署知情。</li>
-              <li><strong>入组条件审核</strong>：符合入组条件 / 已有资料符合，仍需补充材料 / 不符合（驳回）。</li>
-             
+              <li><strong>知情状态</strong>：待确认知情意向 / 待签署知情 / 已签署知情（默认三项，可增删）。</li>
+              <li><strong>入组条件审核</strong>：符合入组条件 / 已有资料符合，仍需补充材料 / 不符合（驳回）（默认三项，可增删）。</li>
+              <li><strong>其它状态</strong>：支持在任一维度下「新增」自定义状态。</li>
               <li><strong>是否启用</strong>：每个状态均可开关「在本项目中是否启用」。</li>
             </ol>
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">二、联动效果（核心）</h4>
-            <p class="prd-text">本项目<strong>启用</strong>的状态，会实时出现在「审核列表」与「智能筛选」的审核记录和审核 页面出现 <strong>「状态修改」</strong> 按钮弹窗中；<strong>停用</strong>的状态不再展示。配置在<strong>同会话内即时生效</strong>（刷新页面重置为默认）。</p>
+            <p class="prd-text">本项目<strong>启用</strong>的状态，会实时出现在「审核列表」与「智能筛选」的 <strong>「状态修改」</strong> 按钮弹窗中；<strong>停用</strong>的状态不再展示。配置在<strong>同会话内即时生效</strong>（刷新页面重置为默认）。</p>
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">三、原型演示</h4>
             <ul class="prd-list">
               <li>项目管理列表 → 点击「患者状态配置」进入配置页；</li>
-              <li>切换某状态启用/停用，或在审核列表 / 智能筛选的审核记录和审核 页面点击「状态修改」，观察可选项随配置实时变化。</li>
+              <li>切换某状态启用/停用，或在审核列表 / 智能筛选点击「状态修改」，观察可选项随配置实时变化。</li>
             </ul>`
         }
       ]
@@ -20194,6 +20194,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 <input type="checkbox" ${s.enabled?'checked':''} onchange="togglePsStatus('${g.key}','${s.id}')">
                 <span class="ps-slider"></span>
               </label>
+              <span class="ps-del" onclick="deletePsStatus('${g.key}','${s.id}')">删除</span>
             </div>
           </div>`;
       }).join('');
@@ -20207,11 +20208,21 @@ window.addEventListener('DOMContentLoaded', function() {
               <span class="ps-slider"></span>
             </label>
             <span class="ps-group-state">${g.enabled!==false?'启用中':'已停用'}</span>
+            <span class="ps-group-del" onclick="deletePsGroup('${g.key}')" title="删除该状态类型"><i class="fa-solid fa-trash-can"></i> 删除类型</span>
           </div>
-          <div class="ps-group-desc">本项目中该维度的可选状态（固定项）；点击名称可直接修改，关闭开关后「状态修改」弹窗中将不再显示此状态。</div>
-          ${rows || '<div class="ps-empty">暂无状态。</div>'}
+          <div class="ps-group-desc">本项目中该维度的可选状态；点击名称可直接修改，关闭开关后「状态修改」弹窗中将不再显示此状态。</div>
+          ${rows || '<div class="ps-empty">暂无状态，请在下方新增。</div>'}
+          <div class="ps-add-row">
+            <input class="ps-add-input" id="psNew_${g.key}" placeholder="新增「${_psEsc(g.name)}」选项…" onkeydown="if(event.key==='Enter')addPsStatus('${g.key}')">
+            <button class="btn btn-default btn-sm" onclick="addPsStatus('${g.key}')">新增选项</button>
+          </div>
         </div>`;
     });
+    html += `
+      <div class="ps-add-group">
+        <input class="ps-add-input" id="psNewGroup" placeholder="新增状态类型名称（例如：随访状态、给药状态…）" onkeydown="if(event.key==='Enter')addPsGroup()">
+        <button class="btn btn-primary btn-sm" onclick="addPsGroup()"><i class="fa-solid fa-plus" style="margin-right:6px"></i>新增状态类型</button>
+      </div>`;
     return html;
   }
 
@@ -20229,11 +20240,17 @@ window.addEventListener('DOMContentLoaded', function() {
         <div class="ps-modal-body">
           <div class="ps-toolbar">
             <span style="font-size:13px;color:#4e5969;font-weight:600">${projText}</span>
-            <span style="font-size:12px;color:#86909c">配置本项目患者可用的状态类型及其选项：可修改名称、控制各状态是否启用（固定为「知情状态」与「入组条件审核」两项）。</span>
+            <span style="font-size:12px;color:#86909c">配置本项目患者可用的状态类型及其选项：可修改名称、增加选项，也可新增自定义状态类型，并控制各状态是否启用。</span>
           </div>
           <div id="patientStatusPanel">${psInnerHTML()}</div>
           <div style="margin-top:16px;padding:12px 16px;background:#f5f7fa;border-radius:8px;font-size:12px;color:#86909c;line-height:1.8">
             <i class="fa-solid fa-lightbulb" style="color:#165DFF;margin-right:6px"></i>联动说明：此处「启用」的状态，会<strong>实时</strong>出现在「审核列表」与「智能筛选」的 <b>状态修改</b> 按钮弹窗中（同会话内即时生效，刷新页面重置为默认）。
+          </div>
+          <div class="ps-rel-section">
+            <div class="ps-rel-title"><i class="fa-solid fa-link" style="margin-right:6px;color:#165DFF"></i>状态类型关系（可选）</div>
+            <div class="ps-rel-desc">配置状态类型之间的约束。例如将「知情状态 → 入组条件审核」设为<strong>串行</strong>：选入组前必须先选知情，选知情可不选入组；也支持<strong>同时</strong>（二者皆需）与<strong>或</strong>（至少其一）。保存后在「状态修改」中自动校验。</div>
+            <div id="psRelList">${psRelInnerHTML()}</div>
+            <button class="btn btn-default btn-sm" onclick="addPsRelation()" style="margin-top:4px"><i class="fa-solid fa-plus" style="margin-right:4px"></i>添加关系</button>
           </div>
         </div>
         <div class="ps-modal-footer">
