@@ -178,12 +178,12 @@
     }
     .nav-item.active .nav-icon { color: #1677ff; }
     .nav-item .nav-icon { font-size: 13px; }
-    /* 演示标注标签 */
-    .demo-tag { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#165DFF; color:#fff; font-size:11px; font-weight:600; line-height:18px; margin-left:6px; }
+    /* 演示标注标签（醒目红色） */
+    .demo-tag { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#F53F3F; color:#fff; font-size:11px; font-weight:600; line-height:18px; margin-left:6px; }
     .demo-tag-wrap { position:relative; }
-    .demo-tag-float { position:absolute; top:-9px; right:-9px; z-index:5; display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#165DFF; color:#fff; font-size:11px; font-weight:600; line-height:18px; box-shadow:0 2px 6px rgba(22,93,255,0.4); }
-    .demo-mark { position:relative; border:2px solid #165DFF !important; border-radius:8px; box-shadow:0 0 0 3px rgba(22,93,255,0.18); }
-    .demo-mark::after { content:attr(data-mark); position:absolute; top:-11px; left:10px; z-index:6; display:inline-block; padding:1px 8px; border-radius:8px; background:#165DFF; color:#fff; font-size:11px; font-weight:600; line-height:17px; box-shadow:0 2px 6px rgba(22,93,255,0.4); }
+    .demo-tag-float { position:absolute; top:-9px; right:-9px; z-index:5; display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#F53F3F; color:#fff; font-size:11px; font-weight:600; line-height:18px; box-shadow:0 2px 6px rgba(245,63,63,0.45); }
+    .demo-mark { position:relative; border:2px solid #F53F3F !important; border-radius:8px; box-shadow:0 0 0 3px rgba(245,63,63,0.22); }
+    .demo-mark::after { content:attr(data-mark); position:absolute; top:-11px; left:10px; z-index:6; display:inline-block; padding:1px 8px; border-radius:8px; background:#F53F3F; color:#fff; font-size:11px; font-weight:600; line-height:17px; box-shadow:0 2px 6px rgba(245,63,63,0.45); }
     .nav-right {
       display: flex; align-items: center; gap: 14px;
       padding: 0 20px;
@@ -3433,7 +3433,7 @@
       color:#1677ff;
     }
 
-    /* 患者状态展示（审批记录 / 审核页面共用） */
+    /* 患患者标签展示（审批记录 / 审核页面共用） */
     .ps-status-bar {
       display:flex;
       align-items:center;
@@ -5577,7 +5577,7 @@
 <div class="nav-menu">
 
 <div class="nav-item active" id="nav-audit" onclick="switchModule('audit')">
-  <span class="nav-icon">📋</span> 审批列表
+  <span class="nav-icon">📋</span> 审批列表<span class="demo-tag">3</span>
 </div>
 <div class="nav-item" id="nav-ai" onclick="switchModule('ai')">
   <span class="nav-icon">✨</span> 智能筛选
@@ -5629,7 +5629,7 @@
     </div>
     <div class="prd-section">
       <div class="prd-section-title">患者标签配置 · 需求说明</div>
-      <div class="prd-section-content"><span class="prd-badge prd-badge-core">核心功能</span><p>项目管理中设置 每个项目的患者状态，在审核和审核记录中可以更新患者状态</p></div>
+      <div class="prd-section-content"><span class="prd-badge prd-badge-core">核心功能</span><p>项目管理中设置 每个项目的患者标签，在审核和审核记录中可以更新患者标签</p></div>
     </div>
 
   </div>
@@ -6738,13 +6738,14 @@ function updatePRDPanel(mod, sub) {
         {
           title: '患者标签配置 · 需求说明',
           content: `
-            <span class="prd-badge prd-badge-core">核心功能</span>项目管理中设置 每个项目的患者状态，在审核和审核记录中可以更新患者状态            
+            <span class="prd-badge prd-badge-core">核心功能</span>项目管理中设置 每个项目的患者标签，在审核和审核记录中可以更新患者标签           
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">一、修改范围总览</h4>
             <ol class="prd-list">
               <li><strong>项目管理</strong>：操作列加患者标签配置。</li>
-              <li><strong>智能筛选</strong>：审核记录 可以更新患者状态，展示标签。</li>
-              <li><strong>审核列表</strong>：审核可以更新患者状态，展示标签，审核记录也是</li>
-    
+              <li><strong>智能筛选</strong>：审核记录 可以更新患者标签，展示标签。</li>
+              <li><strong>智能筛选</strong>：导出的时候，加一个导出 患者标签列</li>
+              <li><strong>审核列表</strong>：审核可以更新患者标签，展示标签，审核记录也是</li>
+              <li><strong>审核列表</strong>：导出的时候，加一个导出 患者标签列</li>
             </ol> `
         },
 
@@ -6757,22 +6758,40 @@ function updatePRDPanel(mod, sub) {
         {
           title: '🆕 患者标签配置 · 功能说明',
           content: `
-            <span class="prd-badge prd-badge-admin">新增</span> 在「后台管理 → 项目管理」的<strong>项目列表中</strong>进入，对本项目配置患者状态维度与选项。
+            <span class="prd-badge prd-badge-admin">新增</span> 在「后台管理 → 项目管理」的<strong>项目列表中</strong>进入，对本项目配置患者标签维度与选项。
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">一、可配置内容</h4>
             <ol class="prd-list">
               <li><strong>知情状态</strong>：待确认知情意向 / 待签署知情 / 已签署知情。</li>
               <li><strong>入组条件审核</strong>：符合入组条件 / 已有资料符合，仍需补充材料 / 不符合（驳回）。</li>
               <li><strong>页面上做了一个测试的数据，是为了提醒后端 ，这个未来要做成可配置的，还会有其它类型，预留一下。</strong></li>
               <li><strong style="color:red">这个页面的配置功能 可以在数据库中直接配置了，页面上只要启用停用和保存，以及是否需要更新历史数据。本周比较着急，暂时只上这些功能</strong></li>
+              <li><strong style="color:red">联动字段建议做成配置项的，比如 哪些字段 可能涉及联动</strong>：包括字段里面的值和选项是下拉还是 时间，下拉里的值都有哪些</li>
               <li><strong>是否启用</strong>：每个状态均可开关「在本项目中是否启用」。</li>
             </ol>
+             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">五、默认配置</h4>
+            <ul class="prd-list">
+              <li>默认所有的状态都是停用，只有配置了，才会显示</li>
+              <li>1. 知情状态：待确认知情意向（默认配置联动，知情时间为空） / 待签署知情（默认配置联动，知情时间为空） / 已签署知情（默认配置联动，知情时间不为空）</li>
+              <li>2. 入组条件审核:本周只支持三个选项即可，先不做联动的默认配置了</li>
+              <li>3. 联动字段需要做成可配置的，包括 知情时间、审核类型、审核状态等，类型是下拉或者是其它，如果是下拉，可以设置对应的下拉框（后端需要冗余出数据库设计，后续完善）</li>
+              <li>4. 联动字段的配置内容先做成只展示 ，以及是否联动的开启，先不做联动字段的编辑功能</li>
+              </ul>
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">二、联动效果（核心）</h4>
             <p class="prd-text">本项目<strong>启用</strong>的状态，会实时出现在「审核列表」与「智能筛选」的审核记录和审核 页面出现 <strong>「状态修改」</strong> 按钮弹窗中；<strong>停用</strong>的状态不再展示。配置在<strong>同会话内即时生效</strong>（刷新页面重置为默认）。</p>
             <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">三、原型演示</h4>
             <ul class="prd-list">
               <li>项目管理列表 → 点击「患者标签配置」进入配置页；</li>
               <li>切换某状态启用/停用，或在审核列表 / 智能筛选的审核记录和审核 页面点击「状态修改」，观察可选项随配置实时变化。</li>
-            </ul>`
+            </ul>
+              <h4 style="margin:14px 0 6px;font-size:13px;color:#1677ff;">四、历史数据是否更新</h4>
+            <ul class="prd-list">
+              <li>1. 启用历史数据更新：
+              根据联动，点击保存之后，更新 项目中所有的数据，①数据为空，直接更新，②标签不为空，根据联动 更新成最新的，③如果这个选项没有设置联动不需要更新</li>
+              <li>2. 关闭历史数据更新：不需要历史数据进行处理 </li>
+            </ul>
+           
+            `
+            
         }
       ]
     },
@@ -7343,7 +7362,7 @@ function buildAuditContent() {
               <span class="action-sep">|</span>
               <span class="action-link" style="color:#165DFF" onclick="openStatusChangeModal('${r.patientNo}')">状态修改</span>
               <span class="action-sep">|</span>
-              <span class="action-link demo-mark" data-mark="查看②" onclick="openAuditRecordModal('${r.patientNo}')">审批记录</span>
+              <span class="action-link demo-mark" data-mark="3" onclick="openAuditRecordModal('${r.patientNo}')">审批记录</span>
               <span class="action-sep">|</span>
               <span class="action-link">邮件记录</span>
             </td>
@@ -8885,10 +8904,11 @@ function renderAuditRecordContent(patientNo) {
   // 添加PRD侧边栏
   const prdSidebar = `
   <div class="prd-sidebar" style="position:static;width:380px;flex-shrink:0;border-left:2px solid #ffd591;max-height:80vh;overflow-y:auto;background:linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);padding:24px 20px">
-    <h3 style="font-size:18px;font-weight:700;color:#d46b08;margin:0 0 20px 0;padding-bottom:12px;border-bottom:2px solid #ffd591">📋 患者状态说明</h3>
+    <h3 style="font-size:18px;font-weight:700;color:#d46b08;margin:0 0 20px 0;padding-bottom:12px;border-bottom:2px solid #ffd591">📋 患者标签说明</h3>
     <div style="margin-bottom:20px">
       <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 功能概述</h3>
-      <p style="font-size:13px;color:#666;line-height:1.8;margin:0">项目配置了患者状态，就显示这个按钮；如果选择了对应的状态，本页面会显示患者的状态标识，该标识可更新。如果审核通过，即代表符合入组条件。</p>
+      <ul>
+        </ul>
     </div>
    
   </div>`;
@@ -10745,7 +10765,7 @@ function buildAdminProjects() {
       btns.push(`<span class="action-btn ${cls}" title="${op}" ${onclick}>${op}</span>`);
     });
     // 每个项目操作列均提供「患者标签配置」入口
-    btns.push(`<span class="action-btn" style="color:#165DFF" title="患者标签配置" onclick="event.stopPropagation();openPatientStatusConfigModal('${row.code}')">患者标签配置</span>`);
+    btns.push(`<span class="action-btn  demo-mark" data-mark="2" style="color:#165DFF" title="患者标签配置" onclick="event.stopPropagation();openPatientStatusConfigModal('${row.code}')">患者标签配置</span>`);
     return btns.join('');
   }
 
@@ -20100,6 +20120,7 @@ window.addEventListener('DOMContentLoaded', function() {
 .ps-chip:hover{border-color:#165DFF;color:#165DFF;}
     .ps-chip.selected{background:#e8f3ff;border-color:#165DFF;color:#165DFF;font-weight:600;}
     .ps-empty{color:#bbb;font-size:12px;padding:4px 0;}
+    .ps-mismatch-hint{display:none;margin-top:6px;padding:10px 12px;background:#fff1f0;border:1px solid #ffccc7;border-radius:8px;color:#cf1322;font-size:13px;line-height:1.6;}
 
     /* 状态修改弹窗步骤 */
     .ps-step-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#165DFF;color:#fff;font-size:11px;font-weight:700;margin-right:6px;vertical-align:middle;}
@@ -20117,7 +20138,7 @@ window.addEventListener('DOMContentLoaded', function() {
   // 状态类型改为可动态增删的数组结构：每个类型含 key / name / options
   // 每个选项的「联动」以 links 数组表达：可配置多个字段条件，字段间以「且(AND)」组合。
   //   单条条件：{ field:'字段key', op:'notEmpty' }  或  { field:'字段key', op:'eq', value:'某值' }
-  // 例：待签署知情 → 仅「知情时间 不为空」；符合入组条件 → 「审核类型=入组审批」且「审核结论=通过」
+  // 例：已签署知情 → 仅「知情时间 不为空」；符合入组条件 → 「审核类型=入组审批」且「审核结论=通过」
   const _DEFAULT_PS_GROUPS = [
     { key:'consent', name:'知情状态', enabled:true, options:[
       {id:'A', name:'待确认知情意向', enabled:true, links:[]},
@@ -20125,15 +20146,21 @@ window.addEventListener('DOMContentLoaded', function() {
       {id:'C', name:'已签署知情', enabled:true, links:[{field:'informedTime', op:'notEmpty'}]}
     ]},
     { key:'enroll', name:'入组条件审核', enabled:true, options:[
-      {id:'A', name:'符合入组条件', enabled:true, links:[{field:'auditType', op:'eq', value:'入组审批'},{field:'auditResult', op:'eq', value:'通过'}]},
+      {id:'A', name:'符合入组条件', enabled:true, links:[]},
       {id:'B', name:'已有资料符合，仍需补充材料', enabled:true, links:[]},
       {id:'C', name:'不符合（驳回）', enabled:true, links:[]}
     ]}
   ];
+  // 清理名称中旧版本自动追加的联动提示括号，如「已签署知情（跟知情时间联动）」
+  function _cleanPsName(name){
+    if(typeof name !== 'string') return name;
+    return name.replace(/（[^（）]*(?:联动|审核)[^（）]*）$/g, '').trim();
+  }
   // 将旧版 linkField（单字段）结构迁移为 links（多条件）结构，保证既有 localStorage 数据兼容
   function _normalizePsGroups(groups){
     (groups||[]).forEach(function(g){
       (g.options||[]).forEach(function(s){
+        if(typeof s.name === 'string') s.name = _cleanPsName(s.name);
         if(s.linkField && !s.links){
           if(s.linkField==='informedTime') s.links = [{field:'informedTime', op:'notEmpty'}];
           else if(s.linkField==='enrollAudit') s.links = [{field:'auditType', op:'eq', value:'入组审批'},{field:'auditResult', op:'eq', value:'通过'}];
@@ -20315,7 +20342,7 @@ window.addEventListener('DOMContentLoaded', function() {
         return `
           <div class="ps-status-row">
             <span class="ps-status-letter">${_letter}</span>
-            <span class="ps-status-name-ro">${_psEsc(s.name)}</span>
+            <span class="ps-status-name-ro">${_psEsc(_cleanPsName(s.name))}</span>
             <div class="ps-row-actions">
               <span class="ps-action-label">启用</span>
               <label class="ps-switch" title="启用 / 停用该状态">
@@ -20425,6 +20452,14 @@ window.addEventListener('DOMContentLoaded', function() {
 
   window.closePatientStatusConfigModal = function(){ const m=document.getElementById('patientStatusConfigModal'); if(m) m.remove(); var pd=document.getElementById('prdDrawer'); if(pd) pd.classList.remove('prd-above-modal'); if(window.refreshStatusChangeModal) window.refreshStatusChangeModal(); };
 
+  // 一键恢复默认配置：清除 localStorage 旧缓存并重置为默认数据（解决旧配置残留导致 C 选项仍带联动括号的问题）
+  window.resetPsConfig = function(){
+    try{ localStorage.removeItem('ps_groups'); }catch(e){}
+    window.PATIENT_STATUS_GROUPS = JSON.parse(JSON.stringify(_DEFAULT_PS_GROUPS));
+    window.renderPatientStatusConfig();
+    if(window.showWechatToast) showWechatToast('已恢复默认配置');
+  };
+
   window.renderPatientStatusConfig = function(){ const el=document.getElementById('patientStatusPanel'); if(el) el.innerHTML = psInnerHTML(); };
 
   window.togglePsStatus = function(key,id){
@@ -20495,10 +20530,11 @@ window.addEventListener('DOMContentLoaded', function() {
     _savePsGroups();
     if(window.PATIENT_STATUS_UPDATE_HISTORY){
       const n = applyStatusLinksToHistory();
-      if(window.showWechatToast) showWechatToast('已按配置回填历史患者状态（'+n+' 条）');
+      if(window.showWechatToast) showWechatToast('已按配置回填历史患者标签（'+n+' 条）');
     } else {
       if(window.showWechatToast) showWechatToast('患者标签配置已保存（本项目生效）');
     }
+    closePatientStatusConfigModal();
   };
 
   // 返回所有「联动了指定字段」的选项（跨类型），用于通用化交互
@@ -20539,8 +20575,9 @@ window.addEventListener('DOMContentLoaded', function() {
     function chips(list, key, selected){
       if(!list.length) return '<div class="ps-empty">该类型未启用任何状态（请在「患者标签配置」中开启）</div>';
       return list.map(function(s){
-        const sel = selected===s.name ? ' selected' : '';
-        return `<div class="ps-chip${sel}" data-group="${key}" data-name="${_psEsc(s.name)}" onclick="togglePsChip(this)">${s.name}</div>`;
+        const cleanName = _cleanPsName(s.name);
+        const sel = (selected===cleanName || selected===s.name) ? ' selected' : '';
+        return `<div class="ps-chip${sel}" data-group="${key}" data-name="${_psEsc(cleanName)}" onclick="togglePsChip(this)">${cleanName}</div>`;
       }).join('');
     }
     const sections = groups.map(function(g, idx){
@@ -20552,77 +20589,38 @@ window.addEventListener('DOMContentLoaded', function() {
             <div class="ps-chips" id="psChips_${g.key}">${chips(enabled, g.key, selectedVal)}</div>
           </div>`;
     }).join('');
-    const informedStore = window._patientStatusStore[patientNo] || {};
-    const informedVal = informedStore.informedTime || '';
-    const hasInformedLink = _existsOptionLinkingField('informedTime');
-    const informedReqShow = (hasInformedLink && informedVal) ? '' : 'none';
-    const informedRow = `
-      <div class="ps-informed-row">
-        <label class="ps-informed-label">知情时间<span id="psInformedReq" class="ps-req-mark" style="display:${informedReqShow}">*</span></label>
-        <input type="datetime-local" class="ps-informed-input" id="psInformedTime" value="${informedVal}" onchange="onInformedTimeChange('${patientNo}')">
-        <span class="ps-informed-hint" id="psInformedHint">${(hasInformedLink && informedVal)?'已填写知情时间，已自动置为对应联动状态':''}</span>
-      </div>`;
-    return informedRow + (sections || '<div class="ps-empty">暂无状态类型，请先在「患者标签配置」中新增。</div>');
+    const hint = `<div id="psMismatchHint" class="ps-mismatch-hint"></div>`;
+    return (sections ? sections + hint : '<div class="ps-empty">暂无状态类型，请先在「患者标签配置」中新增。</div>' + hint);
   }
 
-  // 知情时间 ↔ 联动选项 双向联动（由选项是否「联动知情时间」决定，支持跨类型）
-  window.onInformedTimeChange = function(patientNo){
-    const t = document.getElementById('psInformedTime');
-    const val = t ? t.value.trim() : '';
-    window._patientStatusStore[patientNo] = window._patientStatusStore[patientNo] || {};
-    window._patientStatusStore[patientNo].informedTime = val;
-    const req = document.getElementById('psInformedReq');
-    const hint = document.getElementById('psInformedHint');
-    const linked = _optionsLinkingField('informedTime'); // 所有联动了知情时间的选项（跨类型）
-    if(!linked.length){ // 未配置联动：知情时间仅作普通字段
-      if(req) req.style.display='none';
-      if(hint) hint.textContent='';
-      return;
-    }
-    if(val){
-      linked.forEach(function(o){
-        const chip = document.querySelector('#psChips_'+o.group.key+' .ps-chip[data-name="'+o.option.name+'"]');
-        if(chip){ document.querySelectorAll('#psChips_'+o.group.key+' .ps-chip').forEach(function(c){ c.classList.remove('selected'); }); chip.classList.add('selected'); }
-      });
-      if(req) req.style.display='';
-      if(hint) hint.textContent='已填写知情时间，已自动置为对应联动状态';
+  // 选中联动选项后，校验该患者实际字段值是否满足联动条件，不满足则在页面提示
+  window.checkPsLinkMismatch = function(){
+    const patientNo = window.__statusChangePatient;
+    const hint = document.getElementById('psMismatchHint');
+    if(!hint || !patientNo) return;
+    const groups = window.PATIENT_STATUS_GROUPS || [];
+    let msgs = [];
+    groups.forEach(function(g){
+      const sel = document.querySelector('#psChips_'+g.key+' .ps-chip.selected');
+      if(!sel) return;
+      const name = sel.getAttribute('data-name');
+      const opt = (g.options||[]).find(function(o){ return o.name===name || _cleanPsName(o.name)===name; });
+      if(opt && Array.isArray(opt.links) && opt.links.length && !_evalLinks(patientNo, opt.links)){
+        msgs.push('「'+name+'」：知情时间值与选择的状态不匹配');
+      }
+    });
+    if(msgs.length){
+      hint.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="margin-right:6px"></i>' + msgs.join('；');
+      hint.style.display = 'block';
     } else {
-      const anySel = linked.some(function(o){
-        const chip = document.querySelector('#psChips_'+o.group.key+' .ps-chip[data-name="'+o.option.name+'"]');
-        return chip && chip.classList.contains('selected');
-      });
-      if(req) req.style.display = anySel ? '' : 'none';
-      if(hint) hint.textContent = anySel ? '已选择联动选项，请填写知情时间' : '';
+      hint.style.display = 'none';
+      hint.innerHTML = '';
     }
   };
 
-  // 包装 togglePsChip：选择「联动知情时间」的选项时，知情时间必填（通用化，支持跨类型）
-  (function(){
-    const _orig = window.togglePsChip;
-    window.togglePsChip = function(el){
-      _orig(el);
-      const group = el.getAttribute('data-group');
-      const sel = el.getAttribute('data-name');
-      const req = document.getElementById('psInformedReq');
-      const hint = document.getElementById('psInformedHint');
-      const t = document.getElementById('psInformedTime');
-      const hasTime = t && t.value.trim();
-      const linked = _optionsLinkingField('informedTime');
-      const isLinked = linked.some(function(o){ return o.group.key===group && o.option.name===sel; });
-      if(isLinked){
-        if(req) req.style.display='';
-        if(hint) hint.textContent = hasTime ? '已填写知情时间，已自动置为对应联动状态' : '已选择「'+sel+'」，请填写知情时间';
-      } else {
-        // 仅当没有其它已选中的「联动知情时间」选项时，才隐藏必填标记
-        const stillLinked = linked.some(function(o){
-          const chip = document.querySelector('#psChips_'+o.group.key+' .ps-chip[data-name="'+o.option.name+'"]');
-          return chip && chip.classList.contains('selected');
-        });
-        if(req && !stillLinked) req.style.display='none';
-        if(hint && !stillLinked) hint.textContent='';
-      }
-    };
-  })();
+
+
+
 
   window.openStatusChangeModal = function(patientNo){
     if(typeof patientNo === 'undefined' || patientNo === null) return;
@@ -20632,7 +20630,7 @@ window.addEventListener('DOMContentLoaded', function() {
     overlay.id = 'statusChangeModal';
     overlay.innerHTML = `
       <div class="ps-modal">
-        <div class="ps-modal-header">修改患者状态<span style="cursor:pointer;font-size:20px;color:#999" onclick="closeStatusChangeModal()">&times;</span></div>
+        <div class="ps-modal-header">修改患者标签<span style="cursor:pointer;font-size:20px;color:#999" onclick="closeStatusChangeModal()">&times;</span></div>
         <div class="ps-modal-body">${ buildStatusChangeBody(patientNo) }</div>
         <div class="ps-modal-footer">
           <button class="btn btn-default btn-sm" onclick="closeStatusChangeModal()">取消</button>
@@ -20641,6 +20639,7 @@ window.addEventListener('DOMContentLoaded', function() {
       </div>`;
     overlay.addEventListener('click', function(e){ if(e.target===overlay) closeStatusChangeModal(); });
     document.body.appendChild(overlay);
+    if(window.checkPsLinkMismatch) window.checkPsLinkMismatch();
   };
 
   // 配置弹窗关闭后，若状态修改弹窗仍打开，则原地刷新（保留已选），使新启用的选项立即可见
@@ -20655,6 +20654,7 @@ window.addEventListener('DOMContentLoaded', function() {
     });
     const body = m.querySelector('.ps-modal-body');
     if(body) body.innerHTML = buildStatusChangeBody(window.__statusChangePatient, preset);
+    if(window.checkPsLinkMismatch) window.checkPsLinkMismatch();
   };
 
   window.closeStatusChangeModal = function(){ const m=document.getElementById('statusChangeModal'); if(m) m.remove(); };
@@ -20664,6 +20664,7 @@ window.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('psChips_'+group);
     if(container) container.querySelectorAll('.ps-chip').forEach(function(c){ c.classList.remove('selected'); });
     el.classList.add('selected');
+    if(window.checkPsLinkMismatch) window.checkPsLinkMismatch();
   };
 
   window.confirmStatusChange = function(patientNo){
@@ -20674,18 +20675,7 @@ window.addEventListener('DOMContentLoaded', function() {
       const sel = document.querySelector('#psChips_'+g.key+' .ps-chip.selected');
       next[g.key] = sel ? sel.getAttribute('data-name') : prev[g.key];
     });
-    // 字段关联校验：凡选择了「联动知情时间」的选项，必须填写知情时间
-    const linkedInformed = _optionsLinkingField('informedTime');
-    let informedRequiredName = null;
-    for(let i=0;i<linkedInformed.length;i++){
-      if(next[linkedInformed[i].group.key] === linkedInformed[i].option.name){ informedRequiredName = linkedInformed[i].option.name; break; }
-    }
-    if(informedRequiredName){
-      const it = document.getElementById('psInformedTime');
-      if(!it || !it.value.trim()){ if(window.showWechatToast) showWechatToast('已选择「'+informedRequiredName+'」，请先填写知情时间'); return; }
-      window._patientStatusStore[patientNo] = window._patientStatusStore[patientNo] || {};
-      window._patientStatusStore[patientNo].informedTime = it.value.trim();
-    }
+
     window._patientStatusStore[patientNo] = next;
     closeStatusChangeModal();
     const sm = document.getElementById('submitAuditModal'); if(sm) sm.remove();
@@ -20719,20 +20709,20 @@ window.addEventListener('DOMContentLoaded', function() {
     return p.patientStatus;
   };
 
-  // 患者状态展示：完整状态条（用于弹窗顶部）
+  // 患者标签展示：完整状态条（用于弹窗顶部）
   window.renderPatientStatusBar = function(patientNo) {
     var parts = (typeof window.getPatientStatusParts === 'function') ? window.getPatientStatusParts(patientNo) : [];
-    if (!parts || !parts.length) return ''; // 没有选中任何状态时，不显示「患者状态」区域
+    if (!parts || !parts.length) return ''; // 没有选中任何状态时，不显示「患者标签」区域
     var inner = parts.map(function(p){
       return '<span class="ps-status-chip"><span class="ps-status-chip-label">'+ (p.label||'') +'</span><span class="ps-status-chip-val">'+ (p.value||'') +'</span></span>';
     }).join('');
     return '<div class="ps-status-bar">'
-      + '<span class="ps-status-bar-label"><i class="fa-solid fa-circle-info" style="margin-right:5px"></i>患者状态</span>'
+      + '<span class="ps-status-bar-label"><i class="fa-solid fa-circle-info" style="margin-right:5px"></i>患者标签</span>'
       + '<div class="ps-status-chips">'+ inner +'</div>'
       + '</div>';
   };
 
-  // 患者状态展示：紧凑标签（用于表格单元格）
+  // 患者标签展示：紧凑标签（用于表格单元格）
   window.renderPatientStatusTags = function(patientNo) {
     var parts = (typeof window.getPatientStatusParts === 'function') ? window.getPatientStatusParts(patientNo) : [];
     if (!parts || !parts.length) return '<span class="ps-status-cell-empty">—</span>';
