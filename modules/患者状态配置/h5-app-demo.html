@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APP 端 - 思考链 4 态演示 - AI 智能预筛系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* 基础 */
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #333;
+      background: #f0f2f5;
+    }
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* 左侧 vConsole 模拟手机 */
+    .phone-stage {
+      flex: 0 0 82%;
+      padding: 24px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background: #f5f7fa;
+    }
+    .phone-frame {
+      position: relative;
+      width: 390px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 8px #1a1a1a, 0 0 0 10px #2c2c2c;
+      overflow: hidden;
+    }
+    /* 顶部 vConsole 绿色徽标 */
+    .vconsole-badge {
+      position: absolute;
+      top: 12px; left: -2px;
+      background: #07c160;
+      color: #fff;
+      padding: 6px 14px 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 0 4px 4px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 50;
+      letter-spacing: 0.3px;
+    }
+    .vconsole-watermark {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      color: rgba(0,0,0,0.06);
+      font-size: 38px;
+      font-weight: 700;
+      transform: rotate(-15deg);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 700px;
+      overflow-y: auto;
+      padding: 0;
+      background: #f5f6f8;
+      position: relative;
+    }
+    .phone-header {
+      background: #fff;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .phone-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .phone-title .caret {
+      font-size: 14px;
+      color: #999;
+      margin-left: 4px;
+    }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #1677ff;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .avatar.green { background: #07c160; }
+
+    /* APP 列表页：四宫格入口 */
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 18px 12px;
+      background: #fff;
+    }
+    .app-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .app-cell:active { transform: scale(0.96); }
+    .app-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #1677ff;
+      font-size: 22px;
+      background: #f0f5ff;
+    }
+    .app-icon.gray { background: #f4f6f8; color: #1677ff; }
+    .app-icon.purple { background: #f4eef9; color: #722ed1; }
+    .app-icon.orange { background: #fff4e6; color: #fa8c16; }
+    .app-name {
+      font-size: 12px;
+      color: #333;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* 审核列表：Tab + 卡片 */
+    .tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .tab-bar .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 15px;
+      color: #333;
+      position: relative;
+      cursor: pointer;
+    }
+    .tab-bar .tab.active {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .tab-bar .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 50%; bottom: 0;
+      transform: translateX(-50%);
+      width: 28px; height: 3px;
+      background: #1677ff;
+      border-radius: 2px;
+    }
+
+    .audit-card {
+      background: #fff;
+      margin: 10px 12px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .audit-card .hd {
+      padding: 12px 14px 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .audit-card .name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .audit-card .meta {
+      font-size: 12px;
+      color: #999;
+    }
+    .audit-card .pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .pill-blue { background: #e6f4ff; color: #1677ff; }
+    .pill-orange { background: #fff4e6; color: #fa8c16; }
+    .pill-green { background: #e6f7ec; color: #07c160; }
+    .pill-red { background: #fef0ef; color: #f5222d; }
+    .pill-gray { background: #f5f5f5; color: #8c8c8c; }
+    .audit-card .body { padding: 8px 14px; }
+    .audit-card .row {
+      display: flex;
+      font-size: 13px;
+      line-height: 22px;
+      color: #333;
+    }
+    .audit-card .row .lbl { color: #999; min-width: 78px; flex-shrink: 0; }
+    .audit-card .row .val { flex: 1; }
+    .audit-card .pct-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+    }
+    .pct-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: #fa8c16;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .audit-card .action-bar {
+      display: flex;
+      gap: 8px;
+      padding: 0 14px 12px;
+      justify-content: flex-end;
+    }
+    .audit-card .act-btn {
+      padding: 6px 12px;
+      border: 1px solid #1677ff;
+      background: #fff;
+      color: #1677ff;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .audit-card .act-btn.primary {
+      background: #1677ff;
+      color: #fff;
+    }
+    .audit-card .files {
+      padding: 8px 14px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #999;
+      border-top: 1px solid #f5f5f5;
+    }
+    .audit-card .files i { color: #1677ff; font-size: 14px; }
+
+    /* 匹配详情 */
+    .md-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .md-tabs .md-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+      position: relative;
+    }
+    .md-tabs .md-tab.active {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .md-tabs .md-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 28px; height: 3px;
+      background: #1677ff;
+      border-radius: 2px;
+    }
+
+    .md-section {
+      padding: 10px 12px;
+    }
+    .md-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .md-card .top-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .md-card .top-row .nm {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .md-card .top-row .age { font-size: 13px; color: #666; }
+    .md-card .tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .md-card .tag-edit {
+      margin-left: auto;
+      color: #1677ff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .md-card .disease { font-size: 13px; color: #666; margin-top: 4px; }
+    .md-card .files {
+      display: flex; gap: 8px; align-items: center;
+      margin-top: 10px;
+    }
+    .md-card .file-btn {
+      flex: 1;
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px;
+      background: #f5f6f8;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #666;
+    }
+    .md-card .file-btn i { color: #1677ff; font-size: 18px; }
+    .md-card .file-btn.primary {
+      background: #1677ff;
+      color: #fff;
+    }
+    .md-card .file-btn.primary i { color: #fff; }
+
+    .md-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+    .md-sub { font-size: 12px; color: #999; }
+    .criteria-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #666;
+    }
+
+    .match-pct {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .match-pct .left {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .match-pct .pct {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .match-pct .pct small { font-size: 11px; color: #999; font-weight: 400; display: block; }
+    .match-pct .desc {
+      font-size: 12px; color: #666; line-height: 18px;
+      padding-left: 14px;
+      border-left: 1px solid #eee;
+    }
+
+    .ai-suggest {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 8px;
+    }
+    .ai-suggest .lbl { font-size: 14px; color: #333; }
+    .ai-suggest .lbl b { color: #fa8c16; margin-left: 6px; font-weight: 600; }
+    .ai-suggest .rec {
+      margin-left: auto;
+      padding: 6px 12px;
+      background: #1677ff;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .disclaimer {
+      position: sticky;
+      bottom: 0;
+      background: #fff7e6;
+      color: #fa8c16;
+      padding: 8px 14px;
+      font-size: 12px;
+      border-top: 1px solid #ffd591;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* 思考链 Tab 4 态 */
+    .tc-area { padding: 14px 12px 60px; }
+    .tc-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+    }
+    .tc-state {
+      text-align: center;
+      padding: 50px 20px;
+    }
+    .tc-state .ico {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 32px;
+    }
+    .tc-state .ico.purple { background: #f3effc; color: #722ed1; }
+    .tc-state .ico.red { background: #fef0ef; color: #f5222d; }
+    .tc-state .ico.gray { background: #f5f5f5; color: #999; }
+    .tc-state h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .tc-state h4.purple { color: #722ed1; }
+    .tc-state h4.red { color: #f5222d; }
+    .tc-state .desc { font-size: 13px; color: #666; margin-bottom: 18px; line-height: 1.6; }
+    .tc-state .btn-row { display: flex; gap: 10px; justify-content: center; }
+    .tc-state button {
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-blue { background: #1677ff; color: #fff; }
+    .btn-blue-line { background: #fff; color: #1677ff; border: 1px solid #1677ff !important; }
+
+    /* 思考链类型选择 */
+    .tc-type-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tc-type-btn {
+      padding: 5px 12px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      color: #666;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .tc-type-btn.tc-type-active {
+      border-color: #1677ff;
+      color: #1677ff;
+      background: #f0f5ff;
+      font-weight: 600;
+    }
+
+    /* 开发提示 */
+    .dev-tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      background: #fff2f0;
+      border: 1px solid #ffccc7;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.6;
+    }
+    .dev-tip .icon { color: #ff4d4f; font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+    .dev-tip .title { color: #ff4d4f; font-weight: 600; margin-bottom: 1px; }
+
+    /* 成功态的思考链条目 */
+    .tc-item {
+      background: #fff;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      border: 1px solid #f0f0f0;
+    }
+    .tc-item .hd {
+      display: flex; align-items: center;
+      padding: 10px 12px;
+      background: #fafafa;
+      cursor: pointer;
+    }
+    .tc-item .hd .num {
+      width: 20px; height: 20px;
+      background: #1677ff;
+      color: #fff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      margin-right: 8px;
+    }
+    .tc-item .hd .nm { font-size: 14px; font-weight: 600; flex: 1; }
+    .tc-item .hd .ok-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      background: #e6f7ec;
+      color: #07c160;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    .tc-item .hd .edit-btn {
+      font-size: 12px;
+      color: #1677ff;
+      padding: 3px 10px;
+      background: #e6f4ff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .tc-item .body {
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #333;
+      white-space: pre-wrap;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s;
+    }
+    .tc-item.open .body { max-height: 600px; }
+
+    /* 页面切换 */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* 右侧 PRD */
+    .prd-panel {
+      flex: 0 0 18%;
+      min-width: 260px;
+      background: #fff7e6;
+      border-left: 1px solid #f0d9a8;
+      padding: 16px 14px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    .prd-panel h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #b07a1a;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #f0d9a8;
+      padding-bottom: 6px;
+    }
+    .prd-panel h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #8b5a0a;
+      margin: 12px 0 6px;
+    }
+    .prd-panel p, .prd-panel li {
+      font-size: 12px;
+      color: #6b4a0a;
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }
+    .prd-panel ul { padding-left: 18px; margin: 0; }
+    .prd-panel li.note { margin-top: 6px; color: #9a6a1a; font-size: 12px; font-style: italic; }
+    .prd-panel .hi { background: #fff2cc; padding: 2px 6px; border-radius: 3px; color: #8b5a0a; }
+    .prd-panel .tip {
+      background: #fff;
+      border-left: 3px solid #fa8c16;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #6b4a0a;
+      margin: 10px 0;
+      line-height: 1.6;
+      border-radius: 0 4px 4px 0;
+    }
+    .prd-panel .pin {
+      background: #1677ff;
+      color: #fff;
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 4px;
+    }
+
+    /* 连线 SVG */
+    .lines-svg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .lines-svg path {
+      fill: none;
+      stroke: #1677ff;
+      stroke-width: 2;
+      stroke-dasharray: 5 4;
+      transition: stroke 0.2s, stroke-width 0.2s;
+    }
+    .lines-svg .label {
+      fill: #1677ff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .hl-target, .hl-source {
+      outline: 2px solid #1677ff !important;
+      box-shadow: 0 0 0 4px rgba(22,118,255,0.15);
+      position: relative;
+      z-index: 2;
+    }
+
+    /* APP 列表 hover */
+    [data-link] { cursor: pointer; }
+
+    /* ====== 智能筛选 - 项目列表 ====== */
+    .search-box {
+      padding: 12px;
+      background: #fff;
+    }
+    .search-input {
+      display: flex; align-items: center; gap: 6px;
+      background: #f5f6f8;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px; color: #999;
+    }
+    .filter-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 12px 10px;
+      background: #fff;
+    }
+    .filter-pill {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      border: 1px solid #1677ff;
+      color: #1677ff;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+    }
+    .filter-pill .caret { font-size: 10px; margin-left: 4px; }
+    .seg-tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .seg-tab {
+      flex: 1; text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #666;
+      position: relative;
+    }
+    .seg-tab.active {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .seg-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 28px; height: 3px;
+      background: #1677ff;
+      border-radius: 2px;
+    }
+    .project-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px 14px;
+      margin: 10px 12px;
+      cursor: pointer;
+      transition: transform .15s;
+    }
+    .project-card:active { transform: scale(0.99); }
+    .project-card .pname {
+      font-size: 17px; font-weight: 600;
+      color: #1a1a1a; margin-bottom: 6px;
+    }
+    .project-card .pdisease {
+      font-size: 12px; color: #666;
+    }
+
+    /* ====== 患者列表（智能筛选的二级页） ====== */
+    .pt-tab-bar {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .pt-tab {
+      flex: 1; text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #666;
+      position: relative;
+    }
+    .pt-tab .badge {
+      display: inline-block;
+      background: #f5222d;
+      color: #fff;
+      font-size: 11px;
+      padding: 0 5px;
+      border-radius: 8px;
+      margin-left: 2px;
+      vertical-align: top;
+      line-height: 16px;
+    }
+    .pt-tab.active {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .pt-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 28px; height: 3px;
+      background: #1677ff;
+      border-radius: 2px;
+    }
+    .pt-filter-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+    .pt-filter-pill {
+      flex: 1;
+      text-align: center;
+      padding: 8px 0;
+      border: 1px solid #1677ff;
+      color: #1677ff;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #fff;
+    }
+    .pt-add-btn {
+      color: #1677ff;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .pt-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px;
+      margin: 10px 12px;
+    }
+    .pt-card .pt-hd {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 8px;
+    }
+    .pt-card .pt-hd .nm {
+      font-size: 17px; font-weight: 600; color: #1a1a1a;
+    }
+    .pt-card .pt-hd .info {
+      font-size: 13px; color: #666;
+    }
+    .pt-card .pt-hd .icons {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 10px;
+      color: #999;
+      font-size: 16px;
+    }
+    .pt-card .pt-tags {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .pt-card .pt-row {
+      font-size: 12px; color: #666;
+      line-height: 20px;
+    }
+    .pt-card .pt-row .lbl { color: #999; }
+    .pt-card .pt-actions {
+      display: flex; gap: 8px;
+      margin-top: 10px;
+    }
+    .pt-card .pt-btn {
+      flex: 1; text-align: center;
+      padding: 7px 0;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #1677ff;
+      background: #fff;
+    }
+    .pt-card .pt-match-tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 3px 10px; border-radius: 12px;
+      background: #e6f4ff; color: #1677ff; border: 1px solid #1677ff;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      white-space: nowrap; margin-left: 8px;
+    }
+    .pt-card .pt-match-tag:active { background: #1677ff; color: #fff; }
+    .pt-card .pt-files {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #f5f6f8;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+    }
+    .pt-card .pt-files .cnt {
+      margin-left: auto;
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .pt-card .pt-files i { color: #1677ff; font-size: 16px; }
+
+    /* ====== 审核记录页 ====== */
+    .record-screen { background: #f5f6f8; min-height: 100%; padding-bottom: 20px; }
+    .record-subtitle {
+      text-align: center; font-size: 15px; font-weight: 600; color: #333;
+      padding: 12px 0; background: #fff; border-bottom: 1px solid #f0f0f0;
+    }
+    .record-section { background: #fff; border-radius: 8px; margin: 12px; overflow: hidden; }
+    .record-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid #f0f0f0;
+    }
+    .record-section-title { font-size: 15px; font-weight: 600; color: #333; }
+    .record-section-toggle { font-size: 13px; color: #1677ff; cursor: pointer; }
+    .record-actions {
+      display: flex; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f0f0f0;
+    }
+    .record-action-btn {
+      flex: 1; text-align: center; padding: 7px 0;
+      border-radius: 6px; font-size: 13px; cursor: pointer;
+      background: #1677ff; color: #fff; border: 1px solid #1677ff;
+    }
+    .record-action-btn.secondary {
+      background: #fff; color: #1677ff; border-color: #1677ff;
+    }
+    .record-timeline { padding: 16px 14px 16px 22px; position: relative; }
+    .record-timeline::before {
+      content: ''; position: absolute; left: 31px; top: 16px; bottom: 16px;
+      width: 1px; background: #e8e8e8;
+    }
+    .record-item { position: relative; padding-left: 28px; padding-bottom: 22px; }
+    .record-item:last-child { padding-bottom: 0; }
+    .record-dot {
+      position: absolute; left: -5px; top: 2px;
+      width: 10px; height: 10px; border-radius: 50%; background: #d9d9d9;
+      border: 2px solid #fff; box-shadow: 0 0 0 1px #e8e8e8;
+    }
+    .record-item.active .record-dot { background: #1677ff; }
+    .record-card { background: #f9f9f9; border-radius: 8px; padding: 12px; }
+    .record-role { font-size: 14px; color: #333; font-weight: 500; margin-bottom: 6px; }
+    .record-status {
+      display: inline-block; font-size: 12px; padding: 2px 8px;
+      border-radius: 4px; background: #e6f7ff; color: #1677ff; margin-bottom: 8px;
+    }
+    .record-status.revoke { background: #fff2f0; color: #ff4d4f; }
+    .record-time { font-size: 12px; color: #999; line-height: 1.8; }
+
+    .record-abnormal {
+      background: linear-gradient(135deg, #fff8f6 0%, #fff 100%);
+      border: 1px solid #ffd8cc;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 12px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .record-abnormal::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; background: linear-gradient(180deg, #ff7a45 0%, #ff4d4f 100%);
+      border-radius: 12px 0 0 12px;
+    }
+    .record-abnormal .abnormal-hd {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px; position: relative;
+    }
+    .record-abnormal .abnormal-icon {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #fff2e8; color: #ff7a45;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 1px;
+    }
+    .record-abnormal .abnormal-tag {
+      display: inline-flex; align-items: center;
+      background: #fff; color: #ff4d4f; border: 1px solid #ff9c8f;
+      font-size: 12px; font-weight: 600;
+      padding: 3px 9px; border-radius: 12px;
+      white-space: nowrap; margin-right: 8px;
+    }
+    .record-abnormal .abnormal-tip { color: #595959; font-size: 13px; line-height: 1.5; flex: 1; margin-top: 2px; }
+    .record-abnormal .abnormal-reason {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #ffe6df;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex; gap: 6px; align-items: flex-start;
+      position: relative;
+    }
+    .record-abnormal .abnormal-label { color: #ff4d4f; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .record-abnormal .abnormal-text { color: #595959; font-size: 13px; line-height: 1.6; }
+
+    /* ====== 智能筛选 - 提交审批（参考 h5-patient-list.html） ====== */
+    .pt-card .pt-btn.primary {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+      font-weight: 600;
+    }
+    .pt-card .pt-btn.primary:active { background: #0958d9; }
+
+    /* 提交审批 底部弹窗（限制在手机框内） */
+    .audit-overlay {
+      display: none;
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+    }
+    .audit-overlay.show { display: block; }
+    .audit-sheet {
+      display: none;
+      position: absolute; left: 0; bottom: 0;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      z-index: 301;
+      max-height: 86%;
+      overflow-y: auto;
+      animation: auditSlideUp .3s ease;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.18);
+    }
+    .audit-sheet.show { display: block; }
+    @keyframes auditSlideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .audit-sheet .sh {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+      position: sticky; top: 0; background: #fff; z-index: 2;
+    }
+    .audit-sheet .sh-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .audit-sheet .sh-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #f5f5f5; display: flex; align-items: center; justify-content: center;
+      color: #999; cursor: pointer; font-size: 15px;
+    }
+    .audit-sheet .sh-close:active { background: #e8e8e8; }
+    .audit-sheet .sh-body { padding: 16px; }
+    .audit-sheet .fg { margin-bottom: 16px; }
+    .audit-sheet .fg-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+    .audit-sheet .fg-label .req { color: #f5222d; margin-right: 4px; }
+    .audit-sheet .fg-input, .audit-sheet .fg-select, .audit-sheet .fg-textarea {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fafafa; outline: none;
+      transition: border-color .2s, background-color .2s;
+    }
+    .audit-sheet .fg-input:focus, .audit-sheet .fg-select:focus, .audit-sheet .fg-textarea:focus {
+      border-color: #1677ff; background: #fff;
+    }
+    .audit-sheet .fg-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+    .audit-sheet .fg-input::placeholder, .audit-sheet .fg-textarea::placeholder { color: #bbb; }
+    .audit-sheet .fg-textarea { min-height: 70px; resize: vertical; font-family: inherit; }
+
+    /* 智能推荐卡片 */
+    .reco-card {
+      margin-top: 10px;
+      background: linear-gradient(135deg, #e6f0ff 0%, #f0f5ff 100%);
+      border: 1px solid #b3d8ff; border-radius: 8px; overflow: hidden;
+    }
+    .reco-hd {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px;
+      background: #1677ff; color: #fff; font-size: 13px; font-weight: 600;
+    }
+    .reco-chain { padding: 10px 12px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .reco-chain .chain-label { font-size: 12px; color: #888; font-weight: 500; }
+    .reco-chain .chain-item {
+      font-size: 12px; color: #1677ff; font-weight: 600;
+      padding: 2px 8px; background: #fff; border-radius: 4px; border: 1px solid #1677ff;
+    }
+    .reco-chain .chain-item.chain-active {
+      background: #1677ff; color: #fff;
+    }
+    .reco-chain .chain-arrow { font-size: 12px; color: #999; }
+
+    /* 非标准流程提示 */
+    .nonstd-warn {
+      display: none; margin-top: 10px;
+      background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px; padding: 10px;
+    }
+    .nonstd-warn.show { display: block; }
+    .nonstd-hd {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: #d46b08; margin-bottom: 8px;
+    }
+    .nonstd-ta {
+      width: 100%; min-height: 56px; padding: 8px 10px;
+      border: 1px solid #ffd591; border-radius: 6px; font-size: 12px;
+      color: #333; background: #fff; outline: none; resize: vertical; font-family: inherit;
+    }
+    .nonstd-ta:focus { border-color: #fa8c16; }
+    .nonstd-ta::placeholder { color: #bbb; }
+
+    .audit-sheet .sh-footer {
+      display: flex; gap: 12px; padding: 12px 16px 16px;
+      border-top: 1px solid #f0f0f0; background: #fff; position: sticky; bottom: 0;
+    }
+    .audit-sheet .submit-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600; background: #1677ff; color: #fff; cursor: pointer;
+    }
+    .audit-sheet .submit-btn:active { background: #0958d9; }
+    .audit-sheet .cancel-btn {
+      flex: 1; padding: 12px; border: 1px solid #d9d9d9; border-radius: 8px;
+      font-size: 16px; background: #f5f5f5; color: #666; cursor: pointer;
+    }
+
+    /* ====== 审核列表 - 审核操作 底部弹窗 ====== */
+    .approve-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 310;
+    }
+    .approve-overlay.show { display: block; }
+    .approve-sheet {
+      display: none; position: absolute; left: 0; bottom: 0;
+      width: 100%; background: #fff; border-radius: 16px 16px 0 0;
+      z-index: 311; max-height: 86%; overflow-y: auto;
+      animation: auditSlideUp .3s ease;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.18);
+    }
+    .approve-sheet.show { display: block; }
+    .approve-sheet .sh {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+      position: sticky; top: 0; background: #fff; z-index: 2;
+    }
+    .approve-sheet .sh-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .approve-sheet .sh-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #f5f5f5; display: flex; align-items: center; justify-content: center;
+      color: #999; cursor: pointer; font-size: 15px;
+    }
+    .approve-sheet .sh-close:active { background: #e8e8e8; }
+    .approve-sheet .sh-body { padding: 16px; }
+    .approve-sheet .fg { margin-bottom: 16px; }
+    .approve-sheet .fg-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+    .approve-sheet .status-orange { color: #fa8c16; font-weight: 600; }
+    .approve-sheet .fg-textarea {
+      width: 100%; min-height: 70px; padding: 10px 12px;
+      border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fafafa; outline: none;
+      resize: vertical; font-family: inherit;
+    }
+    .approve-sheet .fg-textarea:focus { border-color: #1677ff; background: #fff; }
+    .approve-sheet .fg-textarea::placeholder { color: #bbb; }
+    .approve-sheet .textarea-counter { text-align: right; font-size: 12px; color: #999; margin-top: 4px; }
+    .approve-sheet .abnormal-flow {
+      background: linear-gradient(135deg, #fff8f6 0%, #fff 100%);
+      border: 1px solid #ffd8cc;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .approve-sheet .abnormal-flow::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #ff7a45 0%, #ff4d4f 100%);
+      border-radius: 12px 0 0 12px;
+    }
+    .approve-sheet .abnormal-hd {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-bottom: 12px; position: relative;
+    }
+    .approve-sheet .abnormal-icon {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #fff2e8; color: #ff7a45;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; margin-top: 1px;
+    }
+    .approve-sheet .abnormal-tag {
+      display: inline-flex; align-items: center;
+      background: #fff; color: #ff4d4f; border: 1px solid #ff9c8f;
+      font-size: 12px; font-weight: 600;
+      padding: 3px 9px; border-radius: 12px;
+      white-space: nowrap; margin-right: 8px;
+    }
+    .approve-sheet .abnormal-tip { color: #595959; font-size: 13px; line-height: 1.5; flex: 1; margin-top: 2px; }
+    .approve-sheet .abnormal-reason {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid #ffe6df;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex; gap: 6px; align-items: flex-start;
+      position: relative;
+    }
+    .approve-sheet .abnormal-label { color: #ff4d4f; font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .approve-sheet .abnormal-text { color: #595959; font-size: 13px; line-height: 1.6; }
+    .approve-sheet .approve-footer {
+      display: flex; gap: 10px; padding: 12px 16px 16px;
+      border-top: 1px solid #f0f0f0; background: #fff; position: sticky; bottom: 0;
+    }
+    .approve-sheet .approve-btn {
+      flex: 1; padding: 10px 0; border: none; border-radius: 6px;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .approve-sheet .approve-btn.blue { background: #1677ff; color: #fff; }
+    .approve-sheet .approve-btn.blue:active { background: #0958d9; }
+    .approve-sheet .approve-btn.outline {
+      background: #fff; color: #1677ff; border: 1px solid #1677ff;
+    }
+    .approve-sheet .approve-btn.outline:active { background: #e6f4ff; }
+
+    /* AI 智能匹配 弹窗 */
+    .ai-modal-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 400;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .ai-modal-overlay.show { display: flex; }
+    .ai-modal {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 300px;
+      padding: 24px 20px 20px; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: aiScaleIn .25s ease;
+    }
+    @keyframes aiScaleIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+    .ai-modal .ai-ic { font-size: 44px; color: #1677ff; margin-bottom: 12px; }
+    .ai-modal .ai-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 10px; }
+    .ai-modal .ai-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+    .ai-modal .ai-version { text-align: left; margin-bottom: 18px; }
+    .ai-modal .ai-version-label { display: block; font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px; }
+    .ai-modal .ai-version-label::before { content: '*'; color: #ff4d4f; margin-right: 4px; }
+    .ai-modal .ai-version-select {
+      width: 100%; padding: 9px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fff; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .ai-modal .ai-version-select:focus { border-color: #1677ff; }
+    .ai-modal .ai-version-select:invalid { color: #999; }
+    .ai-modal .ai-version-hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .ai-modal .ai-btns { display: flex; gap: 10px; }
+    .ai-modal .ai-btns button {
+      flex: 1; padding: 10px 0; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    .ai-modal .ai-confirm { background: #1677ff; color: #fff; }
+    .ai-modal .ai-cancel { background: #f5f5f5; color: #666; }
+
+    /* 项目匹配确认弹窗 */
+    .pm-modal-overlay {
+      display: none; position: absolute; inset: 0;
+      background: rgba(0,0,0,0.55); z-index: 410;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .pm-modal-overlay.show { display: flex; }
+    .pm-modal {
+      background: #fff; border-radius: 16px; width: 100%; max-width: 320px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: aiScaleIn .25s ease;
+    }
+    .pm-modal .pm-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+    }
+    .pm-modal .pm-header-left {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pm-modal .pm-icon {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #e6f7ff; color: #1677ff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .pm-modal .pm-title { font-size: 16px; font-weight: 600; color: #333; }
+    .pm-modal .pm-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #f5f5f5; color: #999;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px;
+    }
+    .pm-modal .pm-close:active { background: #e8e8e8; }
+    .pm-modal .pm-body { padding: 18px 16px; text-align: left; }
+    .pm-modal .pm-question { font-size: 14px; color: #333; margin-bottom: 14px; }
+    .pm-modal .pm-tip {
+      background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px;
+      padding: 12px; margin-bottom: 16px;
+    }
+    .pm-modal .pm-tip-hd {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: #1677ff; margin-bottom: 8px;
+    }
+    .pm-modal .pm-tip-hd i { font-size: 14px; }
+    .pm-modal .pm-tip ul {
+      margin: 0; padding-left: 16px;
+      font-size: 12px; color: #595959; line-height: 1.8;
+    }
+    .pm-modal .pm-tip li { margin-bottom: 4px; }
+    .pm-modal .pm-version { margin-bottom: 4px; }
+    .pm-modal .pm-version-label {
+      display: block; font-size: 13px; color: #333; font-weight: 500; margin-bottom: 6px;
+    }
+    .pm-modal .pm-version-label::before { content: '*'; color: #ff4d4f; margin-right: 4px; }
+    .pm-modal .pm-version-select {
+      width: 100%; padding: 9px 10px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fff; outline: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+    }
+    .pm-modal .pm-version-select:focus { border-color: #1677ff; }
+    .pm-modal .pm-version-select:invalid { color: #999; }
+    .pm-modal .pm-version-hint { font-size: 12px; color: #999; margin-top: 4px; }
+    .pm-modal .pm-footer {
+      display: flex; gap: 8px; padding: 0 16px 16px;
+    }
+    .pm-modal .pm-footer button {
+      flex: 1; padding: 10px 4px; border: 1px solid #d9d9d9; border-radius: 8px;
+      font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; color: #666;
+    }
+    .pm-modal .pm-footer .pm-btn-outline { color: #1677ff; border-color: #1677ff; background: #fff; }
+    .pm-modal .pm-footer .pm-btn-outline:active { background: #e6f4ff; }
+    .pm-modal .pm-footer .pm-btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .pm-modal .pm-footer .pm-btn-primary:active { background: #0958d9; }
+
+    /* 轻提示 Toast */
+    .toast-mini {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #fff; padding: 9px 18px; border-radius: 8px;
+      font-size: 13px; z-index: 999; opacity: 0; transition: opacity .3s;
+      pointer-events: none; max-width: 340px; text-align: center; line-height: 1.4;
+    }
+    .toast-mini.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <!-- SVG 连线层 -->
+  <svg class="lines-svg" id="linesSvg">
+    <defs>
+      <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <polygon points="0 0, 8 4, 0 8" fill="#1677ff"/>
+      </marker>
+    </defs>
+  </svg>
+
+  <!-- 左侧：手机模拟器 -->
+  <div class="phone-stage">
+    <div class="phone-frame">
+      <div class="vconsole-watermark">超管</div>
+      <div class="phone-screen">
+
+        <!-- ========== Screen 1：APP 列表 ========== -->
+        <div id="screen-app" class="screen active">
+          <div class="phone-header">
+            <div></div>
+            <div class="phone-title">应用列表</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+
+          <div class="app-grid" id="appGrid">
+            <div class="app-cell" data-link="audit" id="appCellAudit">
+              <div class="app-icon">
+                <i class="fas fa-clipboard-check"></i>
+              </div>
+              <div class="app-name">审核列表</div>
+            </div>
+            <div class="app-cell" data-link="filter" id="appCellFilter">
+              <div class="app-icon gray">
+                <i class="fas fa-search"></i>
+              </div>
+              <div class="app-name">智能筛选</div>
+            </div>
+            <div class="app-cell" onclick="alert('此 Demo 仅演示审核列表流程')">
+              <div class="app-icon purple">
+                <i class="fas fa-th-large"></i>
+              </div>
+              <div class="app-name">项目中心<br/>邀请码</div>
+            </div>
+            <div class="app-cell" onclick="alert('此 Demo 仅演示审核列表流程')">
+              <div class="app-icon orange">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="app-name">数据统计</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== Screen 2：审核列表 ========== -->
+        <div id="screen-audit" class="screen">
+          <div class="phone-header">
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="goScreen('app')">
+              <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+            </div>
+            <div class="phone-title">审核（恒瑞医药）<span class="caret"><i class="fas fa-chevron-down"></i></span></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+
+          <div class="tab-bar">
+            <div class="tab" onclick="alert('待操作页非本 Demo 重点')">待操作</div>
+            <div class="tab active">审核列表</div>
+          </div>
+
+          <div style="padding-top:6px" id="auditList">
+            <!-- 4 张卡片由 JS 渲染 -->
+          </div>
+        </div>
+
+        <!-- ========== Screen 3：匹配详情 ========== -->
+        <div id="screen-detail" class="screen">
+          <div class="phone-header">
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="goScreen('audit')">
+              <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+            </div>
+            <div class="phone-title" id="detailTitle" style="font-size:15px">匹配详情</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+            <div class="md-tabs">
+            <div class="md-tab" id="mdtab-match1" >预筛阶段</div>
+            <div class="md-tab" id="mdtab-enroll2" >入组阶段</div>
+          </div>
+          <div class="md-tabs">
+            <div class="md-tab" id="mdtab-match" onclick="switchMdTab('match')">匹配详情</div>
+            <div class="md-tab" id="mdtab-screen" onclick="switchMdTab('screen')">筛选表</div>
+            <div class="md-tab" id="mdtab-tc" onclick="switchMdTab('tc')">思考链</div>
+          </div>
+
+          <div id="mdBody"></div>
+        </div>
+
+        <!-- ========== Screen 4：智能筛选 - 项目列表 ========== -->
+        <div id="screen-filter" class="screen">
+          <div class="phone-header">
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="goScreen('app')">
+              <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+            </div>
+            <div class="phone-title">智能筛选（恒瑞医…<span class="caret"><i class="fas fa-chevron-down"></i></span></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+
+          <div class="search-box">
+            <div class="search-input">
+              <i class="fas fa-search" style="color:#bbb"></i>
+              <span>请输入搜索关键词</span>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <div class="filter-pill" onclick="alert('切换研究中心')">全部 <i class="fas fa-chevron-down caret"></i></div>
+          </div>
+
+          <div class="seg-tab-bar">
+            <div class="seg-tab active" id="ftab-mine" onclick="switchSegTab('mine')">本人项目</div>
+            <div class="seg-tab" id="ftab-other" onclick="switchSegTab('other')">其他项目</div>
+          </div>
+
+          <div id="filterProjectList">
+            <!-- 项目卡片由 JS 渲染 -->
+          </div>
+        </div>
+
+        <!-- ========== Screen 5：智能筛选 - 患者列表 ========== -->
+        <div id="screen-patient" class="screen">
+          <div class="phone-header">
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="goScreen('filter')">
+              <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+            </div>
+            <div class="phone-title" id="ptScreenTitle" style="font-size:15px">患者列表</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+
+          <div class="pt-tab-bar">
+            <div class="pt-tab" id="pttab-todo" onclick="switchPtTab('todo')">待操作<span class="badge" id="ptBadgeTodo">1</span></div>
+            <div class="pt-tab active" id="pttab-list" onclick="switchPtTab('list')">患者列表</div>
+          </div>
+
+          <div class="search-box">
+            <div class="search-input">
+              <i class="fas fa-search" style="color:#bbb"></i>
+              <span>请输入搜索关键词</span>
+            </div>
+          </div>
+
+          <div class="pt-filter-bar">
+            <div class="pt-filter-pill" onclick="alert('选择中心')">请选择中心 <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
+            <div class="pt-filter-pill" onclick="alert('筛选条件')">全部 <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
+            <div class="pt-add-btn" onclick="alert('新增患者')">+ 新增患者</div>
+          </div>
+
+          <div id="patientList">
+            <!-- 患者卡片由 JS 渲染 -->
+          </div>
+        </div>
+
+        <!-- ========== Screen 6：审核记录 ========== -->
+        <div id="screen-record" class="screen">
+          <div class="phone-header">
+            <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="goScreen('patient')">
+              <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+            </div>
+            <div class="phone-title">审核记录</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="avatar">超</div>
+              <span style="font-size:13px;color:#333">超管</span>
+            </div>
+          </div>
+
+          <div class="record-screen">
+            <div class="record-subtitle" id="recordSubtitle">DDD-审核记录</div>
+
+            <!-- 非正常流程提示 -->
+            <div class="record-abnormal" id="recordAbnormalNotice">
+              <div class="abnormal-hd">
+                <div class="abnormal-icon"><i class="fas fa-exclamation"></i></div>
+                <div style="flex:1">
+                  <span class="abnormal-tag">非正常流程</span>
+                  <div class="abnormal-tip">提示：若需要走正常流程，请驳回重新提交审批</div>
+                </div>
+              </div>
+              <div class="abnormal-reason">
+                <span class="abnormal-label">原因：</span>
+                <span class="abnormal-text">该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程</span>
+              </div>
+            </div>
+
+            <div class="record-section">
+              <div class="record-section-header" onclick="toggleRecordSection(this)">
+                <span class="record-section-title">预筛审核记录</span>
+                <span class="record-section-toggle">收起 <i class="fas fa-chevron-up" style="font-size:11px"></i></span>
+              </div>
+              <div class="record-actions">
+                <div class="record-action-btn secondary" onclick="toastMini('撤销提交')">撤销提交</div>
+                <div class="record-action-btn secondary" onclick="toastMini('催办')">催办</div>
+                <div class="record-action-btn secondary" onclick="toastMini('下载')">下载</div>
+                <div class="record-action-btn" onclick="toastMini('预筛沟通')">预筛沟通</div>
+              </div>
+              <div class="record-timeline" id="recordTimeline">
+                <!-- 由 JS 渲染 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ====== 提交审批 底部弹窗（智能筛选 - 患者列表，参考 h5-patient-list.html） ====== -->
+      <div class="audit-overlay" id="auditOverlay" onclick="closeAudit()"></div>
+      <div class="audit-sheet" id="auditSheet">
+        <div class="sh">
+          <span class="sh-title" id="auditSheetTitle">提交审批</span>
+          <div class="sh-close" onclick="closeAudit()"><i class="fas fa-times"></i></div>
+        </div>
+        <!-- 开发提示 -->
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 12px;margin:0 16px 12px;font-size:11px;color:#333;line-height:1.8">
+          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:2px;flex-shrink:0"></i>
+          <div>
+            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
+            <div>① 加了审批流程选择，可从项目已配置的流程中选择提交哪个流程</div>
+            <div>② 审批流程默认选中应执行的流程（系统现行固定流程）</div>
+            <div>③ 选择审批流程后，审批人随流程变动</div>
+            <div>④ 选了非推荐流程，必须填写原因</div>
+          </div>
+        </div>
+        <div class="sh-body">
+          <div class="fg">
+            <label class="fg-label"><span class="req">*</span>方案编码</label>
+            <input class="fg-input" id="auditPlanNo" value="SHR-A2102-I-102" readonly>
+          </div>
+          <div class="fg">
+            <label class="fg-label"><span class="req">*</span>参研中心</label>
+            <select class="fg-select" id="auditCenter">
+              <option value="">请选择参研中心</option>
+              <option>复旦大学附属华山医院</option>
+              <option>北京协和医院</option>
+              <option>上海瑞金医院</option>
+              <option>中山大学附属肿瘤医院</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fg-label"><span class="req">*</span>审批模板</label>
+            <select class="fg-select" id="auditTemplate">
+              <option>常规审批模板-主流程</option>
+              <option>快速审批模板</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fg-label"><span class="req">*</span>审批流程</label>
+            <select class="fg-select" id="auditProcessFlow" onchange="onAuditProcessChange()">
+              <option value="">请选择审批流程</option>
+              <option value="预筛审批" selected>预筛审批</option>
+              <option value="主知情审批">主知情审批</option>
+              <option value="入组审批">入组审批</option>
+            </select>
+            <!-- 智能推荐卡片 -->
+            <div class="reco-card">
+              <div class="reco-hd"><i class="fas fa-lightbulb"></i> 推荐：预筛审批</div>
+              <div class="reco-chain">
+                <span class="chain-label">项目审批链路：</span>
+                <span class="chain-item chain-active">预筛审批</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-item">主知情审批</span>
+                <span class="chain-arrow">→</span>
+                <span class="chain-item">入组审批</span>
+              </div>
+            </div>
+            <!-- 非标准流程提示 -->
+            <div class="nonstd-warn" id="auditNonstd">
+              <div class="nonstd-hd"><i class="fas fa-exclamation-triangle"></i> 检测到非标准审批流程，请填写原因</div>
+              <textarea class="nonstd-ta" id="auditNonstdReason" placeholder="请输入选择非标准流程的原因..."></textarea>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fg-label"><span class="req">*</span>审批人</label>
+            <select class="fg-select" id="auditor">
+              <option value="">请选择审批人</option>
+              <option>赵立花</option>
+              <option>王医生</option>
+              <option>陈医生</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fg-label">重点关注：<a style="color:#1677ff;cursor:pointer">引用</a></label>
+          </div>
+          <div class="fg">
+            <label class="fg-label">备注</label>
+            <textarea class="fg-textarea" placeholder="请输入备注"></textarea>
+          </div>
+        </div>
+        <div class="sh-footer">
+          <button class="cancel-btn" onclick="closeAudit()">取消</button>
+          <button class="submit-btn" id="auditSubmitBtn" onclick="submitAudit()">确定</button>
+        </div>
+      </div>
+
+      <!-- ====== AI 智能匹配 弹窗 ====== -->
+      <div class="ai-modal-overlay" id="aiModalOverlay">
+        <div class="ai-modal">
+          <i class="fas fa-robot ai-ic"></i>
+          <div class="ai-title">AI智能匹配</div>
+          <div class="ai-desc">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交</div>
+          <div class="ai-version" id="aiVersionArea">
+            <label class="ai-version-label">入排版本</label>
+            <select class="ai-version-select" id="aiVersionSelect" required>
+              <option value="" disabled selected>请选择入排版本</option>
+            </select>
+            <div class="ai-version-hint">选择入排版本后，系统将按该版本进行匹配</div>
+          </div>
+          <div class="ai-btns">
+            
+            <button class="ai-cancel" onclick="onAiClose()">关闭</button>
+            <button class="ai-confirm" onclick="onAiConfirm()">匹配并提交</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== Toast 轻提示 ====== -->
+      <div class="toast-mini" id="toastMini"></div>
+
+      <!-- ====== 审核列表 - 审核操作 底部弹窗 ====== -->
+      <div class="approve-overlay" id="approveOverlay" onclick="closeApprove()"></div>
+      <div class="approve-sheet" id="approveSheet">
+        <div class="sh">
+          <span class="sh-title">审核</span>
+          <div class="sh-close" onclick="closeApprove()"><i class="fas fa-times"></i></div>
+        </div>
+        <div class="sh-body">
+          <!-- 非正常流程提示 -->
+          <div class="abnormal-flow">
+            <div class="abnormal-hd">
+              <div class="abnormal-icon"><i class="fas fa-exclamation"></i></div>
+              <div style="flex:1">
+                <span class="abnormal-tag">非正常流程</span>
+                <div class="abnormal-tip">提示：若需要走正常流程，请驳回重新提交审批</div>
+              </div>
+            </div>
+            <div class="abnormal-reason">
+              <span class="abnormal-label">原因：</span>
+              <span class="abnormal-text">该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程</span>
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fg-label">当前状态：<span class="status-orange">审核中</span></label>
+          </div>
+          <div class="fg">
+            <label class="fg-label">审批批注：</label>
+            <textarea class="fg-textarea" id="approveRemark" placeholder="请输入审批批注" maxlength="1000" oninput="updateApproveCounter()"></textarea>
+            <div class="textarea-counter"><span id="approveCounter">0</span>/1000</div>
+          </div>
+        </div>
+        <div class="approve-footer">
+          <button class="approve-btn outline" onclick="onApprovePreCom()">预筛沟通</button>
+          <button class="approve-btn blue" onclick="onApproveReject()">驳回</button>
+          <button class="approve-btn blue" onclick="onApprovePass()">通过</button>
+        </div>
+      </div>
+
+      <!-- ====== 项目匹配确认弹窗 ====== -->
+      <div class="pm-modal-overlay" id="pmModalOverlay" onclick="closeProjectMatch(event)">
+        <div class="pm-modal" onclick="event.stopPropagation()">
+          <div class="pm-header">
+            <div class="pm-header-left">
+              <div class="pm-icon"><i class="fas fa-search"></i></div>
+              <div class="pm-title">项目匹配确认</div>
+            </div>
+            <div class="pm-close" onclick="closeProjectMatch()"><i class="fas fa-times"></i></div>
+          </div>
+          <div class="pm-body">
+            <div class="pm-question">确定要执行项目匹配吗？</div>
+             <div class="pm-version" id="pmVersionArea" style="display:none">
+              <label class="pm-version-label">入排版本</label>
+              <select class="pm-version-select" id="pmVersionSelect" required>
+                <option value="" disabled selected>请选择入排版本</option>
+              </select>
+              <div class="pm-version-hint">选择入排版本后，系统将按该版本进行匹配</div>
+            </div>
+            <div class="pm-tip">
+              <div class="pm-tip-hd"><i class="fas fa-info-circle"></i> 温馨提示</div>
+              <ul>
+                <li><b>取消</b>：暂时不操作。</li>
+                <li><b>匹配并预提交</b>：先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+                <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，等您看完再决定。</li>
+              </ul>
+            </div>
+           
+          </div>
+          <div class="pm-footer">
+            <button class="pm-btn-cancel" onclick="closeProjectMatch()">取消</button>
+            <button class="pm-btn-outline" onclick="onProjectMatchOnly()">仅项目匹配</button>
+            <button class="pm-btn-primary" onclick="onProjectMatchPreSubmit()">匹配并预提交</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 右侧：PRD 说明 -->
+  <aside class="prd-panel">
+    <h3>APP 端  提交审核改造</h3>
+    <p class="tip"><b>审核列表的审核页面</b> / <b>智能筛选的提交审核和审核记录页面</b> </p>
+
+    <h4 id="prd-pin-1"><span class="pin">1</span>第一屏：APP 列表</h4>
+    <ul>
+    
+      <li>两个入口：<b>审核列表</b> / <b>智能筛选</b></li>
+    </ul>
+
+    <h4 id="prd-pin-2"><span class="pin">2</span>入口：智能筛选</h4>
+    <ul>
+      <li>点击「智能筛选」入口进入项目列表</li>
+    </ul>
+
+    <h4 id="prd-pin-3"><span class="pin">3</span>项目列表</h4>
+    <ul>
+      <li>4 个项目卡片：<b>0302-305（血液/风湿）</b>、<b>SHR-A2102-I-102（肺癌）</b>、<b>HRS-1167-I-101（妇科肿瘤）</b>、<b>SHR-2019-nCoV-001（呼吸）</b></li>
+      <li>点击第一个项目 → 进入该项目下的患者列表</li>
+    </ul>
+
+    <h4 id="prd-pin-4"><span class="pin">4</span>患者列表 - 提交审核</h4>
+    <ul>
+      <li>患者卡片操作区含「提交审批」按钮；<b>ZWMS / HGKD</b> 卡片额外显示「项目匹配」按钮（原型为展示效果临时放在患者列表）。</li>
+      <li>点击「提交审批」→ 底部弹出提交审批表单（方案编码 / 参研中心 / 审批模板 / 审批流程 / 审批人 / 备注）；审批流程默认推荐「预筛审批」，并展示项目审批链路（预筛→主知情→入组），选非推荐流程需填写原因。</li>
+      <li><b>ZWMS\HGKD</b>（跨阶段，强制非正常流程）：点击「项目匹配」→ 弹出 <b>项目匹配确认</b> 弹窗。
+        HGKD 额外需选择<b>入排版本</b>（V1.0 / V2.0 / V3.0），ZWMS 无此步骤。
+        <ul>
+          <li><b>匹配并预提交</b>：选择入排版本后 → 直接进入提交审批页，此时点击「提交审核」直接提交，无需后端再次校验。</li>
+          <li><b>仅项目匹配</b>：只让 AI 算出结果，暂不提交审批，患者卡片状态更新为「匹配完成」。</li>
+          <li><b>取消</b>：关闭弹窗，不执行任何操作。</li>
+        </ul>
+      </li>
+      <li><b>RFNE</b>（入组通过，可以补充审核）：操作按钮显示为「补充审核」（与提交审批功能一致），点击后弹窗标题为「补充审核」→ 校验必填项通过 → 直接提交 → Toast「提交审批成功」→ 关闭弹窗。补充审核适用于已入组通过的患者追加审核流程的场景。</li>
+      <li><b>其他数据</b>：提交 → 校验必填项通过 → 正常提交 → Toast「提交审批成功」→ 关闭提交审核弹窗</li>
+      <li class="note">注：判断逻辑基于患者<b>原始 id</b> 而非列表索引（「待操作」Tab 过滤已提交数据后，RFNE 可能显示为第三条，但逻辑不受影响）。</li>
+    </ul>
+
+    <h4>使用说明</h4>
+    <ul>
+      <li>路径：APP 列表 → <b>智能筛选</b> → 项目 → <b>患者列表</b></li>
+      <li>点击卡片「提交审批 / 补充审核」体验提交流程，重点体验 <b>ZWMS</b> 的跨阶段 AI 匹配与 <b>RFNE</b> 的补充审核</li>
+    </ul>
+  </aside>
+
+  <script>
+    // ========= 数据：审核列表 4 条 =========
+    // thinkStatus: 'success' | 'failed' | 'running' | null(未配置)
+    // 智能筛选-患者列表 同样 4 条数据，演示相同的思考链 4 态
+    const AUDIT_DATA = [
+      {
+        id: 1, code: 9, name: '预提交9', age: 60, gender: '女',
+        pct: '0.0%', status: '驳回',
+        auditType: '预筛审核',
+        planNo: '测试项目5',
+        center: '中国人民解放军73021部队医院',
+        submitter: '刘雪红',
+        submitTime: '2026-07-10 14:10:21',
+        thinkStatus: 'success',
+        thinkEnabled: true
+      },
+      {
+        id: 2, code: 8, name: '预提交8', age: 47, gender: '男',
+        pct: '0.0%', status: '驳回',
+        auditType: '预筛审核',
+        planNo: '测试项目5',
+        center: '中国人民解放军73021部队医院',
+        submitter: '刘雪红',
+        submitTime: '2026-07-09 10:32:15',
+        thinkStatus: 'failed',
+        thinkEnabled: true
+      },
+      {
+        id: 3, code: 7, name: '预提交7', age: 55, gender: '女',
+        pct: '0.0%', status: '待审核',
+        auditType: '预筛审核',
+        planNo: '测试项目5',
+        center: '中国人民解放军73021部队医院',
+        submitter: '刘雪红',
+        submitTime: '2026-07-08 09:18:42',
+        thinkStatus: 'running',
+        thinkEnabled: true
+      },
+      {
+        id: 4, code: 6, name: '预提交6', age: 52, gender: '男',
+        pct: '85.0%', status: '通过',
+        auditType: '预筛审核',
+        planNo: 'HRS-8080-303',
+        center: '安阳市肿瘤医院',
+        submitter: '张丽',
+        submitTime: '2026-07-07 16:45:30',
+        thinkStatus: null,
+        thinkEnabled: false
+      }
+    ];
+
+    // 当前详情数据 + 思考链类型
+    let currentDetail = null;
+    let currentTcType = 'inclusion';
+
+    // ========= 思考链数据源（与 match-detail-new.html 一致） =========
+    const tcResultsByType = {
+      'inclusion': [
+        {
+          id: 'tc_001',
+          name: 'ASCVD心血管风险评估',
+          version: 'v3.0',
+          inclusionCriteria: 'c1',
+          markdown: `【患者基本信息】
+性别：女
+年龄：54岁（截至2026-03-20）
+
+【第一步：】
+是否存在ASCVD：否
+判定依据：病历中无冠心病、无缺血性脑血管疾病（颈动脉仅报告斑块，未报告狭窄≥50%）、无外周动脉疾病的诊断或检查依据。
+
+【第二步：】
+1. LDL-C≥4.9或TC≥7.2：否（TC=4.08，LDL-C=1.81）
+2. 糖尿病且年龄≥40岁：否（空腹血糖=5.51，无糖尿病诊断）
+3. CKD 3~4期：否（尿素=6.10，肌酐=63，均正常，无CKD诊断）
+是否直接评为高危：否
+
+【第三步：】
+高血压确诊状态：未确诊（病历"现病史"提及"伴血压升高"，但无具体数值，也无"高血压病"诊断）
+危险因素1（吸烟史）：无记录
+危险因素2（HDL-C<1.0）：否（HDL-C=1.09）
+危险因素3（年龄女≥55岁）：否（54岁）
+危险因素合计个数：0
+最近血脂报告日期：2026-03-20
+TC值：4.08 mmol/L
+LDL-C值：1.81 mmol/L
+
+【风险判定逻辑匹配结果】
+匹配场景：无高血压，0个危险因素，未落入任何中危/高危组合，属于"其余未提及场景"
+最终评级：低危（<5%）`
+        },
+        {
+          id: 'tc_002',
+          name: '肿瘤入排标准核查',
+          version: 'v2.0',
+          inclusionCriteria: 'c2',
+          markdown: `【患者基本信息】
+性别：女
+年龄：36岁
+
+【第一步：】
+是否在18-75岁范围：是（36岁）
+
+【第二步：】
+组织学确诊：是（浸润性导管癌）
+ER状态：阳性（90%）
+HER2状态：阴性
+
+【第三步：】
+严重肝肾功能不全：否
+活动性恶性肿瘤（近5年内）：是（当前乳腺癌）
+妊娠或哺乳期：否
+参与其他临床试验：否
+
+【综合判定】
+符合入选标准，无排除项，建议纳入研究。`
+        }
+      ],
+      'screening': [
+        {
+          id: 'tc_003',
+          name: '代谢综合征诊断',
+          version: 'v1.5',
+          screeningTable: 's1',
+          markdown: `【基本信息提取】
+姓名：张三
+性别：女
+年龄：54岁
+身高：158cm
+体重：62kg
+BMI：24.8
+
+【第一步】
+空腹血糖：5.51 mmol/L
+餐后2h血糖：7.2 mmol/L
+HbA1c：5.6%
+TC：4.08 mmol/L
+LDL-C：1.81 mmol/L
+HDL-C：1.09 mmol/L
+尿酸：320 μmol/L
+
+【第二步】
+腹型肥胖：否（腰围82cm，女性<85cm）
+高血糖：否（空腹5.51<6.1）
+高血压：否（血压120/75<130/85）
+高TG：否（TG=1.5<1.7）
+低HDL-C：否（HDL-C=1.09≥1.0）
+符合项数：0/5，不满足≥3项的诊断标准
+
+【第三步】
+不符合代谢综合征诊断标准。`
+        }
+      ]
+    };
+
+    function switchTcType(type) {
+      currentTcType = type;
+      // 刷新思考链 Tab 内容
+      if (currentDetail) {
+        document.getElementById('mdBody').innerHTML = renderThinkChainTab();
+        // 重新高亮类型按钮
+        setTimeout(() => {
+          document.querySelectorAll('.tc-type-btn').forEach(b => b.classList.remove('tc-type-active'));
+          const activeBtn = document.getElementById('tc-type-' + type);
+          if (activeBtn) activeBtn.classList.add('tc-type-active');
+        }, 10);
+      }
+    }
+
+    // ========= 屏幕切换 =========
+    function goScreen(name) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + name).classList.add('active');
+      window.scrollTo(0, 0);
+      // 重新计算连线
+      setTimeout(drawLines, 100);
+    }
+
+    // ========= 智能筛选 - 项目列表数据 =========
+    const FILTER_PROJECTS = [
+      { id: 'p1', name: '0302-305', disease: '血液类疾病,风湿免疫性疾病' },
+      { id: 'p2', name: 'SHR-A2102-I-102', disease: '肺癌' },
+      { id: 'p3', name: 'HRS-1167-I-101', disease: '妇科肿瘤' },
+      { id: 'p4', name: 'SHR-2019-nCoV-001', disease: '呼吸系统疾病' }
+    ];
+
+    // ========= 智能筛选 - 患者列表数据（4 条对应思考链 4 态） =========
+    // 与审核列表 4 条数据同源（共享思考链状态）
+    const PATIENT_DATA = [
+      {
+        id: 1, code: 9, name: 'ZWMS', age: 43, gender: '女',
+        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '预筛审核中', cls: 'pill-orange' }],
+        center: '复旦大学附属华山医院',
+        operator: 'CRA专员188',
+        submitStatus: 'unsubmit',
+        matchLabel: '匹配完成',
+        pct: '78.5%',
+        thinkStatus: 'success',
+        thinkEnabled: true,
+        crossStage: true,   // 强制非正常流程：从预筛跨到入组阶段 → 触发 AI 智能匹配
+        aiMatch: true
+        // ZWMS 不显示入排版本选择
+      },
+      {
+        id: 2, code: 8, name: 'HGKD', age: 36, gender: '男',
+        tags: [{ txt: '未匹配', cls: 'pill-red' }, { txt: '未提交', cls: 'pill-gray' }],
+        center: '北京协和医院',
+        operator: 'CRA专员1881',
+        submitStatus: 'unsubmit',
+        matchLabel: '未匹配',
+        pct: '32.0%',
+        thinkStatus: 'failed',
+        thinkEnabled: true,
+        aiMatch: true,            // 强制非正常流程：需先进行 AI 智能匹配
+        inExVersions: ['V1.0', 'V2.0', 'V3.0']   // 可选入排版本
+      },
+      {
+        id: 3, code: 7, name: 'RFNE', age: 58, gender: '男',
+        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '已通过', cls: 'pill-green' }],
+        center: '上海瑞金医院',
+        operator: 'CRA专员200',
+        submitStatus: 'enrolled',   // 入组通过 → 操作按钮显示「补充审核」
+        matchLabel: '匹配完成',
+        pct: '91.2%',
+        thinkStatus: null,
+        thinkEnabled: false
+      },
+      {
+        id: 4, code: 6, name: 'WSQ', age: 50, gender: '男',
+        tags: [{ txt: '匹配中', cls: 'pill-blue' }, { txt: '预筛审核中', cls: 'pill-orange' }],
+        center: '中山大学附属肿瘤医院',
+        operator: 'CRA专员205',
+        submitStatus: 'unsubmit',
+        matchLabel: '匹配中',
+        pct: '66.0%',
+        thinkStatus: 'running',
+        thinkEnabled: true
+      }
+    ];
+
+    let currentProject = null;
+    let currentPt = null;
+
+    function renderProjectList() {
+      const wrap = document.getElementById('filterProjectList');
+      wrap.innerHTML = FILTER_PROJECTS.map(p => `
+        <div class="project-card" onclick="openProject('${p.id}')">
+          <div class="pname">${p.name}</div>
+          <div class="pdisease">${p.disease}</div>
+        </div>
+      `).join('');
+    }
+
+    function openProject(pid) {
+      currentProject = FILTER_PROJECTS.find(p => p.id === pid);
+      const t = document.getElementById('ptScreenTitle');
+      t.textContent = '患者列表';
+      goScreen('patient');
+      renderPatientList();
+    }
+
+    function renderPatientList() {
+      const wrap = document.getElementById('patientList');
+      wrap.innerHTML = PATIENT_DATA.map(d => {
+        const tags = d.tags.map(t => `<span class="pill ${t.cls}">${t.txt}</span>`).join('');
+        const matchTag = d.aiMatch
+          ? `<span class="pt-match-tag" onclick="event.stopPropagation();openProjectMatch(${d.id})">项目匹配</span>`
+          : '';
+        return `
+          <div class="pt-card" id="ptcard-${d.id}">
+            <div class="pt-hd">
+              <span class="nm">${d.name}</span>
+              <span class="info">${d.gender} | ${d.age}岁</span>
+              <div class="icons">
+                <i class="far fa-edit"></i>
+                <i class="fas fa-times-circle"></i>
+              </div>
+            </div>
+            <div class="pt-tags">${tags}</div>
+            <div class="pt-row"><span class="lbl">中心名称：</span>${d.center}</div>
+            <div class="pt-row" style="display:flex;justify-content:space-between;align-items:center">
+              <span><span class="lbl">待操作人：</span>${d.operator}</span>
+              ${matchTag}
+            </div>
+            <div class="pt-actions">
+              <div class="pt-btn primary" onclick="event.stopPropagation();openAudit(${d.id})">${d.submitStatus === 'enrolled' ? '补充审核' : '提交审批'}</div>
+              <div class="pt-btn" onclick="event.stopPropagation();openAuditRecord(${d.id})">审核记录</div>
+              <div class="pt-btn" onclick="event.stopPropagation();openPtDetail(${d.id})">匹配详情</div>
+            </div>
+            <div class="pt-files">
+              <i class="far fa-folder"></i>
+              <span>病史与资料</span>
+              <span class="cnt">${Math.floor(Math.random() * 6) + 2}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 智能筛选的"匹配详情"入口 -> 复用现有详情屏幕 + 4 态数据
+    function openPtDetail(id) {
+      // 找到与审核列表思考链 4 态一一对应的患者，匹配 state
+      const pt = PATIENT_DATA.find(d => d.id === id);
+      // 在 AUDIT_DATA 中找同 thinkStatus 的数据，复用详情渲染
+      const matched = AUDIT_DATA.find(a => a.thinkStatus === pt.thinkStatus) || AUDIT_DATA[0];
+      currentDetail = matched;
+      goScreen('detail');
+      document.getElementById('detailTitle').textContent =
+        `${pt.name} - ${matched.planNo} | 匹配详情`;
+      // 控制思考链 Tab 显隐
+      const tcTab = document.getElementById('mdtab-tc');
+      tcTab.style.display = matched.thinkEnabled ? '' : 'none';
+      switchMdTab('match');
+    }
+
+    // 智能筛选 - 本人/其他 切换
+    function switchSegTab(name) {
+      document.querySelectorAll('.seg-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('ftab-' + name).classList.add('active');
+    }
+
+    // 患者列表 Tab 切换
+    function switchPtTab(name) {
+      document.querySelectorAll('.pt-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('pttab-' + name).classList.add('active');
+    }
+
+    // ========= 智能筛选 - 提交审批（参考 h5-patient-list.html） =========
+    let currentAuditPatientId = null;
+    let currentMatchPatientId = null;
+    let preSubmitMode = false;
+    const RECOMMENDED_FLOW = '预筛审批';
+
+    // 轻提示 Toast
+    function toastMini(msg) {
+      const t = document.getElementById('toastMini');
+      if (!t) { alert(msg); return; }
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // 打开提交审批弹窗
+    function openAudit(ptId) {
+      currentAuditPatientId = ptId;
+      const d = PATIENT_DATA.find(x => x.id === ptId);
+      const titleEl = document.getElementById('auditSheetTitle');
+      if (titleEl) titleEl.textContent = (d && d.submitStatus === 'enrolled') ? '补充审核' : '提交审批';
+      // 预提交模式下提交按钮显示为“提交审核”
+      const submitBtn = document.getElementById('auditSubmitBtn');
+      if (submitBtn) submitBtn.textContent = preSubmitMode ? '提交审核' : '确定';
+      // 方案编码带入当前项目名
+      const planEl = document.getElementById('auditPlanNo');
+      if (planEl && currentProject) planEl.value = currentProject.name;
+      document.getElementById('auditSheet').classList.add('show');
+      document.getElementById('auditOverlay').classList.add('show');
+    }
+    function closeAudit() {
+      document.getElementById('auditSheet').classList.remove('show');
+      document.getElementById('auditOverlay').classList.remove('show');
+      preSubmitMode = false;
+    }
+
+    // 项目匹配确认弹窗
+    function openProjectMatch(ptId) {
+      currentMatchPatientId = ptId;
+      currentAuditPatientId = ptId;
+      const cur = PATIENT_DATA.find(x => x.id === ptId);
+      const versionArea = document.getElementById('pmVersionArea');
+      const sel = document.getElementById('pmVersionSelect');
+      if (cur && Array.isArray(cur.inExVersions) && cur.inExVersions.length > 0) {
+        versionArea.style.display = 'block';
+        sel.innerHTML = '<option value="" disabled selected>请选择入排版本</option>';
+        cur.inExVersions.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+        sel.value = '';
+      } else {
+        versionArea.style.display = 'none';
+        sel.value = '';
+      }
+      document.getElementById('pmModalOverlay').classList.add('show');
+    }
+
+    function closeProjectMatch() {
+      document.getElementById('pmModalOverlay').classList.remove('show');
+    }
+
+    function onProjectMatchOnly() {
+      const cur = PATIENT_DATA.find(x => x.id === currentMatchPatientId);
+      if (cur) {
+        // 仅项目匹配：更新为匹配完成状态，但不提交审批
+        cur.matchLabel = '匹配完成';
+        const idx = cur.tags.findIndex(t => t.txt === '未匹配');
+        if (idx !== -1) cur.tags[idx] = { txt: '匹配完成', cls: 'pill-green' };
+        renderPatientList();
+      }
+      toastMini('项目匹配完成');
+      closeProjectMatch();
+    }
+
+    function onProjectMatchPreSubmit() {
+      const cur = PATIENT_DATA.find(x => x.id === currentMatchPatientId);
+      const versionArea = document.getElementById('pmVersionArea');
+      if (versionArea.style.display !== 'none') {
+        const sel = document.getElementById('pmVersionSelect');
+        if (!sel.value) {
+          toastMini('请选择入排版本');
+          sel.focus();
+          return;
+        }
+      }
+      closeProjectMatch();
+      preSubmitMode = true;
+      openAudit(currentMatchPatientId);
+    }
+
+    // 审核记录页
+    const AUDIT_RECORDS = [
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-17 17:11:16', duration: '', active: true },
+      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-22 16:21:58', duration: '', active: false },
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-22 16:22:24', duration: '', active: true },
+      { operator: '临床协调员188', role: '临床协调员', status: '已撤销申请', statusClass: 'revoke', time: '2026-06-24 15:38:32', duration: '', active: false },
+      { operator: '临床协调员188', role: '临床协调员', status: '发起', statusClass: 'blue', time: '2026-06-25 10:50:17', duration: '', active: true }
+    ];
+
+    function openAuditRecord(patientId) {
+      const d = PATIENT_DATA.find(x => x.id === patientId);
+      document.getElementById('recordSubtitle').textContent = (d ? d.name : 'DDD') + '-审核记录';
+      const notice = document.getElementById('recordAbnormalNotice');
+      if (d && (d.aiMatch || d.crossStage)) {
+        notice.style.display = 'block';
+      } else {
+        notice.style.display = 'none';
+      }
+      renderRecordTimeline();
+      goScreen('record');
+    }
+
+    function renderRecordTimeline() {
+      const wrap = document.getElementById('recordTimeline');
+      wrap.innerHTML = AUDIT_RECORDS.map((r) => `
+        <div class="record-item ${r.active ? 'active' : ''}">
+          <div class="record-dot"></div>
+          <div class="record-card">
+            <div class="record-role">${r.operator}&lt;${r.role}&gt;</div>
+            <span class="record-status ${r.statusClass}">${r.status}</span>
+            <div class="record-time">提交时间：${r.time}</div>
+            <div class="record-time">操作时间：${r.time}</div>
+            <div class="record-time">操作耗时：${r.duration}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleRecordSection(header) {
+      const section = header.parentElement;
+      const actions = section.querySelector('.record-actions');
+      const timeline = section.querySelector('.record-timeline');
+      const toggle = header.querySelector('.record-section-toggle');
+      const isHidden = actions.style.display === 'none';
+      actions.style.display = isHidden ? 'flex' : 'none';
+      timeline.style.display = isHidden ? 'block' : 'none';
+      toggle.innerHTML = isHidden
+        ? '收起 <i class="fas fa-chevron-up" style="font-size:11px"></i>'
+        : '展开 <i class="fas fa-chevron-down" style="font-size:11px"></i>';
+    }
+
+    // 审批流程切换 -> 非标准流程提示
+    function onAuditProcessChange() {
+      const val = document.getElementById('auditProcessFlow').value;
+      const warn = document.getElementById('auditNonstd');
+      if (val && val !== RECOMMENDED_FLOW) {
+        warn.classList.add('show');
+      } else {
+        warn.classList.remove('show');
+        document.getElementById('auditNonstdReason').value = '';
+      }
+    }
+
+    // 暂存（用于 AI 匹配后继续提交）
+    let pendingAudit = false;
+
+    // AI 智能匹配弹窗
+    function openAiModal() {
+      const cur = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
+      const versionArea = document.getElementById('aiVersionArea');
+      const sel = document.getElementById('aiVersionSelect');
+      if (cur && Array.isArray(cur.inExVersions) && cur.inExVersions.length > 0) {
+        versionArea.style.display = 'block';
+        sel.innerHTML = '<option value="" disabled selected>请选择入排版本</option>';
+        cur.inExVersions.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          sel.appendChild(opt);
+        });
+        sel.value = '';
+      } else {
+        versionArea.style.display = 'none';
+        sel.value = ''; // 清空选择，绕过校验
+      }
+      document.getElementById('aiModalOverlay').classList.add('show');
+    }
+
+    function onAiConfirm() {
+      const versionArea = document.getElementById('aiVersionArea');
+      if (versionArea.style.display !== 'none') {
+        const sel = document.getElementById('aiVersionSelect');
+        if (!sel.value) {
+          toastMini('请选择入排版本');
+          sel.focus();
+          return;
+        }
+      }
+      document.getElementById('aiModalOverlay').classList.remove('show');
+      toastMini('匹配中，匹配完成后系统将自动帮您提交审批');
+      pendingAudit = false;
+      // 继续提交
+      if (currentAuditPatientId != null) {
+        toastMini('匹配中，匹配完成后系统将自动帮您提交审批');
+        closeAudit();
+      }
+    }
+    function onAiClose() {
+      document.getElementById('aiModalOverlay').classList.remove('show');
+      toastMini('您目前还没有点击项目匹配(入组)，无法跨阶段提交审核');
+      pendingAudit = false;
+      // 保持提交审批弹窗不关闭
+    }
+
+    // 真正提交
+    function doSubmitAudit(msg) {
+      toastMini(msg || '提交审批成功');
+      closeAudit();
+    }
+
+    // 点击确定
+    function submitAudit() {
+      // 预提交模式：点击后直接提交，不再校验必填项/版本/流程
+      if (preSubmitMode) {
+        doSubmitAudit('提交审批成功');
+        preSubmitMode = false;
+        return;
+      }
+
+      const flow = document.getElementById('auditProcessFlow').value;
+      const auditor = document.getElementById('auditor').value;
+      if (!flow || !auditor) {
+        toastMini('请填写必填项');
+        return;
+      }
+      // 非标准流程必须填写原因
+      if (flow !== RECOMMENDED_FLOW) {
+        const reason = document.getElementById('auditNonstdReason').value.trim();
+        if (!reason) {
+          toastMini('选择非标准流程需填写原因');
+          document.getElementById('auditNonstdReason').focus();
+          return;
+        }
+      }
+
+      // 需要 AI 智能匹配的患者（ZWMS/HGKD 等）先弹出项目匹配确认弹窗
+      const cur = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
+      if (cur && cur.aiMatch) {
+        pendingAudit = true;
+        openProjectMatch(currentAuditPatientId);
+        return;
+      }
+
+      // 其他数据正常提交（含 RFNE 补充审核 / 其他）
+      doSubmitAudit('提交审批成功');
+    }
+
+    // ========= 审核列表 - 审核操作 底部弹窗 =========
+    function openApprove() {
+      document.getElementById('approveSheet').classList.add('show');
+      document.getElementById('approveOverlay').classList.add('show');
+      updateApproveCounter();
+    }
+    function closeApprove() {
+      document.getElementById('approveSheet').classList.remove('show');
+      document.getElementById('approveOverlay').classList.remove('show');
+    }
+
+    function updateApproveCounter() {
+      const el = document.getElementById('approveRemark');
+      const cnt = el ? el.value.length : 0;
+      const counter = document.getElementById('approveCounter');
+      if (counter) counter.textContent = cnt;
+    }
+
+    function onApprovePreCom() {
+      toastMini('预筛沟通已记录');
+      closeApprove();
+    }
+    function onApproveReject() {
+      toastMini('已驳回');
+      closeApprove();
+    }
+    function onApprovePass() {
+      toastMini('审核已通过');
+      closeApprove();
+    }
+
+    // ========= 渲染审核列表 =========
+    function renderAuditList() {
+      const wrap = document.getElementById('auditList');
+      wrap.innerHTML = AUDIT_DATA.map(d => {
+        // 状态标签样式
+        let statePill = '';
+        if (d.status === '驳回') statePill = '<span class="pill pill-red">驳回</span>';
+        else if (d.status === '通过') statePill = '<span class="pill pill-green">通过</span>';
+        else statePill = '<span class="pill pill-orange">待审核</span>';
+
+        return `
+          <div class="audit-card">
+            <div class="hd">
+              <span class="name">${d.name}</span>
+              <span class="meta">${d.gender} | ${d.age}</span>
+            </div>
+            <div class="pct-row">
+              <span class="pct-pill">${d.pct}</span>
+              ${statePill}
+            </div>
+            <div class="body">
+              <div class="row"><span class="lbl">审核类型：</span><span class="val">${d.auditType}</span></div>
+              <div class="row"><span class="lbl">方案编号：</span><span class="val">${d.planNo}</span></div>
+              <div class="row" style="padding-left:78px"><span class="val">中心：${d.center}</span></div>
+              <div class="row" style="padding-left:78px"><span class="val">提交人：${d.submitter}</span></div>
+              <div class="row"><span class="lbl">提交时间：</span><span class="val">${d.submitTime}</span></div>
+              <div class="row" style="padding-left:78px"><span class="val">审核人：-</span></div>
+              <div class="row" style="padding-left:78px"><span class="val">待操作人：--</span></div>
+            </div>
+              <div class="action-bar">
+              <div class="act-btn">抄送</div>
+              <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>
+              <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>
+            </div>
+            <div class="files">
+              <i class="far fa-folder"></i> 病史与资料
+              <span style="color:#1677ff;margin-left:auto">5</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ========= 进入详情 =========
+    function openDetail(id) {
+      currentDetail = AUDIT_DATA.find(d => d.id === id);
+      goScreen('detail');
+      // 标题
+      document.getElementById('detailTitle').textContent =
+        `${currentDetail.code} - ${currentDetail.name} | 匹配详情（${currentDetail.planNo}）`;
+
+      // 控制思考链 Tab 显隐
+      const tcTab = document.getElementById('mdtab-tc');
+      tcTab.style.display = currentDetail.thinkEnabled ? '' : 'none';
+
+      // 默认显示「匹配详情」Tab
+      switchMdTab('match');
+    }
+
+    // ========= 详情 Tab 切换 =========
+    function switchMdTab(name) {
+      document.querySelectorAll('.md-tab').forEach(t => t.classList.remove('active'));
+      const tab = document.getElementById('mdtab-' + name);
+      if (tab) tab.classList.add('active');
+      renderMdBody(name);
+    }
+
+    function renderMdBody(name) {
+      const body = document.getElementById('mdBody');
+      if (name === 'match') {
+        body.innerHTML = renderMatchDetail();
+      } else if (name === 'screen') {
+        body.innerHTML = `
+          <div class="md-section">
+            <div class="md-card">
+              <div style="text-align:center;color:#999;padding:30px 0">
+                <i class="far fa-file-alt" style="font-size:32px;display:block;margin-bottom:8px;color:#d9d9d9"></i>
+                筛选表内容
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (name === 'enroll') {
+        body.innerHTML = `
+          <div class="md-section">
+            <div class="md-card">
+              <div style="text-align:center;color:#999;padding:30px 0">
+                <i class="far fa-folder-open" style="font-size:32px;display:block;margin-bottom:8px;color:#d9d9d9"></i>
+                入组阶段内容
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (name === 'tc') {
+        body.innerHTML = renderThinkChainTab();
+      }
+    }
+
+    function renderMatchDetail() {
+      const d = currentDetail;
+      return `
+        <div class="md-section">
+          <div class="md-card">
+            <div class="top-row">
+              <span class="nm">${d.name}</span>
+              <span class="age">${d.age}岁</span>
+              <span class="pill pill-blue">预筛${d.status}</span>
+              <span class="tag-edit"><i class="far fa-edit"></i></span>
+            </div>
+            <div class="disease">疾病领域：肺癌</div>
+            <div class="files">
+              <div class="file-btn">
+                <i class="far fa-folder"></i>
+                <div>
+                  <div>病史与资料</div>
+                  <div style="color:#999;font-size:11px">未上传</div>
+                </div>
+              </div>
+              <div class="file-btn primary">标记储备</div>
+            </div>
+          </div>
+
+          <div class="md-card">
+            <div class="md-title">${d.planNo}</div>
+            <div class="md-sub">${d.planNo}-肿瘤</div>
+            <div class="criteria-row" style="margin-top:6px">
+              <span>入排标准（版本2）</span>
+              <span style="margin-left:auto">上次更新时间：2026-07-10 10:36:56</span>
+            </div>
+            <div class="match-pct" style="margin-top:12px">
+              <div class="left">
+                <div class="pct">${d.pct}<br><small>匹配度</small></div>
+                <div class="pct">0.00%<br><small>待定占比</small></div>
+              </div>
+              <div class="desc">
+                入选标准0条中，0条匹配，0条待定；<br>
+                排除标准0条中，0条匹配，0条待定。
+              </div>
+            </div>
+            <div class="ai-suggest">
+              <span class="lbl">AI建议 <b>${d.status === '通过' ? '建议入组' : d.status === '驳回' ? '建议排除' : '建议待审'}</b></span>
+              <div class="rec" onclick="openAuditRecord(${d.id})" style="cursor:pointer">审核记录</div>
+            </div>
+          </div>
+          <div class="disclaimer">
+            <i class="fas fa-info-circle"></i>
+            <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // ========= 思考链 Tab 4 态渲染 =========
+    function renderThinkChainTab() {
+      const d = currentDetail;
+      if (!d) return '';
+
+      if (d.thinkStatus === 'failed') {
+        return `
+          <div class="tc-area">
+            <div class="tc-state">
+              <div class="ico red"><i class="fas fa-times-circle"></i></div>
+              <h4 class="red">思考失败</h4>
+              <div class="desc">思考失败，请点击「AI思考」重新触发。</div>
+              <div class="btn-row">
+                <button class="btn-blue" onclick="alert('已重新触发 AI 思考')">
+                  <i class="fas fa-redo"></i> AI思考
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (d.thinkStatus === 'running') {
+        return `
+          <div class="tc-area">
+            <div class="tc-state">
+              <div class="ico purple"><i class="fas fa-spinner fa-spin"></i></div>
+              <h4 class="purple">AI 正在思考中，请稍后再来</h4>
+           
+            </div>
+          </div>
+        `;
+      }
+
+      // success —— 与 match-detail-new.html 一致的思考链数据
+      const chains = tcResultsByType[currentTcType] || [];
+      if (chains.length === 0) {
+        return `
+          <div class="tc-area">
+            <div class="dev-tip">
+              <i class="fas fa-exclamation-triangle icon"></i>
+              <div>
+                <div class="title">开发提示：</div>
+                <div>① 每一条都是在项目中配置的思考链对应的返回结果</div>
+                <div>② 可以查看和修改思考链，查看每个人都可以看，但编辑按钮只有管理员和医学经理、项目经理有权限</div>
+                <div>③ 如果还没思考完成，页面显示"思考中，请稍后再来"</div>
+              </div>
+            </div>
+            <div class="tc-type-selector">
+              <button class="tc-type-btn tc-type-active" id="tc-type-inclusion" onclick="switchTcType('inclusion')">入排条件</button>
+              <button class="tc-type-btn" id="tc-type-screening" onclick="switchTcType('screening')">筛选表</button>
+            </div>
+            <div class="tc-empty">
+              <div style="font-size:32px;margin-bottom:12px">🧠</div>
+              <div>暂无该类型的思考链结果</div>
+            </div>
+          </div>
+        `;
+      }
+
+      let chainHtml = chains.map((chain, i) => {
+        const chainId = `tc-item-${i}`;
+        return `
+          <div class="tc-item${i === 0 ? ' open' : ''}" id="${chainId}">
+            <div class="hd" onclick="toggleTcItem(this)">
+              <span class="num">${i + 1}</span>
+              <span class="nm">${chain.name}</span>
+              <span class="ok-tag">已完成</span>
+            </div>
+            <div class="body">${chain.markdown.replace(/`/g, '\\`').replace(/\$/g, '\\$')}</div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="tc-area">
+          <div class="dev-tip" style="margin-bottom:8px">
+            <i class="fas fa-exclamation-triangle icon"></i>
+            <div>
+              <div class="title">开发提示：</div>
+              <div>① 每一条都是在项目中配置的思考链对应的返回结果</div>
+              <div>② 可以查看和修改思考链，查看每个人都可以看，但编辑按钮只有管理员和医学经理、项目经理有权限</div>
+              <div>③ 如果还没思考完成，页面显示"思考中，请稍后再来"</div>
+            </div>
+          </div>
+          <div class="tc-type-selector">
+            <button class="tc-type-btn ${currentTcType === 'inclusion' ? 'tc-type-active' : ''}" id="tc-type-inclusion" onclick="switchTcType('inclusion')">入排条件</button>
+            <button class="tc-type-btn ${currentTcType === 'screening' ? 'tc-type-active' : ''}" id="tc-type-screening" onclick="switchTcType('screening')">筛选表</button>
+          </div>
+          ${chainHtml}
+          <div class="disclaimer">
+            <i class="fas fa-info-circle"></i>
+            <span>以上内容由AI生成，仅供参考，请谨慎鉴别。如果需要校正思考链，可以修改思考链的逻辑。</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleTcItem(hd) {
+      hd.parentElement.classList.toggle('open');
+    }
+
+    // ========= 连线绘制 =========
+    function drawLines() {
+      const svg = document.getElementById('linesSvg');
+      // 清除已有 path 和 label
+      svg.querySelectorAll('path, text').forEach(n => n.remove());
+
+      const lines = [
+        { fromSel: '#appCellAudit', toId: 'prd-pin-1', label: '1' },
+        { fromSel: '#appCellFilter', toId: 'prd-pin-2', label: '2' },
+        { fromSel: '.project-card', toId: 'prd-pin-3', label: '3' },
+        { fromSel: '#ptcard-1 .pt-btn.primary', toId: 'prd-pin-4', label: '4' }
+      ];
+
+      // 仅在当前屏幕激活时画对应连线
+      const appActive = document.getElementById('screen-app').classList.contains('active');
+      const auditActive = document.getElementById('screen-audit').classList.contains('active');
+      const filterActive = document.getElementById('screen-filter').classList.contains('active');
+      const patientActive = document.getElementById('screen-patient').classList.contains('active');
+      const detailActive = document.getElementById('screen-detail').classList.contains('active');
+
+      if (appActive) {
+        drawLine(svg, lines[0]);
+        drawLine(svg, lines[1]);
+      }
+      if (filterActive) drawLine(svg, lines[2]);
+      if (patientActive) drawLine(svg, lines[3]);
+    }
+
+    function drawLine(svg, cfg) {
+      const fromEl = document.querySelector(cfg.fromSel);
+      const toEl = document.getElementById(cfg.toId);
+      if (!fromEl || !toEl) return;
+
+      const fromR = fromEl.getBoundingClientRect();
+      const toR = toEl.getBoundingClientRect();
+
+      const x1 = fromR.right;
+      const y1 = fromR.top + fromR.height / 2;
+      const x2 = toR.left;
+      const y2 = toR.top + toR.height / 2;
+
+      // 贝塞尔曲线
+      const midX = (x1 + x2) / 2;
+      const d = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+
+      const ns = 'http://www.w3.org/2000/svg';
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('marker-end', 'url(#arrowhead)');
+      svg.appendChild(path);
+
+      // 编号
+      const text = document.createElementNS(ns, 'text');
+      text.setAttribute('x', midX);
+      text.setAttribute('y', (y1 + y2) / 2 - 6);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('class', 'label');
+      text.textContent = cfg.label;
+      svg.appendChild(text);
+
+      // hover 高亮联动
+      const onEnter = () => path.style.stroke = '#fa8c16';
+      const onLeave = () => path.style.stroke = '#1677ff';
+      fromEl.addEventListener('mouseenter', onEnter);
+      fromEl.addEventListener('mouseleave', onLeave);
+      toEl.addEventListener('mouseenter', onEnter);
+      toEl.addEventListener('mouseleave', onLeave);
+    }
+
+    // ========= 初始化 =========
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAuditList();
+      renderProjectList();
+      // 默认连第 1 条
+      setTimeout(drawLines, 200);
+
+      // 给 APP 列表入口绑定跳转
+      document.querySelectorAll('[data-link]').forEach(el => {
+        el.addEventListener('click', () => {
+          const link = el.getAttribute('data-link');
+          if (link === 'audit') goScreen('audit');
+          else if (link === 'filter') goScreen('filter');
+        });
+      });
+    });
+
+    // 窗口变化重绘
+    window.addEventListener('resize', drawLines);
+  </script>
+</body>
+</html>

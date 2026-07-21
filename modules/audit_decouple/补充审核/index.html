@@ -669,6 +669,62 @@
     .confirm-btn.primary { background: #1677ff; color: #fff; border-color: #1677ff; }
     .confirm-btn.primary:hover { background: #4096ff; border-color: #4096ff; }
 
+    /* 项目匹配并预提交确认弹窗 */
+    .match-pre-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 9600; display: none; align-items: center; justify-content: center;
+    }
+    .match-pre-overlay.show { display: flex; }
+    .match-pre-modal {
+      width: 100%; max-width: 440px; background: #fff; border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15); animation: confirmIn 0.25s ease;
+      overflow: hidden;
+    }
+    .match-pre-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+    }
+    .match-pre-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .match-pre-title .icon-circle {
+      width: 28px; height: 28px; border-radius: 50%; background: #e6f4ff; color: #1677ff;
+      display: inline-flex; align-items: center; justify-content: center; margin-right: 8px;
+      font-size: 14px;
+    }
+    .match-pre-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: #999; font-size: 14px; margin-left: auto;
+    }
+    .match-pre-close:hover { background: #f5f5f5; color: #333; }
+    .match-pre-body { padding: 18px 20px 6px; font-size: 13px; color: #333; }
+    .match-pre-body > p { margin: 0 0 14px; }
+    .match-pre-tips {
+      background: linear-gradient(135deg, #f0f7ff 0%, #e6f4ff 100%);
+      border-radius: 10px; padding: 14px 16px; font-size: 13px; color: #333;
+      line-height: 1.8; position: relative; overflow: hidden;
+    }
+    .match-pre-tips::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(180deg, #1677ff, #4096ff); border-radius: 2px 0 0 2px;
+    }
+    .match-pre-tips-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-left: 6px;
+    }
+    .match-pre-tips-icon {
+      width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #1677ff, #4096ff);
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; flex-shrink: 0;
+    }
+    .match-pre-tips-title { font-weight: 600; color: #1677ff; font-size: 14px; }
+    .match-pre-tips ul { margin: 0; padding-left: 26px; list-style: none; }
+    .match-pre-tips li { position: relative; margin-bottom: 8px; padding-left: 16px; }
+    .match-pre-tips li:last-child { margin-bottom: 0; }
+    .match-pre-tips li::before { content: '•'; position: absolute; left: 0; color: #1677ff; font-weight: bold; }
+    .match-pre-tips li strong { color: #1677ff; }
+    .match-pre-footer {
+      display: flex; gap: 12px; padding: 14px 20px 20px;
+    }
+    .match-pre-footer .matching-btn { flex: 1; }
+
     /* 入排版本选择弹窗 */
     .version-select-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
@@ -1040,6 +1096,122 @@
     .audit-warning li {
       margin-bottom: 6px;
     }
+
+    /* 补充审核原因（已入组患者） */
+    .audit-supplement-box {
+      background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 16px;
+    }
+    .audit-supplement-title {
+      font-size: 13px; font-weight: 600; color: #d46b08; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .audit-supplement-sub {
+      font-size: 12px; color: #ad6800; margin-bottom: 10px; line-height: 1.6;
+    }
+    .audit-reason-label {
+      font-size: 13px; color: #333; font-weight: 600; margin-bottom: 6px;
+    }
+    .audit-reason-label .req { color: #f53f3f; margin-left: 2px; }
+
+    /* 审批 / 审核记录弹窗 */
+    .audit-record-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 10000; display: none; align-items: center; justify-content: center;
+    }
+    .audit-record-overlay.show { display: flex; }
+    .audit-record-modal {
+      width: 100%; max-width: 1000px; background: #fff; border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15); max-height: 88vh;
+      display: flex; overflow: hidden; animation: confirmIn 0.25s ease;
+    }
+    .audit-record-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .audit-record-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid #f0f0f0;
+    }
+    .audit-record-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .audit-record-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: transparent;
+      cursor: pointer; color: #999; font-size: 18px;
+    }
+    .audit-record-close:hover { background: #f5f5f5; color: #333; }
+    .audit-record-body { flex: 1; overflow-y: auto; padding: 18px 20px; }
+    .audit-group-card {
+      border: 1px solid #f0f0f0; border-radius: 10px; margin-bottom: 14px; overflow: hidden;
+    }
+    .audit-group-header {
+      display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      background: #fafbfc; cursor: pointer; font-weight: 600; color: #1a1a1a;
+    }
+    .audit-group-toggle { font-size: 12px; transition: transform 0.2s; }
+    .audit-group-header.collapsed .audit-group-toggle { transform: rotate(-90deg); }
+    .audit-group-actions {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+      font-weight: 400; font-size: 12px; color: #999;
+    }
+    .audit-flow-table { width: 100%; border-collapse: collapse; }
+    .audit-flow-table th {
+      text-align: left; font-size: 12px; color: #86909c; font-weight: 600;
+      padding: 10px 14px; border-top: 1px solid #f0f0f0; background: #fff;
+    }
+    .audit-flow-table td {
+      font-size: 13px; color: #4e5969; padding: 10px 14px;
+      border-top: 1px solid #f5f7fa; vertical-align: top;
+    }
+    .audit-operator-name { font-weight: 600; color: #1d2129; }
+    .audit-operator-role { font-size: 11px; color: #a9aeb8; margin-left: 4px; }
+    .audit-status-tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; }
+    .audit-status-tag.submitted { background: #e8f3ff; color: #165dff; }
+    .audit-status-tag.approved { background: #e8ffea; color: #00b42a; }
+    .audit-status-tag.rejected { background: #ffece8; color: #f53f3f; }
+    .audit-status-tag.pending { background: #fff7e8; color: #ff7d00; }
+    .audit-duration { color: #86909c; font-size: 12px; }
+    .audit-supplement-tag {
+      display: inline-block; background: #fff1e8; color: #ff7d00; font-size: 11px;
+      padding: 1px 8px; border-radius: 9px; margin-left: 6px;
+    }
+    .audit-supplement-note {
+      margin-top: 6px; font-size: 12px; color: #ad6800; background: #fff7e6;
+      border: 1px solid #ffd591; border-radius: 6px; padding: 6px 10px; line-height: 1.6;
+    }
+    .audit-annotation-card {
+      border: 1px solid #f0f0f0; border-radius: 10px; padding: 14px 16px; background: #fffdf5;
+    }
+    .audit-annotation-header { font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .audit-annotation-body { font-size: 13px; color: #4e5969; line-height: 1.8; white-space: pre-wrap; }
+    .audit-record-empty { text-align: center; color: #999; padding: 60px 0; font-size: 14px; }
+    .audit-record-supplement-banner {
+      background: linear-gradient(135deg, #fff5f5 0%, #fff0f0 100%);
+      border: 1px solid #ffccc7; border-left: 4px solid #f53f3f; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 18px;
+    }
+    .audit-record-supplement-label {
+      display: inline-block; background: #f53f3f; color: #fff; font-size: 12px;
+      font-weight: 600; padding: 3px 10px; border-radius: 4px; margin-right: 8px; vertical-align: middle;
+    }
+    .audit-record-supplement-tip {
+      font-size: 13px; color: #333; line-height: 1.6; margin-top: 10px;
+    }
+    .audit-record-supplement-tip strong {
+      color: #f53f3f; font-weight: 600; margin-right: 4px;
+    }
+    .audit-record-supplement-reason {
+      font-size: 13px; color: #333; line-height: 1.6; margin-top: 8px; padding-top: 8px;
+      border-top: 1px dashed #ffd7d7;
+    }
+    .audit-record-supplement-reason strong {
+      color: #333; font-weight: 600; margin-right: 4px;
+    }
+    .audit-record-sidebar {
+      width: 300px; background: linear-gradient(135deg,#fff7e6 0%,#fffbe6 100%);
+      border-left: 2px solid #ffd591; padding: 20px 14px; overflow-y: auto;
+    }
+    .audit-record-mini-btn {
+      background: #fff; color: #555; border: 1px solid #e8e8e8; border-radius: 6px;
+      font-size: 12px; padding: 2px 10px; cursor: pointer;
+    }
+    .audit-record-mini-btn:hover { color: #165dff; border-color: #165dff; }
 
     /* 匹配状态提示 */
     .match-status-notice {
@@ -1820,6 +1992,35 @@
     </div>
   </div>
 
+  <!-- 项目匹配并预提交确认弹窗 -->
+  <div class="match-pre-overlay" id="matchPreSubmitOverlay" onclick="if(event.target===this) closeMatchPreSubmitConfirm()">
+    <div class="match-pre-modal">
+      <div class="match-pre-header">
+        <span class="match-pre-title"><span class="icon-circle"><i class="fa-solid fa-magnifying-glass"></i></span>项目匹配确认</span>
+        <button class="match-pre-close" onclick="closeMatchPreSubmitConfirm()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="match-pre-body">
+        <p>确定要执行项目匹配吗？</p>
+        <div class="match-pre-tips">
+          <div class="match-pre-tips-header">
+            <span class="match-pre-tips-icon">💡</span>
+            <span class="match-pre-tips-title">温馨提示</span>
+          </div>
+          <ul>
+            <li><strong>取消：</strong>暂时不操作。</li>
+            <li><strong>匹配并预提交：</strong>先让 AI 匹配结果，匹配完成后系统自动发起审批。</li>
+            <li><strong>仅项目匹配：</strong>只让 AI 先算出结果，暂不提交审批，等您看完再决定。</li>
+          </ul>
+        </div>
+      </div>
+      <div class="match-pre-footer">
+        <button class="matching-btn primary" onclick="onMatchOnly()">仅项目匹配</button>
+        <button class="matching-btn primary" onclick="onMatchAndPreSubmit()">匹配并预提交</button>
+        <button class="matching-btn secondary" onclick="closeMatchPreSubmitConfirm()">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SVG连线层 -->
   <svg class="svg-connector-layer" id="connectorSvg">
     <defs>
@@ -2038,260 +2239,13 @@
     <!-- 功能概述 -->
     <div class="prd-section">
       <h3 class="prd-section-title">修改摘要</h3>
-      <p class="prd-text"><strong style="color: red;">注意：列表的项目匹配和 病史与资料的项目匹配思路完全一致，目前的效果 在列表上实现，病史与资料可参考该思路</strong></p>
-        <ul class="prd-list"><li>点击了项目匹配之后可以直接预提交审批，预提交审核的按钮。</li>
-        <li>匹配中，未提交的，也不在预提交中的，可以预提交</li>
-        <li>  已经预提交的按钮，在序号上显示预提交状态，然后操作列有取消提交，提交成功，就不显示这个状态和按钮了， 只要系统还没有协助提交，就存在这俩状态，如果系统提交成功，就不显示了 </li>
+      <p class="prd-text"><strong style="color: red;">补充审核</strong></p>
+        <li>入组通过和筛败的 默认显示补充审核按钮，但是如果文件变动了，可以直接点击项目匹配，支持预提交</li>
         </ul>
        
-      <p class="prd-text"><strong style="color: red;">注意：</strong><ul>
-        <li>匹配成功后，系统自动提交，如果匹配失败了（注意三次容错机制），就需要通知再次点击项目匹配，才可以进行提交审核了,让把之前的预提交过程再做一遍</li>
-        <li>取消预提交/匹配失败再设置预提交，不过内容都需要回显</li>      
-        </ul>
-
-      <!-- 按钮交互说明 -->
-      <p class="prd-text" style="margin-top:14px;"><strong style="color:#1677ff;">📌 操作列按钮显示规则：</strong></p>
-      <ul class="prd-list" style="background:#f0f5ff; border:1px solid #adc6ff; border-radius:8px; padding:12px 16px;">
-        <li><strong>① 预提交中</strong>（匹配中& 预提交中）→ 显示「<span style="color:#ff7a00;">取消预提交</span>」按钮，<span style="color:#ff4d4f;">不显示</span>提交审核</li>
-        <li><strong>② 匹配中 + 未预提交</strong> → 显示「<span style="color:#fa8c16;">预提交</span>」按钮，<span style="color:#ff4d4f;">不显示</span>提交审核</li>
-        <li><strong>③ 匹配完成 + 未预提交</strong> → 显示「<span style="color:#1677ff;">提交审核</span>」按钮，不显示预提交</li>
-        <li><strong>④  预提交中的状态  不会显示提交审核的按钮，除非 取消了预提交，正好 匹配完成了，在显示这个按钮 </li>
-        <li><strong>⑤ 预提交中状态标注</strong> → 序号列显示「预提交中」红底标签（参考第3条数据效果）</li>
-      </ul>
-
-      <!-- 本周/下周安排 -->
-      <p class="prd-text" style="margin-top:14px;"><strong style="color:#d46b08;">⏰ 排期说明：</strong></p>
-      <ul class="prd-list" style="background:#fff7e6; border:1px solid #ffd591; border-radius:8px; padding:12px 16px;">
-        <li>✅ <strong>本周做：</strong>第1-2-3-7条数据交互效果、项目匹配+预提交流程、按钮动态显示</li>
-        <li>❌ <strong>本周先不做,下周做：</strong>三次容错机制、筛选表必填项校验、第4-5-6条数据效果</li>
-      </ul>
     </div>
 
-    <!-- 交互流程 -->
-    <div class="prd-section">
-      <h3 class="prd-section-title">交互流程</h3>
-      
-      <p class="prd-text"><strong id="prd-section-a">A. 通过项目匹配按钮：</strong></p>
-      <ul class="prd-list">
-        <li><strong>前置条件：</strong>患者已上传病史与资料</li>
-        <li id="prd-step1"><strong style="color: red;">第1条数据(本周)</strong> 点击提交审核，看到入排只有一个版本的效果</li>
-        <li><strong style="color: red;">第2条数据(本周)</strong>点击项目匹配，弹出「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致</li>
-        <li><strong style="color: red;">第3条数据(本周)</strong>状态为「匹配中」，无预提交 → 操作列显示「预提交」按钮 → 点击预提交 → 弹出提交审核弹窗 → 系统自动标记为「预提交中」并显示取消预提交</li>
-        <li><strong style="color: red;">第4条数据(下周)</strong> 点击项目匹配，弹出确认框：「检测到您的资料未发生变更。是否确定要基于当前资料再次进行项目匹配？」→ 点击项目匹配 → 显示「系统匹配中」弹窗</li>
-        <li><strong style="color: red;">第5条数据(下周)</strong>已提交审核，资料未变更 → 点击项目匹配 → 弹出重新匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
-        <li><strong style="color: red;">第6条数据(下周)</strong> 已提交审核，文件有变动 → 点击项目匹配 → 弹出项目匹配确认弹窗 → 点击开始匹配 → toast「正在匹配，请稍后」</li>
-        <li><strong style="color: red;">第7条数据(本周)</strong> 主知情审核/需要填写预筛号和知情时间的 → 点击项目匹配 → 「入排版本选择」弹窗（选择项目编码+版本）→ 点击确定 → 显示「系统匹配中」弹窗 → 点击预提交审批 → 与现有提交审核弹窗一致 → 点击提交审核，弹出编辑页面，需要填写患者知情时间和筛选号</li>
-
-        <li><strong style="color: red;">注意：</strong>对于点击项目匹配可以预提交 ， 所有可以提交的相关人员都可以操作，只要初始这条数据没有提交审核（包括预筛、主知情、入组等等）点击项目匹配，就可以选择 预提交，如果已经在 审核流程中了，点击项目匹配 就不需要 预提交了，直接匹配即可；取消预提交按钮的操作权限 是所有可以提交本次数据的相关人员 </li>
-        <!-- <li id="prd-step5"><strong style="color: red;">注意：</strong>需要保存好 2个按钮的操作日志，统计2个按钮的点击次数，用于评估用户对功能需求的评估</li> -->
-      </ul>
-      
-      <p class="prd-text" style="margin-top:16px;"><strong id="prd-section-b">B. 查看病史与资料：逻辑与列表保持完全一致</strong></p>
-   
-      
-    </div>
-
-   
-
-    <!-- SVG流程图 - 患者全流程 -->
-    <div class="prd-section">
-      <h3 class="prd-section-title">患者预筛全流程图</h3>
-      <span class="flowchart-zoom-hint" onclick="openFlowchartZoom()">
-        <i class="fa-solid fa-magnifying-glass-plus"></i> 点击放大查看
-      </span>
-      <div class="prd-flowchart" onclick="openFlowchartZoom()" style="cursor:pointer;">
-        <svg class="flowchart-svg" viewBox="0 0 480 1200" xmlns="http://www.w3.org/2000/svg" style="min-height:1200px;">
-          <defs>
-            <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#fa8c16" />
-            </marker>
-            <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#52c41a" />
-            </marker>
-            <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#ff4d4f" />
-            </marker>
-            <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#1677ff" />
-            </marker>
-            <!-- 投影阴影 -->
-            <filter id="shadow" x="-10%" y="-5%" width="120%" height="130%">
-              <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.1"/>
-            </filter>
-          </defs>
-
-          <!-- ===== 阶段一：患者创建 ===== -->
-          <rect x="5" y="8" width="470" height="112" rx="8" fill="#f6ffed" stroke="#b7eb8f" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="26" font-size="10" fill="#52c41a" font-weight="bold">阶段一：患者创建</text>
-
-          <!-- ① 新增患者 -->
-          <rect x="155" y="38" width="170" height="34" rx="17" fill="#1677ff" stroke="#0958d9" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="60" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">① 新增患者</text>
-
-          <line x1="240" y1="72" x2="240" y2="90" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- ② 上传病史与资料 -->
-          <rect x="145" y="90" width="190" height="30" rx="6" fill="#fff" stroke="#1677ff" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="109" text-anchor="middle" font-size="11" fill="#333" font-weight="500">② 上传病史与资料</text>
-
-          <!-- ===== 阶段二：项目匹配与预提交 ===== -->
-          <rect x="5" y="128" width="470" height="178" rx="8" fill="#e6f4ff" stroke="#91caff" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="146" font-size="10" fill="#1677ff" font-weight="bold">阶段二：项目匹配与预提交</text>
-
-          <line x1="240" y1="120" x2="240" y2="148" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- ③ 项目匹配 - 红色高亮框 -->
-          <rect x="150" y="145" width="180" height="36" rx="6" fill="#fff1f0" stroke="#ff4d4f" stroke-width="2.5" filter="url(#shadow)"/>
-          <text x="240" y="167" text-anchor="middle" font-size="11" fill="#cf1322" font-weight="bold">③ 项目匹配+预提交设置（本次修改）</text>
-
-        
-          <!-- 匹配分支 -->
-          <circle cx="240" cy="198" r="7" fill="#fa8c16" stroke="#ad6800" stroke-width="1.5"/>
-          <line x1="240" y1="178" x2="240" y2="191" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- 左分支：匹配成功 -->
-          <line x1="233" y1="198" x2="130" y2="198" stroke="#52c41a" stroke-width="2"/>
-          <line x1="130" y1="198" x2="130" y2="218" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
-          <rect x="55" y="218" width="150" height="26" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
-          <text x="130" y="235" text-anchor="middle" font-size="10" fill="#333">✓ 匹配成功 → 查看详情</text>
-
-          <!-- 右分支：匹配失败 -->
-          <line x1="247" y1="198" x2="350" y2="198" stroke="#ff4d4f" stroke-width="2"/>
-          <line x1="350" y1="198" x2="350" y2="218" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
-          <rect x="280" y="218" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="235" text-anchor="middle" font-size="10" fill="#333">✗ 失败/超时 → 重试3次（下周）</text>
-
-          <!-- 失败路径回指③ -->
-          <line x1="350" y1="244" x2="350" y2="165" stroke="#ff4d4f" stroke-width="1.5" stroke-dasharray="5,3"/>
-          <line x1="350" y1="165" x2="342" y2="165" stroke="#ff4d4f" stroke-width="1.5" marker-end="url(#arrowRed)"/>
-          <text x="358" y="208" font-size="8" fill="#ff4d4f">重试</text>
-
-        
-          <!-- ===== 阶段三：提交与校验 ===== -->
-          <rect x="5" y="314" width="470" height="218" rx="8" fill="#fffbe6" stroke="#ffe58f" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="332" font-size="10" fill="#d48806" font-weight="bold">阶段三：提交与校验</text>
-
-          <!-- 连接线 -->
-          <line x1="240" y1="306" x2="240" y2="330" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- ⑤ 提交成功 - 绿色大框 -->
-          <rect x="140" y="330" width="200" height="34" rx="7" fill="#52c41a" stroke="#389e0d" stroke-width="2" filter="url(#shadow)"/>
-          <text x="240" y="352" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">⑤ 系统自动提交成功（本次修改）</text>
-
-          <!-- ⑤ → ⑥ -->
-          <line x1="240" y1="364" x2="240" y2="384" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- ⑥ 校验预筛表必填项 -->
-          <rect x="140" y="384" width="200" height="30" rx="6" fill="#fff" stroke="#fa8c16" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="403" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑥ 校验预筛表必填项（下周）</text>
-
-          <!-- 校验分支 -->
-          <circle cx="240" cy="430" r="7" fill="#fa8c16" stroke="#ad6800" stroke-width="1.5"/>
-          <line x1="240" y1="414" x2="240" y2="423" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <!-- 左：校验通过 → 指向预筛审核 -->
-          <line x1="233" y1="430" x2="130" y2="430" stroke="#52c41a" stroke-width="2"/>
-          <line x1="130" y1="430" x2="130" y2="454" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
-          <rect x="55" y="454" width="150" height="26" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
-          <text x="130" y="471" text-anchor="middle" font-size="10" fill="#333">✓ 校验通过（下周）</text>
-
-          <!-- 右：校验失败 → 企微提醒 -->
-          <line x1="247" y1="430" x2="350" y2="430" stroke="#ff4d4f" stroke-width="2"/>
-          <line x1="350" y1="430" x2="350" y2="454" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
-          <rect x="280" y="454" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="471" text-anchor="middle" font-size="10" fill="#d4380d">✗ 校验失败（下周）</text>
-
-          <line x1="350" y1="480" x2="350" y2="500" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
-          <rect x="280" y="500" width="140" height="26" rx="5" fill="#fff2f0" stroke="#ff4d4f" stroke-width="1.5"/>
-          <text x="350" y="517" text-anchor="middle" font-size="10" fill="#d4380d">发企业微信提醒（下周）</text>
-
-          <!-- ===== 阶段四：预筛审核 ===== -->
-          <rect x="5" y="540" width="470" height="100" rx="8" fill="#f9f0ff" stroke="#d3adf7" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="558" font-size="10" fill="#722ed1" font-weight="bold">阶段四：预筛审核</text>
-
-          <!-- 校验通过 → 预筛审核 -->
-          <line x1="130" y1="480" x2="130" y2="570" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
-          <!-- 校验失败/企微提醒 → 预筛审核 -->
-          <line x1="350" y1="526" x2="350" y2="570" stroke="#ff4d4f" stroke-width="2"/>
-          <line x1="350" y1="570" x2="242" y2="570" stroke="#ff4d4f" stroke-width="2" marker-end="url(#arrowRed)"/>
-
-          <!-- ⑦ 预筛审核 -->
-          <rect x="155" y="560" width="170" height="30" rx="6" fill="#fff" stroke="#722ed1" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="579" text-anchor="middle" font-size="11" fill="#333" font-weight="500">⑦ 预筛审核</text>
-
-          <line x1="240" y1="590" x2="240" y2="610" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
-          <text x="255" y="603" font-size="9" fill="#52c41a">通过</text>
-
-          <!-- ===== 阶段五：主知情审核 ===== -->
-          <rect x="5" y="648" width="470" height="250" rx="8" fill="#fff7e6" stroke="#ffd591" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="666" font-size="10" fill="#d46b08" font-weight="bold">阶段五：主知情审核</text>
-
-          <!-- ⑧ 主知情审核标题 -->
-          <rect x="145" y="672" width="190" height="28" rx="6" fill="#fa8c16" stroke="#d46b08" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="690" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑧ 主知情审核</text>
-
-          <!-- 主知情内部流程 -->
-          <line x1="240" y1="700" x2="240" y2="720" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <rect x="155" y="720" width="170" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
-          <text x="240" y="737" text-anchor="middle" font-size="10" fill="#333">8a. 项目匹配</text>
-
-          <line x1="240" y1="746" x2="240" y2="764" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <rect x="155" y="764" width="170" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
-          <text x="240" y="781" text-anchor="middle" font-size="10" fill="#333">8b. 设置预提交审批（本次修改）</text>
-
-          <line x1="240" y1="790" x2="240" y2="808" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <rect x="140" y="808" width="200" height="26" rx="5" fill="#fff" stroke="#fa8c16" stroke-width="1.5"/>
-          <text x="240" y="825" text-anchor="middle" font-size="10" fill="#333">8c. 填写主知情时间 &amp; 预筛号（本次修改）</text>
-
-          <line x1="240" y1="834" x2="240" y2="852" stroke="#52c41a" stroke-width="2" marker-end="url(#arrowGreen)"/>
-
-          <rect x="145" y="852" width="190" height="28" rx="5" fill="#f6ffed" stroke="#52c41a" stroke-width="1.5"/>
-          <text x="240" y="865" text-anchor="middle" font-size="10" fill="#389e0d" font-weight="500">✓ 匹配成功，提交主知情（本次修改）</text>
-          <text x="240" y="877" text-anchor="middle" font-size="9" fill="#888">（系统自动提交）</text>
-
-          <!-- ===== 阶段六：后续审核 ===== -->
-          <rect x="5" y="906" width="470" height="110" rx="8" fill="#fafafa" stroke="#d9d9d9" stroke-width="1" stroke-dasharray="4,2"/>
-          <text x="15" y="924" font-size="10" fill="#8c8c8c" font-weight="bold">阶段六：后续审核（以此类推）</text>
-
-          <line x1="240" y1="880" x2="240" y2="928" stroke="#1677ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
-
-          <rect x="155" y="930" width="170" height="30" rx="6" fill="#1677ff" stroke="#0958d9" stroke-width="1.5" filter="url(#shadow)"/>
-          <text x="240" y="949" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑨ 入组审核</text>
-
-          <line x1="240" y1="960" x2="240" y2="980" stroke="#fa8c16" stroke-width="2" marker-end="url(#arrowOrange)"/>
-
-          <rect x="155" y="980" width="170" height="28" rx="6" fill="#fff" stroke="#999" stroke-width="1.5"/>
-          <text x="240" y="998" text-anchor="middle" font-size="10" fill="#666">… 后续审核流程 …</text>
-
-          <!-- 右侧图例 -->
-          <rect x="350" y="1020" width="120" height="92" rx="6" fill="#fff" stroke="#d9d9d9" stroke-width="1"/>
-          <text x="410" y="1038" text-anchor="middle" font-size="10" fill="#333" font-weight="bold">图例</text>
-          <line x1="365" y1="1050" x2="390" y2="1050" stroke="#1677ff" stroke-width="2"/>
-          <text x="395" y="1052" font-size="9" fill="#666">主流程  </text>
-          <text x="440" y="1052" font-size="9" fill="#666">→</text>
-          <line x1="365" y1="1066" x2="390" y2="1066" stroke="#52c41a" stroke-width="2"/>
-          <text x="395" y="1068" font-size="9" fill="#666">通过/成功</text>
-          <line x1="365" y1="1082" x2="390" y2="1082" stroke="#ff4d4f" stroke-width="2"/>
-          <text x="395" y="1084" font-size="9" fill="#666">失败/拒绝</text>
-          <line x1="365" y1="1098" x2="390" y2="1098" stroke="#fa8c16" stroke-width="2"/>
-          <text x="395" y="1100" font-size="9" fill="#666">分支/回退</text>
-
-          <!-- 底部：关键说明 -->
-          <text x="15" y="1038" font-size="9" fill="#999">关键说明：</text>
-          <text x="15" y="1053" font-size="9" fill="#999">1. 项目匹配与审批已解耦，匹配中也可提交审批</text>
-          <text x="15" y="1068" font-size="9" fill="#999">2. 匹配失败自动重试3次，仍失败则企微通知重新匹配</text>
-          <text x="15" y="1083" font-size="9" fill="#999">3. 提交成功后校验预筛表必填项，不通过则企微提醒</text>
-          <text x="15" y="1098" font-size="9" fill="#999">4. 主知情、入组等后续环节沿用相同匹配与提交流程</text>
-
-          <!-- 结束节点 -->
-          <rect x="190" y="1150" width="100" height="28" rx="14" fill="#52c41a" stroke="#389e0d" stroke-width="1.5"/>
-          <text x="240" y="1169" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">流程结束</text>
-        </svg>
-      </div>
-    </div>
+  
 
   </aside>
 
@@ -2305,7 +2259,7 @@
       <!-- 左侧：表单内容 -->
       <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; max-height: 85vh;">
         <div class="audit-header" style="border-bottom: 1px solid #f0f0f0; padding: 16px 20px;">
-          <h3 class="audit-title">🚀 提交审批</h3>
+          <h3 class="audit-title" id="auditModalTitle">🚀 提交审批</h3>
           <button class="audit-close" onclick="closeAuditModal()">
             <i class="fas fa-times"></i>
           </button>
@@ -2314,19 +2268,6 @@
        
 
           <!-- 匹配状态提示 -->
-          <div class="match-status-notice" id="matchStatusNotice" style="display:none;">
-            <div class="notice-icon"><i class="fas fa-info-circle"></i></div>
-            <div class="notice-content">
-              <strong>当前项目未匹配/匹配失败</strong>
-              <p>是否需要进行项目匹配，项目匹配仅用于AI辅助提取信息，不影响审批结果。</p>
-              <div class="notice-actions">
-                <button class="notice-btn notice-btn-primary" id="matchBtn" onclick="handleMatchFromAudit1()">
-                  <i class="fas fa-magnifying-glass-chart"></i> 项目匹配
-                </button>
-                <span id="matchStatusText" style="display:none;">项目匹配中，您可继续设置预提交审批内容</span>
-              </div>
-            </div>
-          </div>
 
         <div class="audit-section">
             <label class="section-label">方案编码</label>
@@ -2340,7 +2281,33 @@
               <input type="text" class="audit-input" value="测试B" readonly style="background:#f5f5f5;cursor:not-allowed" />
             </div>
           </div>
-       
+
+          <!-- 审核模板 -->
+          <div class="audit-section">
+            <label class="section-label required">审核模板</label>
+            <select class="audit-input" id="auditTemplate">
+              <option value="常规模板">常规审批模板-主流程</option>
+              <option value="快速审批模板">快速审批模板</option>
+            </select>
+          </div>
+
+          <!-- 审核流程 -->
+          <div class="audit-section">
+            <label class="section-label required">审核流程</label>
+            <select class="audit-input" id="auditFlow" onchange="checkAuditFlow()">
+              <option value="">请选择审核流程</option>
+              <option value="prescreen">预筛审批</option>
+              <option value="main">主知情审批</option>
+              <option value="enroll">入组审批</option>
+            </select>
+            <div id="auditFlowHint" style="margin-top:8px;padding:8px 12px;background:#f0f5ff;border:1px solid #d6e4ff;border-radius:6px;display:flex;align-items:flex-start;gap:8px;">
+              <i class="fa-solid fa-lightbulb" style="color:#1677ff;font-size:13px;margin-top:1px;flex-shrink:0"></i>
+              <div style="font-size:12px;color:#1d39c4;line-height:1.6">
+                <span id="auditFlowHintText"><strong>推荐：入组审批</strong></span>
+                <div style="margin-top:4px;padding-top:4px;border-top:1px dashed #d6e4ff;color:#85a5ff">项目审批链路：<strong>预筛审批</strong> → <strong>主知情审批</strong> → <strong>入组审批</strong></div>
+              </div>
+            </div>
+          </div>
 
           <!-- 审批人选择 -->
           <div class="audit-section">
@@ -2364,6 +2331,14 @@
             <textarea class="audit-textarea" placeholder="请输入备注" rows="3" id="auditRemark"></textarea>
           </div>
 
+          <!-- 补充审核原因（已入组患者必填） -->
+          <div class="audit-section audit-supplement-box" id="auditSupplementSection" style="display:none;">
+            <div class="audit-supplement-title"><i class="fa-solid fa-triangle-exclamation"></i> 补充审核</div>
+    
+            <label class="section-label">补充审核原因 <span class="required">*</span></label>
+            <textarea class="audit-textarea" placeholder="请说明原因" rows="3" id="auditSupplementReason"></textarea>
+          </div>
+
           <!-- 主知情审核专用：筛选号 & 知情时间（仅第7条数据显示） -->
           <div class="audit-section" id="mainConsentFields" style="display:none;">
             <div style="background: #fff7e6; border: 1px solid #ffd591; border-radius: 8px; padding: 16px; margin-bottom: 4px;">
@@ -2385,7 +2360,7 @@
         </div>
         <div class="audit-footer" style="border-top: 1px solid #f0f0f0; padding: 16px 20px 20px;">
           <button class="audit-btn audit-btn-cancel" onclick="closeAuditModal()">取消</button>
-          <button class="audit-btn audit-btn-submit" onclick="confirmSubmitAudit()">提交审批</button>
+          <button class="audit-btn audit-btn-submit" id="auditSubmitBtn" onclick="confirmSubmitAudit()">提交审批</button>
         </div>
       </div>
       
@@ -2394,11 +2369,16 @@
         <h2 class="audit-prd-title">📋 PRD - 功能说明</h2>
         
         <!-- 模块一：项目匹配状态提示 -->
-        <div class="audit-prd-section">
-          <h3 class="audit-prd-section-title">一、项目匹配状态提示</h3>
-          <p class="audit-prd-text"><strong>触发条件：</strong>预提交时,匹配中，打开弹窗后顶部显示蓝色提示区域。</p>
-          <p class="audit-prd-text" style="color: red;"><strong>如果预筛的时候，需要填写 预筛号和知情时间，在当前页面可以直接填写了</strong></p>
+       
 
+        <div class="audit-prd-section" id="auditPrdSupplement" style="display:none;">
+          <h3 class="audit-prd-section-title">补充审核（已入组患者）</h3>
+          <p class="audit-prd-text"><strong>场景：</strong>患者状态为「已入组」时，操作入口显示<strong>补充审核</strong>而非「提交审批」。</p>
+          <ul class="audit-prd-list">
+            <li>弹窗标题切换为「补充审核」，提交按钮为「提交补充审核」。</li>
+            <li>必须填写<strong>补充审核原因</strong>（必填），说明发起补充审核的理由。</li>
+            <li>提交后在「审批记录 - 补充审核记录」中可追溯原因。</li>
+          </ul>
         </div>
 
         
@@ -2407,6 +2387,9 @@
       
     </div>
   </div>
+
+  <!-- 审批/审核记录弹窗 -->
+  <div class="audit-record-overlay" id="auditRecordOverlay"></div>
 
   <script>
     // 模拟患者数据
@@ -2424,92 +2407,7 @@
         patientStatus: '已入组',
         creator: '张三'
       },
-      {
-        id: 2,
-        screenNo: 'PT-2026-002',
-        nameAbbr: 'LS',
-        age: 38,
-        gender: '女',
-        patientNo: 'P002',
-        centerNo: 'C001',
-        center: '北京大学第一医院',
-        matchStatus: '待匹配',
-        patientStatus: '筛选中',
-        creator: '李四'
-      },
-      {
-        id: 3,
-        screenNo: 'PT-2026-003',
-        nameAbbr: 'WW',
-        age: 52,
-        gender: '男',
-        patientNo: 'P003',
-        centerNo: 'C002',
-        center: '上海交通大学医学院附属瑞金医院',
-        matchStatus: '匹配中',
-        patientStatus: '驳回',
-        creator: '王五'
-      },
-      {
-        id: 4,
-        screenNo: 'PT-2026-004',
-        nameAbbr: 'ZL',
-        age: 29,
-        gender: '女',
-        patientNo: 'P004',
-        centerNo: 'C003',
-        center: '广州医科大学附属第一医院',
-        matchStatus: '已匹配',
-        patientStatus: '驳回',
-        creator: '赵六',
-        hasMatchedOnce: true,
-        lastMatchSuccess: true,
-        filesChanged: false
-      },
-      {
-        id: 5,
-        screenNo: 'PT-2026-005',
-        nameAbbr: 'HM',
-        age: 61,
-        gender: '男',
-        patientNo: 'P005',
-        centerNo: 'C001',
-        center: '北京大学第一医院',
-        matchStatus: '已匹配',
-        patientStatus: '已入组',
-        creator: '钱七',
-        filesChanged: false,
-        quickMatch: true
-      },
-      {
-        id: 6,
-        screenNo: 'PT-2026-006',
-        nameAbbr: 'WT',
-        age: 44,
-        gender: '男',
-        patientNo: 'P006',
-        centerNo: 'C002',
-        center: '上海交通大学医学院附属瑞金医院',
-        matchStatus: '已匹配',
-        patientStatus: '已入组',
-        creator: '孙八',
-        filesChanged: true,
-        quickMatch: true
-      },
-      {
-        id: 7,
-        screenNo: 'PT-2026-007',
-        nameAbbr: 'LJ',
-        age: 57,
-        gender: '女',
-        patientNo: 'P007',
-        centerNo: 'C001',
-        center: '北京大学第一医院',
-        matchStatus: '待匹配',
-        patientStatus: '主知情审核',
-        creator: '李九',
-        isMainInformedConsent: true
-      }
+     
     ];
 
     // 预筛表字段数据
@@ -2573,7 +2471,7 @@
               <a href="javascript:void(0)">编辑</a><span>|</span>
               <a href="javascript:void(0)" class="history-files-btn" onclick="switchToFilesView(${p.id})">病史与资料</a><span>|</span>
               <a href="match-detail-new.html?id=${p.id}&screenNo=${encodeURIComponent(p.screenNo)}&age=${p.age}&gender=${encodeURIComponent(p.gender)}&centerNo=${p.centerNo}&center=${encodeURIComponent(p.center)}">匹配详情</a><span>|</span>
-              ${p.preSubmit ? `<a href="javascript:void(0)" style="color:#ff7a00" onclick="cancelPreSubmit(${p.id})"><i class="fas fa-undo"></i> 取消预提交</a><span>|</span>` : (p.matchStatus === '匹配中' ? `<a href="javascript:void(0)" style="color:#fa8c16" onclick="handleDirectPreSubmit(${p.id})"><i class="fas fa-paper-plane"></i> 预提交</a><span>|</span>` : `<a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})"><i class="fas fa-paper-plane"></i> 提交审批</a><span>|</span>`)}
+              ${p.preSubmit ? `<a href="javascript:void(0)" style="color:#ff7a00" onclick="cancelPreSubmit(${p.id})"><i class="fas fa-undo"></i> 取消预提交</a><span>|</span>` : (p.matchStatus === '匹配中' ? `<a href="javascript:void(0)" style="color:#fa8c16" onclick="handleDirectPreSubmit(${p.id})"><i class="fas fa-paper-plane"></i> 预提交</a><span>|</span>` : `<a href="javascript:void(0)" class="submit-audit-btn" onclick="submitAudit(${p.id})"><i class="fas fa-paper-plane"></i> ${p.patientStatus==='已入组'?'补充审核':'提交审批'}</a><span>|</span>`)}
               <a href="javascript:void(0)" onclick="viewAuditRecord('${p.patientNo}')">审批记录</a><span>|</span>
               <a href="javascript:void(0)">邮件记录</a>
             </div>
@@ -2667,6 +2565,43 @@
       }
     }
 
+    // 当前在项目匹配并预提交确认弹窗中的患者ID
+    let currentMatchPrePatientId = null;
+
+    // 打开项目匹配并预提交确认弹窗
+    function openMatchPreSubmitConfirm(patientId) {
+      currentMatchPrePatientId = patientId;
+      window.currentPatientId = patientId;
+      document.getElementById('matchPreSubmitOverlay').classList.add('show');
+    }
+
+    // 关闭项目匹配并预提交确认弹窗
+    function closeMatchPreSubmitConfirm() {
+      document.getElementById('matchPreSubmitOverlay').classList.remove('show');
+      currentMatchPrePatientId = null;
+    }
+
+    // 仅项目匹配：显示系统匹配中弹窗
+    function onMatchOnly() {
+      const patientId = currentMatchPrePatientId;
+      closeMatchPreSubmitConfirm();
+      if (!patientId) return;
+      setMatchBtnLoading(patientId, true);
+      showMatchingModal();
+    }
+
+    // 匹配并预提交：直接弹出补充审核页面
+    function onMatchAndPreSubmit() {
+      const patientId = currentMatchPrePatientId;
+      closeMatchPreSubmitConfirm();
+      if (!patientId) return;
+      const patient = patientData.find(p => p.id === patientId);
+      if (!patient) return;
+      patient.preSubmit = true;
+      renderPatients();
+      showAuditModal(patient);
+    }
+
     // 显示项目匹配确认框
     function showProjectMatchConfirm(patientId, matchStatus) {
       const patient = patientData.find(p => p.id === patientId);
@@ -2727,18 +2662,8 @@
         return;
       }
 
-      // 默认：普通确认弹窗 → 显示系统匹配中弹窗
-      showConfirm(
-        '项目匹配确认',
-        `您确定要对患者「<strong style="color:#1677ff">${patient.screenNo}</strong>」进行项目匹配吗？`,
-        () => {
-          closeConfirm();
-          setMatchBtnLoading(patientId, true);
-          window.currentPatientId = patientId;
-          showMatchingModal();
-        },
-        { iconType: 'info', okText: '开始匹配' }
-      );
+      // 默认：显示项目匹配并预提交确认弹窗
+      openMatchPreSubmitConfirm(patientId);
     }
 
     // 显示重新匹配确认弹窗
@@ -2918,6 +2843,40 @@
       );
     }
 
+    // 上次使用的审核模板（补充审核默认沿用）
+    let lastAuditTemplate = '常规模板';
+    // 审核流程映射
+    const auditFlowMap = {
+      prescreen: '预筛审批',
+      main: '主知情审批',
+      enroll: '入组审批'
+    };
+    const auditTemplateMap = {
+      '常规模板': '常规审批模板-主流程',
+      '快速审批模板': '快速审批模板'
+    };
+    // 根据当前模式更新审核流程推荐提示
+    function updateAuditFlowHint(flow, isSupplement) {
+      const hintText = document.getElementById('auditFlowHintText');
+      if (!hintText) return;
+      const recommended = isSupplement ? 'enroll' : 'prescreen';
+      if (flow === recommended) {
+        hintText.innerHTML = `<strong>推荐：${auditFlowMap[recommended]}</strong>`;
+        hintText.parentElement.parentElement.style.background = '#f0f5ff';
+        hintText.parentElement.parentElement.style.borderColor = '#d6e4ff';
+      } else {
+        hintText.innerHTML = `当前选择：<strong>${auditFlowMap[flow] || '未选择'}</strong>（非推荐流程，请确认）`;
+        hintText.parentElement.parentElement.style.background = '#fff7e6';
+        hintText.parentElement.parentElement.style.borderColor = '#ffd591';
+      }
+    }
+    // 审核流程变更
+    function checkAuditFlow() {
+      const flowSelect = document.getElementById('auditFlow');
+      if (!flowSelect) return;
+      updateAuditFlowHint(flowSelect.value, window.currentAuditIsSupplement);
+    }
+
     // 提交审批
     function submitAudit(patientId) {
       const patient = patientData.find(p => p.id === patientId);
@@ -2939,37 +2898,36 @@
     // 显示提交审批弹窗
     function showAuditModal(patient, submitMode = 'sync') {
       const overlay = document.getElementById('auditOverlay');
-      const matchStatusNotice = document.getElementById('matchStatusNotice');
       const auditPatientNo = document.getElementById('auditPatientNo');
       const auditPatientName = document.getElementById('auditPatientName');
       const auditMatchStatus = document.getElementById('auditMatchStatus');
       
-      // 根据提交模式显示不同提示
-      const noticeTitle = document.querySelector('#matchStatusNotice strong');
-      const noticeDesc = document.querySelector('#matchStatusNotice .notice-content > p');
-      
-      if (submitMode === 'pre') {
-        // 预提交模式：显示特殊提示
-        if (noticeTitle) noticeTitle.textContent = '预提交审批模式';
-        if (noticeDesc) noticeDesc.textContent = '您先预设提交审核内容，待匹配完成后，系统会自动帮您提交';
-      } else {
-        // 同步提交模式：显示默认提示
-        if (noticeTitle) noticeTitle.textContent = '当前项目未匹配/匹配失败';
-        if (noticeDesc) noticeDesc.textContent = '是否需要进行项目匹配，项目匹配仅用于AI辅助提取信息，不影响审批结果。';
-      }
 
-     
-      
-      // 根据匹配状态显示提示
-      const isUnmatchedOrFailed = patient.matchStatus === '待匹配' || patient.matchStatus === '匹配失败';
-      if (isUnmatchedOrFailed) {
-        matchStatusNotice.style.display = 'block';
-      } else {
-        matchStatusNotice.style.display = 'none';
-      }
-      
       // 保存当前患者ID用于后续操作
       window.currentAuditPatientId = patient.id;
+
+      // 补充审核场景：患者状态为「已入组」时切换为补充审核
+      const isSupplement = patient.patientStatus === '已入组';
+      window.currentAuditIsSupplement = isSupplement;
+      const titleEl = document.getElementById('auditModalTitle');
+      const submitBtn = document.getElementById('auditSubmitBtn');
+      const supplementSection = document.getElementById('auditSupplementSection');
+      const prdSupplement = document.getElementById('auditPrdSupplement');
+      if (titleEl) titleEl.textContent = isSupplement ? '📝 补充审核' : '🚀 提交审批';
+      if (submitBtn) submitBtn.textContent = isSupplement ? '提交补充审核' : '提交审批';
+      if (supplementSection) supplementSection.style.display = isSupplement ? 'block' : 'none';
+      if (prdSupplement) prdSupplement.style.display = isSupplement ? 'block' : 'none';
+      const reasonEl = document.getElementById('auditSupplementReason');
+      if (reasonEl) reasonEl.value = '';
+      // 审核模板 / 审核流程默认值（补充审核默认沿用上次模板、流程为入组审批）
+      const tplSelect = document.getElementById('auditTemplate');
+      const flowSelect = document.getElementById('auditFlow');
+      if (tplSelect) tplSelect.value = lastAuditTemplate;
+      if (flowSelect) {
+        const recFlow = isSupplement ? 'enroll' : 'prescreen';
+        flowSelect.value = recFlow;
+        updateAuditFlowHint(recFlow, isSupplement);
+      }
 
       // 第7条数据：显示筛选号和知情时间字段
       const mainConsentFields = document.getElementById('mainConsentFields');
@@ -3032,7 +2990,8 @@
     
     // 忽略匹配警告，直接提交审批
     function ignoreMatchWarning() {
-      document.getElementById('matchStatusNotice').style.display = 'none';
+      const el = document.getElementById('matchStatusNotice');
+      if (el) el.style.display = 'none';
     }
     
     // 确认提交审批
@@ -3045,6 +3004,31 @@
       if (!reviewerInput.value.trim()) {
         showToast('请输入审批人', 'warning');
         return;
+      }
+
+      // 审核模板 / 审核流程（必填）
+      const tplSelect = document.getElementById('auditTemplate');
+      const flowSelect = document.getElementById('auditFlow');
+      const auditTemplate = tplSelect ? tplSelect.value : '常规模板';
+      const auditFlow = flowSelect ? flowSelect.value : '';
+      if (!auditFlow) {
+        showToast('请选择审核流程', 'warning');
+        if (flowSelect) flowSelect.focus();
+        return;
+      }
+      lastAuditTemplate = auditTemplate;
+
+      // 补充审核（已入组患者）必须填写补充审核原因
+      const isSupplement = window.currentAuditIsSupplement;
+      let supplementReason = '';
+      if (isSupplement) {
+        const reasonEl = document.getElementById('auditSupplementReason');
+        supplementReason = reasonEl ? reasonEl.value.trim() : '';
+        if (!supplementReason) {
+          showToast('请填写补充审核原因（已入组患者必填）', 'warning');
+          if (reasonEl) reasonEl.focus();
+          return;
+        }
       }
       
       // 模拟校验筛选表必填项（假设身高、体重为必填）
@@ -3085,7 +3069,28 @@
         renderPatients();
       }
       
-      // 执行提交审批
+      // 执行提交审批 / 补充审核
+      if (isSupplement) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const time = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        if (!auditRecordData[patient.id]) auditRecordData[patient.id] = [];
+        auditRecordData[patient.id].push({
+          stage: 'supplement',
+          operator: reviewerInput.value.trim(),
+          role: '补充审核员',
+          statusClass: 'submitted',
+          time: time,
+          duration: '刚提交',
+          template: auditTemplateMap[auditTemplate] || auditTemplate,
+          flow: auditFlowMap[auditFlow] || auditFlow,
+          supplementReason: supplementReason,
+          opinion: '发起补充审核：' + supplementReason
+        });
+        showToast('补充审核已提交', 'success');
+      } else {
+        showToast('审批已提交', 'success');
+      }
       doSubmitAudit(patient);
     }
     
@@ -3246,7 +3251,155 @@
 
     // 查看审批记录
     function viewAuditRecord(patientNo) {
-      showToast(`查看患者「${patientNo}」的审批记录`, 'info');
+      openAuditRecordModal(patientNo);
+    }
+
+    // 审批记录示例数据（key = 患者 id）
+    const auditRecordData = {
+      1: [
+        { stage:'enrolling', operator:'王主任', role:'入组审批员', statusClass:'approved', time:'2026-06-10 09:20:11', duration:'8分钟', opinion:'患者符合入组条件，已分配入组编号，同意入组。' },
+        { stage:'supplement', operator:'张三', role:'补充审核员', statusClass:'submitted', time:'2026-07-18 14:05:33', duration:'15分钟', template:'常规审批模板-主流程', flow:'入组审批', supplementReason:'新增检查：患者近期复查肌酐升高，需补充审核入组安全性。', opinion:'对已入组患者发起补充审核。' }
+      ],
+      2: [
+        { stage:'prescreen', operator:'赵主任', role:'预筛审批员', statusClass:'rejected', time:'2026-06-07 16:15:08', duration:'10分钟', opinion:'主要排除标准命中，建议排除。' }
+      ],
+      3: [
+        { stage:'prescreen', operator:'李主任', role:'预筛审批员', statusClass:'approved', time:'2026-06-06 11:20:45', duration:'12分钟', opinion:'AI匹配率100%，建议入组。' }
+      ],
+      4: [
+        { stage:'prescreen', operator:'周主任', role:'预筛审批员', statusClass:'approved', time:'2026-06-08 10:55:30', duration:'9分钟', opinion:'建议入组（修正）。' }
+      ],
+      5: [
+        { stage:'enrolling', operator:'陈主任', role:'入组审批员', statusClass:'approved', time:'2026-06-09 15:08:12', duration:'11分钟', opinion:'同意入组。' },
+        { stage:'supplement', operator:'张三', role:'补充审核员', statusClass:'submitted', time:'2026-07-19 09:42:33', duration:'13分钟', template:'常规审批模板-主流程', flow:'入组审批', supplementReason:'方案偏离复核：患者漏服研究药物3天，需补充审核。', opinion:'发起补充审核。' }
+      ],
+      6: [
+        { stage:'enrolling', operator:'刘主任', role:'入组审批员', statusClass:'approved', time:'2026-06-11 08:30:22', duration:'10分钟', opinion:'同意入组。' },
+        { stage:'supplement', operator:'张三', role:'补充审核员', statusClass:'submitted', time:'2026-07-20 10:15:05', duration:'14分钟', template:'常规审批模板-主流程', flow:'入组审批', supplementReason:'安全性再评估：新增合并用药冲突，需补充审核。', opinion:'发起补充审核。' }
+      ],
+      7: []
+    };
+    const auditAnnotationData = {
+      1: '• 补充审核原因：肌酐升高需重新评估入组安全性\n• 已通知研究者复核近期化验',
+      5: '• 方案偏离：漏服药物需补充审核并记录',
+      6: '• 合并用药冲突，安全性再评估'
+    };
+
+    function openAuditRecordModal(patientNo) {
+      const patient = patientData.find(p => p.patientNo === patientNo);
+      if (!patient) return;
+      const overlay = document.getElementById('auditRecordOverlay');
+      overlay.innerHTML = buildAuditRecordContent(patient);
+      overlay.classList.add('show');
+      overlay.onclick = function(e) { if (e.target === overlay) closeAuditRecord(); };
+    }
+
+    function closeAuditRecord() {
+      const overlay = document.getElementById('auditRecordOverlay');
+      overlay.classList.remove('show');
+      overlay.innerHTML = '';
+    }
+
+    function toggleAuditGroup(headerEl, e) {
+      if (e && e.target.closest('button')) return;
+      headerEl.classList.toggle('collapsed');
+      const body = headerEl.nextElementSibling;
+      if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+    }
+
+    function buildAuditRecordContent(patient) {
+      const title = `${patient.patientNo} · ${patient.name}（${patient.patientStatus}）— 审批记录`;
+      const records = auditRecordData[patient.id] || [];
+      const statusLabel = cls => ({ submitted:'已提交', approved:'通过', rejected:'拒绝', pending:'待审批' }[cls] || cls);
+
+      const group = (label, rows, actions) => {
+        if (!rows.length) return '';
+        return `
+        <div class="audit-group-card">
+          <div class="audit-group-header" onclick="toggleAuditGroup(this, event)">
+            <span class="audit-group-toggle">▼</span>
+            <span>${label}</span>
+            <div class="audit-group-actions">
+              ${actions.map(a => `<button class="audit-record-mini-btn">${a}</button>`).join('')}
+              <span>收起</span>
+            </div>
+          </div>
+          <div class="audit-group-body">
+            <table class="audit-flow-table">
+              <thead><tr>
+                <th style="width:200px">操作人</th>
+                <th style="width:120px">操作状态</th>
+                <th style="width:220px">操作时间</th>
+                <th style="width:140px">操作耗时</th>
+              </tr></thead>
+              <tbody>
+                ${rows.map(r => `
+                <tr>
+                  <td><span class="audit-operator-name">${r.operator}</span><span class="audit-operator-role">&lt;${r.role}&gt;</span></td>
+                  <td><span class="audit-status-tag ${r.statusClass}">${statusLabel(r.statusClass)}</span>${r.stage==='supplement'?'<span class="audit-supplement-tag">入组审核（补充审核）</span>':''}</td>
+                  <td style="font-size:11.5px;color:#888">${r.time}</td>
+                  <td><span class="audit-duration">${r.duration}</span></td>
+                </tr>
+                ${r.supplementReason ? `
+                <tr><td colspan="4"><div class="audit-supplement-note">📝 补充审核原因：${r.supplementReason}</div>
+                  ${r.template||r.flow?`<div style="margin-top:6px;color:#ad6800">审核模板：${r.template||'-'} ｜ 审核流程：${r.flow||'-'}</div>`:''}</td></tr>
+                ` : ''}
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      };
+
+      const prescreen = records.filter(r => r.stage === 'prescreen');
+      const enrolling = records.filter(r => r.stage === 'enrolling');
+      const supplement = records.filter(r => r.stage === 'supplement');
+      const latestSupplement = supplement.length ? supplement[supplement.length - 1] : null;
+      const annotation = auditAnnotationData[patient.id] || '';
+
+      const supplementBanner = latestSupplement ? `
+        <div class="audit-record-supplement-banner">
+          <span class="audit-record-supplement-label">补充审核</span>
+          <div class="audit-record-supplement-reason"><strong>补充审核原因：</strong>${latestSupplement.supplementReason || '-'}</div>
+        </div>
+      ` : '';
+
+      const bodyHtml = records.length > 0 ? `
+        ${supplementBanner}
+        ${group('预筛审批记录', prescreen, ['下载', '预筛沟通'])}
+        ${group('入组审批记录', enrolling, ['下载', '入组沟通'])}
+        ${group('入组审核（补充审核）记录', supplement, ['下载'])}
+        ${annotation ? `<div class="audit-annotation-card"><div class="audit-annotation-header">批注</div><div class="audit-annotation-body">${annotation}</div></div>` : ''}
+      ` : `<div class="audit-record-empty">📭 暂无审批记录</div>`;
+
+      return `
+      <div class="audit-record-modal" onclick="event.stopPropagation()">
+        <div class="audit-record-main">
+          <div class="audit-record-header">
+            <span class="audit-record-title">${title}</span>
+            <button class="audit-record-close" onclick="closeAuditRecord()">&times;</button>
+          </div>
+          <div class="audit-record-body">${bodyHtml}</div>
+        </div>
+        <div class="audit-record-sidebar">
+          <div class="audit-prd-title">📋 PRD - 审批记录</div>
+          <div class="audit-prd-section">
+            <h3 class="audit-prd-section-title">补充审核记录</h3>
+            <p class="audit-prd-text">已入组患者发起的<strong>补充审核</strong>在「补充审核记录」分组展示，并标注<strong>补充审核原因</strong>，便于追溯。</p>
+          </div>
+           <div class="audit-prd-section">
+            <h3 class="audit-prd-section-title">审核页面也这样修改</h3>
+          </div>
+          <div class="audit-prd-section">
+            <h3 class="audit-prd-section-title">展示规则</h3>
+            <ul class="audit-prd-list">
+              <li>按审批阶段分组：预筛 / 入组 / 补充审核。</li>
+              <li>每条记录含操作人、状态、时间、耗时。</li>
+              <li>补充审核记录带橙色「补充审核」标识与原因说明。</li>
+            </ul>
+          </div>
+        </div>
+      </div>`;
     }
 
     // 搜索患者
