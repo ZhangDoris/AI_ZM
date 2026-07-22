@@ -1194,8 +1194,12 @@
     .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
     .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
     .proj-criteria-table .stage-select-all input { width: 14px; height: 14px; cursor: pointer; }
-    .stage-enable-td { min-width: 100px; vertical-align: middle; text-align: center; }
-    .stage-enable-td .stage-enabled-check { width: 16px; height: 16px; cursor: pointer; }
+    .stage-enable-td { min-width: 110px; vertical-align: middle; text-align: center; }
+    .stage-enable-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .stage-enabled-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
+    .stage-enable-td .stage-enabled-check { width: 14px; height: 14px; cursor: pointer; }
+    .screening-required-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff4d4f; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
+    .screening-required-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #ff4d4f; }
     .sub-remark-row td { background: #fafbff !important; padding: 0; }
     .sub-remark-inner { padding: 4px 14px 14px; }
     .sub-remark-title { font-size: 12px; color: #999; font-weight: 600; margin: 4px 0 8px 2px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
@@ -2766,8 +2770,28 @@
     .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
     .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
     .proj-criteria-table .stage-select-all input { width: 14px; height: 14px; cursor: pointer; }
-    .stage-enable-td { min-width: 100px; vertical-align: middle; text-align: center; }
-    .stage-enable-td .stage-enabled-check { width: 16px; height: 16px; cursor: pointer; }
+    .stage-enable-td { min-width: 110px; vertical-align: middle; text-align: center; }
+    .stage-enable-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .stage-enabled-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
+    .stage-enable-td .stage-enabled-check { width: 14px; height: 14px; cursor: pointer; }
+    .screening-required-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff4d4f; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
+    .screening-required-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #ff4d4f; }
+    /* 合并症 / 合并用药配置 */
+    .merge-config-area { display: flex; flex-direction: column; gap: 14px; }
+    .merge-stage-card { background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; padding: 14px 16px; }
+    .merge-stage-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .merge-stage-name { font-size: 13px; font-weight: 600; color: #333; display: inline-flex; align-items: center; gap: 6px; }
+    .merge-stage-name i { color: #1677ff; }
+    .merge-enable-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #52c41a; cursor: pointer; }
+    .merge-enable-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #52c41a; }
+    .merge-stage-body { display: flex; flex-direction: column; gap: 10px; }
+    .merge-extract-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; width: fit-content; }
+    .merge-extract-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #1677ff; }
+    .merge-remark-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .merge-remark-lbl { font-size: 12px; color: #999; font-weight: 600; }
+    .merge-remark-textarea { width: 100%; min-height: 56px; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+    .merge-remark-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .merge-remark-textarea::placeholder { color: #bbb; }
     .proj-criteria-group { margin-bottom: 24px; }
     .proj-criteria-group-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     .proj-criteria-group-title.inclusion { color: #52c41a; }
@@ -16156,15 +16180,20 @@ let _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData
 // 项目筛选表数据：单一版本（无版本概念），每条标准支持「各阶段共用」备注与按阶段启用，并可配置思考链
 const _defaultProjectScreeningData = {
   items: [
-    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] },
-    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] },
-    { id:'S03', content:'ECOG体力状况评分0或1分', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] },
-    { id:'S04', content:'已知对试验药物成分过敏', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] },
-    { id:'S05', content:'妊娠期或哺乳期女性', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] },
-    { id:'S06', content:'活动性自身免疫性疾病', stageEnabled:{ 'ST01':true, 'ST03':true }, remark:'', thinkingChain:[] }
+    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] },
+    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] },
+    { id:'S03', content:'ECOG体力状况评分0或1分', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] },
+    { id:'S04', content:'已知对试验药物成分过敏', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] },
+    { id:'S05', content:'妊娠期或哺乳期女性', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] },
+    { id:'S06', content:'活动性自身免疫性疾病', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, remark:'', thinkingChain:[] }
   ]
 };
 let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
+
+// 合并症 / 合并用药配置：按阶段启用 + 是否提取 + 备注（单一配置块，非多条列表）
+const _defaultMergeConfig = { stages: {} };
+let _comorbidityData = JSON.parse(JSON.stringify(_defaultMergeConfig));
+let _conmedData = JSON.parse(JSON.stringify(_defaultMergeConfig));
 
 // 试验方案上传文件列表（项目管理新增/编辑页）
 let uploadedFiles = [];
@@ -16207,6 +16236,8 @@ function buildAdminProjectEdit(isNew) {
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-stage" onclick="scrollToProjectSection('sec-stage', this)"><i class="fa-solid fa-puzzle-piece"></i> 阶段设置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-criteria" onclick="scrollToProjectSection('sec-criteria', this)"><i class="fa-solid fa-scale-balanced"></i> 项目入排标准</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-screening" onclick="scrollToProjectSection('sec-screening', this)"><i class="fa-solid fa-magnifying-glass"></i> 筛选表配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-comorbidity" onclick="scrollToProjectSection('sec-comorbidity', this)"><i class="fa-solid fa-stethoscope"></i> 合并症配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-conmed" onclick="scrollToProjectSection('sec-conmed', this)"><i class="fa-solid fa-pills"></i> 合并用药配置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-approval" onclick="scrollToProjectSection('sec-approval', this)"><i class="fa-solid fa-circle-check"></i> 审批模板配置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-thinkchain" onclick="scrollToProjectSection('sec-thinkchain', this)"><i class="fa-solid fa-brain"></i> 思考链配置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-qa" onclick="scrollToProjectSection('sec-qa', this)"><i class="fa-solid fa-comments"></i> 问答知识库</a>
@@ -16382,6 +16413,32 @@ function buildAdminProjectEdit(isNew) {
         </div>
         <div class="edit-section-body" id="screeningBody">
           ${renderProjectScreeningBody()}
+        </div>
+      </div>
+
+      <!-- 合并症配置 -->
+      <div class="edit-section-card" id="sec-comorbidity">
+        <div class="edit-section-header" onclick="toggleEditSection(this)">
+          <div class="edit-section-title">
+            <span class="section-icon">🩺</span> 合并症配置
+          </div>
+          <span class="edit-section-arrow" id="comorbidityArrow">▼</span>
+        </div>
+        <div class="edit-section-body" id="comorbidityBody">
+          ${renderComorbidityBody()}
+        </div>
+      </div>
+
+      <!-- 合并用药配置 -->
+      <div class="edit-section-card" id="sec-conmed">
+        <div class="edit-section-header" onclick="toggleEditSection(this)">
+          <div class="edit-section-title">
+            <span class="section-icon">💊</span> 合并用药配置
+          </div>
+          <span class="edit-section-arrow" id="conmedArrow">▼</span>
+        </div>
+        <div class="edit-section-body" id="conmedBody">
+          ${renderConmedBody()}
         </div>
       </div>
 
@@ -17059,6 +17116,7 @@ function toggleProjectStage(stageId) {
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
+  refreshMergeConfigSections();
   showWechatToast(idx >= 0 ? '已取消选择该阶段' : '阶段已添加，可在入排标准 / 筛选表中配置');
 }
 
@@ -17113,6 +17171,7 @@ function confirmAddProjectStage() {
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
+  refreshMergeConfigSections();
   showWechatToast('已新增「' + name + '」并选中');
 }
 
@@ -17565,7 +17624,12 @@ function renderScreeningContent() {
       const enabled = item.stageEnabled[s.id] != null ? item.stageEnabled[s.id] : true;
       return `
         <td class="stage-enable-td">
-          <input type="checkbox" class="stage-enabled-check" ${enabled ? 'checked' : ''} onchange="updateScreeningStageEnabled(${idx}, '${s.id}', this.checked)"/>
+          <div class="stage-enable-cell">
+            <label class="stage-enabled-label" title="该阶段是否启用此项">
+              <input type="checkbox" class="stage-enabled-check" ${enabled ? 'checked' : ''} onchange="updateScreeningStageEnabled(${idx}, '${s.id}', this.checked)"/>
+              <span>启用</span>
+            </label>
+          </div>
         </td>
       `;
     }).join('');
@@ -17601,6 +17665,10 @@ function renderScreeningContent() {
       <tr>
         <td class="num-cell">${idx + 1}</td>
         <td class="content-cell">
+          <label class="screening-required-label" title="该筛选内容是否为必填项">
+            <input type="checkbox" class="screening-required-check" ${item.required ? 'checked' : ''} onchange="updateScreeningRequired(${idx}, this.checked)"/>
+            <span>必填</span>
+          </label>
           <textarea class="criteria-textarea" rows="3" placeholder="请输入筛选内容" onchange="updateScreeningContent(${idx}, this.value)">${item.content}</textarea>
         </td>
         ${stageTds}
@@ -17650,6 +17718,72 @@ function refreshScreeningSection() {
   if(contentArea) contentArea.innerHTML = renderScreeningContent();
 }
 
+/* ===== 合并症 / 合并用药配置 ===== */
+function ensureMergeStageConfig(data) {
+  _projectSelectedStages.forEach(s => {
+    if(!data.stages[s.id]) data.stages[s.id] = { enabled: true, extract: false, remark: '' };
+  });
+}
+function renderMergeConfigBody(cfgType) {
+  const isComorbidity = cfgType === 'comorbidity';
+  const data = isComorbidity ? _comorbidityData : _conmedData;
+  const title = isComorbidity ? '合并症' : '合并用药';
+  const extractLabel = isComorbidity ? '是否提取合并症' : '是否提取合并用药';
+  ensureMergeStageConfig(data);
+  if(!_projectSelectedStages.length) {
+    return '<div class="proj-criteria-no-stage">请先完成上方「阶段设置」，选择至少一个阶段后再配置' + title + '。</div>';
+  }
+  const stageCards = _projectSelectedStages.map(s => {
+    const cfg = data.stages[s.id] || { enabled: true, extract: false, remark: '' };
+    return `
+      <div class="merge-stage-card">
+        <div class="merge-stage-head">
+          <span class="merge-stage-name"><i class="fa-solid ${isComorbidity ? 'fa-stethoscope' : 'fa-pills'}"></i> ${s.name}</span>
+          <label class="merge-enable-label" title="该阶段是否启用${title}">
+            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="updateMergeEnabled('${cfgType}', '${s.id}', this.checked)"/>
+            <span>启用</span>
+          </label>
+        </div>
+        <div class="merge-stage-body">
+          <label class="merge-extract-label" title="${extractLabel}">
+            <input type="checkbox" ${cfg.extract ? 'checked' : ''} onchange="updateMergeExtract('${cfgType}', '${s.id}', this.checked)"/>
+            <span>${extractLabel}</span>
+          </label>
+          <div class="merge-remark-wrap">
+            <span class="merge-remark-lbl">备注</span>
+            <textarea class="merge-remark-textarea" placeholder="请输入${title}在「${s.name}」的备注说明……" onchange="updateMergeRemark('${cfgType}', '${s.id}', this.value)">${cfg.remark || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `<div class="merge-config-area">${stageCards}</div>`;
+}
+function renderComorbidityBody() { return renderMergeConfigBody('comorbidity'); }
+function renderConmedBody() { return renderMergeConfigBody('conmed'); }
+function getMergeConfig(cfgType) { return cfgType === 'comorbidity' ? _comorbidityData : _conmedData; }
+function updateMergeEnabled(cfgType, stageId, enabled) {
+  const data = getMergeConfig(cfgType);
+  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
+  data.stages[stageId].enabled = enabled;
+}
+function updateMergeExtract(cfgType, stageId, extract) {
+  const data = getMergeConfig(cfgType);
+  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
+  data.stages[stageId].extract = extract;
+}
+function updateMergeRemark(cfgType, stageId, remark) {
+  const data = getMergeConfig(cfgType);
+  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
+  data.stages[stageId].remark = remark;
+}
+function refreshMergeConfigSections() {
+  const cb = document.getElementById('comorbidityBody');
+  if(cb) cb.innerHTML = renderComorbidityBody();
+  const mb = document.getElementById('conmedBody');
+  if(mb) mb.innerHTML = renderConmedBody();
+}
+
 function updateScreeningContent(idx, value) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].content = value;
@@ -17657,6 +17791,10 @@ function updateScreeningContent(idx, value) {
 function updateScreeningStageEnabled(idx, stageId, enabled) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].stageEnabled[stageId] = enabled;
+}
+function updateScreeningRequired(idx, required) {
+  const items = _projectScreeningData.items;
+  if(items && items[idx]) items[idx].required = required;
 }
 function toggleScreeningStageAll(stageId, checked) {
   const items = _projectScreeningData.items;
@@ -17670,7 +17808,7 @@ function addScreeningRow(idx) {
   const newId = 'S' + String(items.length + 1).padStart(2, '0');
   const stageEnabled = {};
   _projectSelectedStages.forEach(s => { stageEnabled[s.id] = true; });
-  items.splice(idx + 1, 0, { id:newId, content:'', thinkingChain:[], stageEnabled:stageEnabled, remark:'' });
+  items.splice(idx + 1, 0, { id:newId, content:'', thinkingChain:[], stageEnabled:stageEnabled, required:false, remark:'' });
   refreshScreeningSection();
   showWechatToast('已新增一条筛选内容');
 }
