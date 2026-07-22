@@ -121,6 +121,22 @@
       font-weight: 500;
     }
 
+    /* 思考链类型切换按钮（入排条件 / 筛选表） */
+    .tc-type-btn {
+      padding: 6px 16px;
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      color: #666;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tc-type-btn.active {
+      border-color: #1677ff;
+      color: #1677ff;
+    }
+
     /* 主内容区域 */
     .main-content {
       padding: 24px;
@@ -1121,8 +1137,8 @@
          <!-- 思维链类型选择 + 全部思考按钮 -->
       <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
         <div style="display:flex;gap:8px">
-          <button onclick="switchTcType('inclusion')" style="padding:6px 16px;background:#fff;border:1px solid #1677ff;color:#1677ff;border-radius:4px;font-size:13px;cursor:pointer">入排条件</button>
-          <button onclick="switchTcType('screening')" style="padding:6px 16px;background:#fff;border:1px solid #d9d9d9;color:#666;border-radius:4px;font-size:13px;cursor:pointer">筛选表</button>
+          <button id="tcBtn-inclusion" class="tc-type-btn active" onclick="switchTcType('inclusion')">入排条件</button>
+          <button id="tcBtn-screening" class="tc-type-btn" onclick="switchTcType('screening')">筛选表</button>
         </div>
         <button id="tcAllThinkBtn" onclick="executeAllTcThinking()" style="padding:6px 16px;background:#1677ff;color:#fff;border:none;border-radius:4px;font-size:13px;cursor:pointer;display:none;align-items:center;gap:4px">
           <i class="fas fa-brain" style="color:#fff"></i>全部思考
@@ -1485,6 +1501,7 @@
       renderMatchDetailTable();
       renderPrescreenTable();
       renderThinkChainList();
+      updateTcButtons();
       
       // 设置当前时间
       const now = new Date();
@@ -1812,7 +1829,16 @@ let currentTcType = 'inclusion';
 // 切换思考链类型
 function switchTcType(type) {
   currentTcType = type;
+  updateTcButtons();
   renderThinkChainList();
+}
+
+// 根据 currentTcType 更新「入排条件 / 筛选表」按钮选中态
+function updateTcButtons() {
+  const inc = document.getElementById('tcBtn-inclusion');
+  const scr = document.getElementById('tcBtn-screening');
+  if (inc) inc.classList.toggle('active', currentTcType === 'inclusion');
+  if (scr) scr.classList.toggle('active', currentTcType === 'screening');
 }
 
 // 切换思考链项收缩/展开
