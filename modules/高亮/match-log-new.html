@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品原型 - 筛选表 · 匹配日志</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;overflow:hidden;}
+.proto-desc{transition:all .2s;border:1px solid #fde68a;background:#fffbeb;border-radius:6px;}.proto-desc:hover{background:#fef3c7;border-color:#f59e0b;}
+.data-table th{background:#F5F7FA;font-weight:600;color:#333;white-space:nowrap;}.data-table td{white-space:nowrap;}.data-table tbody tr{transition:background .15s;}.data-table tbody tr:hover{background:rgba(22,93,255,.04);}.data-table tbody tr.row-alert{background:rgba(245,63,63,.06);}.data-table tbody tr.row-alert:hover{background:rgba(245,63,63,.12);}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;}.tag-blue{background:rgba(22,93,255,.1);color:#165DFF;}.tag-green{background:rgba(0,180,42,.1);color:#00B42A;}.tag-gray{background:#F5F7FA;color:#666;}.tag-red{background:rgba(245,63,63,.1);color:#F53F3F;}.tag-orange{background:rgba(245,158,11,.12);color:#d97706;}
+.cell-tags{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px;}.cell-tag{font-size:11px;padding:1px 7px;border-radius:10px;background:#E8F5FE;color:#1976D2;}
+.op-btn{font-size:12px;color:#165DFF;cursor:pointer;padding:2px 5px;border-radius:4px;white-space:nowrap;}.op-btn:hover{background:rgba(22,93,255,.1);}.op-btn.danger{color:#F53F3F;}.op-btn.danger:hover{background:rgba(245,63,63,.1);}.op-btn.disabled{color:#bbb;cursor:not-allowed;}.op-btn.disabled:hover{background:none;}.op-divider{color:#e5e7eb;}
+.modal-overlay{transition:opacity .3s;}.modal-content{transition:transform .3s,opacity .3s;}.modal-hidden{opacity:0;pointer-events:none;}.modal-hidden .modal-content{transform:scale(.95);opacity:0;}
+@media (max-width:768px){#app{flex-direction:column;}#left-panel{width:100%!important;height:60vh;}#divider{display:none;}#right-panel{width:100%!important;height:40vh;border-top:1px solid #e5e7eb;}.mobile-toggle-btn{display:flex!important;}}
+.mobile-toggle-btn{display:none;position:fixed;bottom:20px;right:20px;z-index:100;width:48px;height:48px;border-radius:50%;background:#165DFF;color:#fff;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(22,93,255,.3);cursor:pointer;border:none;}
+#right-panel{transition:width .3s;flex-shrink:0;overflow:visible;background:#fffbeb;border-left:2px dashed #fcd34d;position:relative;}
+#right-panel.collapsed{width:0!important;min-width:0!important;border-left:none;}
+.drawer-handle{position:absolute;top:50%;left:-32px;transform:translateY(-50%);width:32px;height:180px;background:linear-gradient(180deg,#165DFF,#0E47D1);color:#fff;border-radius:8px 0 0 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;writing-mode:vertical-rl;letter-spacing:4px;font-size:14px;font-weight:bold;border:none;z-index:60;}
+.drawer-handle i{writing-mode:horizontal-tb;font-size:16px;}
+.btn-click:active{transform:scale(.96);}.form-input:focus{border-color:#165DFF;box-shadow:0 0 0 3px rgba(22,93,255,.1);outline:none;}
+</style>
+</head>
+<body class="bg-gray-50">
+<button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()"><i class="fas fa-info"></i></button>
+<div id="app" class="flex h-screen relative">
+  <div id="left-panel" class="overflow-y-auto bg-gray-50 relative">
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+      <div class="flex items-center gap-3"><div class="w-8 h-8 bg-[#165DFF] rounded-lg flex items-center justify-center text-white"><i class="fas fa-microscope"></i></div><h1 class="text-lg font-semibold text-gray-800">智能预筛系统</h1></div>
+      <div class="flex items-center gap-4"><span class="text-sm text-gray-600"><i class="fas fa-user-circle mr-1"></i>研究管理员</span><button class="text-gray-500 hover:text-gray-700 btn-click"><i class="fas fa-bell"></i></button></div>
+    </header>
+    <main class="p-6">
+      <div class="flex items-center justify-between mb-6"><div><h2 class="text-xl font-bold text-gray-800">筛选表 · 匹配日志</h2><p class="text-sm text-gray-500 mt-1">记录每次筛选匹配任务的执行与耗时，支持重新匹配、重新溯源与修正记录标签</p></div></div>
+      <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4" data-proto-id="1">
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-3 items-end">
+          <div><label class="block text-xs text-gray-500 mb-1">患者缩写</label><input placeholder="患者缩写" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">方案编号</label><input placeholder="方案编号" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">匹配状态</label><select class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"><option>全部</option><option>匹配成功</option><option>匹配中</option><option>匹配失败</option></select></div>
+          <div><label class="block text-xs text-gray-500 mb-1">是否删除</label><select class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"><option>全部</option><option>未删除</option><option>已删除</option></select></div>
+          <div><label class="block text-xs text-gray-500 mb-1">匹配人</label><input placeholder="匹配人" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">项目编码</label><input placeholder="项目编码" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">溯源状态</label><select class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"><option>全部</option><option>已溯源</option><option>未溯源</option><option>溯源中</option><option>溯源异常</option></select></div>
+          <div class="col-span-2 md:col-span-3 xl:col-span-2"><label class="block text-xs text-gray-500 mb-1">时间范围</label><div class="flex items-center gap-2"><input type="datetime-local" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"><span class="text-gray-400 text-sm whitespace-nowrap">至</span><input type="datetime-local" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-full"></div></div>
+          <div class="flex items-end gap-2">
+            <button class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 btn-click"><i class="fas fa-search"></i>查询</button>
+            <button class="text-gray-500 hover:text-gray-700 text-sm px-2 btn-click"><i class="fas fa-redo"></i>重置</button>
+          </div>
+        </div>
+      </div>
+     
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden" data-proto-id="3">
+        <div class="overflow-x-auto">
+          <table class="data-table w-full text-sm">
+            <thead><tr>
+              <th class="px-3 py-3 text-center">序号</th><th class="px-3 py-3 text-left">方案编号</th><th class="px-3 py-3 text-left">项目编码</th><th class="px-3 py-3 text-left">项目名称</th><th class="px-3 py-3 text-left">患者姓名</th>
+              <th class="px-3 py-3 text-center">匹配状态</th><th class="px-3 py-3 text-center">溯源状态</th><th class="px-3 py-3 text-left">匹配阶段</th><th class="px-3 py-3 text-left">匹配人</th>
+              <th class="px-3 py-3 text-left">开始匹配时间</th><th class="px-3 py-3 text-left">结束匹配时间</th><th class="px-3 py-3 text-right">OCR用时</th><th class="px-3 py-3 text-right">RAG用时</th><th class="px-3 py-3 text-right">LLM用时</th><th class="px-3 py-3 text-right">溯源用时</th><th class="px-3 py-3 text-right">总用时</th>
+              <th class="px-3 py-3 text-center sticky right-0 bg-[#F5F7FA]">操作</th>
+            </tr></thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+          <span class="text-sm text-gray-500">共 <span id="totalCount">0</span> 条记录</span>
+          <div class="flex items-center gap-1"><button class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-500 hover:bg-gray-50 btn-click">上一页</button><button class="px-3 py-1 bg-[#165DFF] text-white rounded text-sm">1</button><button class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-500 hover:bg-gray-50 btn-click">下一页</button></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <div id="divider" class="w-px bg-gray-300"></div>
+  <div id="right-panel" class="w-[25%] lg:w-[22%]">
+    <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()"><i class="fas fa-chevron-right" id="drawerIcon"></i><span>PRD</span></button>
+    <div class="p-4 overflow-y-auto" style="max-height:100vh;">
+      <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg"><div class="flex items-center gap-2 mb-1"><span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded">PROTOTYPE</span><span class="text-xs font-semibold text-amber-800">原型说明</span></div><p class="text-[11px] text-amber-700">本模块说明文档，对应上方查询栏、日志表格与状态图例。</p></div>
+      <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200"><i class="fas fa-map-signs text-amber-600"></i><h2 class="text-sm font-bold text-amber-900">功能说明</h2></div>
+      <div class="space-y-3">
+        <div class="proto-desc p-3"><div class="flex items-start gap-2"><span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span><div><h3 class="text-sm font-semibold text-gray-800">查询条件新增溯源状态</h3><p class="text-xs text-gray-500 mt-1">在原有患者缩写、方案编号、匹配状态、是否删除、匹配人、项目编码与开始/结束日期时间范围基础上，新增「溯源状态」筛选。</p></div></div></div>
+        <div class="proto-desc p-3"><div class="flex items-start gap-2"><span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span><div><h3 class="text-sm font-semibold text-gray-800">列表新增耗时与状态列</h3><p class="text-xs text-gray-500 mt-1">列表在原有字段上新增：溯源状态、OCR用时、RAG用时、LLM用时、溯源用时（与总用时并列展示各阶段耗时）。</p></div></div></div>
+        <div class="proto-desc p-3"><div class="flex items-start gap-2"><span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span><div><h3 class="text-sm font-semibold text-gray-800">操作列新增重新溯源</h3><p class="text-xs text-gray-500 mt-1">操作列在原「重新匹配」基础上新增「重新溯源」按钮；点击重新匹配/重新溯源均弹出确认框，确认后执行。</p></div></div></div>
+        <div class="proto-desc p-3"><div class="flex items-start gap-2"><span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span><div><h3 class="text-sm font-semibold text-gray-800">匹配详情不需要改</h3></div></div></div>
+       <div class="proto-desc p-3"><div class="flex items-start gap-2"><span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">5</span><div><h3 class="text-sm font-semibold text-gray-800">总用时=OCR用时+RAG用时+LLM用时+溯源用时。溯源还没出来的时候先别显示总用时</h3></div></div></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<div id="editTagModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+  <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200"><h3 class="text-lg font-semibold text-gray-800" id="editTagTitle">修正记录标签</h3><button onclick="closeModal('editTagModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button></div>
+    <div class="px-6 py-5"><label class="block text-sm font-medium text-gray-700 mb-2">当前标签</label><div id="editTagList" class="flex flex-wrap gap-2 mb-4 min-h-[32px]"></div><div class="flex items-center gap-2"><input id="editTagInput" type="text" placeholder="输入标签后回车或点击添加" class="form-input flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" onkeydown="if(event.key==='Enter')addTag()"><button onclick="addTag()" class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium btn-click"><i class="fas fa-plus"></i>添加</button></div></div>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50"><button onclick="closeModal('editTagModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button><button onclick="saveTags()" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button></div>
+  </div>
+</div>
+<div id="confirmModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+  <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4">
+    <div class="px-6 py-5"><div class="flex items-center gap-3 mb-2"><i class="fas fa-question-circle text-[#165DFF] text-xl"></i><h3 class="text-base font-semibold text-gray-800" id="confirmTitle">确认操作</h3></div><p class="text-sm text-gray-500" id="confirmText"></p></div>
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50"><button onclick="closeModal('confirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button><button onclick="confirmAction()" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">确认</button></div>
+  </div>
+</div>
+<div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[80] bg-gray-800 text-white text-sm px-4 py-2 rounded-lg opacity-0 pointer-events-none" style="transition:opacity .25s"></div>
+<script>
+const records = [
+ {id:1,planNo:'SP-2026-001',projCode:'PJ-1001',projName:'肺癌靶向治疗真实世界研究',patient:'张*',matchStatus:'匹配成功',traceStatus:'已溯源',stage:'入组阶段',matcher:'李娜',start:'2026-07-20 09:12:33',end:'2026-07-20 09:14:10',ocr:'1.2s',rag:'12.4s',llm:'28.6s',trace:'5.1s',total:'47.3s',tags:['入组符合']},
+ {id:2,planNo:'SP-2026-001',projCode:'PJ-1001',projName:'肺癌靶向治疗真实世界研究',patient:'王*',matchStatus:'匹配失败',traceStatus:'未溯源',stage:'预筛阶段',matcher:'李娜',start:'2026-07-20 10:01:02',end:'2026-07-20 10:01:11',ocr:'1.0s',rag:'8.2s',llm:'-',trace:'-',total:'9.2s',tags:[]},
+ {id:3,planNo:'SP-2026-002',projCode:'PJ-1002',projName:'糖尿病并发症筛查队列',patient:'刘*',matchStatus:'匹配成功',traceStatus:'溯源异常',stage:'入组阶段',matcher:'陈明',start:'2026-07-20 11:20:45',end:'2026-07-20 11:22:30',ocr:'1.5s',rag:'15.1s',llm:'30.2s',trace:'3.8s',total:'50.6s',tags:['待补材料']},
+ {id:4,planNo:'SP-2026-002',projCode:'PJ-1002',projName:'糖尿病并发症筛查队列',patient:'赵*',matchStatus:'匹配成功',traceStatus:'已溯源',stage:'入组阶段',matcher:'陈明',start:'2026-07-20 13:05:12',end:'2026-07-20 13:06:48',ocr:'1.1s',rag:'11.8s',llm:'27.3s',trace:'4.6s',total:'44.8s',tags:[]},
+ {id:5,planNo:'SP-2026-003',projCode:'PJ-1003',projName:'心血管高危人群随访管理',patient:'孙*',matchStatus:'匹配中',traceStatus:'未溯源',stage:'预筛阶段',matcher:'李娜',start:'2026-07-20 14:30:00',end:'-',ocr:'0.9s',rag:'进行中',llm:'-',trace:'-',total:'-',tags:[]},
+ {id:6,planNo:'SP-2026-003',projCode:'PJ-1003',projName:'心血管高危人群随访管理',patient:'周*',matchStatus:'匹配成功',traceStatus:'已溯源',stage:'入组阶段',matcher:'王浩',start:'2026-07-20 15:12:40',end:'2026-07-20 15:14:05',ocr:'1.3s',rag:'13.0s',llm:'29.1s',trace:'4.2s',total:'47.6s',tags:['高血压']},
+ {id:7,planNo:'SP-2026-004',projCode:'PJ-1004',projName:'肿瘤免疫治疗疗效预测',patient:'吴*',matchStatus:'匹配失败',traceStatus:'未溯源',stage:'预筛阶段',matcher:'王浩',start:'2026-07-20 16:00:18',end:'2026-07-20 16:00:25',ocr:'0.4s',rag:'-',llm:'-',trace:'-',total:'0.7s',tags:[]},
+ {id:8,planNo:'SP-2026-004',projCode:'PJ-1004',projName:'肿瘤免疫治疗疗效预测',patient:'郑*',matchStatus:'匹配成功',traceStatus:'溯源中',stage:'入组阶段',matcher:'陈明',start:'2026-07-20 16:40:55',end:'2026-07-20 16:42:20',ocr:'1.2s',rag:'12.9s',llm:'28.0s',trace:'进行中',total:'42.1s',tags:[]}
+];
+const matchTagCls=s=>s==='匹配成功'?'tag-green':s==='匹配失败'?'tag-red':s==='匹配中'?'tag-blue':'tag-gray';
+const traceTagCls=s=>s==='已溯源'?'tag-green':s==='未溯源'?'tag-gray':s==='溯源中'?'tag-blue':'tag-orange';
+function renderTable(){
+ const body=document.getElementById('logBody');
+ body.innerHTML=records.map(r=>{
+  const alert=r.matchStatus==='匹配失败'||r.traceStatus==='溯源异常';
+  return '<tr class="'+(alert?'row-alert':'')+'">'+
+   '<td class="px-3 py-3 text-center text-gray-400">'+r.id+'</td>'+
+   '<td class="px-3 py-3 font-mono text-[#165DFF]">'+r.planNo+'</td>'+
+   '<td class="px-3 py-3 font-mono">'+r.projCode+'</td>'+
+   '<td class="px-3 py-3">'+r.projName+'</td>'+
+   '<td class="px-3 py-3"><div class="font-medium">'+r.patient+'</div></td>'+
+   '<td class="px-3 py-3 text-center"><span class="tag '+matchTagCls(r.matchStatus)+'">'+r.matchStatus+'</span></td>'+
+   '<td class="px-3 py-3 text-center"><span class="tag '+traceTagCls(r.traceStatus)+'">'+r.traceStatus+'</span></td>'+
+   '<td class="px-3 py-3 text-gray-600">'+r.stage+'</td>'+
+   '<td class="px-3 py-3">'+r.matcher+'</td>'+
+   '<td class="px-3 py-3 font-mono text-gray-500">'+r.start+'</td>'+
+   '<td class="px-3 py-3 font-mono text-gray-500">'+r.end+'</td>'+
+   '<td class="px-3 py-3 text-right font-mono">'+r.ocr+'</td>'+
+   '<td class="px-3 py-3 text-right font-mono">'+r.rag+'</td>'+
+   '<td class="px-3 py-3 text-right font-mono">'+r.llm+'</td>'+
+   '<td class="px-3 py-3 text-right font-mono">'+r.trace+'</td>'+
+   '<td class="px-3 py-3 text-right font-mono font-medium">'+r.total+'</td>'+
+   '<td class="px-3 py-3 text-center sticky right-0 bg-white">'+
+     '<span class="op-btn disabled" title="暂不支持查看">匹配详情</span><span class="op-divider">|</span>'+
+     '<span class="op-btn" onclick="reMatch('+r.id+')">重新匹配</span><span class="op-divider">|</span>'+
+     '<span class="op-btn" onclick="reTrace('+r.id+')">重新溯源</span><span class="op-divider">|</span>'+
+     '<span class="op-btn danger" onclick="openEditTags('+r.id+')">修正记录</span>'+
+   '</td></tr>';
+ }).join('');
+ document.getElementById('totalCount').textContent=records.length;
+}
+let currentTagId=null;
+let confirmCb=null;
+function reMatch(id){const r=records.find(x=>x.id===id);askConfirm('重新匹配确认','确定要对「'+r.patient+'」重新执行匹配吗？',()=>showToast('已触发重新匹配：'+r.patient));}
+function reTrace(id){const r=records.find(x=>x.id===id);askConfirm('重新溯源确认','确定要对「'+r.patient+'」重新执行溯源吗？',()=>showToast('已触发重新溯源：'+r.patient));}
+function askConfirm(title,text,cb){document.getElementById('confirmTitle').textContent=title;document.getElementById('confirmText').textContent=text;confirmCb=cb;openModal('confirmModal');}
+function confirmAction(){closeModal('confirmModal');const cb=confirmCb;confirmCb=null;if(cb)cb();}
+function openEditTags(id){currentTagId=id;const r=records.find(x=>x.id===id);document.getElementById('editTagTitle').textContent='修正记录标签 · '+r.patient;const box=document.getElementById('editTagList');box.innerHTML=r.tags.map(t=>'<span class="cell-tag" style="display:inline-flex;align-items:center;gap:4px">'+t+'<i class="fas fa-times" style="cursor:pointer" onclick="removeTag(this)"></i></span>').join('');openModal('editTagModal');}
+function addTag(){const inp=document.getElementById('editTagInput');const v=inp.value.trim();if(!v)return;const box=document.getElementById('editTagList');const s=document.createElement('span');s.className='cell-tag';s.style.display='inline-flex';s.style.alignItems='center';s.style.gap='4px';s.innerHTML=v+'<i class="fas fa-times" style="cursor:pointer" onclick="removeTag(this)"></i>';box.appendChild(s);inp.value='';}
+function removeTag(el){el.parentElement.remove();}
+function saveTags(){if(currentTagId==null)return;const r=records.find(x=>x.id===currentTagId);const els=document.querySelectorAll('#editTagList .cell-tag');r.tags=Array.from(els).map(e=>e.childNodes[0].nodeValue.trim());renderTable();closeModal('editTagModal');showToast('记录标签已保存');}
+function openModal(id){document.getElementById(id).classList.remove('modal-hidden');}
+function closeModal(id){document.getElementById(id).classList.add('modal-hidden');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',1800);}
+function toggleRightPanel(){const p=document.getElementById('right-panel');p.classList.toggle('collapsed');const i=document.getElementById('drawerIcon');i.classList.toggle('fa-chevron-right');i.classList.toggle('fa-chevron-left');}
+function toggleMobileView(){const p=document.getElementById('right-panel');p.classList.toggle('collapsed');}
+document.addEventListener('DOMContentLoaded',()=>{renderTable();});
+</script>
+</body>
+</html>
