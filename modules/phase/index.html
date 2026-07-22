@@ -1077,16 +1077,18 @@
     }
     /* 底部操作栏 */
     .edit-bottom-bar {
+      position: sticky;
+      bottom: 0;
+      z-index: 30;
+      margin: 16px -24px 0;
       background: #fff;
       border-top: 1px solid #e8e8e8;
-      border-radius: 0 0 10px 10px;
-      padding: 14px 20px;
+      border-radius: 0;
+      padding: 14px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: sticky;
-      bottom: 0;
-      box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.08);
     }
     .edit-bottom-bar .btn-group {
       display: flex;
@@ -1198,8 +1200,11 @@
     .stage-enable-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .stage-enabled-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
     .stage-enable-td .stage-enabled-check { width: 14px; height: 14px; cursor: pointer; }
-    .screening-required-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff4d4f; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
-    .screening-required-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #ff4d4f; }
+    .required-col-th { min-width: 72px; text-align: center; vertical-align: middle; }
+    .required-col-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 4px; }
+    .required-col-td { text-align: center; vertical-align: middle; }
+    .required-col-label { display: inline-flex; align-items: center; cursor: pointer; }
+    .required-col-check { width: 16px; height: 16px; cursor: pointer; accent-color: #ff4d4f; }
     .sub-remark-row td { background: #fafbff !important; padding: 0; }
     .sub-remark-inner { padding: 4px 14px 14px; }
     .sub-remark-title { font-size: 12px; color: #999; font-weight: 600; margin: 4px 0 8px 2px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
@@ -2774,24 +2779,45 @@
     .stage-enable-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .stage-enabled-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
     .stage-enable-td .stage-enabled-check { width: 14px; height: 14px; cursor: pointer; }
-    .screening-required-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ff4d4f; font-weight: 600; cursor: pointer; margin-bottom: 6px; }
-    .screening-required-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #ff4d4f; }
+    .required-col-th { min-width: 72px; text-align: center; vertical-align: middle; }
+    .required-col-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 4px; }
+    .required-col-td { text-align: center; vertical-align: middle; }
+    .required-col-label { display: inline-flex; align-items: center; cursor: pointer; }
+    .required-col-check { width: 16px; height: 16px; cursor: pointer; accent-color: #ff4d4f; }
     /* 合并症 / 合并用药配置 */
-    .merge-config-area { display: flex; flex-direction: column; gap: 14px; }
-    .merge-stage-card { background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; padding: 14px 16px; }
-    .merge-stage-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .merge-stage-name { font-size: 13px; font-weight: 600; color: #333; display: inline-flex; align-items: center; gap: 6px; }
-    .merge-stage-name i { color: #1677ff; }
-    .merge-enable-label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #52c41a; cursor: pointer; }
-    .merge-enable-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #52c41a; }
-    .merge-stage-body { display: flex; flex-direction: column; gap: 10px; }
-    .merge-extract-label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #333; cursor: pointer; width: fit-content; }
-    .merge-extract-label input { width: 15px; height: 15px; cursor: pointer; accent-color: #1677ff; }
-    .merge-remark-wrap { display: flex; flex-direction: column; gap: 5px; }
-    .merge-remark-lbl { font-size: 12px; color: #999; font-weight: 600; }
-    .merge-remark-textarea { width: 100%; min-height: 56px; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
-    .merge-remark-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
-    .merge-remark-textarea::placeholder { color: #bbb; }
+    .merge-section-header { display: flex; align-items: center; justify-content: space-between; }
+    .merge-header-tools { display: inline-flex; align-items: center; gap: 8px; }
+    .merge-extract-label { font-size: 13px; color: #555; font-weight: 500; }
+    .merge-config-table-wrap { overflow-x: auto; }
+    .merge-config-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eaeef5; border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .merge-config-table th, .merge-config-table td { border-bottom: 1px solid #eef1f5; border-right: 1px solid #eef1f5; padding: 12px 14px; vertical-align: middle; }
+    .merge-config-table th:last-child, .merge-config-table td:last-child { border-right: none; }
+    .merge-config-table thead th { background: #f5f7fa; font-weight: 600; color: #333; text-align: center; }
+    .merge-config-table tbody tr:last-child td { border-bottom: none; }
+    .merge-remark-col { width: 38%; min-width: 200px; text-align: left; }
+    .merge-remark-col .merge-remark-input { width: 100%; min-height: 64px; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+    .merge-remark-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .merge-remark-input::placeholder { color: #bbb; }
+    .merge-remark-inner { position: relative; }
+    .merge-remark-required-tip {
+      display: none;
+      color: #F53F3F; font-size: 12px; font-weight: 600;
+      margin-top: 6px; line-height: 1.4;
+    }
+    .merge-remark-required-tip::before { content: "⚠ "; }
+    .merge-remark-required-tip.show { display: block; animation: mergeTipFadeIn 0.25s ease; }
+    @keyframes mergeTipFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .merge-remark-input.merge-remark-required {
+      border-color: #F53F3F !important;
+      box-shadow: 0 0 0 2px rgba(245,63,63,0.12) !important;
+    }
+    .merge-stage-col { text-align: center; min-width: 96px; }
+    .merge-stage-toggle { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+    .merge-enabled-text { font-size: 12px; color: #888; }
+    .merge-enabled-text:empty { display: none; }
     .proj-criteria-group { margin-bottom: 24px; }
     .proj-criteria-group-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     .proj-criteria-group-title.inclusion { color: #52c41a; }
@@ -6726,7 +6752,7 @@ function switchModule(mod, sub) {
       else sidebar.classList.remove('collapsed');
       sidebar.innerHTML = buildAdminSidebar(currentSub);
       panel.innerHTML = buildAdminContent(currentSub);
-      if(currentSub === 'project-new' || currentSub === 'project-edit') initProjectNavSpy();
+      if(currentSub === 'project-new' || currentSub === 'project-edit') { initProjectNavSpy(); validateMergeConfigSections(); }
     } else if(mod === 'aiimprove') {
       currentSub = sub || 'settings';
       sidebar.classList.remove('hidden');
@@ -6838,7 +6864,7 @@ function updatePRDPanel(mod, sub) {
             <li><strong>修改摘要</strong>：
               <ul style="margin-top:6px">
                 <li><strong style="color:red">列表页面暂不修改</strong></li>
-                <li><strong style="color:red">患者列表</strong>可以自己选择下一步的审批流程</li>
+                <li><strong style="color:red">患者列表</strong></li>
               </ul>
             </li>
           </ul>`
@@ -6853,28 +6879,11 @@ function updatePRDPanel(mod, sub) {
         {
           title: '★本次修改',
           content: `<ul>
-            <li><strong>返回按钮</strong>：← 返回项目列表</li>
-            <li><strong>患者编号</strong>：患者提交审批的时候，后台自动生成一个患者编号：'项目方案编号+ PT+中心号+4位流水号'，页面显示的时候 显示"PT+中心号+4位流水号"</li>
-           <li><strong>项目匹配点击(列表和病史与资料的页面需要同步修改，效果一致)</strong>：将触发项目匹配和预提交设置 换了一下顺序，先选择再触发项目匹配，只是做了匹配和设置的顺序调整，其它的提示和功能一样</li>
-            <li><strong>提交审批</strong>：患者可以自己选择审批流程</li>
-            <li><strong>提交审核点击效果</strong>：
-              <ul style="margin-top:6px">
-                <li><strong>第一条数据 王*明（强制非正常流程，且 从预筛跨到了入组阶段 单版本入排）</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择流程和审批人后点击「提交」→ Toast 提示「【判断：是】审批提交成功！该患者AI思考结果为失败状态，已标记为需要人工复核。」</li>
-                <li><strong>第二条数据 李*华（强制非正常流程，且 从预筛跨到了入组阶段 多版本入排）</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择流程和审批人后点击「提交」→ Toast 提示「【判断：否】审批提交成功！该患者AI思考结果为成功状态，无需人工复核，正常流转。」</li>
-
-                <li><strong>第三条数据 李*华（强制非正常流程，且 还是在预筛阶段）</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择流程和审批人后点击「提交」→ Toast 提示「【判断：否】审批提交成功！该患者AI思考结果为成功状态，无需人工复核，正常流转。」</li>
-                <li><strong>其他数据</strong>：点击提交审核 → 弹出审批流程选择弹窗 → 选择后提交 → 常规 Toast 提示「审批提交成功！」</li>
-            <li><strong>第四条数据 孙*芳（入组通过 ，可以补充审核）</strong>：操作列显示为<strong>「补充审核」</strong>（功能与提交审批一致），适用于已入组通过的患者追加审核流程的场景。点击后弹出审批流程选择弹窗，流程与提交审批相同。</li>
-              </ul>
-            </li>
-              <li><strong>项目匹配点击效果</strong>：
-              <ul style="margin-top:6px">
-                <li><strong>第一条数据 王*明 单版本不需要选择版本的效果</li>
-                <li><strong>第二条数据 李*华 需要选择版本的效果</li>
-            </ul>
-            </li>
-            <li><strong>判断逻辑说明</strong>：第一条数据 <code>thinkStatus:'failed'</code>（AI思考失败）→ 判断为<strong style="color:#F53F3F">是</strong>（需要人工复核）；第二条数据 <code>thinkStatus:'success'</code>（AI思考成功）→ 判断为<strong style="color:#00B42A">否</strong>（无需人工复核，正常流转）。该判断仅用于演示不同患者提交后的差异化效果。</li>
-          </ul>`
+            <li><strong>涉及项目匹配</strong>：写死的入组阶段和预筛阶段 按照项目配置修改</li>
+            <li><strong>预提交审核和提交审核</strong>：判断触发的审核阶段需要修改</li>
+             <li><strong>匹配详情</strong>：入组阶段和预筛阶段写死的地方，需要根据项目配置 修改，匹配详情中可以查看患者基本信息和 病史与资料</li>
+            <li><strong>审核记录 和审核页面也需要修改</strong>：需要展示项目配置的阶段，之前是写死的</li>
+           </ul>`
         },
       
         
@@ -6889,9 +6898,13 @@ function updatePRDPanel(mod, sub) {
         {
           title: '★ 修改点③ 项目中配置（本次修改）',
           content: `<ul class="prd-list">
+             <li><strong>页面右侧加了页面导航：点击对应的导航，左侧内容需要到对应的区域</strong></li>
             <li><strong>阶段设置</strong>：项目编辑/新建页新增「阶段设置」模块，默认勾选 <strong>预筛 + 入组</strong>；可增删项目所需阶段，只能选择「系统管理 → 项目阶段配置」中已启用的阶段。</li>
             <li><strong>阶段审核类型</strong>：每个已选阶段独立勾选本项目需要的审核类型，默认带入该阶段在阶段配置中维护的审核类型；审核类型来源为「系统管理 → 字典管理 → 审核类型字典」。</li>
-            <li><strong>入排按阶段配置</strong>：「项目入排标准」按版本管理；入选/排除标准的每一行，针对每个已选阶段提供 <strong>备注</strong> 输入和 <strong>是否启用</strong> 开关。</li>
+            <li><strong>入排、筛选表、合并症和合并药物按阶段配置</strong>：上面选择女色了 阶段设置，然后 涉及到所有的项目阶段 都是灵活的变成上面选择的阶段。</li>
+             <li>「项目入排标准」按版本管理；入选/排除标准的每一行，针对每个已选阶段提供 <strong>备注</strong> 输入和 <strong>是否启用</strong> 开关。</li>
+            <li><strong>加了 合并症和合并药物的配置</strong>：可以选择在每个阶段配置是否要提取对应的合并症和合并药物，但是在选择启用任何一个阶段的时候，备注 必须是必填项</li>
+             <li>「项目入排标准」页面展示做了调整</li>
             <li><strong>历史数据刷新</strong>：旧项目刷新后，各阶段的备注自动保持一致（统一默认备注），启用状态保持原状。</li>
           </ul>`
         }
@@ -7331,19 +7344,7 @@ function buildAuditContent() {
         <span class="spacer"></span>
       </div>
     </div>
- <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 审批记录页面跟智能筛选一样需要修改,待审批页面和已审批列表都需要修改审批记录</div>
-            <div>② 审批：待审批页面</div>
 
-            <div>③ 撤回审批：（按钮上需要加一个提示）当这条数据还没有下一个动作的时候，本人撤回审批，但是一旦进入了 下一个流程节点了，不包括审批沟通，就不能撤回，也不显示这个按钮了</div>
-            <div>④ 操作列和查询条件加"患者编号"，待审批页面和已审批列表都需要修改,导出和预筛表导出的时候也需要加患者编号</div>
-
-            </div>
-        </div>
     <!-- Table -->
     <div class="table-card">
       <table class="data-table blue-header">
@@ -7497,15 +7498,6 @@ function buildAiContent() {
         </div>
       </div>
     </div>
- <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>直接到患者列表，PRD可能挡住了，关掉PRD，就可以看到右侧部分</div>
-          
-          </div>
-        </div>
     <!-- 项目列表表格 -->
     <div class="table-card" style="padding:0;overflow:hidden">
       <table class="sc-project-table">
@@ -7631,21 +7623,6 @@ function buildScPatientListContent() {
         </div>
       </div>
     </div>
-    <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 加了返回项目列表的返回按钮</div>
-            <div>② 项目匹配单独一列修改出来，固定到右侧，点击【项目匹配】，判断如果在匹配中，给一个提示 "正在匹配中，请稍后点击"，如果没有在匹配中，弹出一个确认框，包含【取消】【仅匹配】【预提交】三个按钮；点击预提交后打开提交审核弹窗，设置好内容提交后同步执行匹配与审批提交</div>
-            <div>③ 每个患者自动生成一个患者编号，提交审批的时候生成，生成规则：项目编号-PT-中心号-4位流水号，页面显示：PT-中心号-4位流水号；如果中心号为空：生成规则：项目编号-PT-XX-4位流水号,页面显示：PT-XX-4位流水号</div>
-            <div>④ 患者编号还需要处理 历史数据，导出和预筛表导出的时候也需要加患者编号</div>
-            <div>⑤ 在当前页面 把项目编码带出来显示。</div>
-            <div>⑥ 点击提交审批按钮，对这个页面进行了修改。</div>
-            <div>⑦ 点击审批记录按钮，对这个页面进行了修改。</div>
-            <div>⑧ 审批列表的审批记录和审批页面也需要同步修改审批记录的显示内容和沟通页面。</div>
-            </div>
-        </div>
     <!-- 项目信息摘要 -->
     <div style="display:flex;align-items:center;gap:16px;padding:10px 0;margin-bottom:12px;font-size:13px;color:#666">
       <span>方案编号：<strong style="color:#1677ff">${schemeNo}</strong></span>
@@ -8851,15 +8828,6 @@ function renderAuditRecordContent(patientNo) {
           <strong>原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程
         </div>
         </div>
-         <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 点击预筛沟通，加了一个 提示</div>
-          
-            </div>
-        </div>
         
         <div style="margin-bottom:16px;display:flex;justify-content:flex-end;gap:12px">
           <button class="audit-action-btn default">下载</button>
@@ -9624,18 +9592,6 @@ function buildAdminWorkflow() {
         <button class="btn btn-primary btn-sm" onclick="filterWorkflowTable()">查询</button>
         <button class="btn btn-default btn-sm" onclick="document.getElementById('wfNameFilter').value='';document.getElementById('wfVerFilter').value='';document.getElementById('wfTypeFilter').value='';document.getElementById('wfStageFilter').value='';document.getElementById('wfStatusFilter').value='';filterWorkflowTable()" style="margin-left:4px">重置</button>
       </div>
-       <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 加了筛选条件；</div>
-            <div>②「查看」按钮更名为【流程设置】，但是页面的内容还是用现在系统的功能，不用跟随原型修改。</div>
-            <div>③「删除」已发布的，不能删除。</div>
-            <div>④ 审批类型删除"送检审批"</div>
-            <div>⑤ 隐藏"同步至项目"按钮和"同步记录"按钮功能</div>
-          </div>
-        </div>
       <div class="toolbar">
         <div class="toolbar-left">
           <button class="btn btn-primary" onclick="openWorkflowForm()"><i class="fa-solid fa-plus"></i> 新建模板</button>
@@ -10025,11 +9981,6 @@ function buildFlowTemplateManagement() {
         <button class="btn btn-primary btn-sm" onclick="filterFlowTemplateTable()">查询</button>
         <button class="btn btn-default btn-sm" onclick="document.getElementById('ftNameFilter').value='';document.getElementById('ftStatusFilter').value='';filterFlowTemplateTable()" style="margin-left:4px">重置</button>
       </div>
-       <!-- 开发提示 -->
-        <div style="display:flex;align-items:center;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:8px 14px;margin-bottom:16px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px"></i>
-          <span style="font-size:12px;color:#ff4d4f;font-weight:500;">开发提示：【包含审批类型】字段，表示该流程模板所包含所有的审批类型，如：预筛审批、入组审批等。</span>
-        </div>
       <div class="toolbar">
         <div class="toolbar-left">
           <button class="btn btn-primary" onclick="openFlowTemplateForm()"><i class="fa-solid fa-plus"></i> 新建流程模板</button>
@@ -10064,20 +10015,6 @@ function buildFlowTemplateManagement() {
     <div class="modal-overlay" id="flowTemplateFormModal" style="display:none">
       <div class="modal-panel" style="width:750px;max-height:90vh">
         <div class="modal-header"><h3 id="flowTemplateFormTitle">新建流程模板</h3><button class="modal-close" onclick="closeFlowTemplateForm()">✕</button></div>
-               <!-- 开发提示 -->
-          <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
-            <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
-            <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
-              <div><strong>开发提示：</strong></div>
-              <div>① 【模板名称】和【流程配置】是必填项；</div>
-              <div>② 点击添加【审批流程】按钮，审批名称 可以自定义，如果审批名称不填写的情况下，选择了审批流，自动把审批流类型回填到审批名称中</div>
-              <div>③ 审批流下拉框的数据是 审批流程设置的所有已发布的数据</div>
-              <div>④ 新增审批流程的时候，需要按照序号添加，项目选择了模板之后，会根据流程顺序依次执行。</div>
-              <div>⑤ 审批流程的顺序可以调节，向上，向下</div>
-              <div>⑥ 点击查看流程，弹出 目前的审批流程详情</div>
-              <div>⑦ 一个模板中，审批类型可以重复，但是 审批名称不能重复</div>
-            </div>
-          </div>
         <div class="modal-body" style="overflow-y:auto;max-height:calc(90vh - 120px)">
           <div class="form-group"><label class="form-label">模板名称 <span class="required">*</span></label><input type="text" class="form-input" id="ftName" placeholder="请输入模板名称，如：常规模板、肿瘤类模板"/></div>
           <div class="form-group"><label class="form-label">模板描述</label><textarea class="form-input" id="ftDesc" placeholder="请输入模板描述" style="height:60px;resize:vertical"></textarea></div>
@@ -10548,17 +10485,6 @@ function buildCenterList() {
         <button class="btn btn-danger btn-sm">🗑 删除选中 (0)</button>
       </div>
     </div>
-      <!-- 开发提示 -->
-          <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
-            <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
-            <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
-              <div><strong>开发提示：</strong></div>
-              <div>① 中心名称固定在左端，操作列固定在右端，加列表横向滚动条；</div>
-              <div>② 操作列加 【审批流程设置】按钮</div>
-
-
-            </div>
-          </div>
     <!-- 数据表格 -->
     <div class="table-card" style="padding:0">
       <table class="data-table" style="min-width:1200px">
@@ -10984,15 +10910,6 @@ function buildAdminProjects() {
         </div>
       </div>
     </div>
-<!-- 开发提示 -->
-          <div style="display:flex;align-items:flex-start;gap:6px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 14px;margin-bottom:16px">
-            <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:13px;margin-top:1px;flex-shrink:0"></i>
-            <div style="font-size:12px;color:#ff4d4f;font-weight:500;line-height:1.8">
-              <div><strong>开发提示：</strong></div>
-              <div>① 列表页面暂不修改，直接修改新增和编辑页面的审批流程部分</div>
-              <div>② 点击项目编号，参研中心修改了，选中第一条数据的项目编号可看到效果</div>
-            </div>
-          </div>
     <!-- 操作工具栏 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="display:flex;gap:8px;align-items:center">
@@ -16190,8 +16107,8 @@ const _defaultProjectScreeningData = {
 };
 let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
 
-// 合并症 / 合并用药配置：按阶段启用 + 是否提取 + 备注（单一配置块，非多条列表）
-const _defaultMergeConfig = { stages: {} };
+// 合并症 / 合并用药配置：是否提取（总开关）+ 备注（总体）+ 各阶段启用/停用
+const _defaultMergeConfig = { extract: false, remark: '', stages: {} };
 let _comorbidityData = JSON.parse(JSON.stringify(_defaultMergeConfig));
 let _conmedData = JSON.parse(JSON.stringify(_defaultMergeConfig));
 
@@ -16418,10 +16335,11 @@ function buildAdminProjectEdit(isNew) {
 
       <!-- 合并症配置 -->
       <div class="edit-section-card" id="sec-comorbidity">
-        <div class="edit-section-header" onclick="toggleEditSection(this)">
+        <div class="edit-section-header merge-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">🩺</span> 合并症配置
           </div>
+        
           <span class="edit-section-arrow" id="comorbidityArrow">▼</span>
         </div>
         <div class="edit-section-body" id="comorbidityBody">
@@ -16431,10 +16349,11 @@ function buildAdminProjectEdit(isNew) {
 
       <!-- 合并用药配置 -->
       <div class="edit-section-card" id="sec-conmed">
-        <div class="edit-section-header" onclick="toggleEditSection(this)">
+        <div class="edit-section-header merge-section-header" onclick="toggleEditSection(this)">
           <div class="edit-section-title">
             <span class="section-icon">💊</span> 合并用药配置
           </div>
+       
           <span class="edit-section-arrow" id="conmedArrow">▼</span>
         </div>
         <div class="edit-section-body" id="conmedBody">
@@ -16597,9 +16516,6 @@ function buildAdminProjectEdit(isNew) {
           <div class="modal-body" style="overflow-y:auto;max-height:calc(90vh - 120px);padding:20px 24px">
             <!-- Tab 1: 基本信息 -->
             <div class="wf-tab-panel active" id="pntTabBasic">
-              <span style="display:inline-flex;align-items:center;gap:3px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:4px;padding:2px 8px;font-size:11px;color:#ff4d4f;font-weight:500;margin-left:4px;">
-                <i class="fas fa-exclamation-triangle" style="font-size:10px"></i> 开发提示：先保存基本信息（没有保存之前，流程设置的tab页不可点击），保存成功之后，可以直接在另一个tab页面设置对应的审批流程了
-              </span>
               <div class="form-group"><label class="form-label">审批流名称 <span class="required">*</span></label><input type="text" class="form-input" id="pntName" placeholder="请输入审批流名称"/></div>
               <div class="form-group"><label class="form-label">版本号 <span class="required">*</span></label><input type="text" class="form-input" id="pntVersion" placeholder="如 v2.5.0"/></div>
               <div class="form-group"><label class="form-label">审批类型 <span class="required">*</span></label><select class="form-select" id="pntAuditType"><option value="预筛审批">预筛审批</option><option value="主知情审批">主知情审批</option><option value="导入审批">导入审批</option><option value="入组审批">入组审批</option></select></div>
@@ -17636,7 +17552,7 @@ function renderScreeningContent() {
     const remarkOn = (item.remark && item.remark.trim()) ? 1 : 0;
     const remarkSubTable = remarkOn ? `
       <tr class="sub-remark-row">
-        <td colspan="${3 + _projectSelectedStages.length}">
+        <td colspan="${4 + _projectSelectedStages.length}">
           <div class="sub-remark-inner">
             <div class="sub-remark-title" onclick="toggleScreeningSubRemark(${idx})">
               <i class="fa-regular fa-note-sticky"></i> 共用备注
@@ -17665,11 +17581,12 @@ function renderScreeningContent() {
       <tr>
         <td class="num-cell">${idx + 1}</td>
         <td class="content-cell">
-          <label class="screening-required-label" title="该筛选内容是否为必填项">
-            <input type="checkbox" class="screening-required-check" ${item.required ? 'checked' : ''} onchange="updateScreeningRequired(${idx}, this.checked)"/>
-            <span>必填</span>
-          </label>
           <textarea class="criteria-textarea" rows="3" placeholder="请输入筛选内容" onchange="updateScreeningContent(${idx}, this.value)">${item.content}</textarea>
+        </td>
+        <td class="required-col-td">
+          <label class="required-col-label" title="该筛选内容是否为必填项">
+            <input type="checkbox" class="required-col-check" ${item.required ? 'checked' : ''} onchange="updateScreeningRequired(${idx}, this.checked)"/>
+          </label>
         </td>
         ${stageTds}
         <td class="action-cell">
@@ -17694,6 +17611,13 @@ function renderScreeningContent() {
           <tr>
             <th class="num-cell">序号</th>
             <th class="content-th">筛选内容</th>
+            <th class="required-col-th">
+              <div class="required-col-name">必填</div>
+              <label class="stage-select-all">
+                <input type="checkbox" title="勾选/取消全部必填" onchange="toggleScreeningRequiredAll(this.checked)"/>
+                <span>全选</span>
+              </label>
+            </th>
             ${stageThs}
             <th class="action-cell">操作</th>
           </tr>
@@ -17721,67 +17645,113 @@ function refreshScreeningSection() {
 /* ===== 合并症 / 合并用药配置 ===== */
 function ensureMergeStageConfig(data) {
   _projectSelectedStages.forEach(s => {
-    if(!data.stages[s.id]) data.stages[s.id] = { enabled: true, extract: false, remark: '' };
+    if(!data.stages[s.id]) data.stages[s.id] = { enabled: true };
   });
 }
 function renderMergeConfigBody(cfgType) {
   const isComorbidity = cfgType === 'comorbidity';
   const data = isComorbidity ? _comorbidityData : _conmedData;
   const title = isComorbidity ? '合并症' : '合并用药';
-  const extractLabel = isComorbidity ? '是否提取合并症' : '是否提取合并用药';
   ensureMergeStageConfig(data);
   if(!_projectSelectedStages.length) {
     return '<div class="proj-criteria-no-stage">请先完成上方「阶段设置」，选择至少一个阶段后再配置' + title + '。</div>';
   }
-  const stageCards = _projectSelectedStages.map(s => {
-    const cfg = data.stages[s.id] || { enabled: true, extract: false, remark: '' };
+  const stageHeaders = _projectSelectedStages.map(s => `<th class="merge-stage-col">${s.name}</th>`).join('');
+  const stageCells = _projectSelectedStages.map(s => {
+    const cfg = data.stages[s.id] || { enabled: true };
     return `
-      <div class="merge-stage-card">
-        <div class="merge-stage-head">
-          <span class="merge-stage-name"><i class="fa-solid ${isComorbidity ? 'fa-stethoscope' : 'fa-pills'}"></i> ${s.name}</span>
-          <label class="merge-enable-label" title="该阶段是否启用${title}">
-            <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="updateMergeEnabled('${cfgType}', '${s.id}', this.checked)"/>
-            <span>启用</span>
-          </label>
-        </div>
-        <div class="merge-stage-body">
-          <label class="merge-extract-label" title="${extractLabel}">
-            <input type="checkbox" ${cfg.extract ? 'checked' : ''} onchange="updateMergeExtract('${cfgType}', '${s.id}', this.checked)"/>
-            <span>${extractLabel}</span>
-          </label>
-          <div class="merge-remark-wrap">
-            <span class="merge-remark-lbl">备注</span>
-            <textarea class="merge-remark-textarea" placeholder="请输入${title}在「${s.name}」的备注说明……" onchange="updateMergeRemark('${cfgType}', '${s.id}', this.value)">${cfg.remark || ''}</textarea>
+        <td class="merge-stage-col">
+          <div class="merge-stage-toggle">
+            <label class="switch" title="${s.name} 是否启用${title}">
+              <input type="checkbox" ${cfg.enabled ? 'checked' : ''} onchange="updateMergeEnabled('${cfgType}', '${s.id}', this.checked, this)"/>
+              <span class="slider"></span>
+            </label>
+            <span class="merge-enabled-text">${cfg.enabled ? '启用' : '停用'}</span>
           </div>
-        </div>
-      </div>
+        </td>
     `;
   }).join('');
-  return `<div class="merge-config-area">${stageCards}</div>`;
+  return `
+    <div class="merge-config-table-wrap">
+      <table class="merge-config-table">
+        <thead>
+          <tr>
+            <th class="merge-remark-col">备注</th>
+            ${stageHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="merge-remark-col">
+              <div class="merge-remark-inner">
+                <textarea class="merge-remark-input" rows="3" placeholder="请输入${title}的备注说明……（启用阶段前必填）" oninput="updateMergeRemark('${cfgType}', this.value)">${data.remark || ''}</textarea>
+                <div class="merge-remark-required-tip"></div>
+              </div>
+            </td>
+            ${stageCells}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 function renderComorbidityBody() { return renderMergeConfigBody('comorbidity'); }
 function renderConmedBody() { return renderMergeConfigBody('conmed'); }
 function getMergeConfig(cfgType) { return cfgType === 'comorbidity' ? _comorbidityData : _conmedData; }
-function updateMergeEnabled(cfgType, stageId, enabled) {
+function toggleMergeExtract(cfgType, checked) {
   const data = getMergeConfig(cfgType);
-  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
+  data.extract = checked;
+}
+function updateMergeEnabled(cfgType, stageId, enabled, el) {
+  const data = getMergeConfig(cfgType);
+  const title = cfgType === 'comorbidity' ? '合并症' : '合并用药';
+  // 启用时校验备注必填
+  if (enabled && !(data.remark && data.remark.trim())) {
+    if (el) {
+      el.checked = false;
+      const textSpan = el.closest('.merge-stage-toggle').querySelector('.merge-enabled-text');
+      if (textSpan) textSpan.textContent = '停用';
+    }
+    validateMergeConfigSections();
+    return;
+  }
+  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true };
   data.stages[stageId].enabled = enabled;
+  validateMergeConfigSections();
 }
-function updateMergeExtract(cfgType, stageId, extract) {
-  const data = getMergeConfig(cfgType);
-  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
-  data.stages[stageId].extract = extract;
+function updateMergeRemark(cfgType, remark) {
+  getMergeConfig(cfgType).remark = remark;
+  validateMergeConfigSections();
 }
-function updateMergeRemark(cfgType, stageId, remark) {
-  const data = getMergeConfig(cfgType);
-  if(!data.stages[stageId]) data.stages[stageId] = { enabled: true, extract: false, remark: '' };
-  data.stages[stageId].remark = remark;
+function mergeHasEnabledStage(data) {
+  return Object.keys(data.stages || {}).some(id => data.stages[id] && data.stages[id].enabled);
+}
+// 只要有任一阶段处于启用状态，且备注为空，则提示必填；否则清除提示
+function validateMergeConfigSections() {
+  ['comorbidity', 'conmed'].forEach(function(cfgType) {
+    const data = getMergeConfig(cfgType);
+    const bodyId = cfgType === 'comorbidity' ? 'comorbidityBody' : 'conmedBody';
+    const body = document.getElementById(bodyId);
+    if (!body) return;
+    const title = cfgType === 'comorbidity' ? '合并症' : '合并用药';
+    const need = mergeHasEnabledStage(data) && !(data.remark && data.remark.trim());
+    const input = body.querySelector('.merge-remark-input');
+    const tip = body.querySelector('.merge-remark-required-tip');
+    if (need) {
+      if (input) input.classList.add('merge-remark-required');
+      if (tip) { tip.textContent = '必填：启用「' + title + '」阶段前必须填写备注'; tip.classList.add('show'); }
+    } else {
+      if (input) input.classList.remove('merge-remark-required');
+      if (tip) tip.classList.remove('show');
+    }
+  });
 }
 function refreshMergeConfigSections() {
   const cb = document.getElementById('comorbidityBody');
   if(cb) cb.innerHTML = renderComorbidityBody();
   const mb = document.getElementById('conmedBody');
   if(mb) mb.innerHTML = renderConmedBody();
+  validateMergeConfigSections();
 }
 
 function updateScreeningContent(idx, value) {
@@ -17795,6 +17765,12 @@ function updateScreeningStageEnabled(idx, stageId, enabled) {
 function updateScreeningRequired(idx, required) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].required = required;
+}
+function toggleScreeningRequiredAll(checked) {
+  const items = _projectScreeningData.items;
+  if(items) items.forEach(item => { item.required = checked; });
+  refreshScreeningSection();
+  showWechatToast(checked ? '已全选必填' : '已取消全选必填');
 }
 function toggleScreeningStageAll(stageId, checked) {
   const items = _projectScreeningData.items;
@@ -17859,7 +17835,18 @@ function closeScreeningRemarkModal() {
   _screeningRemarkTarget = null;
 }
 
-// 编辑页左侧导航：点击滚动 + 滚动联动高亮
+// 编辑页导航：点击滚动 + 滚动联动高亮
+// 内容实际滚动容器是 .main-panel（overflow-y:auto），而非 window，需动态探测
+function getProjectScrollContainer() {
+  let el = document.querySelector('.edit-project-content');
+  el = el ? el.parentElement : null;
+  while(el && el !== document.body && el !== document.documentElement) {
+    const oy = getComputedStyle(el).overflowY;
+    if(oy === 'auto' || oy === 'scroll') return el;
+    el = el.parentElement;
+  }
+  return window;
+}
 function scrollToProjectSection(targetId, el) {
   const nav = document.getElementById('editPageNav');
   if(nav) {
@@ -17874,8 +17861,14 @@ function scrollToProjectSection(targetId, el) {
     if(body && body.classList.contains('collapsed') && header) {
       toggleEditSection(header);
     }
-    const top = target.getBoundingClientRect().top + window.pageYOffset - 70;
-    window.scrollTo({ top: top, behavior: 'smooth' });
+    const container = getProjectScrollContainer();
+    if(container === window) {
+      const top = target.getBoundingClientRect().top + window.pageYOffset - 70;
+      window.scrollTo({ top: top, behavior: 'smooth' });
+    } else {
+      const top = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - 70;
+      container.scrollTo({ top: top, behavior: 'smooth' });
+    }
   }
 }
 
@@ -17883,24 +17876,29 @@ let _projectNavScrollBound = false;
 function initProjectNavSpy() {
   if(_projectNavScrollBound) return;
   _projectNavScrollBound = true;
-  window.addEventListener('scroll', () => {
+  const handler = () => {
     const nav = document.getElementById('editPageNav');
     if(!nav) return;
     const items = nav.querySelectorAll('.edit-nav-item');
     if(!items.length) return;
+    const container = getProjectScrollContainer();
+    const cTop = (container === window) ? 0 : container.getBoundingClientRect().top;
     let currentId = items[0].getAttribute('data-target');
     items.forEach(item => {
       const id = item.getAttribute('data-target');
       const sec = document.getElementById(id);
       if(sec) {
-        const rect = sec.getBoundingClientRect();
-        if(rect.top - 90 <= 0) currentId = id;
+        const top = sec.getBoundingClientRect().top - cTop;
+        if(top - 90 <= 0) currentId = id;
       }
     });
     items.forEach(item => {
       item.classList.toggle('active', item.getAttribute('data-target') === currentId);
     });
-  }, { passive: true });
+  };
+  window.addEventListener('scroll', handler, { passive: true });
+  const sc = getProjectScrollContainer();
+  if(sc !== window) sc.addEventListener('scroll', handler, { passive: true });
 }
 
 // 编辑项目交互函数
@@ -18256,9 +18254,6 @@ function viewTemplateFlow(id) {
         <span style="cursor:pointer;font-size:20px;color:#999;line-height:1" onclick="closeTemplateFlow()">&times;</span>
       </div>
       <div class="flow-modal-body">
-        <span style="display:inline-flex;align-items:center;gap:3px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:4px;padding:2px 8px;font-size:11px;color:#ff4d4f;font-weight:500;margin-left:4px;">
-            <i class="fas fa-exclamation-triangle" style="font-size:10px"></i> 开发提示：就是菜单中的【审批流设置】数据中的【查看】页面，这个页面只是做一个效果<br/>
-          </span>
         <div class="flow-step-list">
           ${stepsHtml}
         </div>
@@ -19382,22 +19377,6 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
         </span>
         <button class="submit-audit-close" onclick="closeSubmitAuditModal()">&times;</button>
       </div>
-       <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 加了审批流程的选择，可以从项目已配置的生效的流程中选择 提交哪个流程</div>
-            <div>② 下面提示把目前的审批流程展示出来</div>
-            <div>③ 审批流程 默认选中 应该去执行的流程，就是目前系统现行的固定死的流程</div>
-            <div>④ 当选择了审批流程之后，审批人也需要随着变动，跟流程绑定</div>
-            <div>⑤ 如果还没开始走流程，或者是 主流程没有开始，那么可以选择其他流程（1.还没有提交过审批；2. 第一次提交了审批，被驳回了；这两种情况 可以换流程模板），如果已经再走 主流程审批，走了一半了，不允许换流程模板</div>
-            <div>⑥ 审批流程默认选中 模板下的该走的流程，如果这个流程提交审批，被驳回，还可以选择其他流程（假设初始提交应该是预筛审批，但是被CRA驳回了，再次提交的时候，还可以选择 主知情审批或者其他审批）</div>
-            <div>⑦ 预提交场景下，弹窗新增【筛选号】和【知情时间】两个字段（标记为必填）；<strong>仅当审核类型为「主知情通过-入组预提交（入组审批）」或「提交导入期审核（导入审批）」时，这两个字段才真正必填，提交时需校验不能为空</strong>。</div>
-            <div>⑧ 预提交场景下，点击提交审核 需要同时触发项目匹配和 预提交的动作设置</strong>。</div>
-
-            </div>
-        </div>
       <div class="submit-audit-body">
         <div class="submit-audit-form-row">
           <label class="submit-audit-form-label required">方案编码</label>
@@ -20215,17 +20194,6 @@ window.addEventListener('DOMContentLoaded', function() {
           <div class="audit-abnormal-reason">
           <strong>原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程
         </div>
-        </div>
-         <!-- 开发提示 -->
-        <div style="display:flex;align-items:flex-start;gap:8px;background:#fff2f0;border:1px solid #ff4d4f;border-radius:6px;padding:10px 16px;margin:16px 24px">
-          <i class="fas fa-exclamation-triangle" style="color:#ff4d4f;font-size:14px;margin-top:2px;flex-shrink:0"></i>
-          <div style="font-size:12px;color:#333;line-height:1.9">
-            <div style="color:#ff4d4f;font-weight:600;margin-bottom:2px">开发提示：</div>
-            <div>① 点击预筛沟通，加了一个 提示</div>
-          
-            <div>② 下面的三个按钮需要改成悬浮，不要随着页面移动</div>
-            <div>③ 非正常流程提示的显示参考 审核记录</div>
-            </div>
         </div>
         
       <!-- 审批记录标题 -->
