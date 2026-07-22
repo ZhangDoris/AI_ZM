@@ -1,0 +1,718 @@
+<!--
+  产品原型：匹配日志（高亮版）
+  功能：展示患者项目匹配记录列表，支持多维度筛选、重新匹配、匹配详情查看、重新溯源。
+  布局：左侧产品界面 + 右侧PRD说明面板，SVG连线交互。
+  表格：横向滚动，操作列固定在右侧。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>思考链</title>
+<link href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #1a1a1a; overflow: hidden; }
+
+  /* ===== TOP NAV ===== */
+  .top-nav { height: 56px; background: #fff; display: flex; align-items: center; padding: 0 0 0 20px; flex-shrink: 0; box-shadow: 0 1px 0 #e8e8e8, 0 2px 8px rgba(0,0,0,0.06); position: relative; z-index: 100; }
+  .nav-brand { display: flex; align-items: center; gap: 0; padding-right: 24px; border-right: 1px solid #f0f0f0; margin-right: 8px; flex-shrink: 0; }
+  .nav-brand .idy-logo { display: flex; align-items: center; gap: 0; margin-right: 10px; }
+  .nav-brand .idy-letters { font-size: 17px; font-weight: 900; font-style: italic; color: #1a1a1a; letter-spacing: -1px; line-height: 1; }
+  .nav-brand .idy-divider { width: 3px; height: 22px; background: #e53935; border-radius: 2px; margin: 0 8px 0 6px; flex-shrink: 0; }
+  .nav-brand .brand-name { font-size: 14px; font-weight: 600; color: #1a1a1a; letter-spacing: 0.3px; white-space: nowrap; }
+  .nav-menu { display: flex; align-items: center; flex: 1; gap: 2px; }
+  .nav-item { padding: 7px 15px; border-radius: 8px; color: #555; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px; white-space: nowrap; user-select: none; }
+  .nav-item:hover { background: #f5f7ff; color: #1677ff; }
+  .nav-item.active { background: #eff6ff; color: #1677ff; font-weight: 600; }
+  .nav-item .nav-icon { font-size: 13px; }
+  .nav-right { display: flex; align-items: center; gap: 14px; padding: 0 20px; border-left: 1px solid #f0f0f0; flex-shrink: 0; }
+  .nav-avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #1677ff, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .nav-username { color: #555; font-size: 13px; }
+
+  /* ===== LAYOUT: LEFT + RIGHT ===== */
+  .content-area { display: flex; height: calc(100vh - 56px); overflow: hidden; position: relative; }
+  .left-panel { width: 78%; overflow-y: auto; background: #f5f7fa; padding: 24px; flex-shrink: 0; }
+  .divider-line { width: 1px; background: #d9d9d9; flex-shrink: 0; }
+  .right-panel { flex: 1; overflow-y: auto; background: #fffbeb; border-left: 2px dashed #f59e0b; }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .page-header h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .page-header p { font-size: 13px; color: #888; margin-top: 3px; }
+
+  /* ===== FILTER ===== */
+  .filter-card { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; }
+  .filter-field label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
+  .form-input, .form-select { width: 100%; padding: 8px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13.5px; color: #1a1a1a; background: #fafafa; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .form-input:focus, .form-select:focus { border-color: #1677ff; box-shadow: 0 0 0 3px rgba(22,119,255,0.12); background: #fff; }
+  .filter-actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+  .filter-actions .spacer { flex: 1; }
+
+  /* ===== BUTTONS ===== */
+  .btn-filter { padding: 7px 20px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1.5px solid #e8e8e8; background: white; color: #555; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-filter:hover { border-color: #1677ff; color: #1677ff; }
+  .btn-filter.primary { background: #1677ff; color: white; border-color: #1677ff; }
+  .btn-filter.primary:hover { background: #0958d9; color: white; }
+
+  /* ===== TABLE ===== */
+  .table-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .table-scroll { overflow-x: auto; }
+  .table-scroll::-webkit-scrollbar { height: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: #f5f5f5; border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+  .data-table { width: 100%; min-width: 2200px; border-collapse: collapse; }
+  .data-table thead tr { background: #fafbfc; }
+  .data-table th { padding: 13px 16px; text-align: left; font-size: 12.5px; font-weight: 600; color: #888; border-bottom: 1px solid #f0f0f0; letter-spacing: 0.3px; white-space: nowrap; }
+  .data-table td { padding: 13px 16px; font-size: 13.5px; color: #333; border-bottom: 1px solid #f5f5f5; white-space: nowrap; }
+  .data-table tbody tr:hover { background: #fafcff; }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  /* 固定操作列 */
+  .data-table th.col-op, .data-table td.col-op { position: sticky; right: 0; background: white; z-index: 2; }
+  .data-table thead th.col-op { background: #fafbfc; z-index: 3; }
+  .data-table tbody tr:hover td.col-op { background: #fafcff; }
+  td.col-op { box-shadow: -2px 0 6px rgba(0,0,0,0.06); }
+  .text-truncate { display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; color: #555; }
+  .proj-id { color: #1677ff; font-weight: 600; font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; }
+
+  /* ===== TAGS ===== */
+  .tag { padding: 2px 8px; border-radius: 5px; font-size: 11.5px; display: inline-block; }
+  .tag-green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+  .tag-blue { background: #e6f4ff; color: #1677ff; border: 1px solid #91caff; }
+  .tag-red { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+  .tag-gray { background: #f5f5f5; color: #8c8c8c; border: 1px solid #e0e0e0; }
+  .tag-orange { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+  .seq-wrap { position: relative; display: inline-block; }
+  .pre-submit-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #fff; background: #ff4d4f; border-radius: 8px; padding: 1px 6px; white-space: nowrap; line-height: 1.4; box-shadow: 0 1px 3px rgba(255,77,79,0.35); }
+
+  /* ===== PAGE TIP ===== */
+  .page-tip { background: #fff2f0; border: 1px solid #ffccc7; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #ff4d4f; margin-bottom: 16px; }
+  .page-tip i { color: #ff4d4f; }
+
+
+  /* Action links */
+  .op-link { color: #1677ff; font-size: 13px; font-weight: 500; cursor: pointer; margin-right: 12px; transition: color 0.15s; white-space: nowrap; }
+  .op-link:hover { color: #0958d9; text-decoration: underline; }
+  .op-link.trace { color: #d46b08; }
+  .op-link.trace:hover { color: #ad4d00; }
+  .op-link.disabled { color: #bfbfbf; cursor: not-allowed; pointer-events: none; }
+
+  /* Pagination */
+  .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid #f0f0f0; }
+  .table-footer .total { font-size: 13px; color: #888; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 100001; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-panel { background: #fff; border-radius: 12px; width: 480px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease-out; }
+  .modal-panel.lg { width: 720px; }
+  @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .modal-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-title { font-size: 16px; font-weight: 600; color: #333; }
+  .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; font-size: 18px; color: #999; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .modal-close:hover { background: #f5f5f5; color: #333; }
+  .modal-body { padding: 24px; flex: 1; overflow-y: auto; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #f0f0f0; background: #fafbfc; flex-shrink: 0; }
+  .modal-meta { display: flex; gap: 18px; flex-wrap: wrap; padding: 12px 16px; background: #fafafa; border-radius: 8px; font-size: 12px; color: #666; margin-top: 16px; }
+  .modal-meta b { color: #333; font-weight: 600; }
+  .btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.18s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: #1677ff; color: white; box-shadow: 0 2px 8px rgba(22,119,255,0.3); }
+  .btn-primary:hover { background: #0958d9; }
+  .btn-default { background: white; color: #555; border: 1.5px solid #e0e0e0; }
+  .btn-default:hover { border-color: #1677ff; color: #1677ff; }
+  .btn-warning { background: #faad14; color: white; }
+  .btn-warning:hover { background: #d48806; }
+
+  .detail-block { background: #fafafa; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .detail-block h4 { font-size: 13.5px; font-weight: 600; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail-block h4 i { color: #1677ff; }
+  .detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .detail-grid .lbl { font-size: 12px; color: #999; margin-bottom: 4px; }
+  .detail-grid .val { font-size: 13.5px; color: #333; font-weight: 500; }
+  .sub-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sub-table th { text-align: left; font-size: 12px; color: #888; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  .sub-table td { padding: 10px; border-bottom: 1px solid #f5f5f5; color: #555; }
+  .sub-table tbody tr:last-child td { border-bottom: none; }
+  .sub-link { color: #1677ff; font-size: 12.5px; cursor: pointer; }
+  .sub-link:hover { text-decoration: underline; }
+
+  /* ===== PROTOTYPE HIGHLIGHT ===== */
+  .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+  .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.02); }
+  .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.25); background-color: rgba(22,93,255,0.05); }
+  .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+  .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+  .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+  /* ===== SVG CONNECTIONS ===== */
+  #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+  .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+  .connection-line.active { stroke-width: 3; opacity: 1; }
+  .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+  .connection-label-bg { fill: #165DFF; }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel .prd-header { padding: 16px; border-bottom: 1px solid #fde68a; }
+  .right-panel .prd-body { padding: 14px; }
+  .right-panel .proto-desc { margin-bottom: 10px; }
+
+  /* ===== MOBILE ===== */
+  .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; width: 48px; height: 48px; border-radius: 50%; background: #1677ff; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,119,255,0.3); cursor: pointer; border: none; }
+  @media (max-width: 768px) {
+    .content-area { flex-direction: column; }
+    .left-panel { width: 100% !important; height: 60vh; }
+    .divider-line { display: none; }
+    .right-panel { width: 100% !important; height: 40vh; border-left: none; border-top: 2px dashed #f59e0b; }
+    #connections { display: none; }
+    .mobile-toggle-btn { display: flex !important; }
+    .proto-element:hover, .proto-desc:hover { box-shadow: none; }
+    .proto-element.active-highlight, .proto-desc.active-highlight { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<div class="top-nav">
+  <div class="nav-brand">
+    <div class="idy-logo">
+      <span class="idy-letters">IDY</span>
+      <span class="idy-divider"></span>
+    </div>
+    <span class="brand-name">AI 智能预筛系统</span>
+  </div>
+  <div class="nav-menu">
+    <div class="nav-item"><i class="fa-solid fa-folder-open nav-icon"></i> 项目管理</div>
+    <div class="nav-item active"><i class="fa-solid fa-bolt nav-icon"></i> 智能匹配</div>
+    <div class="nav-item"><i class="fa-solid fa-clipboard-check nav-icon"></i> 审核列表</div>
+    <div class="nav-item"><i class="fa-solid fa-chart-bar nav-icon"></i> 数据统计</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-avatar">医</div>
+    <span class="nav-username">医学经理</span>
+  </div>
+</div>
+
+<div class="content-area">
+
+  <!-- ===== LEFT PANEL: 产品界面 ===== -->
+  <div class="left-panel" id="leftPanel">
+   
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h2>思考链日志</h2>
+      </div>
+    </div>
+
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label>患者缩写</label>
+          <input class="form-input" type="text" placeholder="请输入患者缩写"/>
+        </div>
+        <div class="filter-field">
+          <label>匹配状态</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>思考中</option>
+            <option>思考成功</option>
+            <option>思考失败</option>
+          </select>
+        </div>
+        
+        <div class="filter-field">
+          <label>匹配人</label>
+          <input class="form-input" type="text" placeholder="请输入匹配人"/>
+        </div>
+        <div class="filter-field">
+          <label>项目编码</label>
+          <input class="form-input" type="text" placeholder="请输入项目编码"/>
+        </div>
+        <div class="filter-field">
+          <label>是否删除</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>是</option>
+            <option>否</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>时间范围</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input class="form-input" type="text" placeholder="开始日期时间"/>
+            <span style="color:#ccc;">-</span>
+            <input class="form-input" type="text" placeholder="结束日期时间"/>
+          </div>
+        </div>
+        <div class="filter-field">
+          <label>是否超过10min</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>是</option>
+            <option>否</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-filter primary"><i class="fa-solid fa-magnifying-glass"></i> 查询</button>
+        <button class="btn-filter"><i class="fa-solid fa-rotate-right"></i> 重置</button>
+        <span class="spacer"></span>
+        <button class="btn-filter primary"><i class="fa-solid fa-download"></i> 导出</button>
+      </div>
+    </div>
+ <!-- Page Tip -->
+    
+
+    <!-- Table Card ★ 连线 1 -->
+    <div class="table-card proto-element" data-proto-id="1">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>项目编码</th>
+              <th>项目名称</th>
+              <th>患者姓名</th>
+              <th>匹配状态</th>
+              <th>匹配人</th>
+              <th>操作时间</th>
+              <th>开始匹配时间</th>
+              <th>结束匹配时间</th>
+              <th>总用时</th>
+              <th>是否超过10min</th>
+              <th>是否删除</th>
+              <th>删除人</th>
+              <th>删除时间</th>
+              <th class="col-op">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="seq-wrap">
+                 
+                  1
+                </div>
+              </td>
+              <td class="proj-id">高脂血症-1918-302</td>
+              <td><span class="text-truncate" title="评价SHR-1918用于混合型高脂血症患者的疗效和安全性">评价SHR-1918用于混合型高脂血症患者的疗效和安全性</span></td>
+              <td>ZRM1</td>
+              <td><span class="tag tag-blue">思考中</span></td>
+              <td>郭娇娇</td>
+
+              <td>2026-07-14 18:05:15</td>
+              <td>2026-07-14 18:05:15</td>
+              <td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                 <span class="op-link disabled">思考链</span>
+                <span class="op-link" onclick="openMatchConfirm('PT-2026-001','ZRM1')">重新思考</span>
+              </td>
+            </tr>
+           <tr>
+              <td>
+                <div class="seq-wrap">
+                 
+                  1
+                </div>
+              </td>
+              <td class="proj-id">高脂血症-1918-302</td>
+              <td><span class="text-truncate" title="评价SHR-1918用于混合型高脂血症患者的疗效和安全性">评价SHR-1918用于混合型高脂血症患者的疗效和安全性</span></td>
+              <td>ZRM1</td>
+              <td><span class="tag tag-blue">思考成功</span></td>
+              <td>WERT</td>
+
+              <td>2026-07-14 18:05:15</td>
+              <td>2026-07-14 18:05:15</td>
+              <td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                 <span class="op-link" onclick="openThinkChain('高脂血症-1918-302','ZRM1')">思考链</span>
+                <span class="op-link" onclick="openMatchConfirm('PT-2026-001','ZRM1')">重新思考</span>
+              </td>
+            </tr>
+             <tr>
+              <td>
+                <div class="seq-wrap">
+                 
+                  1
+                </div>
+              </td>
+              <td class="proj-id">高脂血症-1918-302</td>
+              <td><span class="text-truncate" title="评价SHR-1918用于混合型高脂血症患者的疗效和安全性">评价SHR-1918用于混合型高脂血症患者的疗效和安全性</span></td>
+              <td>ZRM1</td>
+              <td><span class="tag tag-blue">思考失败</span></td>
+              <td>SDFR</td>
+
+              <td>2026-07-14 18:05:15</td>
+              <td>2026-07-14 18:05:15</td>
+              <td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                 <span class="op-link disabled">思考链</span>
+                <span class="op-link" onclick="openMatchConfirm('PT-2026-001','ZRM1')">重新思考</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="total">共 8 条记录，显示 1-8 条</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn-filter"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="btn-filter primary">1</button>
+          <button class="btn-filter"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+
+   
+  </div>
+
+  <!-- ===== DIVIDER ===== -->
+  <div class="divider-line"></div>
+
+  <!-- ===== RIGHT PANEL: PRD 说明 ===== -->
+  <div class="right-panel" id="rightPanel">
+    <div class="prd-header">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">PRD</span>
+        <span class="text-xs font-semibold text-amber-800">修改需求说明</span>
+      </div>
+     
+    </div>
+    <div class="prd-body">
+
+     
+
+      <!-- 说明 2: 操作列 -->
+      <div class="proto-desc p-3" data-proto-id="2">
+        <div class="flex items-start gap-2">
+          <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-800">修改说明</h3>
+           
+            <ul class="text-xs text-gray-500 mt-1 ml-3 list-disc space-y-0.5">
+              <li><strong>1. 新加了思考链日志</strong></li>
+           
+              <li><strong>2. 思考成功的，可以点击看思考链，思考链显示思考成功状态，思考中和思考失败的，思考链的按钮不让点击 </strong></li>         
+              <li><strong>3. 点击重新思考，弹出确认框，然后重新触发 </strong></li>      
+             </ul>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+</div>
+
+<!-- SVG 连线层 -->
+<svg id="connections"></svg>
+
+<!-- 移动端切换按钮 -->
+<button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()" title="切换视图">
+  <i class="fa-solid fa-info"></i>
+</button>
+
+<!-- ===== MODAL: 项目匹配确认 ===== -->
+<div class="modal-overlay" id="matchConfirmModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">项目匹配确认</span>
+      <button class="modal-close" onclick="closeModal('matchConfirmModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e6f4ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-circle-info" style="color:#1677ff;font-size:18px;"></i>
+        </div>
+        <p style="font-size:14px;color:#555;line-height:1.7;">您确认要重新匹配吗？</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('matchConfirmModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmStartMatch()">开始匹配</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 重新溯源确认 ===== -->
+<div class="modal-overlay" id="traceConfirmModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">AI 溯源确认</span>
+      <button class="modal-close" onclick="closeModal('traceConfirmModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fff7e6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-magnifying-glass-location" style="color:#d46b08;font-size:18px;"></i>
+        </div>
+        <p style="font-size:14px;color:#555;line-height:1.7;">您确认要进行溯源吗？</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('traceConfirmModal')">取消</button>
+      <button class="btn" style="background:#d46b08;color:#fff;" onclick="confirmTrace()">确认溯源</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 预提交校验提示 ===== -->
+<div class="modal-overlay" id="preSubmitModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">存在预提交数据</span>
+      <button class="modal-close" onclick="closeModal('preSubmitModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fffbe6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#faad14;font-size:18px;"></i>
+        </div>
+        <div>
+          <p style="font-size:14px;color:#555;line-height:1.7;">该患者已设置预提交，当前数据处于预提交状态。请先点击「预提交」完成匹配，且<span style="color:#d46b08;font-weight:600;">提交人必须为原提交人</span>，不能替换为当前匹配人。</p>
+          <div class="modal-meta">
+            <span>患者：<b id="preSubmitPatient">PT-2026-001</b></span>
+            <span>原提交人：<b id="preSubmitUser">张三</b></span>
+            <span>当前匹配人：<b id="currentMatchUser">李四</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('preSubmitModal')">取消</button>
+      <button class="btn btn-warning" onclick="confirmPreSubmit()">预提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 匹配详情 ===== -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-panel lg">
+    <div class="modal-header">
+      <span class="modal-title">匹配详情 <span style="font-size:13px;font-weight:400;color:#999;" id="detailPatient">PT-2026-007</span></span>
+      <button class="modal-close" onclick="closeModal('detailModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-block">
+        <h4><i class="fa-solid fa-gear"></i> 匹配运行信息</h4>
+        <div class="detail-grid">
+          <div><div class="lbl">开始匹配时间</div><div class="val">2026-07-14 18:02:27</div></div>
+          <div><div class="lbl">结束匹配时间</div><div class="val">2026-07-14 18:03:20</div></div>
+          <div><div class="lbl">RAG用时</div><div class="val">12s</div></div>
+          <div><div class="lbl">LLM用时</div><div class="val">8s</div></div>
+          <div><div class="lbl">OCR用时</div><div class="val">3s</div></div>
+          <div><div class="lbl">总用时</div><div class="val">25s</div></div>
+          <div><div class="lbl">溯源用时</div><div class="val">5s</div></div>
+          <div><div class="lbl">匹配率</div><div class="val">68%</div></div>
+          <div><div class="lbl">AI模型</div><div class="val">GPT-4o</div></div>
+        </div>
+      </div>
+      <div class="detail-block">
+        <h4><i class="fa-solid fa-lightbulb"></i> AI 建议</h4>
+        <div style="padding:12px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;font-size:13.5px;color:#555;">
+          排除标准命中：患者存在活动性心血管疾病，建议 <span style="color:#ff4d4f;font-weight:600;">筛败</span>。
+        </div>
+      </div>
+      <div class="detail-block" style="margin-bottom:0;">
+        <h4><i class="fa-solid fa-list-ol"></i> 匹配详情列表</h4>
+        <table class="sub-table">
+          <thead><tr><th>序号</th><th>标准类型</th><th>纳排内容</th><th>AI判断</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>入选标准</td><td>年龄18-75岁</td><td><span class="tag tag-green">通过</span></td><td><span class="sub-link">病历溯源</span></td></tr>
+            <tr><td>2</td><td>排除标准</td><td>活动性心血管疾病</td><td><span class="tag tag-red">命中</span></td><td><span class="sub-link">病历溯源</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 模态框 =====
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+
+  // ===== 项目匹配确认 =====
+  let currentMatch = { patient: '', matcher: '' };
+  function openMatchConfirm(patient, matcher) {
+    currentMatch = { patient, matcher };
+    openModal('matchConfirmModal');
+  }
+  function confirmStartMatch() {
+    closeModal('matchConfirmModal');
+    if (currentMatch.patient === 'PT-2026-005') {
+      document.getElementById('preSubmitPatient').textContent = currentMatch.patient;
+      document.getElementById('preSubmitUser').textContent = '张三';
+      document.getElementById('currentMatchUser').textContent = currentMatch.matcher;
+      openModal('preSubmitModal');
+    } else {
+      alert('已开始匹配：' + currentMatch.patient);
+    }
+  }
+  function confirmPreSubmit() {
+    closeModal('preSubmitModal');
+    alert('预提交成功，提交人固定为原提交人：张三');
+  }
+
+  // ===== AI 溯源确认 =====
+  let currentTracePatient = '';
+  function openTraceConfirm(patient) {
+    currentTracePatient = patient;
+    openModal('traceConfirmModal');
+  }
+  function confirmTrace() {
+    closeModal('traceConfirmModal');
+    alert('已发起 AI 溯源：' + currentTracePatient);
+  }
+
+  // ===== 匹配详情 =====
+  function openDetail(patient) {
+    document.getElementById('detailPatient').textContent = patient;
+    openModal('detailModal');
+  }
+
+  // ===== 跳转思考链详情（仅思考成功可点击） =====
+  function openThinkChain(projectNo, patientNo) {
+    const params = new URLSearchParams();
+    params.set('thinkStatus', 'success');
+    if (projectNo) params.set('projectNo', projectNo);
+    if (patientNo) params.set('patientNo', patientNo);
+    window.location.href = '思考链详情.html?' + params.toString();
+  }
+
+  // ===== SVG 连线 =====
+  let connectionsData = [];
+  const svg = document.getElementById('connections');
+  const contentArea = document.querySelector('.content-area');
+
+  function drawConnections() {
+    svg.innerHTML = '';
+    connectionsData = [];
+    const containerRect = contentArea.getBoundingClientRect();
+    const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+    const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+    leftElements.forEach(leftEl => {
+      const protoId = leftEl.getAttribute('data-proto-id');
+      const rightEl = document.querySelector('.proto-desc[data-proto-id="' + protoId + '"]');
+      if (!rightEl) return;
+
+      const leftRect = leftEl.getBoundingClientRect();
+      const rightRect = rightEl.getBoundingClientRect();
+      const containerTop = containerRect.top;
+
+      const x1 = leftRect.right - containerRect.left;
+      const y1 = leftRect.top + leftRect.height / 2 - containerTop;
+      const x2 = rightRect.left - containerRect.left;
+      const y2 = rightRect.top + rightRect.height / 2 - containerTop;
+
+      const cp1x = x1 + (x2 - x1) * 0.5;
+      const cp2x = x1 + (x2 - x1) * 0.5;
+
+      // 路径
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' C ' + cp1x + ' ' + y1 + ', ' + cp2x + ' ' + y2 + ', ' + x2 + ' ' + y2);
+      path.setAttribute('class', 'connection-line');
+      path.setAttribute('data-proto-id', protoId);
+      svg.appendChild(path);
+
+      // 编号标签
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      bg.setAttribute('cx', midX);
+      bg.setAttribute('cy', midY);
+      bg.setAttribute('r', 11);
+      bg.setAttribute('class', 'connection-label-bg');
+      svg.appendChild(bg);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', midX);
+      text.setAttribute('y', midY);
+      text.setAttribute('dy', '0.05em');
+      text.setAttribute('class', 'connection-label');
+      text.textContent = protoId;
+      svg.appendChild(text);
+
+      connectionsData.push({ protoId, path, leftEl, rightEl });
+    });
+  }
+
+  function highlightConnection(protoId, active) {
+    const conn = connectionsData.find(c => c.protoId === protoId);
+    if (!conn) return;
+    if (active) {
+      conn.path.classList.add('active');
+      conn.leftEl.classList.add('active-highlight');
+      conn.rightEl.classList.add('active-highlight');
+    } else {
+      conn.path.classList.remove('active');
+      conn.leftEl.classList.remove('active-highlight');
+      conn.rightEl.classList.remove('active-highlight');
+    }
+  }
+
+  // Hover 事件
+  document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+    const id = el.getAttribute('data-proto-id');
+    el.addEventListener('mouseenter', () => highlightConnection(id, true));
+    el.addEventListener('mouseleave', () => highlightConnection(id, false));
+  });
+  document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+    const id = el.getAttribute('data-proto-id');
+    el.addEventListener('mouseenter', () => highlightConnection(id, true));
+    el.addEventListener('mouseleave', () => highlightConnection(id, false));
+  });
+
+  // 初始化 & 响应 resize
+  window.addEventListener('DOMContentLoaded', () => { drawConnections(); });
+  window.addEventListener('resize', () => { drawConnections(); });
+  // 左右面板滚动时重绘
+  document.getElementById('leftPanel').addEventListener('scroll', () => { drawConnections(); });
+  document.getElementById('rightPanel').addEventListener('scroll', () => { drawConnections(); });
+
+  // ===== 移动端视图切换 =====
+  let mobilePRDVisible = true;
+  function toggleMobileView() {
+    const left = document.getElementById('leftPanel');
+    const right = document.getElementById('rightPanel');
+    const toggle = document.getElementById('mobileToggle');
+    if (window.innerWidth > 768) return;
+    if (mobilePRDVisible) {
+      right.style.display = 'none';
+      left.style.height = '100%';
+      toggle.innerHTML = '<i class="fa-solid fa-file-lines"></i>';
+      mobilePRDVisible = false;
+    } else {
+      right.style.display = 'block';
+      left.style.height = '60vh';
+      toggle.innerHTML = '<i class="fa-solid fa-info"></i>';
+      mobilePRDVisible = true;
+    }
+  }
+</script>
+</body>
+</html>
