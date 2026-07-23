@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+  原型说明：项目管理「新增项目」页面 —— 布局方案 B：分步向导（4 步）
+  目的：仅验证页面布局设计，不实现解析/保存等逻辑。
+  左侧（约 82%）：向导式产品界面，顶部步骤条 + 每步内容 + 底部导航
+  右侧（约 18%，琥珀色）：设计说明，与左侧关键元素用 SVG 连线对应
+  交互：点击步骤条或底部「上一步/下一步」切换；悬停元素高亮对应连线与说明。
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品原型 - 新增项目（向导式布局 B）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+    /* 连线元素高亮 */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 8px; }
+    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF; background-color: rgba(22,93,255,0.04); }
+    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.06); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 8px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* 步骤条 */
+    .step-item { transition: all 0.2s ease; }
+    .step-dot { transition: all 0.2s ease; }
+    .step-item.active .step-dot { background: #165DFF; color: #fff; border-color: #165DFF; }
+    .step-item.active .step-text { color: #165DFF; font-weight: 600; }
+    .step-item.done .step-dot { background: #00B42A; color: #fff; border-color: #00B42A; }
+    .step-line { height: 2px; background: #e5e7eb; flex: 1; transition: background 0.2s; }
+    .step-line.done { background: #00B42A; }
+
+    /* 步骤必填/可选徽标（沿用已实现的红=必填 / 绿=可选 规范） */
+    .step-badge { font-size: 11px; padding: 1px 9px; border-radius: 10px; line-height: 1.5; font-weight: 500; }
+    .step-badge.required { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .step-badge.optional { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+
+    /* ===== 以下为阶段设置 / 入排 / 筛选表 / 合并症 / 合并用药 的原实现样式（与 phase/index.html 保持一致） ===== */
+    .proj-stage-box { background: #fafbfc; border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .proj-stage-title { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .proj-stage-title .required { color: #ff4d4f; }
+    .proj-stage-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .proj-stage-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 16px; font-size: 13px; color: #666; background: #fff; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .proj-stage-chip:hover { border-color: #1677ff; color: #1677ff; background: #f0f7ff; }
+    .proj-stage-chip input[type="checkbox"] { width: 14px; height: 14px; accent-color: #1677ff; margin: 0; cursor: pointer; }
+    .proj-stage-chip.selected { border-color: #1677ff; color: #1677ff; background: #e6f0ff; font-weight: 500; }
+    .proj-stage-empty { color: #999; font-size: 13px; padding: 8px 0; }
+    .proj-stage-add { border-style: dashed; color: #1677ff; border-color: #91b8ff; background: #f5f9ff; }
+    .proj-stage-add:hover { background: #e6f0ff; }
+    .proj-stage-add-form { display: inline-flex; align-items: center; gap: 8px; }
+    .proj-stage-hint { margin-top: 10px; font-size: 12px; color: #999; line-height: 1.6; }
+    .proj-stage-audit-panel { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fff; margin-bottom: 12px; }
+    .proj-stage-audit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .proj-stage-audit-name { font-size: 13px; font-weight: 600; color: #1677ff; display: flex; align-items: center; gap: 6px; }
+    .proj-stage-audit-types { display: flex; flex-wrap: wrap; gap: 8px; }
+    .proj-audit-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid #e5e6eb; border-radius: 14px; font-size: 12px; color: #555; background: #fafbfc; cursor: pointer; user-select: none; transition: all 0.15s; }
+    .proj-audit-chip:hover { border-color: #1677ff; background: #f0f7ff; }
+    .proj-audit-chip input[type="checkbox"] { width: 13px; height: 13px; accent-color: #1677ff; margin: 0; cursor: pointer; }
+    .proj-audit-chip.selected { border-color: #1677ff; background: #e6f0ff; color: #1677ff; font-weight: 500; }
+
+    .criteria-version-tabs { display: flex; gap: 0; background: #f5f7fa; border-radius: 8px 8px 0 0; padding: 0; overflow-x: auto; }
+    .criteria-version-tab { padding: 10px 18px; font-size: 13px; color: #666; cursor: pointer; background: #f5f7fa; border-right: 1px solid #e8e8e8; transition: all 0.2s; min-width: 132px; }
+    .criteria-version-tab:hover { background: #e8f0ff; color: #1677ff; }
+    .criteria-version-tab.active { background: #fff; color: #1677ff; font-weight: 600; border-bottom: 2px solid #1677ff; }
+    .criteria-version-tab.disabled-ver { opacity: 0.62; }
+    .criteria-version-tab .ver-top { display: flex; align-items: center; gap: 6px; }
+    .criteria-version-tab .ver-name { font-weight: 600; font-size: 14px; }
+    .criteria-version-tab .ver-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .criteria-version-tab .ver-dot.on { background: #52c41a; }
+    .criteria-version-tab .ver-dot.off { background: #bbb; }
+    .criteria-version-tab .ver-date { font-size: 11px; color: #999; margin-top: 2px; }
+    .criteria-content-area { background: #fff; border: 1px solid #e8e8e8; border-top: none; border-radius: 0 0 8px 8px; padding: 16px; overflow-x: auto; }
+
+    .criteria-version-status { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #e8e8e8; background: #fafbfc; }
+    .criteria-version-status.on { background: #f0f9eb; border-color: #b7eb8f; }
+    .criteria-version-status.off { background: #fafafa; border-color: #e8e8e8; }
+    .criteria-version-status .cvs-left { display: flex; align-items: center; gap: 10px; }
+    .criteria-version-status .cvs-label { font-size: 12px; color: #999; }
+    .criteria-version-status .cvs-name { font-weight: 700; font-size: 15px; color: #1677ff; }
+    .criteria-version-status .cvs-rename-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border: 1px solid #91caff; border-radius: 6px; background: #f0f5ff; color: #1677ff; font-size: 12px; cursor: pointer; }
+    .criteria-version-status .cvs-meta { font-size: 12px; color: #999; }
+    .criteria-version-status .cvs-right { display: flex; align-items: center; gap: 12px; }
+    .criteria-version-status .cvs-status-text { font-size: 13px; font-weight: 600; }
+    .criteria-version-status.on .cvs-status-text { color: #389e0d; }
+    .criteria-version-status.off .cvs-status-text { color: #999; }
+    .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 22px; transition: .2s; }
+    .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .2s; }
+    .switch input:checked + .slider { background-color: #52c41a; }
+    .switch input:checked + .slider:before { transform: translateX(22px); }
+
+    .proj-criteria-group { min-width: 720px; margin-bottom: 24px; }
+    .proj-criteria-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 720px; }
+    .proj-criteria-table th { background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+    .proj-criteria-table td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+    .proj-criteria-table tr:hover td { background: #fafbff; }
+    .proj-criteria-table .num-cell { width: 36px; color: #999; padding-top: 18px; }
+    .proj-criteria-table .content-cell { min-width: 280px; }
+    .proj-criteria-table .content-th { min-width: 280px; }
+    .criteria-textarea { width: 100%; min-height: 84px; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+    .criteria-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .criteria-textarea::placeholder { color: #bbb; }
+    .proj-criteria-table .action-cell { width: 92px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
+    .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
+    .proj-criteria-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+    .criteria-add-btn:hover { background: #0958d9; }
+    .proj-criteria-table .stage-enable-th { width: 100px; text-align: center; }
+    .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
+    .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
+    .proj-criteria-table .stage-select-all input { width: 14px; height: 14px; cursor: pointer; }
+    .stage-enable-td { min-width: 110px; vertical-align: middle; text-align: center; }
+    .stage-enable-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .stage-enabled-label { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
+    .stage-enable-td .stage-enabled-check { width: 14px; height: 14px; cursor: pointer; }
+    .required-col-th { min-width: 72px; text-align: center; vertical-align: middle; }
+    .required-col-name { font-size: 13px; font-weight: 600; color: #333; margin-bottom: 4px; }
+    .required-col-td { text-align: center; vertical-align: middle; }
+    .required-col-label { display: inline-flex; align-items: center; cursor: pointer; }
+    .required-col-check { width: 16px; height: 16px; cursor: pointer; accent-color: #ff4d4f; }
+    .config-action { color: #1677ff; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
+    .config-action:hover { text-decoration: underline; }
+    .think-badge { font-style: normal; margin-left: 2px; background: #1677ff; color: #fff; font-size: 10px; line-height: 1; padding: 2px 5px; border-radius: 8px; }
+    .group-title-left { display: inline-flex; align-items: center; gap: 6px; }
+    .group-title-right { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-weight: 500; color: #666; }
+    .group-title-right .group-weight-label { font-size: 12px; }
+    .group-title-right .group-weight-pct { font-size: 12px; color: #999; }
+    .proj-criteria-group-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .proj-criteria-group-title.inclusion { color: #52c41a; }
+    .proj-criteria-group-title.exclusion { color: #ff4d4f; }
+    .proj-criteria-group-title.screening { color: #165DFF; }
+    .group-weight-input { width: 64px; padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; }
+
+    .merge-config-table-wrap { overflow-x: auto; }
+    .merge-config-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #eaeef5; border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .merge-config-table th, .merge-config-table td { border-bottom: 1px solid #eef1f5; border-right: 1px solid #eef1f5; padding: 12px 14px; vertical-align: middle; }
+    .merge-config-table th:last-child, .merge-config-table td:last-child { border-right: none; }
+    .merge-config-table thead th { background: #f5f7fa; font-weight: 600; color: #333; text-align: center; }
+    .merge-config-table tbody tr:last-child td { border-bottom: none; }
+    .merge-remark-col { width: 38%; min-width: 200px; text-align: left; }
+    .merge-remark-col .merge-remark-input { width: 100%; min-height: 64px; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+    .merge-remark-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
+    .merge-remark-input::placeholder { color: #bbb; }
+    .merge-stage-col { text-align: center; min-width: 96px; }
+    .merge-stage-toggle { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+    .merge-enabled-text { font-size: 12px; color: #888; }
+    .merge-enabled-text:empty { display: none; }
+    .proj-criteria-no-stage { background: #fff7e6; border: 1px dashed #faad14; border-radius: 6px; padding: 16px; color: #d48806; font-size: 13px; text-align: center; }
+
+    .btn-click:active { transform: scale(0.96); }
+    .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
+
+    /* 右侧面板 —— 琥珀色说明区 */
+    #right-panel { transition: width 0.3s ease, min-width 0.3s ease; position: relative; flex-shrink: 0; overflow-y: auto; background: #fffbeb; border-left: 2px dashed #fcd34d; }
+
+    /* 移动端 */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 62vh; }
+      #divider { display: none; }
+      #right-panel { width: 100% !important; height: 38vh; border-top: 1px solid #e5e7eb; border-left: none; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+
+    /* ============ 小模块折叠 / 展开 ============ */
+    .module-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
+    .module-header:hover { background: #f7f9fc; }
+    .module-header h3, .module-header h4 { margin: 0 !important; }
+    .module-chevron { color: #9ca3af; font-size: 13px; transition: transform 0.2s ease; flex-shrink: 0; }
+    .module-card.collapsed .module-chevron { transform: rotate(-90deg); }
+    .module-body { padding: 0 20px 20px; }
+    .module-card.collapsed .module-body { display: none; }
+
+    /* ============ 审批模板配置表格（与原项目编辑风格一致） ============ */
+    .edit-inline-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e8edf3; border-radius: 8px; overflow: hidden; font-size: 13px; }
+    .edit-inline-head, .edit-inline-edit-row { display: flex; align-items: stretch; border-bottom: 1px solid #eef1f5; box-sizing: border-box; }
+    .edit-inline-head { background: #f5f7fa; font-weight: 600; color: #333; }
+    .edit-inline-head:last-child, .edit-inline-edit-row:last-child { border-bottom: none; }
+    .edit-inline-td { padding: 12px 14px; display: flex; align-items: center; box-sizing: border-box; color: #333; }
+    .edit-inline-td.audit-type { width: 110px; flex: 0 0 110px; }
+    .edit-inline-td.ver { width: 84px; flex: 0 0 84px; }
+    .edit-inline-td.flow-name { flex: 1; min-width: 140px; }
+    .edit-inline-td.active { width: 96px; flex: 0 0 96px; }
+    .edit-inline-td.start-time { width: 172px; flex: 0 0 172px; }
+    .edit-inline-td.end-time { width: 172px; flex: 0 0 172px; }
+    .edit-inline-td.ops { width: 90px; flex: 0 0 90px; }
+    .sub-row { background: #fff; }
+    .sub-row.hidden-row { display: none; }
+    .template-row { background: #f0f5ff; cursor: pointer; font-weight: 600; }
+    .template-row:hover { background: #e6f0ff; }
+    .template-row .template-name { font-weight: 600; color: #1d39c4; flex: 1; }
+    .template-row .template-flows { color: #666; font-weight: 500; }
+    .template-row .template-actions { gap: 8px; justify-content: flex-end; }
+    .sub-row-tag { width: 110px; flex: 0 0 110px; }
+    .sub-row-caret { color: #1d39c4; transition: transform 0.15s; margin-right: 4px; font-size: 12px; }
+    .template-row.expanded .sub-row-caret { transform: rotate(90deg); }
+    .edit-star { color: #fa8c16; font-size: 12px; margin-left: 6px; font-weight: 500; }
+    .ref-template-btn { background: #fff; border: 1px solid #d9d9d9; color: #1677ff; border-radius: 6px; padding: 4px 12px; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+    .ref-template-btn:hover { border-color: #1677ff; background: #f0f5ff; }
+    /* 审批类型标签 */
+    .edit-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 12px; line-height: 1.6; white-space: nowrap; }
+    .edit-tag-blue { background: #e6f4ff; color: #1677ff; border: 1px solid #91caff; }
+    .edit-tag-orange { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .edit-tag-teal { background: #e6fffb; color: #08979d; border: 1px solid #87e8de; }
+    .edit-tag-green { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+    .edit-tag-purple { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
+    .edit-tag-red { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <div id="app" class="flex h-screen relative">
+
+    <!-- ================= 左侧：产品界面（向导） ================= -->
+    <div id="left-panel" class="flex-1 overflow-y-auto bg-gray-50 relative">
+
+      <!-- 顶部栏 -->
+      <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#165DFF] rounded-lg flex items-center justify-center text-white font-bold text-sm"><i class="fas fa-flask"></i></div>
+          <div>
+            <div class="text-lg font-semibold text-gray-800 leading-tight">新增项目</div>
+            <div class="text-xs text-gray-400">智能预筛系统 / 项目管理</div>
+          </div>
+        </div>
+        <button class="text-gray-500 hover:text-gray-700 text-sm btn-click"><i class="fas fa-xmark mr-1"></i>关闭</button>
+      </header>
+
+      <div class="p-6">
+        <!-- ★ 连线 1~4：步骤条（4 个步骤芯片，贯穿全局，切换步骤仍可见） -->
+        <div class="bg-white rounded-xl border border-gray-200 px-6 py-5 mb-5">
+          <div class="flex items-center">
+            <div class="proto-element step-item active flex flex-col items-center" data-proto-id="1" onclick="goStep(1)" style="cursor:pointer;width:120px">
+              <div class="step-dot w-9 h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-sm font-semibold text-gray-500">1</div>
+              <div class="step-text text-sm text-gray-500 mt-2 text-center">试验方案</div>
+              <span class="step-badge optional mt-1">可选</span>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="proto-element step-item flex flex-col items-center" data-proto-id="2" onclick="goStep(2)" style="cursor:pointer;width:120px">
+              <div class="step-dot w-9 h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-sm font-semibold text-gray-500">2</div>
+              <div class="step-text text-sm text-gray-500 mt-2 text-center">基本信息</div>
+              <span class="step-badge required mt-1">必填</span>
+            </div>
+            <div class="step-line" id="line2"></div>
+            <div class="proto-element step-item flex flex-col items-center" data-proto-id="3" onclick="goStep(3)" style="cursor:pointer;width:120px">
+              <div class="step-dot w-9 h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-sm font-semibold text-gray-500">3</div>
+              <div class="step-text text-sm text-gray-500 mt-2 text-center">匹配与审批</div>
+              <span class="step-badge required mt-1">必填</span>
+            </div>
+            <div class="step-line" id="line3"></div>
+            <div class="proto-element step-item flex flex-col items-center" data-proto-id="4" onclick="goStep(4)" style="cursor:pointer;width:120px">
+              <div class="step-dot w-9 h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-sm font-semibold text-gray-500">4</div>
+              <div class="step-text text-sm text-gray-500 mt-2 text-center">智能增强</div>
+              <span class="step-badge optional mt-1">可选</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ 步骤 1：试验方案 ============ -->
+        <section id="pane-1" class="step-pane">
+          <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="text-base font-semibold text-gray-800 mb-1"><i class="fas fa-file-lines text-[#165DFF] mr-2"></i>试验方案</h3>
+            <p class="text-xs text-gray-400 mb-5">上传方案文件，作为后续所有信息的来源（解析逻辑不在本原型范围）。</p>
+            <div class="border-2 border-dashed border-gray-300 rounded-xl py-14 text-center bg-gray-50 hover:bg-blue-50/40 transition-colors cursor-pointer">
+              <div class="text-4xl text-gray-300 mb-3"><i class="fas fa-cloud-arrow-up"></i></div>
+              <div class="text-sm text-gray-600">点击上传临床试验方案文件</div>
+              <div class="text-xs text-gray-400 mt-1">支持 PDF / DOC / DOCX，≤ 50MB</div>
+            </div>
+            <button class="mt-5 bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium btn-click"><i class="fas fa-wand-magic-sparkles mr-1"></i>分析并录入</button>
+          </div>
+        </section>
+
+        <!-- ============ 步骤 2：基本信息 ============ -->
+        <section id="pane-2" class="step-pane hidden">
+          <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 class="text-base font-semibold text-gray-800 mb-4"><i class="fas fa-clipboard-list text-[#165DFF] mr-2"></i>项目基本信息</h3>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-4">
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">项目编码 <span class="text-red-500">*</span></label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入项目编码"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">项目名称 <span class="text-red-500">*</span></label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入项目名称"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">审批阶段 <span class="text-red-500">*</span></label><select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"><option>请选择</option><option>准备中</option><option>进行中</option><option>已暂停</option><option>已结束</option></select></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">样本量</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入样本量"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">方案编号</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入方案编号"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">化合物名称</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入化合物名称"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">适应症</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入适应症"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">申办方</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入申办方"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">领域</label><select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"><option>实体瘤</option><option>血液肿瘤</option><option>心血管</option><option>内分泌</option><option>神经系统</option></select></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">试验分期</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="如：III 期"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">项目经理</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入项目经理"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">医学经理</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入医学经理"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">市场经理</label><input class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="请输入市场经理"></div>
+              <div><label class="block text-sm font-medium text-gray-700 mb-1">项目种类</label><select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"><option>肿瘤</option><option>非肿瘤</option><option>其它</option></select></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 步骤 3：匹配与审批配置 ============ -->
+        <section id="pane-3" class="step-pane hidden">
+          <div class="space-y-4">
+
+            <!-- ① 阶段设置 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-puzzle-piece text-[#165DFF] mr-2"></i>阶段设置 <span class="text-red-500 text-sm font-normal">* 必填，至少选择一个阶段</span></h3>
+              <div class="proj-stage-box">
+                <div class="proj-stage-title"><span class="required">*</span> 选择审批阶段（可多选）</div>
+                <div class="proj-stage-chips">
+                  <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#1677ff;margin-right:6px"></span><span>预筛阶段</span></label>
+                  <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#52c41a;margin-right:6px"></span><span>入组阶段</span></label>
+                  <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#722ed1;margin-right:6px"></span><span>随机阶段</span></label>
+                  <label class="proj-stage-chip proj-stage-add"><i class="fa-solid fa-plus"></i><span>新增审批阶段</span></label>
+                </div>
+                <div class="proj-stage-hint">支持从「系统管理 → 审批阶段配置」已有的启用阶段中多选；如本项目叫法不同，可直接「新增审批阶段」，新增后自动选中并进入下方审批类型配置。</div>
+              </div>
+              <!-- 各阶段审批类型配置 -->
+              <div class="proj-stage-audit-panel">
+                <div class="proj-stage-audit-header">
+                  <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 预筛阶段</div>
+                  <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+                </div>
+                <div class="proj-stage-audit-types">
+                  <label class="proj-audit-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1677ff;margin-right:5px"></span><span>预筛</span></label>
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52c41a;margin-right:5px"></span><span>入组</span></label>
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
+                </div>
+              </div>
+              <div class="proj-stage-audit-panel">
+                <div class="proj-stage-audit-header">
+                  <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 入组阶段</div>
+                  <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+                </div>
+                <div class="proj-stage-audit-types">
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1677ff;margin-right:5px"></span><span>预筛</span></label>
+                  <label class="proj-audit-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52c41a;margin-right:5px"></span><span>入组</span></label>
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
+                </div>
+              </div>
+              <div class="proj-stage-audit-panel">
+                <div class="proj-stage-audit-header">
+                  <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 随机阶段</div>
+                  <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+                </div>
+                <div class="proj-stage-audit-types">
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1677ff;margin-right:5px"></span><span>预筛</span></label>
+                  <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52c41a;margin-right:5px"></span><span>入组</span></label>
+                  <label class="proj-audit-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- ② 项目入排标准 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-scale-balanced text-[#165DFF] mr-2"></i>项目入排标准</h3>
+              <div class="criteria-version-tabs">
+                <div class="criteria-version-tab active"><div class="ver-top"><span class="ver-name">入排标准 v3.0</span><span class="ver-dot on"></span></div><div class="ver-date">2026-07-20 · 张医生</div></div>
+                <div class="criteria-version-tab disabled-ver"><div class="ver-top"><span class="ver-name">入排标准 v2.0</span><span class="ver-dot off"></span></div><div class="ver-date">2026-06-11 · 李医生</div></div>
+              </div>
+              <div class="criteria-content-area">
+                <div class="criteria-version-status on">
+                  <div class="cvs-left">
+                    <span class="cvs-label">当前版本</span>
+                    <span class="cvs-name">入排标准 v3.0</span>
+                    <button class="cvs-rename-btn"><i class="fa-solid fa-pen"></i> 重命名</button>
+                    <span class="cvs-meta">2026-07-20 · 张医生</span>
+                  </div>
+                  <div class="cvs-right">
+                    <span class="cvs-status-text">已启用</span>
+                    <label class="switch"><input type="checkbox" checked/><span class="slider"></span></label>
+                  </div>
+                </div>
+
+                <div class="proj-criteria-group">
+                  <div class="proj-criteria-group-title inclusion">
+                    <span class="group-title-left"><i class="fa-solid fa-circle-check"></i> 入选标准（2条）</span>
+                    <span class="group-title-right"><span class="group-weight-label">权重</span><input type="number" class="group-weight-input" value="50" min="0" max="100"/><span class="group-weight-pct">%</span></span>
+                  </div>
+                  <div class="proj-criteria-toolbar"><button class="criteria-add-btn"><i class="fa-solid fa-plus"></i> 新增入选标准</button></div>
+                  <table class="proj-criteria-table">
+                    <thead><tr><th class="num-cell">序号</th><th class="content-th">入选标准内容</th>
+                      <th class="stage-enable-th"><div class="stage-th-name">预筛阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">入组阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">随机阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="action-cell">操作</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td class="num-cell">1</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">年龄 18-75 周岁，性别不限，预计生存 ≥ 3 个月。</textarea></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注</span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链<em class="think-badge">2</em></span><span class="delete-action">删除</span></td>
+                      </tr>
+                      <tr>
+                        <td class="num-cell">2</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">经组织学/细胞学确诊的恶性肿瘤患者。</textarea></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check"/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注</span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链</span><span class="delete-action">删除</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div class="proj-criteria-group">
+                  <div class="proj-criteria-group-title exclusion">
+                    <span class="group-title-left"><i class="fa-solid fa-circle-xmark"></i> 排除标准（2条）</span>
+                    <span class="group-title-right"><span class="group-weight-label">权重</span><input type="number" class="group-weight-input" value="50" min="0" max="100"/><span class="group-weight-pct">%</span></span>
+                  </div>
+                  <div class="proj-criteria-toolbar"><button class="criteria-add-btn"><i class="fa-solid fa-plus"></i> 新增排除标准</button></div>
+                  <table class="proj-criteria-table">
+                    <thead><tr><th class="num-cell">序号</th><th class="content-th">排除标准内容</th>
+                      <th class="stage-enable-th"><div class="stage-th-name">预筛阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">入组阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">随机阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="action-cell">操作</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td class="num-cell">1</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">既往接受过同种抗肿瘤治疗且疾病进展。</textarea></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check"/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check"/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注</span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链</span><span class="delete-action">删除</span></td>
+                      </tr>
+                      <tr>
+                        <td class="num-cell">2</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">严重肝肾功能不全（ALT/AST &gt; 2.5×ULN）。</textarea></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注</span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链<em class="think-badge">1</em></span><span class="delete-action">删除</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- ③ 筛选表 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-magnifying-glass text-[#165DFF] mr-2"></i>筛选表</h3>
+              <div class="criteria-content-area" style="border:1px solid #e8e8e8;border-radius:8px">
+                <div class="proj-criteria-group">
+                  <div class="proj-criteria-group-title screening"><span class="group-title-left"><i class="fa-solid fa-magnifying-glass"></i> 筛选内容（2条）</span></div>
+                  <div class="proj-criteria-toolbar"><button class="criteria-add-btn"><i class="fa-solid fa-plus"></i> 加筛选内容</button></div>
+                  <table class="proj-criteria-table">
+                    <thead><tr><th class="num-cell">序号</th><th class="content-th">筛选内容</th>
+                      <th class="required-col-th"><div class="required-col-name">必填</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">预筛阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">入组阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="stage-enable-th"><div class="stage-th-name">随机阶段</div><label class="stage-select-all"><input type="checkbox"/><span>全选</span></label></th>
+                      <th class="action-cell">操作</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td class="num-cell">1</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">血常规：中性粒细胞绝对值 ≥ 1.5×10⁹/L。</textarea></td>
+                        <td class="required-col-td"><label class="required-col-label"><input type="checkbox" class="required-col-check" checked/></label></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注<em class="think-badge">1</em></span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链</span><span class="delete-action">删除</span></td>
+                      </tr>
+                      <tr>
+                        <td class="num-cell">2</td>
+                        <td class="content-cell"><textarea class="criteria-textarea" rows="3">心电图：QTc &lt; 450 ms。</textarea></td>
+                        <td class="required-col-td"><label class="required-col-label"><input type="checkbox" class="required-col-check"/></label></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check" checked/></td>
+                        <td class="stage-enable-td"><input type="checkbox" class="stage-enabled-check"/></td>
+                        <td class="action-cell"><span class="config-action"><i class="fa-regular fa-note-sticky"></i> 配置备注</span><span class="config-action"><i class="fa-solid fa-brain"></i> 思考链</span><span class="delete-action">删除</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- ④ 合并症 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-diagram-project text-[#165DFF] mr-2"></i>合并症</h3>
+              <div class="merge-config-table-wrap">
+                <table class="merge-config-table">
+                  <thead><tr><th class="merge-remark-col">备注</th><th class="merge-stage-col">预筛阶段</th><th class="merge-stage-col">入组阶段</th><th class="merge-stage-col">随机阶段</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td class="merge-remark-col"><div class="merge-remark-inner"><textarea class="merge-remark-input" rows="3">糖尿病、高血压等合并症需在入组前评估控制情况。</textarea></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox" checked/><span class="slider"></span></label><span class="merge-enabled-text">启用</span></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox" checked/><span class="slider"></span></label><span class="merge-enabled-text">启用</span></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox" checked/><span class="slider"></span></label><span class="merge-enabled-text">启用</span></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ⑤ 合并用药 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-pills text-[#165DFF] mr-2"></i>合并用药</h3>
+              <div class="merge-config-table-wrap">
+                <table class="merge-config-table">
+                  <thead><tr><th class="merge-remark-col">备注</th><th class="merge-stage-col">预筛阶段</th><th class="merge-stage-col">入组阶段</th><th class="merge-stage-col">随机阶段</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td class="merge-remark-col"><div class="merge-remark-inner"><textarea class="merge-remark-input" rows="3">禁用强效 CYP3A4 抑制剂（如酮康唑）。</textarea></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox" checked/><span class="slider"></span></label><span class="merge-enabled-text">启用</span></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox" checked/><span class="slider"></span></label><span class="merge-enabled-text">启用</span></div></td>
+                      <td class="merge-stage-col"><div class="merge-stage-toggle"><label class="switch"><input type="checkbox"/><span class="slider"></span></label><span class="merge-enabled-text">停用</span></div></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- ⑥ 审批模板配置 -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-circle-check text-[#165DFF] mr-2"></i>审批模板配置</h3>
+              <p class="text-xs text-gray-400 mb-3">为各审批阶段配置对应的审批模板与审批流；点击模板行可展开 / 收起其下的流程节点（示例数据，仅展示布局）。</p>
+              <div class="edit-inline-table" id="approvalConfigContainer">
+                <div class="edit-inline-head">
+                  <div class="edit-inline-td audit-type">审批类型</div>
+                  <div class="edit-inline-td ver">版本号</div>
+                  <div class="edit-inline-td flow-name">审批流名称</div>
+                  <div class="edit-inline-td active">是否生效</div>
+                  <div class="edit-inline-td start-time">生效开始时间</div>
+                  <div class="edit-inline-td end-time">生效结束时间</div>
+                  <div class="edit-inline-td ops">操作</div>
+                </div>
+
+                <!-- 模板：预筛审批模板（主流程模板） -->
+                <div class="edit-inline-edit-row template-row expanded" onclick="toggleSubRows(this)">
+                  <div class="edit-inline-td template-name"><i class="fa-solid fa-caret-right sub-row-caret"></i>预筛审批模板<span class="edit-star">★ 主流程模板</span></div>
+                  <div class="edit-inline-td template-flows">共 3 个流程</div>
+                  <div class="edit-inline-td template-actions">
+                    <span class="edit-tag edit-tag-blue">预筛审批</span>
+                    <span class="edit-tag edit-tag-orange">主知情审批</span>
+                    <span class="edit-tag edit-tag-teal">导入审批</span>
+                    <button class="ref-template-btn">引用模板</button>
+                  </div>
+                </div>
+                <div class="edit-inline-edit-row sub-row">
+                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-blue">预筛审批</span></div>
+                  <div class="edit-inline-td ver">v1.0</div>
+                  <div class="edit-inline-td flow-name">预筛审批流程</div>
+                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
+                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
+                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
+                </div>
+                <div class="edit-inline-edit-row sub-row">
+                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-orange">主知情审批</span></div>
+                  <div class="edit-inline-td ver">v1.0</div>
+                  <div class="edit-inline-td flow-name">主知情审批流程</div>
+                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
+                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
+                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
+                </div>
+                <div class="edit-inline-edit-row sub-row">
+                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-teal">导入审批</span></div>
+                  <div class="edit-inline-td ver">v1.0</div>
+                  <div class="edit-inline-td flow-name">导入审批流程</div>
+                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
+                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
+                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
+                </div>
+
+                <!-- 模板：主知情审批模板 -->
+                <div class="edit-inline-edit-row template-row expanded" onclick="toggleSubRows(this)">
+                  <div class="edit-inline-td template-name"><i class="fa-solid fa-caret-right sub-row-caret"></i>主知情审批模板</div>
+                  <div class="edit-inline-td template-flows">共 2 个流程</div>
+                  <div class="edit-inline-td template-actions">
+                    <span class="edit-tag edit-tag-orange">主知情审批</span>
+                    <span class="edit-tag edit-tag-teal">导入审批</span>
+                    <button class="ref-template-btn">引用模板</button>
+                  </div>
+                </div>
+                <div class="edit-inline-edit-row sub-row">
+                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-orange">主知情审批</span></div>
+                  <div class="edit-inline-td ver">v1.0</div>
+                  <div class="edit-inline-td flow-name">主知情审批流程</div>
+                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
+                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
+                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
+                </div>
+                <div class="edit-inline-edit-row sub-row">
+                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-teal">导入审批</span></div>
+                  <div class="edit-inline-td ver">v1.0</div>
+                  <div class="edit-inline-td flow-name">导入审批流程</div>
+                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
+                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
+                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- ============ 步骤 4：智能增强 ============ -->
+        <section id="pane-4" class="step-pane hidden">
+          <div class="space-y-4">
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-2"><i class="fas fa-brain text-[#165DFF] mr-2"></i>思考链配置</h3>
+              <p class="text-xs text-gray-400">配置 AI 推理链路（可选，默认折叠收尾）。</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-2"><i class="fas fa-comments text-[#165DFF] mr-2"></i>问答知识库</h3>
+              <p class="text-xs text-gray-400">维护面向本项目的问答对（可选）。</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 class="text-base font-semibold text-gray-800 mb-2"><i class="fas fa-book text-[#165DFF] mr-2"></i>项目知识库</h3>
+              <p class="text-xs text-gray-400">上传项目专属文档（可选）。</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 底部导航 -->
+        <div class="sticky bottom-0 mt-5 bg-white border border-gray-200 rounded-xl px-5 py-3 flex items-center justify-between shadow-sm">
+          <div class="text-xs text-gray-400">第 <span id="curStep" class="font-semibold text-[#165DFF]">1</span> / 4 步</div>
+          <div class="flex gap-3">
+            <button id="btnPrev" onclick="goStep(currentStep-1)" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg btn-click disabled:opacity-40" disabled><i class="fas fa-arrow-left mr-1"></i>上一步</button>
+            <button id="btnNext" onclick="goStep(currentStep+1)" class="px-5 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">下一步<i class="fas fa-arrow-right ml-1"></i></button>
+            <button id="btnFinish" onclick="alert('完成创建（原型演示）')" class="hidden px-5 py-2 bg-[#00B42A] hover:bg-green-600 text-white text-sm rounded-lg font-medium btn-click">完成创建</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="divider" class="w-px bg-gray-200"></div>
+
+    <!-- ================= 右侧：设计说明（琥珀色） ================= -->
+    <div id="right-panel" class="w-[340px]">
+      <div class="p-5">
+        <div class="text-sm font-bold text-amber-700 mb-1"><i class="fas fa-lightbulb mr-1"></i>布局方案 B · 分步向导</div>
+        <div class="text-xs text-amber-600/80 leading-relaxed mb-3">把原 11 块平铺收敛为 4 步，按「方案 → 基本信息 → 匹配审批 → 智能增强」的依赖顺序排列，每步一屏、强制聚焦，避免信息过载。</div>
+        <div class="flex items-center gap-3 mb-4 text-xs">
+          <span class="inline-flex items-center gap-1"><span class="step-badge required">必填</span> 需完成才能创建</span>
+          <span class="inline-flex items-center gap-1"><span class="step-badge optional">可选</span> 可跳过</span>
+        </div>
+
+        <div class="proto-desc p-3 mb-3" data-proto-id="1">
+          <div class="text-sm font-semibold text-amber-800">① 试验方案（<span class="step-badge optional">可选</span>）</div>
+          <p class="text-xs text-gray-600 mt-1 leading-relaxed">作为第 1 步单独成屏，强调它是后续所有数据的来源；上传 + 解析在此完成，不与表单混排。非必填，无方案也可继续。</p>
+        </div>
+        <div class="proto-desc p-3 mb-3" data-proto-id="2">
+          <div class="text-sm font-semibold text-amber-800">② 基本信息（<span class="step-badge required">必填</span>）</div>
+          <p class="text-xs text-gray-600 mt-1 leading-relaxed">核心必填项集中一屏，带 * 的必填项一目了然；与方案解析结果衔接，人工补填项高亮。本步未完成无法创建。</p>
+        </div>
+        <div class="proto-desc p-3 mb-3" data-proto-id="3">
+          <div class="text-sm font-semibold text-amber-800">③ 匹配与审批（<span class="step-badge required">必填</span>）</div>
+          <p class="text-xs text-gray-600 mt-1 leading-relaxed">阶段设置、入排、筛选表/合并症/合并用药、审批模板同属「依赖阶段」的配置，合并到一步内分区展示，减少切换。阶段设置为必填，须至少选一个阶段。</p>
+        </div>
+        <div class="proto-desc p-3 mb-3" data-proto-id="4">
+          <div class="text-sm font-semibold text-amber-800">④ 智能增强（<span class="step-badge optional">可选</span>）</div>
+          <p class="text-xs text-gray-600 mt-1 leading-relaxed">思考链、问答、知识库作为可选高级配置放在最后一步，可零修改直接「完成创建」。</p>
+        </div>
+        <div class="p-3 mt-4 bg-amber-100/60 rounded-lg border border-amber-200">
+          <div class="text-xs font-semibold text-amber-800 mb-1">布局取舍</div>
+          <p class="text-xs text-gray-600 leading-relaxed">向导式牺牲了「全貌可见」，换取每步轻量、顺序明确。底部固定「上一步/下一步」可回看，缓解回跳成本。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 连线层 -->
+    <svg id="connections"></svg>
+  </div>
+
+  <script>
+    // ========== 步骤切换 ==========
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    function goStep(n) {
+      if (n < 1 || n > totalSteps) return;
+      currentStep = n;
+      for (let i = 1; i <= totalSteps; i++) {
+        document.getElementById('pane-' + i).classList.toggle('hidden', i !== n);
+      }
+      // 步骤条状态
+      document.querySelectorAll('.step-item').forEach((el, idx) => {
+        const s = idx + 1;
+        el.classList.toggle('active', s === n);
+        el.classList.toggle('done', s < n);
+        const dot = el.querySelector('.step-dot');
+        const txt = el.querySelector('.step-text');
+        if (s < n) { dot.innerHTML = '<i class="fas fa-check"></i>'; txt.classList.remove('text-gray-500'); }
+        else { dot.textContent = s; txt.classList.add('text-gray-500'); }
+        if (s === n) txt.classList.remove('text-gray-500');
+      });
+      for (let i = 1; i < totalSteps; i++) {
+        document.getElementById('line' + i).classList.toggle('done', i < n);
+      }
+      // 底部按钮
+      document.getElementById('btnPrev').disabled = (n === 1);
+      document.getElementById('btnNext').classList.toggle('hidden', n === totalSteps);
+      document.getElementById('btnFinish').classList.toggle('hidden', n !== totalSteps);
+      document.getElementById('curStep').textContent = n;
+      requestAnimationFrame(drawConnections);
+    }
+
+    // ========== 连线绘制 ==========
+    const svg = document.getElementById('connections');
+    const connections = [];
+    function drawConnections() {
+      svg.innerHTML = ''; connections.length = 0;
+      if (window.innerWidth <= 768) return;
+      const leftEls = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightEls = document.querySelectorAll('.proto-desc[data-proto-id]');
+      leftEls.forEach(leftEl => {
+        const id = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${id}"]`);
+        if (!rightEl) return;
+        const lr = leftEl.getBoundingClientRect();
+        const rr = rightEl.getBoundingClientRect();
+        const sr = svg.getBoundingClientRect();
+        const x1 = lr.right - sr.left, y1 = lr.top + lr.height / 2 - sr.top;
+        const x2 = rr.left - sr.left, y2 = rr.top + rr.height / 2 - sr.top;
+        const cp = x1 + (x2 - x1) * 0.5;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp} ${y1}, ${cp} ${y2}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', id);
+        svg.appendChild(path);
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', mx); bg.setAttribute('cy', my); bg.setAttribute('r', 11); bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+        const tx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        tx.setAttribute('x', mx); tx.setAttribute('y', my); tx.setAttribute('dy', '0.05em'); tx.setAttribute('class', 'connection-label');
+        tx.textContent = id; svg.appendChild(tx);
+        connections.push({ id, path, leftEl, rightEl });
+      });
+    }
+    function highlightConnection(id, on) {
+      const c = connections.find(x => x.id === id); if (!c) return;
+      c.path.classList.toggle('active', on);
+      c.leftEl.classList.toggle('active-highlight', on);
+      c.rightEl.classList.toggle('active-highlight', on);
+    }
+    function bindHover() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // ========== 移动端 ==========
+    let mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      const l = document.getElementById('left-panel'); const r = document.getElementById('right-panel'); const b = document.getElementById('mobileToggle');
+      if (mobileShowDesc) { l.style.display = 'none'; r.style.height = '100vh'; b.innerHTML = '<i class="fas fa-desktop"></i>'; }
+      else { l.style.display = ''; r.style.height = ''; b.innerHTML = '<i class="fas fa-info"></i>'; }
+    }
+
+    // ========== 小模块折叠 / 展开 ==========
+    function initCollapsible() {
+      const cards = document.querySelectorAll('div.bg-white.rounded-xl.border.border-gray-200');
+      cards.forEach(card => {
+        if (card.dataset.collapsible === '1') return;
+        const title = card.querySelector(':scope > h3, :scope > h4');
+        if (!title) return;                 // 如顶部步骤条：无标题，跳过
+        card.dataset.collapsible = '1';
+        card.classList.add('module-card');
+        card.classList.remove('p-5', 'p-6'); // 内边距改由 header / body 控制
+        const header = document.createElement('div');
+        header.className = 'module-header';
+        header.appendChild(title);
+        const chev = document.createElement('i');
+        chev.className = 'fa-solid fa-chevron-down module-chevron';
+        header.appendChild(chev);
+        const body = document.createElement('div');
+        body.className = 'module-body';
+        while (card.firstChild && card.firstChild !== header) {
+          body.appendChild(card.firstChild);
+        }
+        card.appendChild(header);
+        card.appendChild(body);
+        header.addEventListener('click', () => {
+          card.classList.toggle('collapsed');
+        });
+      });
+    }
+
+    // 审批模板配置：模板行展开 / 收起其下的流程节点
+    function toggleSubRows(row) {
+      const expanded = row.classList.toggle('expanded');
+      let n = row.nextElementSibling;
+      while (n && !n.classList.contains('template-row')) {
+        if (n.classList.contains('sub-row')) n.classList.toggle('hidden-row', !expanded);
+        n = n.nextElementSibling;
+      }
+    }
+
+    // ========== 初始化 ==========
+    function init() { initCollapsible(); drawConnections(); bindHover(); }
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 100));
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(init, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', () => requestAnimationFrame(drawConnections));
+    document.getElementById('right-panel').addEventListener('scroll', () => requestAnimationFrame(drawConnections));
+  </script>
+</body>
+</html>

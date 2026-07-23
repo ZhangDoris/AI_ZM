@@ -933,6 +933,14 @@
       font-weight: 600;
     }
     .pt-card .pt-btn.primary:active { background: #0958d9; }
+    /* 患者卡片情景提示 */
+    .pt-card .pt-hint {
+      display: flex; align-items: flex-start; gap: 6px;
+      margin-top: 10px; padding: 8px 10px;
+      background: #fff7e6; border: 1px solid #ffe0a3; border-radius: 6px;
+      color: #ad6800; font-size: 12px; line-height: 1.5;
+    }
+    .pt-card .pt-hint i { margin-top: 2px; flex-shrink: 0; }
 
     /* 补充审批 底部弹窗（限制在手机框内） */
     .audit-overlay {
@@ -1703,6 +1711,7 @@
       <h4 id="prd-supp-1"><span class="pin">A</span>场景与入口</h4>
       <ul>
         <li>补充审核的按钮展示：当选择的审核模板流程全部走完之后，显示补充审核的按钮，并且可以项目匹配和预提交，点击后弹出补充审核表单，标题为「补充审核」。</li>
+        <li>当补充审核的按钮出现的时候，这条数据加一个提示：若后续出现其他需要审核的特殊情况，可点击「补充审核」发起补充审核。</li>
         <li>适用审核模板流程已经走完了的患者<b>追加审核流程</b>的场景，与补充审批共用同一表单。</li>
       </ul>
 
@@ -1791,6 +1800,19 @@
         thinkStatus: null,
         thinkEnabled: false,
         canWithdraw: true   // 本人已提交、尚未进入下一个流程节点 → 可撤回审批（无「审核」按钮）
+      },
+      {
+        id: 6, code: 3, name: '预提交3', age: 51, gender: '男',
+        pct: '88.0%', status: '通过',
+        auditType: '入组审批',   // 入组审批已通过 → 操作列显示「补充审核」
+        planNo: 'HRS-8080-303',
+        center: '安阳市肿瘤医院',
+        submitter: '张丽',
+        submitTime: '2026-06-28 10:12:05',
+        enrolled: true,          // 入组审批通过标记：操作列展示「补充审核」
+        supplementReason: '',    // 补充审核原因（提交后回填，供审核记录展示）
+        thinkStatus: null,
+        thinkEnabled: false
       }
     ];
 
@@ -1943,7 +1965,8 @@ HDL-C：1.09 mmol/L
         thinkStatus: 'success',
         thinkEnabled: true,
         crossStage: true,   // 强制补充审核：从预筛跨到入组阶段 → 触发 AI 智能匹配
-        aiMatch: true
+        aiMatch: true,
+        hint: '已跨阶段（预筛→入组），补充审核时需先进行 AI 智能匹配项目'
         // ZWMS 不显示入排版本选择
       },
       {
@@ -1957,7 +1980,8 @@ HDL-C：1.09 mmol/L
         thinkStatus: 'failed',
         thinkEnabled: true,
         aiMatch: true,            // 强制补充审核：需先进行 AI 智能匹配
-        inExVersions: ['V1.0', 'V2.0', 'V3.0']   // 可选入排版本
+        inExVersions: ['V1.0', 'V2.0', 'V3.0'],   // 可选入排版本
+        hint: '思考链未通过，需先进行 AI 智能匹配后才能补充审核'
       },
       {
         id: 3, code: 7, name: 'RFNE', age: 58, gender: '男',
@@ -1966,6 +1990,7 @@ HDL-C：1.09 mmol/L
         operator: 'CRA专员200',
         submitStatus: 'enrolled',   // 入组通过 → 操作按钮显示「补充审核」
         matchLabel: '匹配完成',
+        hint: '入组审批已通过，出现需复核的特殊情况可在操作列发起补充审核',
         pct: '91.2%',
         thinkStatus: null,
         thinkEnabled: false
@@ -1979,7 +2004,8 @@ HDL-C：1.09 mmol/L
         matchLabel: '匹配中',
         pct: '66.0%',
         thinkStatus: 'running',
-        thinkEnabled: true
+        thinkEnabled: true,
+        hint: '思考链匹配中，匹配完成后可发起补充审核'
       }
     ];
 
@@ -2032,6 +2058,7 @@ HDL-C：1.09 mmol/L
               <div class="pt-btn" onclick="event.stopPropagation();openAuditRecord(${d.id})">审核记录</div>
               <div class="pt-btn" onclick="event.stopPropagation();openPtDetail(${d.id})">匹配详情</div>
             </div>
+            ${d.hint ? `<div class="pt-hint"><i class="fas fa-lightbulb"></i><span>${d.hint}</span></div>` : ''}
             <div class="pt-files">
               <i class="far fa-folder"></i>
               <span>病史与资料</span>
@@ -2091,11 +2118,14 @@ HDL-C：1.09 mmol/L
       t._timer = setTimeout(() => t.classList.remove('show'), 1800);
     }
 
-    // 打开补充审批弹窗
-    function openAudit(ptId) {
+    // 打开补充审批弹窗（source: 'filter'=智能筛选患者列表，'audit'=审核列表）
+    let currentAuditSource = 'filter';
+    function openAudit(ptId, source) {
       currentAuditPatientId = ptId;
-      const d = PATIENT_DATA.find(x => x.id === ptId);
-      const isSupplement = !!(d && d.submitStatus === 'enrolled') && !preSubmitMode;
+      currentAuditSource = source || 'filter';
+      const d = (currentAuditSource === 'audit' ? AUDIT_DATA : PATIENT_DATA).find(x => x.id === ptId);
+      const isEnrolled = !!(d && (d.submitStatus === 'enrolled' || d.enrolled));
+      const isSupplement = isEnrolled && !preSubmitMode;
       supplementMode = isSupplement;
       const titleEl = document.getElementById('auditSheetTitle');
       if (titleEl) titleEl.textContent = isSupplement ? '补充审核' : '补充审批';
@@ -2214,8 +2244,8 @@ HDL-C：1.09 mmol/L
       { operator: '补充审核员张三', role: '补充审核员', status: '补充审核发起', statusClass: 'orange', time: '2026-07-20 09:30:45', duration: '', active: true, stage: '入组审核（补充审核）' }
     ];
 
-    function openAuditRecord(patientId) {
-      const d = PATIENT_DATA.find(x => x.id === patientId);
+    function openAuditRecord(patientId, source) {
+      const d = (source === 'audit' ? AUDIT_DATA : PATIENT_DATA).find(x => x.id === patientId);
       document.getElementById('recordSubtitle').textContent = (d ? d.name : 'DDD') + '-审核记录';
       const notice = document.getElementById('recordAbnormalNotice');
       // 补充审核提示：已入组补充审核 / 交叉阶段 / 文件变动 / 跨阶段提交
@@ -2345,7 +2375,8 @@ HDL-C：1.09 mmol/L
       if (tplSel && tplSel.value) lastAuditTemplate = tplSel.value;
       // 补充审核：记录原因到患者，便于审核记录页展示
       if (supplementMode) {
-        const d = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
+        const src = (currentAuditSource === 'audit' ? AUDIT_DATA : PATIENT_DATA);
+        const d = src.find(x => x.id === currentAuditPatientId);
         const supReason = document.getElementById('auditSupplementReason');
         if (d && supReason) d.supplementReason = supReason.value.trim();
       }
@@ -2388,7 +2419,7 @@ HDL-C：1.09 mmol/L
       }
 
       // 需要 AI 智能匹配的患者（ZWMS/HGKD 等）先弹出项目匹配确认弹窗
-      const cur = PATIENT_DATA.find(x => x.id === currentAuditPatientId);
+      const cur = (currentAuditSource === 'audit' ? AUDIT_DATA : PATIENT_DATA).find(x => x.id === currentAuditPatientId);
       if (cur && cur.aiMatch) {
         pendingAudit = true;
         openProjectMatch(currentAuditPatientId);
@@ -2396,7 +2427,7 @@ HDL-C：1.09 mmol/L
       }
 
       // 其他数据正常提交（含 RFNE 补充审核 / 其他）
-      doSubmitAudit('补充审批成功');
+      doSubmitAudit(supplementMode ? '补充审核已发起' : '补充审批成功');
     }
 
     // ========= 审核列表 - 审核操作 底部弹窗 =========
@@ -2441,11 +2472,15 @@ HDL-C：1.09 mmol/L
         else if (d.status === '已撤回') statePill = '<span class="pill pill-gray">已撤回</span>';
         else statePill = '<span class="pill pill-orange">待审核</span>';
 
-        // 操作区：canWithdraw 时显示「撤回审核」（无「审核」按钮）；否则显示「审核」
+        // 操作区：入组审批通过（enrolled）显示「补充审核」；canWithdraw 显示「撤回审核」；其余显示「审核」
         let actionBtns = `
           <div class="act-btn">抄送</div>
-          <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>`;
-        if (d.canWithdraw) {
+          <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>
+          <div class="act-btn" onclick="event.stopPropagation();openAuditRecord(${d.id}, 'audit')">审核记录</div>`;
+        if (d.enrolled) {
+          actionBtns += `
+          <div class="act-btn primary" onclick="event.stopPropagation();openAudit(${d.id}, 'audit')">补充审核</div>`;
+        } else if (d.canWithdraw) {
           actionBtns += `
           <div class="act-btn withdraw-btn" onclick="event.stopPropagation();withdrawAudit(${d.id})">撤回审核</div>`;
         } else {
@@ -2475,7 +2510,11 @@ HDL-C：1.09 mmol/L
               <div class="action-bar">
               ${actionBtns}
             </div>
-            ${d.canWithdraw ? `<div class="withdraw-hint"><i class="fas fa-info-circle"></i> 当审批结果错误或需要加签时，可撤回审批</div>` : ''}
+            ${d.canWithdraw
+              ? `<div class="withdraw-hint"><i class="fas fa-info-circle"></i> 当审批结果错误或需要加签时，可撤回审批</div>`
+              : (d.enrolled
+                ? `<div class="withdraw-hint"><i class="fas fa-exclamation-circle"></i> 该患者入组审批已通过，若后续出现需复核的特殊情况，可在操作列发起补充审核</div>`
+                : '')}
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料
               <span style="color:#1677ff;margin-left:auto">5</span>
