@@ -2748,10 +2748,22 @@
     .proj-stage-empty { color: #999; font-size: 13px; padding: 8px 0; }
     .proj-stage-add { border-style: dashed; color: #1677ff; border-color: #91b8ff; background: #f5f9ff; }
     .proj-stage-add:hover { background: #e6f0ff; }
-    .proj-stage-add-form { display: inline-flex; align-items: center; gap: 8px; }
+    .proj-stage-add-form { display: inline-flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px dashed #91b8ff; border-radius: 8px; background: #f5f9ff; }
+    .psa-block { display: flex; flex-direction: column; gap: 5px; }
+    .psa-label { font-size: 12px; color: #666; font-weight: 500; }
+    .psa-colors { display: flex; flex-direction: row; gap: 6px; align-items: center; }
+    .psa-color { width: 20px; height: 20px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); transition: transform .12s; }
+    .psa-color:hover { transform: scale(1.12); }
+    .psa-color.sel { border-color: #1a1a1a; box-shadow: 0 0 0 2px #fff, 0 0 0 3px #1677ff; }
+    .psa-actions { flex-direction: row; gap: 8px; align-items: flex-end; }
     .proj-stage-hint { margin-top: 10px; font-size: 12px; color: #999; line-height: 1.6; }
     .proj-stage-audit-panel { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fff; margin-bottom: 12px; }
     .proj-stage-audit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .proj-stage-audit-head-right { display: flex; align-items: center; gap: 12px; }
+    .proj-stage-move { display: inline-flex; gap: 4px; }
+    .icon-btn { width: 26px; height: 26px; border: 1px solid #d9d9d9; background: #fff; border-radius: 6px; cursor: pointer; color: #555; display: inline-flex; align-items: center; justify-content: center; transition: all .12s; }
+    .icon-btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; background: #f0f6ff; }
+    .icon-btn:disabled { opacity: .35; cursor: not-allowed; }
     .proj-stage-audit-name { font-size: 13px; font-weight: 600; color: #1677ff; display: flex; align-items: center; gap: 6px; }
     .proj-stage-audit-types { display: flex; flex-wrap: wrap; gap: 8px; }
     .proj-audit-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid #e5e6eb; border-radius: 14px; font-size: 12px; color: #555; background: #fafbfc; cursor: pointer; user-select: none; transition: all 0.15s; }
@@ -6085,7 +6097,20 @@ document.addEventListener('click', function(e) {
 function openDetailById(id) {
   const row = auditData.find(r => r.id === id);
   if (!row) return;
-  openDetailRow(row);
+  // 跳转至审核详情页（match-detail-check.html），并标记来源为审核列表
+  const params = new URLSearchParams();
+  params.set('id', row.id);
+  params.set('screenNo', row.screenNo || '');
+  params.set('patientNo', row.patientNo || '');
+  params.set('schemeNo', row.planNo || '');
+  params.set('age', row.age || '');
+  params.set('gender', row.gender || '');
+  params.set('centerNo', row.centerNo || '');
+  params.set('center', row.center || '');
+  params.set('projectName', row.projectName || '');
+  params.set('from', 'audit');
+  params.set('logged', '1');
+  window.location.href = 'match-detail-check.html?' + params.toString();
 }
 
 function openDetailRow(row) {
@@ -6878,12 +6903,50 @@ function updatePRDPanel(mod, sub) {
           title: '★ 修改点③ 项目中配置（本次修改）',
           content: `<ul class="prd-list">
              <li><strong>页面右侧加了页面导航：点击对应的导航，左侧内容需要到对应的区域</strong></li>
-            <li><strong>阶段设置</strong>：项目编辑/新建页新增「阶段设置」模块，默认勾选 <strong>预筛 + 入组</strong>；可增删项目所需阶段(如果项目阶段已经在下面启用或者是 已经有患者数据进入了 这个阶段了，则不能删除和取消选择)，只能选择「系统管理 → 审批阶段配置」中已启用的阶段，本项目中如果有特殊的阶段可以定义，只是项目级别的，不用保存到 模板中。</li>
-            <li><strong>阶段审批类型</strong>：每个已选阶段独立勾选本项目需要的审批类型，默认带入该阶段在阶段配置中维护的审批类型；审批类型来源为「系统管理 → 审批类型配置」。</li>
+             <li><strong>项目管理的列表上加了 “页面版本”按钮</strong></li>
+             <li><strong>功能优化： 1. 思考链 跟入排和筛选表绑定， 入排和筛选表在哪个阶段启用，就需要在不同阶段显示不同的思考链；2. 流程模板 删除判断的时候，加一个  删除的条件，只判断有效的患者数据是否启用，删除了的不算在内</strong></li>
+            <li><strong>审批阶段设置</strong>：
+              <ul><li>项目编辑/新建页新增「审批阶段设置」模块，默认勾选 <strong>预筛 + 入组</strong>默认行为：</li><li>
+                新建项目时，默认勾选「预筛」和「入组」两个阶段。</li><li>
+                阶段增删规则：</li><li>
+                可选范围：仅允许选择「系统管理 → 审批阶段配置」中状态为“已启用”的阶段。</li><li>
+                不可删除/取消勾选的条件（满足任一即锁定）：</li><li>
+                该阶段在下方列表中已处于“启用”状态。</li><li>
+                该项目下已有患者数据进入该阶段。</li><li>
+                项目级自定义：支持在项目级别定义特殊阶段，该配置仅对当前项目生效，不同步保存至系统全局模板。</li>
+                 顺序调整：</li><li>
+               1.  默认阶段顺序继承自系统模板。</li><li>
+                2. 支持在当前项目中通过排序功能调整阶段顺序。</li><li>
+                3. 业务影响：调整后的顺序即为该项目后续实际执行的审批流顺序。</li>
+                </ul></li>
+            <li><strong>阶段审批类型</strong>：
+              <ul><li>
+              配置逻辑：</li><li>
+                1.每个已选阶段独立配置本项目所需的审批类型，这个审核类型 用于后面 判断 在什么样的审核流下 进行不同阶段的匹配。</li><li>
+                2.默认值：自动带入该阶段在「系统管理 → 审批阶段配置」中维护的审批类型。</li><li>
+                3. 数据来源：「系统管理 → 审批类型配置」。</li>
+                <li>这个地方开发和测试的时候注意一下：有一个逻辑的问题，就是 每个阶段包含的审核类型  不要随便组合测试，按照常用的测试，因为还跟 审核流程 有一点关系，比如审核流程的顺序是 预筛-主知情-入组，那在这边配置的时候 ，
+                  就不能选择 预筛阶段 可以选择 预筛和入组，筛选阶段选择 主知情了，会乱掉，这两部分 从业务上 是有逻辑顺序的
+                  <li>如果审批阶段配置的审核类型多于 审核模板，在审核的时候，以审核流程为主</li>
+                  <li>保存的时候，校验 阶段综合下来的 包含的审核类型顺序 是不是 跟 审核流程 的顺序是一致的，如果不一致，就提示 审核阶段设置的顺序和审核模板不一致  不让保存</li>
+                  </li>
+                </ul>
+              </li>
              <li><strong>每个项目中都选择了对应的审核阶段和阶段对应的审核类型，在后面项目匹配的时候，就根据这个来匹配，进入到哪个项目审核流了，就知道 对应哪个阶段的匹配了。</strong>假设 选择了 筛选阶段包括 入组审核，那么 项目匹配的时候，判断一下 审核流程的类型是不是匹配的</li>
-            <li><strong style="color:red">入排、筛选表、合并症和合并药物按阶段配置：上面选择 阶段设置，然后 涉及到所有的审批阶段 都是灵活的变成上面选择的阶段。</strong></li>
-             <li>「项目入排标准」按版本管理；入选/排除标准的每一行，针对每个已选阶段提供 <strong>备注</strong> 输入和 <strong>是否启用</strong> 开关。</li>
-            <li><strong>加了 合并症和合并药物的配置</strong>：可以选择在每个阶段配置是否要提取对应的合并症和合并药物，但是在选择启用任何一个阶段的时候，备注 必须是必填项</li>
+            <li><strong style="color:red">入排、筛选表、合并症和合并药物按阶段配置：</strong>
+              <ul><li> 入排标准、合并症与合并药物的阶段化配置
+                联动逻辑：</li><li>
+                「项目入排标准」、「合并症配置」、「合并药物配置」的审批阶段选项，动态读取「阶段设置」中已选的阶段列表。</li><li>
+                入排标准版本与阶段配置：</li><li>
+                版本管理：「项目入排标准」支持按版本管理。</li><li>
+                阶段级配置：入选/排除标准的每一行，针对每个已选阶段提供：</li><li>
+                备注：文本输入框。</li><li>
+                是否启用：开关控件。</li><li>
+              <strong style="color:red">  合并症/合并药物提取配置：</strong></li><li>
+                支持按阶段配置是否提取合并症/合并药物。</li><li>
+                强制校验：若某阶段开启了“提取合并症/合并药物”，则「备注」字段为必填项，否则无法保存。</li></ul>
+              
+              </li>
              <li>「项目入排标准」页面展示做了调整</li>
             <li><strong>历史数据刷新</strong>：
               <ul>
@@ -7733,7 +7796,7 @@ function openScPatientDetail(patientId, schemeNo) {
   params.set('centerNo', patient.centerNo || '');
   params.set('center', patient.center || '');
   params.set('projectName', patient.projectName || '');
-  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
+  window.location.href = 'match-detail-' + getPageVersion(schemeNo, 'match') + '.html?' + params.toString();
 }
 
 // ==================== 匹配详情全屏页（原 match-detail-new.html） ====================
@@ -7793,7 +7856,7 @@ function openMatchDetail(patientId, schemeNo) {
   params.set('centerNo', p.centerNo || '');
   params.set('center', p.center || '');
   params.set('projectName', p.projectName || '');
-  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
+  window.location.href = 'match-detail-' + getPageVersion(schemeNo, 'match') + '.html?' + params.toString();
 }
 
 function closeMatchDetail() {
@@ -7831,7 +7894,7 @@ function goToNewMatchDetail() {
   params.set('centerNo', p.centerNo || '');
   params.set('center', p.center || '');
   params.set('projectName', p.projectName || '');
-  window.location.href = '../custom_match/match-detail-new.html?' + params.toString();
+  window.location.href = 'match-detail-new.html?' + params.toString();
 }
 
 function switchMdTab(tab) {
@@ -9241,6 +9304,8 @@ let _stageConfigData = [
   { id:'ST02', name:'筛选阶段', order:2, color:'#722ed1', auditTypes:['筛选审批','导入审批'], status:'enabled', remark:'正式筛选入组资格阶段', updater:'李明', time:'2026-06-18 14:20' },
   { id:'ST03', name:'入组阶段', order:3, color:'#52c41a', auditTypes:['入组审批'], status:'enabled', remark:'患者入组确认阶段', updater:'张管理', time:'2026-06-15 09:15' },
 ];
+// 新增阶段时默认选中的颜色（在 renderProjectStageSettings 中按未占用色刷新）
+let _addStageSelColor = '#1677ff';
 // ==================== 审批类型配置（独立功能，不再归属字典） ====================
 // 每条审批类型维护：编码、名称、排序、颜色、图标、状态
 let _auditTypeConfigData = [
@@ -10894,6 +10959,199 @@ function saveCenterApprovalFlow(centerName, centerNo) {
   }
 }
 
+// ============ 页面版本配置（按项目配置 + 系统默认；持久化到数据库 /api/pv） ============
+// 内存缓存（同步读取用），打开页面/点击前从数据库加载
+let PV_STATE = { projects: {} };
+let PV_LOADED = false;
+
+function pvLocalCache() {
+  try { return JSON.parse(localStorage.getItem('pv_cfg') || 'null'); } catch (e) { return null; }
+}
+async function pvLoad() {
+  try {
+    const r = await fetch('/api/pv', { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      PV_STATE = { defaults: d.defaults || { match: 'new', audit: 'old' }, projects: d.projects || {} };
+      PV_LOADED = true;
+      try { localStorage.setItem('pv_cfg', JSON.stringify(PV_STATE)); } catch (e) {}
+      return;
+    }
+  } catch (e) { /* 后端不可用时走本地缓存 */ }
+  const fb = pvLocalCache();
+  if (fb && fb.projects) PV_STATE = { projects: fb.projects };
+  PV_LOADED = true;
+}
+async function pvSave(payload) {
+  // 乐观更新缓存
+  if (payload.key) {
+    if (!PV_STATE.projects[payload.key]) PV_STATE.projects[payload.key] = {};
+    PV_STATE.projects[payload.key].list = payload.list;
+  }
+  try { localStorage.setItem('pv_cfg', JSON.stringify(PV_STATE)); } catch (e) {}
+  // 写入数据库
+  try {
+    const r = await fetch('/api/pv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.db && d.db.projects) {
+        PV_STATE.projects = d.db.projects;
+        try { localStorage.setItem('pv_cfg', JSON.stringify(PV_STATE)); } catch (e) {}
+      }
+    }
+  } catch (e) { /* 离线：仅本地缓存 */ }
+}
+// 取某项目某模块的生效版本：返回 'new' / 'old'（决定展示哪个物理页面）
+function getPageVersion(key, page) {
+  const proj = PV_STATE.projects[key];
+  if (proj && Array.isArray(proj.list)) {
+    const rec = proj.list.find(function(r){ return r.module === page; });
+    if (rec && rec.defaultView) return rec.defaultView;
+  }
+  return page === 'audit' ? 'old' : 'new';
+}
+
+// 模块选项
+function pvModuleOptions(sel) {
+  return '<option value="match"' + (sel==='match'?' selected':'') + '>智能筛选-匹配详情</option>' +
+         '<option value="audit"' + (sel==='audit'?' selected':'') + '>审核列表-查看</option>';
+}
+// 版本号选项
+function pvVersionOptions(sel) {
+  return ['v1.0','v1.5','v2.0','v2.1','v3.0'].map(function(v){
+    return '<option value="'+v+'"'+(sel===v?' selected':'')+'>'+v+'</option>';
+  }).join('');
+}
+// 默认查看选项
+function pvViewOptions(sel) {
+  return '<option value="new"' + (sel==='new'?' selected':'') + '>新版本</option>' +
+         '<option value="old"' + (sel==='old'?' selected':'') + '>旧版本</option>';
+}
+// 生成一行 HTML
+function pvRowHtml(rec) {
+  rec = rec || {};
+  const mod = rec.module || 'match';
+  const ver = rec.newVersion || 'v2.0';
+  const view = rec.defaultView || 'new';
+  const viewLabel = view === 'new' ? ('新版本页面（' + ver + '）') : '旧版本页面';
+  return '<tr class="pv-row">' +
+    '<td style="padding:8px;border-bottom:1px solid #f5f5f5"><select class="form-select pv-mod" onchange="pvRowChanged(this)">' + pvModuleOptions(mod) + '</select></td>' +
+    '<td style="padding:8px;border-bottom:1px solid #f5f5f5"><select class="form-select pv-ver" onchange="pvRowChanged(this)">' + pvVersionOptions(ver) + '</select></td>' +
+    '<td style="padding:8px;border-bottom:1px solid #f5f5f5"><select class="form-select pv-view" onchange="pvRowChanged(this)">' + pvViewOptions(view) + '</select></td>' +
+    '<td style="padding:8px;border-bottom:1px solid #f5f5f5;text-align:center"><button class="btn btn-danger btn-sm" onclick="pvDelRow(this)"><i class="fa-solid fa-trash"></i></button></td>' +
+    '</tr>';
+}
+function pvRowChanged(sel) {
+  const tr = sel.closest('tr');
+  const ver = tr.querySelector('.pv-ver').value;
+  const view = tr.querySelector('.pv-view').value;
+  const viewLabel = view === 'new' ? ('新版本页面（' + ver + '）') : '旧版本页面';
+  tr.querySelector('.pv-effect').textContent = '→ 进入展示：' + viewLabel;
+}
+function pvDelRow(btn) {
+  const tr = btn.closest('tr');
+  if (tr && tr.parentNode) tr.parentNode.removeChild(tr);
+}
+function pvAddRow() {
+  const tb = document.getElementById('pvListBody');
+  if (tb) tb.insertAdjacentHTML('beforeend', pvRowHtml({ module:'match', newVersion:'v2.0', defaultView:'new' }));
+}
+
+async function openPageVersion(schemeNo, code, name) {
+  await pvLoad(); // 打开前刷新数据库最新配置
+  const key = schemeNo || code || '';
+  const proj = PV_STATE.projects[key] || {};
+  const list = (proj.list && proj.list.length) ? proj.list : [
+    { module:'match', newVersion:'v2.0', defaultView:'new' },
+    { module:'audit', newVersion:'v2.0', defaultView:'old' }
+  ];
+  let overlay = document.getElementById('pageVersionModal');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'pageVersionModal';
+    overlay.className = 'modal-overlay';
+    document.body.appendChild(overlay);
+  }
+  const rowsHtml = list.map(function(r){ return pvRowHtml(r); }).join('');
+  overlay.innerHTML = '<div class="modal-panel" style="width:min(960px,94vw);max-height:88vh;display:flex;flex-direction:column">' +
+    '<div class="modal-header">' +
+      '<h3><i class="fa-solid fa-layer-group" style="color:#1677ff;margin-right:8px"></i>页面版本配置</h3>' +
+      '<button class="modal-close" onclick="closePageVersion()">&times;</button>' +
+    '</div>' +
+    '<div class="modal-body" style="display:flex;padding:0;overflow:hidden" onclick="if(event.target===this)closePageVersion()">' +
+      '<div style="flex:1;min-width:0;padding:20px;overflow-y:auto">' +
+        '<div style="font-size:13px;color:#666;margin-bottom:6px">项目：<b style="color:#1a1a1a">' + (code||'—') + '</b>' + (name?' · '+name:'') + ' <span style="color:#999">（' + (key||'—') + '）</span></div>' +
+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+          '<div style="font-weight:600;color:#333">页面版本配置列表</div>' +
+          '<button class="btn btn-primary btn-sm" onclick="pvAddRow()"><i class="fa-solid fa-plus"></i> 新增</button>' +
+        '</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px">' +
+          '<thead><tr style="background:#fafbfc;text-align:left">' +
+            '<th style="padding:8px;border-bottom:1px solid #eee">模块</th>' +
+            '<th style="padding:8px;border-bottom:1px solid #eee">配置的新版本</th>' +
+            '<th style="padding:8px;border-bottom:1px solid #eee">默认查看</th>' +
+            '<th style="padding:8px;border-bottom:1px solid #eee">操作</th>' +
+          '</tr></thead>' +
+          '<tbody id="pvListBody">' + rowsHtml + '</tbody>' +
+        '</table>' +
+        '<div style="font-size:12px;color:#999;margin-top:6px">说明：每条记录选择「模块 → 配置的新版本号 → 默认查看（新/旧版本）」；进入页面时按「默认查看」展示对应版本，新旧版本可以切换。</div>' +
+
+        '<div style="margin-top:18px;display:flex;justify-content:flex-end;gap:10px">' +
+          '<button class="btn btn-cancel" onclick="closePageVersion()">取消</button>' +
+          '<button class="btn btn-primary" onclick="savePageVersion(\'' + key + '\')"><i class="fa-solid fa-floppy-disk" style="margin-right:4px"></i>保存</button>' +
+        '</div>' +
+      '</div>' +
+
+      '<div style="width:320px;flex-shrink:0;background:#fffbeb;padding:20px;overflow-y:auto;border-left:2px dashed #fcd34d">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span style="width:26px;height:26px;border-radius:6px;background:#f59e0b;color:#fff;display:inline-flex;align-items:center;justify-content:center"><i class="fa-solid fa-file-lines"></i></span><b style="color:#b45309">PRD · 页面版本配置</b></div>' +
+        '<div style="background:#fff;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:10px">' +
+          '<b style="color:#b45309;font-size:12px">功能概述</b>' +
+          '<p style="font-size:12px;color:#555;line-height:1.7;margin-top:4px">以「配置列表」方式，为每个项目设置各模块的页面版本：选择模块 → 配置该模块的新版本号 → 选择默认查看（新版本 / 旧版本）。进入页面即按「默认查看」展示对应版本。每个项目不同的页面，最多可以配置一个版本，旧版本一直保留，新旧版本在页面上可以切换。</p>' +
+        '</div>' +
+        '<div style="background:#fff;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:10px">' +
+          '<b style="color:#b45309;font-size:12px">字段说明</b>' +
+          '<ul style="font-size:12px;color:#555;line-height:1.7;margin:4px 0 0;padding-left:16px">' +
+            '<li><b>模块</b>：智能筛选-匹配详情 / 审核列表-查看。</li>' +
+            '<li><b>配置的新版本</b>：该模块当前「新版本」对应的版本号（如 v2.0）。</li>' +
+            '<li><b>默认查看</b>：进入页面时默认展示新版本还是旧版本。</li>' +
+          '</ul>' +
+        '</div>' +
+        '<div style="background:#fff;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-bottom:10px">' +
+          '<b style="color:#b45309;font-size:12px">交互流程</b>' +
+          '<p style="font-size:12px;color:#555;line-height:1.7;margin-top:4px">项目管理「页面版本」→ 新增/编辑记录（模块+新版本号+默认查看）→ 保存到数据库 → 进入页面按默认查看渲染 → 页面内可切换。</p>' +
+        '</div>' +
+       
+      '</div>' +
+    '</div>' +
+  '</div>';
+  overlay.classList.add('open');
+}
+function closePageVersion() {
+  const o = document.getElementById('pageVersionModal');
+  if (o) o.classList.remove('open');
+}
+async function savePageVersion(key) {
+  const rows = Array.prototype.slice.call(document.querySelectorAll('#pvListBody tr.pv-row'));
+  const list = rows.map(function(tr){
+    return {
+      module: tr.querySelector('.pv-mod').value,
+      newVersion: tr.querySelector('.pv-ver').value,
+      defaultView: tr.querySelector('.pv-view').value
+    };
+  });
+  await pvSave({ key: key, list: list });
+  const sum = list.map(function(r){
+    return '· ' + (r.module==='match'?'智能筛选-匹配详情':'审核列表-查看') + '：新版=' + r.newVersion + '，默认查看=' + (r.defaultView==='new'?'新版本':'旧版本');
+  }).join('\n');
+  // alert('页面版本配置已保存到数据库\n项目：' + (key || '—') + '\n\n' + sum);
+  closePageVersion();
+}
+
 function buildAdminProjects() {
   // 列设置状态（默认显示的列）
   if(!window._projColConfig) {
@@ -10908,24 +11166,22 @@ function buildAdminProjects() {
 
   const projects = [
     { index:1, code:'324234', schemeNo:'324234', name:'324234', phase:'准备中', sponsor:'', indication:'肺癌', staging:'', pmUser:'', medicalUser:'', leader:'', status:'', domain:'', createName:'刘慧娟', createTime:'2026-06-04 15:09:36', updateName:'刘慧娟', updateTime:'2026-06-04 15:31:44', ops:['编辑','删除'] },
-    { index:2, code:'测试主知情', schemeNo:'测试主知情', name:'测试主知情', phase:'进行中', sponsor:'', indication:'乳腺癌', staging:'', pmUser:'水洋洋', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'水洋洋', createTime:'2026-05-22 19:16:39', updateName:'胡帅', updateTime:'2026-06-04 11:29:41', ops:['编辑','下架','删除'] },
-    { index:3, code:'HSTEST0522', schemeNo:'001', name:'HSTEST0522', phase:'进行中', sponsor:'测试', indication:'', staging:'', pmUser:'胡帅', medicalUser:'', leader:'', status:'', domain:'', createName:'胡帅', createTime:'2026-05-22 13:15:06', updateName:'超管', updateTime:'2026-05-28 18:00:52', ops:['编辑','删除'] },
-    { index:4, code:'CY0522', schemeNo:'0522', name:'0522', phase:'进行中', sponsor:'', indication:'妇科肿瘤,消化肿瘤,泌尿系肿瘤', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-22 09:46:57', updateName:'沈娟', updateTime:'2026-06-08 14:38:19', ops:['编辑','下架','删除'] },
-    { index:5, code:'CY052102', schemeNo:'052102', name:'052102', phase:'进行中', sponsor:'', indication:'乳腺癌,肺癌,妇科肿瘤,消化肿瘤,泌尿系肿瘤', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 18:44:28', updateName:'沈娟', updateTime:'2026-05-21 18:44:28', ops:['编辑','下架','删除'] },
-    { index:6, code:'CY0521-其他', schemeNo:'052101', name:'052101', phase:'进行中', sponsor:'', indication:'其他', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 15:41:33', updateName:'胡帅', updateTime:'2026-05-21 17:26:30', ops:['编辑','下架','删除'] },
-    { index:7, code:'CY0521', schemeNo:'0521', name:'0251', phase:'进行中', sponsor:'', indication:'代谢内分泌疾病,血液类疾病,风湿免疫性疾病', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 13:52:39', updateName:'沈娟', updateTime:'2026-06-04 13:40:53', ops:['编辑','下架','删除'] },
-    { index:8, code:'测试相同项目', schemeNo:'测试相同项目', name:'测试相同项目', phase:'进行中', sponsor:'', indication:'肺癌', staging:'', pmUser:'超管', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'超管', createTime:'2026-05-18 14:36:03', updateName:'王克', updateTime:'2026-05-20 19:58:16', ops:['编辑','下架','删除'] },
-    { index:9, code:'001ZJ测试', schemeNo:'乳腺癌-CSXM-001', name:'注射用化合物001对比注射用xxx在新辅助治疗后存在浸润癌残留的HER2阳性乳腺癌辅助治疗中的随机、开放、平行对照、多中心II期临床研究', phase:'进行中', sponsor:'测试申办方', indication:'肺癌', staging:'III期', pmUser:'运营部PM1881', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'运营部PM1881', createTime:'2026-05-18 10:59:21', updateName:'运营部PM1881', updateTime:'2026-05-19 16:05:05', ops:['编辑','下架','删除'] },
-    { index:10, code:'CY1659', schemeNo:'CY1659', name:'CY1659', phase:'进行中', sponsor:'', indication:'乳腺癌', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-15 14:22:10', updateName:'沈娟', updateTime:'2026-05-15 14:22:10', ops:['编辑','下架','删除'] },
+    { index:2, code:'测试主知情', schemeNo:'测试主知情', name:'测试主知情', phase:'进行中', sponsor:'', indication:'乳腺癌', staging:'', pmUser:'水洋洋', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'水洋洋', createTime:'2026-05-22 19:16:39', updateName:'胡帅', updateTime:'2026-06-04 11:29:41', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:3, code:'HSTEST0522', schemeNo:'001', name:'HSTEST0522', phase:'进行中', sponsor:'测试', indication:'', staging:'', pmUser:'胡帅', medicalUser:'', leader:'', status:'', domain:'', createName:'胡帅', createTime:'2026-05-22 13:15:06', updateName:'超管', updateTime:'2026-05-28 18:00:52', ops:['编辑','患者标签设置','删除'] },
+    { index:4, code:'CY0522', schemeNo:'0522', name:'0522', phase:'进行中', sponsor:'', indication:'妇科肿瘤,消化肿瘤,泌尿系肿瘤', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-22 09:46:57', updateName:'沈娟', updateTime:'2026-06-08 14:38:19', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:5, code:'CY052102', schemeNo:'052102', name:'052102', phase:'进行中', sponsor:'', indication:'乳腺癌,肺癌,妇科肿瘤,消化肿瘤,泌尿系肿瘤', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 18:44:28', updateName:'沈娟', updateTime:'2026-05-21 18:44:28', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:6, code:'CY0521-其他', schemeNo:'052101', name:'052101', phase:'进行中', sponsor:'', indication:'其他', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 15:41:33', updateName:'胡帅', updateTime:'2026-05-21 17:26:30', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:7, code:'CY0521', schemeNo:'0521', name:'0251', phase:'进行中', sponsor:'', indication:'代谢内分泌疾病,血液类疾病,风湿免疫性疾病', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-21 13:52:39', updateName:'沈娟', updateTime:'2026-06-04 13:40:53', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:8, code:'测试相同项目', schemeNo:'测试相同项目', name:'测试相同项目', phase:'进行中', sponsor:'', indication:'肺癌', staging:'', pmUser:'超管', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'超管', createTime:'2026-05-18 14:36:03', updateName:'王克', updateTime:'2026-05-20 19:58:16', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:9, code:'001ZJ测试', schemeNo:'乳腺癌-CSXM-001', name:'注射用化合物001对比注射用xxx在新辅助治疗后存在浸润癌残留的HER2阳性乳腺癌辅助治疗中的随机、开放、平行对照、多中心II期临床研究', phase:'进行中', sponsor:'测试申办方', indication:'肺癌', staging:'III期', pmUser:'运营部PM1881', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'运营部PM1881', createTime:'2026-05-18 10:59:21', updateName:'运营部PM1881', updateTime:'2026-05-19 16:05:05', ops:['编辑','患者标签设置','下架','删除'] },
+    { index:10, code:'CY1659', schemeNo:'CY1659', name:'CY1659', phase:'进行中', sponsor:'', indication:'乳腺癌', staging:'', pmUser:'沈娟', medicalUser:'', leader:'', status:'已上架', domain:'', createName:'沈娟', createTime:'2026-05-15 14:22:10', updateName:'沈娟', updateTime:'2026-05-15 14:22:10', ops:['编辑','患者标签设置','下架','删除'] },
   ];
 
   // 操作按钮渲染（新版按钮样式）
   function renderOpBtns(row) {
     const btns = [];
-    // 已上架的项目显示"进入项目"按钮
-    if(row.status === '已上架') {
-      btns.push(`<span class="action-btn enter-project" title="进入项目" onclick="event.stopPropagation();switchModule('admin','project-edit')">进入项目</span>`);
-    }
+
+   
     row.ops.forEach(op => {
       let cls = '';
       let onclick = '';
@@ -10935,6 +11191,7 @@ function buildAdminProjects() {
       else if(op === '上架') cls = 'success';
       btns.push(`<span class="action-btn ${cls}" title="${op}" ${onclick}>${op}</span>`);
     });
+    btns.push(`<span class="action-btn" title="页面版本" onclick="event.stopPropagation();openPageVersion('${(row.schemeNo||row.code||'').replace(/'/g,'')}','${(row.code||'').replace(/'/g,'')}','${String(row.name||'').replace(/'/g,'').replace(/"/g,'')}')">页面版本</span>`);
     return btns.join('');
   }
 
@@ -13400,9 +13657,9 @@ function showWechatToast(msg, type) {
 
 // 审批阶段设置（项目管理新增/编辑页）：默认勾选预筛+入组
 const _defaultProjectSelectedStages = [
-  { id:'ST01', name:'预筛阶段', auditTypes:['预筛审批'] },
-  { id:'ST02', name:'随机阶段', auditTypes:['导入审批'] },
-  { id:'ST03', name:'入组阶段', auditTypes:['入组审批'] }
+  { id:'ST01', name:'预筛阶段', auditTypes:['预筛审批'], order:1 },
+  { id:'ST02', name:'随机阶段', auditTypes:['导入审批'], order:2 },
+  { id:'ST03', name:'入组阶段', auditTypes:['入组审批'], order:3 }
 ];
 let _projectSelectedStages = JSON.parse(JSON.stringify(_defaultProjectSelectedStages));
 
@@ -13900,61 +14157,14 @@ function buildAdminProjectEdit(isNew) {
             <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addThinkChain()">
               <i class="fa-solid fa-plus"></i> 新增思考链
             </button>
-            <span class="edit-section-arrow" id="thinkChainArrow">▼</span>
+             <span class="edit-section-arrow" id="thinkChainArrow">▼</span>
           </div>
         </div>
         <div class="edit-section-body" id="thinkChainBody">
-          <table class="edit-inline-table">
-            <thead>
-              <tr>
-                <th style="width:60px">序号</th>
-                <th>思考链名称</th>
-                <th>关联条件</th>
-                <th style="width:100px">优先级</th>
-                <th style="width:80px">状态</th>
-                <th style="width:150px">更新时间</th>
-                <th style="width:120px">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td><strong>入排检查链路</strong></td>
-                <td><span class="edit-tag edit-tag-blue">性别=女</span> <span class="edit-tag edit-tag-blue">年龄≥18</span></td>
-                <td><span class="edit-tag edit-tag-orange">高</span></td>
-                <td><span class="edit-tag edit-tag-green">启用</span></td>
-                <td>2026-06-20 14:30</td>
-                <td>
-                  <span class="action-link" onclick="alert('编辑思考链')">编辑</span>
-                  <span class="action-link danger" onclick="alert('删除')">删除</span>
-                </td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td><strong>既往治疗评估</strong></td>
-                <td><span class="edit-tag edit-tag-blue">既往治疗史</span></td>
-                <td><span class="edit-tag edit-tag-blue">中</span></td>
-                <td><span class="edit-tag edit-tag-green">启用</span></td>
-                <td>2026-06-19 10:15</td>
-                <td>
-                  <span class="action-link" onclick="alert('编辑思考链')">编辑</span>
-                  <span class="action-link danger" onclick="alert('删除')">删除</span>
-                </td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td><strong>合并用药检查</strong></td>
-                <td><span class="edit-tag edit-tag-blue">合并用药</span></td>
-                <td><span class="edit-tag edit-tag-blue">中</span></td>
-                <td><span class="edit-tag edit-tag-green">启用</span></td>
-                <td>2026-06-18 16:00</td>
-                <td>
-                  <span class="action-link" onclick="alert('编辑思考链')">编辑</span>
-                  <span class="action-link danger" onclick="alert('删除')">删除</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+           <div style="text-align:center;padding:40px;color:#999">
+              <div style="font-size:32px;margin-bottom:12px">🧠</div>
+              <div>暂无该类型的思考链结果</div>
+            </div>
         </div>
       </div>
 
@@ -14107,13 +14317,21 @@ function renderProjectStageSettings() {
       </label>
     `;
   }).join('');
-  const auditPanels = _projectSelectedStages.map(stage => {
+  const auditPanels = _projectSelectedStages.map((stage, i) => {
     const allAuditTypes = getAuditTypeList();
+    const isFirst = i === 0;
+    const isLast = i === _projectSelectedStages.length - 1;
     return `
       <div class="proj-stage-audit-panel">
         <div class="proj-stage-audit-header">
           <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> ${stage.name}</div>
-          <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+          <div class="proj-stage-audit-head-right">
+            <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+            <span class="proj-stage-move">
+              <button class="icon-btn" ${isFirst ? 'disabled' : ''} title="上移" onclick="moveProjectStage('up','${stage.id}')"><i class="fa-solid fa-arrow-up"></i></button>
+              <button class="icon-btn" ${isLast ? 'disabled' : ''} title="下移" onclick="moveProjectStage('down','${stage.id}')"><i class="fa-solid fa-arrow-down"></i></button>
+            </span>
+          </div>
         </div>
         <div class="proj-stage-audit-types">
           ${allAuditTypes.map(t => {
@@ -14129,6 +14347,20 @@ function renderProjectStageSettings() {
       </div>
     `;
   }).join('');
+  // 新增阶段：颜色与顺序选项
+  const _stageColorPalette = ['#1677ff','#722ed1','#52c41a','#fa8c16','#13c2c2','#eb2f96','#f5222d','#faad14','#2f54eb','#fa541c'];
+  const usedColors = new Set(_stageConfigData.map(s => s.color));
+  const defaultAddColor = _stageColorPalette.find(c => !usedColors.has(c)) || _stageColorPalette[0];
+  _addStageSelColor = defaultAddColor;
+  const colorSwatches = _stageColorPalette.map(c => `
+    <span class="psa-color ${c === defaultAddColor ? 'sel' : ''}" data-color="${c}" title="${c}" style="background:${c}" onclick="selectAddStageColor('${c}', this)"></span>
+  `).join('');
+  let orderOptions = [];
+  if(_projectSelectedStages.length){
+    orderOptions.push(`<option value="first">放在第一位（第 1 位）</option>`);
+    _projectSelectedStages.forEach((s, i) => orderOptions.push(`<option value="${s.id}">在「${s.name}」之后（第 ${i + 2} 位）</option>`));
+  }
+  orderOptions.push(`<option value="last" selected>放在最后（第 ${_projectSelectedStages.length + 1} 位）</option>`);
   return `
     <div class="proj-stage-box">
       <div class="proj-stage-title"><span class="required">*</span> 选择审批阶段（可多选）</div>
@@ -14138,9 +14370,18 @@ function renderProjectStageSettings() {
           <i class="fa-solid fa-plus"></i><span>新增审批阶段</span>
         </label>
         <div class="proj-stage-add-form" id="projStageAddForm" style="display:none">
-          <input class="filter-input" id="projStageAddName" placeholder="输入阶段名称" style="width:180px" onkeydown="if(event.key==='Enter')confirmAddProjectStage()"/>
-          <button class="btn btn-primary btn-sm" onclick="confirmAddProjectStage()">确定</button>
-          <button class="btn btn-default btn-sm" onclick="cancelAddProjectStage()">取消</button>
+          <div class="psa-block">
+            <span class="psa-label">阶段名称</span>
+            <input class="filter-input" id="projStageAddName" placeholder="输入阶段名称" style="width:170px" onkeydown="if(event.key==='Enter')confirmAddProjectStage()"/>
+          </div>
+          <div class="psa-block">
+            <span class="psa-label">颜色</span>
+            <div class="psa-colors" id="projStageColorRow">${colorSwatches}</div>
+          </div>
+          <div class="psa-block psa-actions">
+            <button class="btn btn-primary btn-sm" onclick="confirmAddProjectStage()">确定</button>
+            <button class="btn btn-default btn-sm" onclick="cancelAddProjectStage()">取消</button>
+          </div>
         </div>
       </div>
       ${availableStages.length ? '' : '<div class="proj-stage-empty">暂无可选阶段，可点击下方「新增审批阶段」直接添加。</div>'}
@@ -14375,20 +14616,46 @@ function toggleProjectStage(stageId) {
       _projectSelectedStages.push({
         id: stageId,
         name: stageDef.name,
-        auditTypes: (stageDef.auditTypes || []).slice()
+        auditTypes: (stageDef.auditTypes || []).slice(),
+        order: _nextSelectedOrder()
       });
       ensureProjectCriteriaStageConfig(stageId);
       ensureProjectScreeningStageConfig(stageId);
     }
   }
-  // 按阶段配置里的顺序排序
-  const orderMap = new Map(_stageConfigData.map((s, i) => [s.id, i]));
-  _projectSelectedStages.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
+  // 按已选阶段的显式顺序排序
+  _projectSelectedStages.sort((a, b) => (a.order || 0) - (b.order || 0));
+  _projectSelectedStages.forEach((s, i) => { s.order = i + 1; });
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
   refreshMergeConfigSections();
   showWechatToast(idx >= 0 ? '已取消选择该阶段' : '阶段已添加，可在入排标准 / 筛选表中配置');
+}
+
+// 取已选阶段当前最大顺序 +1，用于新增阶段追加到末尾
+function _nextSelectedOrder() {
+  let m = 0;
+  _projectSelectedStages.forEach(s => { m = Math.max(m, s.order || 0); });
+  return m + 1;
+}
+
+// 调整已选阶段的顺序：上移 / 下移
+function moveProjectStage(dir, stageId) {
+  const arr = _projectSelectedStages;
+  arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+  const i = arr.findIndex(s => s.id === stageId);
+  if(i < 0) return;
+  const j = dir === 'up' ? i - 1 : i + 1;
+  if(j < 0 || j >= arr.length) return;
+  const tmp = arr[i].order; arr[i].order = arr[j].order; arr[j].order = tmp;
+  arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+  arr.forEach((s, k) => { s.order = k + 1; });
+  refreshProjectStageSettings();
+  refreshCriteriaSection();
+  refreshScreeningSection();
+  refreshMergeConfigSections();
+  showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
 // 项目编辑页内联新增审批阶段：写入阶段配置并自动选中
@@ -14406,6 +14673,13 @@ function cancelAddProjectStage() {
   if(form) form.style.display = 'none';
   const input = document.getElementById('projStageAddName');
   if(input) input.value = '';
+}
+
+// 选中新增阶段的颜色
+function selectAddStageColor(color, el) {
+  _addStageSelColor = color;
+  document.querySelectorAll('#projStageColorRow .psa-color').forEach(n => n.classList.remove('sel'));
+  if(el) el.classList.add('sel');
 }
 
 function confirmAddProjectStage() {
@@ -14427,18 +14701,39 @@ function confirmAddProjectStage() {
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const timeStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  _stageConfigData.push({
-    id: newId, name: name, order: _stageConfigData.length + 1,
+  // 顺序：相对已选阶段放置（第一位 / 在 XX 之后 / 最后）
+  const posSel = document.getElementById('projStageAddOrder');
+  const pos = posSel ? posSel.value : 'last';
+  let insertIndex;
+  if(pos === 'first') insertIndex = 0;
+  else if(pos === 'last') insertIndex = _stageConfigData.length;
+  else { const k = _stageConfigData.findIndex(s => s.id === pos); insertIndex = k < 0 ? _stageConfigData.length : k + 1; }
+  const newStage = {
+    id: newId, name: name, order: 0, color: _addStageSelColor,
     auditTypes: [], status: 'enabled', remark: '项目编辑页内联新增', updater: '当前用户', time: timeStr
-  });
+  };
+  _stageConfigData.splice(insertIndex, 0, newStage);
+  // 重新编号全局阶段顺序，保证选中顺序正确
+  _stageConfigData.forEach((s, i) => { s.order = i + 1; });
   // 自动选中该阶段
   if(!_projectSelectedStages.some(s => s.id === newId)) {
-    _projectSelectedStages.push({ id: newId, name: name, auditTypes: [] });
+    _projectSelectedStages.push({ id: newId, name: name, auditTypes: [], order: 0 });
     ensureProjectCriteriaStageConfig(newId);
     ensureProjectScreeningStageConfig(newId);
   }
-  const orderMap = new Map(_stageConfigData.map((s, i) => [s.id, i]));
-  _projectSelectedStages.sort((a, b) => (orderMap.get(a.id) || 0) - (orderMap.get(b.id) || 0));
+  // 依据选择的顺序，将新阶段放入已选阶段中的目标位置
+  const arr = _projectSelectedStages;
+  arr.sort((a, b) => (a.order || 0) - (b.order || 0));
+  const newIdx = arr.findIndex(s => s.id === newId);
+  let targetIndex;
+  if(pos === 'first') targetIndex = 0;
+  else if(pos === 'last') targetIndex = arr.length - 1;
+  else { const k = arr.findIndex(s => s.id === pos); targetIndex = k < 0 ? arr.length - 1 : k + 1; }
+  if(newIdx >= 0 && newIdx !== targetIndex) {
+    const ns = arr.splice(newIdx, 1)[0];
+    arr.splice(targetIndex, 0, ns);
+  }
+  arr.forEach((s, i) => { s.order = i + 1; });
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
@@ -15060,19 +15355,16 @@ function toggleMergeExtract(cfgType, checked) {
 function updateMergeEnabled(cfgType, stageId, enabled, el) {
   const data = getMergeConfig(cfgType);
   const title = cfgType === 'comorbidity' ? '合并症' : '合并用药';
-  // 启用时校验备注必填
-  if (enabled && !(data.remark && data.remark.trim())) {
-    if (el) {
-      el.checked = false;
-      const textSpan = el.closest('.merge-stage-toggle').querySelector('.merge-enabled-text');
-      if (textSpan) textSpan.textContent = '停用';
-    }
-    validateMergeConfigSections();
-    return;
-  }
   if(!data.stages[stageId]) data.stages[stageId] = { enabled: true };
   data.stages[stageId].enabled = enabled;
+  // 开关始终可点击：启用但备注为空时，保留开启状态并给出明确提示，不再静默回退
   validateMergeConfigSections();
+  if(enabled && !(data.remark && data.remark.trim())) {
+    showWechatToast('已启用「' + title + '」，请先填写备注说明（启用阶段前必填）');
+    const body = document.getElementById(cfgType === 'comorbidity' ? 'comorbidityBody' : 'conmedBody');
+    const input = body && body.querySelector('.merge-remark-input');
+    if(input) input.focus();
+  }
 }
 function updateMergeRemark(cfgType, remark) {
   getMergeConfig(cfgType).remark = remark;
@@ -17141,6 +17433,8 @@ function confirmRefKeyConcern() {
 
 // ==================== 页面加载时检查登录状态 ====================
 window.addEventListener('DOMContentLoaded', function() {
+  // 加载页面版本配置（数据库）
+  pvLoad();
   // 检查URL参数中是否有logged=1，如果有则自动跳过登录页
   const urlParams = new URLSearchParams(window.location.search);
   const logged = urlParams.get('logged');

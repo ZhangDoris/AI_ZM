@@ -60,7 +60,19 @@
     .proj-stage-empty { color: #999; font-size: 13px; padding: 8px 0; }
     .proj-stage-add { border-style: dashed; color: #1677ff; border-color: #91b8ff; background: #f5f9ff; }
     .proj-stage-add:hover { background: #e6f0ff; }
-    .proj-stage-add-form { display: inline-flex; align-items: center; gap: 8px; }
+    .proj-stage-add-form { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 12px 14px; border: 1px dashed #91b8ff; border-radius: 10px; background: #f5f9ff; margin-top: 10px; width: 100%; box-sizing: border-box; }
+    .proj-stage-add-form .add-form-label { font-size: 12px; color: #999; }
+    .proj-stage-add-form .add-form-input { padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; outline: none; }
+    .proj-stage-add-form .add-form-input:focus { border-color: #1677ff; }
+    .stage-color-swatches { display: inline-flex; gap: 6px; align-items: center; }
+    .stage-color-swatch { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 0 1px #d9d9d9; transition: transform .12s; }
+    .stage-color-swatch:hover { transform: scale(1.12); }
+    .stage-color-swatch.active { box-shadow: 0 0 0 2px #333; }
+    .stage-color-picker { width: 30px; height: 30px; padding: 0; border: none; background: none; cursor: pointer; }
+    .proj-stage-confirm-btn { padding: 6px 16px; border: none; border-radius: 6px; background: #1677ff; color: #fff; font-size: 13px; cursor: pointer; }
+    .proj-stage-confirm-btn:hover { background: #0958d9; }
+    .proj-stage-cancel-btn { padding: 6px 14px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; color: #666; font-size: 13px; cursor: pointer; }
+    .proj-stage-cancel-btn:hover { border-color: #999; color: #333; }
     .proj-stage-hint { margin-top: 10px; font-size: 12px; color: #999; line-height: 1.6; }
     .proj-stage-audit-panel { border: 1px solid #e8e8e8; border-radius: 8px; padding: 14px; background: #fff; margin-bottom: 12px; }
     .proj-stage-audit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -182,7 +194,15 @@
     /* ============ 小模块折叠 / 展开 ============ */
     .module-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; user-select: none; transition: background 0.15s; }
     .module-header:hover { background: #f7f9fc; }
-    .module-header h3, .module-header h4 { margin: 0 !important; }
+    .module-header h3, .module-header h4 { margin: 0 !important; flex: 1; display: flex; align-items: center; gap: 8px; }
+    .module-actions { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+    /* 标题内操作按钮（与原按钮风格一致） */
+    .btn { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; font-size: 13px; padding: 5px 12px; cursor: pointer; border: 1px solid transparent; line-height: 1.4; white-space: nowrap; background: none; font-family: inherit; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .btn-primary:hover { background: #0958d9; border-color: #0958d9; }
+    .btn-default { background: #fff; color: #333; border-color: #d9d9d9; }
+    .btn-default:hover { border-color: #1677ff; color: #1677ff; }
     .module-chevron { color: #9ca3af; font-size: 13px; transition: transform 0.2s ease; flex-shrink: 0; }
     .module-card.collapsed .module-chevron { transform: rotate(-90deg); }
     .module-body { padding: 0 20px 20px; }
@@ -323,16 +343,29 @@
               <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-puzzle-piece text-[#165DFF] mr-2"></i>阶段设置 <span class="text-red-500 text-sm font-normal">* 必填，至少选择一个阶段</span></h3>
               <div class="proj-stage-box">
                 <div class="proj-stage-title"><span class="required">*</span> 选择审批阶段（可多选）</div>
-                <div class="proj-stage-chips">
+                <div class="proj-stage-chips" id="stageChips">
                   <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#1677ff;margin-right:6px"></span><span>预筛阶段</span></label>
                   <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#52c41a;margin-right:6px"></span><span>入组阶段</span></label>
                   <label class="proj-stage-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#722ed1;margin-right:6px"></span><span>随机阶段</span></label>
-                  <label class="proj-stage-chip proj-stage-add"><i class="fa-solid fa-plus"></i><span>新增审批阶段</span></label>
+                  <label class="proj-stage-chip proj-stage-add" id="stageAddBtn" onclick="showAddStageForm()"><i class="fa-solid fa-plus"></i><span>新增审批阶段</span></label>
                 </div>
-                <div class="proj-stage-hint">支持从「系统管理 → 审批阶段配置」已有的启用阶段中多选；如本项目叫法不同，可直接「新增审批阶段」，新增后自动选中并进入下方审批类型配置。</div>
+                <!-- 新增审批阶段表单：设置名称、颜色、相对已选阶段的顺序 -->
+                <div class="proj-stage-add-form hidden" id="stageAddForm">
+                  <span class="add-form-label">阶段名称</span>
+                  <input id="newStageName" class="add-form-input" placeholder="如：随访阶段" style="width:150px">
+                  <span class="add-form-label">颜色</span>
+                  <span class="stage-color-swatches" id="stageColorSwatches"></span>
+                  <input type="color" id="newStageColor" class="stage-color-picker" value="#fa8c16" title="自定义颜色">
+                  <span class="add-form-label">顺序（相对已选阶段）</span>
+                  <select id="newStageOrder" class="add-form-input"></select>
+                  <button class="proj-stage-confirm-btn" onclick="confirmAddStage()">确定新增</button>
+                  <button class="proj-stage-cancel-btn" onclick="cancelAddStage()">取消</button>
+                </div>
+                <div class="proj-stage-hint">支持从「系统管理 → 审批阶段配置」已有的启用阶段中多选；如本项目叫法不同，可直接「新增审批阶段」，需设置颜色与相对已选阶段的顺序，新增后自动选中并进入下方审批类型配置。</div>
               </div>
               <!-- 各阶段审批类型配置 -->
-              <div class="proj-stage-audit-panel">
+              <div id="stageAuditContainer">
+              <div class="proj-stage-audit-panel" data-name="预筛阶段">
                 <div class="proj-stage-audit-header">
                   <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 预筛阶段</div>
                   <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
@@ -343,7 +376,7 @@
                   <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
                 </div>
               </div>
-              <div class="proj-stage-audit-panel">
+              <div class="proj-stage-audit-panel" data-name="入组阶段">
                 <div class="proj-stage-audit-header">
                   <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 入组阶段</div>
                   <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
@@ -354,7 +387,7 @@
                   <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
                 </div>
               </div>
-              <div class="proj-stage-audit-panel">
+              <div class="proj-stage-audit-panel" data-name="随机阶段">
                 <div class="proj-stage-audit-header">
                   <div class="proj-stage-audit-name"><i class="fa-solid fa-layer-group"></i> 随机阶段</div>
                   <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
@@ -365,11 +398,18 @@
                   <label class="proj-audit-chip selected"><input type="checkbox" checked/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
                 </div>
               </div>
+              </div>
             </div>
 
             <!-- ② 项目入排标准 -->
             <div class="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-scale-balanced text-[#165DFF] mr-2"></i>项目入排标准</h3>
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-scale-balanced text-[#165DFF] mr-2"></i>项目入排标准
+                <span class="module-actions">
+                  <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();addCriteriaVersion()"><i class="fa-solid fa-plus"></i> 新增版本</button>
+                  <button class="btn btn-default btn-sm" onclick="event.stopPropagation();copyCriteriaVersion()"><i class="fa-solid fa-copy"></i> 复制当前版本</button>
+                  <button class="btn btn-default btn-sm" onclick="event.stopPropagation();deleteCriteriaVersion()"><i class="fa-solid fa-trash"></i> 删除版本</button>
+                </span>
+              </h3>
               <div class="criteria-version-tabs">
                 <div class="criteria-version-tab active"><div class="ver-top"><span class="ver-name">入排标准 v3.0</span><span class="ver-dot on"></span></div><div class="ver-date">2026-07-20 · 张医生</div></div>
                 <div class="criteria-version-tab disabled-ver"><div class="ver-top"><span class="ver-name">入排标准 v2.0</span><span class="ver-dot off"></span></div><div class="ver-date">2026-06-11 · 李医生</div></div>
@@ -533,7 +573,11 @@
 
             <!-- ⑥ 审批模板配置 -->
             <div class="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-circle-check text-[#165DFF] mr-2"></i>审批模板配置</h3>
+              <h3 class="text-base font-semibold text-gray-800 mb-3"><i class="fas fa-circle-check text-[#165DFF] mr-2"></i>审批模板配置
+                <span class="module-actions">
+                  <span class="ref-template-btn" onclick="event.stopPropagation();showRefTemplateModal()"><i class="fa-solid fa-link"></i> 引用流程模板</span>
+                </span>
+              </h3>
               <p class="text-xs text-gray-400 mb-3">为各审批阶段配置对应的审批模板与审批流；点击模板行可展开 / 收起其下的流程节点（示例数据，仅展示布局）。</p>
               <div class="edit-inline-table" id="approvalConfigContainer">
                 <div class="edit-inline-head">
@@ -549,19 +593,21 @@
                 <!-- 模板：预筛审批模板（主流程模板） -->
                 <div class="edit-inline-edit-row template-row expanded" onclick="toggleSubRows(this)">
                   <div class="edit-inline-td template-name"><i class="fa-solid fa-caret-right sub-row-caret"></i>预筛审批模板<span class="edit-star">★ 主流程模板</span></div>
-                  <div class="edit-inline-td template-flows">共 3 个流程</div>
+                    <div class="edit-inline-td active">-</div>
+                  <div class="edit-inline-td active">生效</div>
+                  <div class="edit-inline-td active">2026-07-01</div>
+                   <div class="edit-inline-td active">-</div>
                   <div class="edit-inline-td template-actions">
-                    <span class="edit-tag edit-tag-blue">预筛审批</span>
-                    <span class="edit-tag edit-tag-orange">主知情审批</span>
-                    <span class="edit-tag edit-tag-teal">导入审批</span>
-                    <button class="ref-template-btn">引用模板</button>
+                    <span class="edit-tag edit-tag-blue">取消生效</span>
+                    <span class="edit-tag edit-tag-orange">删除</span>
+                    <span class="edit-tag edit-tag-teal" aria-disabled="true">主流程模板设置</span>
                   </div>
                 </div>
                 <div class="edit-inline-edit-row sub-row">
                   <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-blue">预筛审批</span></div>
                   <div class="edit-inline-td ver">v1.0</div>
                   <div class="edit-inline-td flow-name">预筛审批流程</div>
-                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+                  <div class="edit-inline-td active">生效</div>
                   <div class="edit-inline-td start-time">2024-01-01 00:00</div>
                   <div class="edit-inline-td end-time">2099-12-31 23:59</div>
                   <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
@@ -585,34 +631,7 @@
                   <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
                 </div>
 
-                <!-- 模板：主知情审批模板 -->
-                <div class="edit-inline-edit-row template-row expanded" onclick="toggleSubRows(this)">
-                  <div class="edit-inline-td template-name"><i class="fa-solid fa-caret-right sub-row-caret"></i>主知情审批模板</div>
-                  <div class="edit-inline-td template-flows">共 2 个流程</div>
-                  <div class="edit-inline-td template-actions">
-                    <span class="edit-tag edit-tag-orange">主知情审批</span>
-                    <span class="edit-tag edit-tag-teal">导入审批</span>
-                    <button class="ref-template-btn">引用模板</button>
-                  </div>
-                </div>
-                <div class="edit-inline-edit-row sub-row">
-                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-orange">主知情审批</span></div>
-                  <div class="edit-inline-td ver">v1.0</div>
-                  <div class="edit-inline-td flow-name">主知情审批流程</div>
-                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
-                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
-                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
-                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
-                </div>
-                <div class="edit-inline-edit-row sub-row">
-                  <div class="edit-inline-td sub-row-tag"><span class="edit-tag edit-tag-teal">导入审批</span></div>
-                  <div class="edit-inline-td ver">v1.0</div>
-                  <div class="edit-inline-td flow-name">导入审批流程</div>
-                  <div class="edit-inline-td active"><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
-                  <div class="edit-inline-td start-time">2024-01-01 00:00</div>
-                  <div class="edit-inline-td end-time">2099-12-31 23:59</div>
-                  <div class="edit-inline-td ops"><span class="config-action">编辑</span></div>
-                </div>
+                
               </div>
             </div>
 
@@ -639,11 +658,20 @@
 
         <!-- 底部导航 -->
         <div class="sticky bottom-0 mt-5 bg-white border border-gray-200 rounded-xl px-5 py-3 flex items-center justify-between shadow-sm">
-          <div class="text-xs text-gray-400">第 <span id="curStep" class="font-semibold text-[#165DFF]">1</span> / 4 步</div>
+          <div class="flex items-center gap-3">
+            <div class="text-xs text-gray-400">第 <span id="curStep" class="font-semibold text-[#165DFF]">1</span> / 4 步</div>
+            <!-- 步骤 1、2：返回列表 + 暂存 -->
+            <div id="grpStash" class="flex gap-3">
+              <button id="btnReturn" onclick="alert('返回列表（原型演示）')" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg btn-click"><i class="fas fa-list mr-1"></i>返回列表</button>
+              <button id="btnStash" onclick="alert('暂存成功（原型演示）')" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg btn-click"><i class="fas fa-save mr-1"></i>暂存</button>
+            </div>
+          </div>
           <div class="flex gap-3">
             <button id="btnPrev" onclick="goStep(currentStep-1)" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg btn-click disabled:opacity-40" disabled><i class="fas fa-arrow-left mr-1"></i>上一步</button>
             <button id="btnNext" onclick="goStep(currentStep+1)" class="px-5 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">下一步<i class="fas fa-arrow-right ml-1"></i></button>
-            <button id="btnFinish" onclick="alert('完成创建（原型演示）')" class="hidden px-5 py-2 bg-[#00B42A] hover:bg-green-600 text-white text-sm rounded-lg font-medium btn-click">完成创建</button>
+            <!-- 步骤 3、4：保存 + 保存并上架 -->
+            <button id="btnSave" onclick="alert('保存成功（原型演示）')" class="hidden px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg btn-click">保存</button>
+            <button id="btnSavePublish" onclick="alert('保存并上架成功（原型演示）')" class="hidden px-5 py-2 bg-[#00B42A] hover:bg-green-600 text-white text-sm rounded-lg font-medium btn-click">保存并上架</button>
           </div>
         </div>
       </div>
@@ -716,7 +744,11 @@
       // 底部按钮
       document.getElementById('btnPrev').disabled = (n === 1);
       document.getElementById('btnNext').classList.toggle('hidden', n === totalSteps);
-      document.getElementById('btnFinish').classList.toggle('hidden', n !== totalSteps);
+      // 步骤 1、2：返回列表 + 暂存；步骤 3、4：保存 + 保存并上架
+      const showStash = (n <= 2);
+      document.getElementById('grpStash').classList.toggle('hidden', !showStash);
+      document.getElementById('btnSave').classList.toggle('hidden', showStash);
+      document.getElementById('btnSavePublish').classList.toggle('hidden', showStash);
       document.getElementById('curStep').textContent = n;
       requestAnimationFrame(drawConnections);
     }
@@ -818,6 +850,112 @@
         n = n.nextElementSibling;
       }
     }
+
+    // ========== 新增审批阶段（设置名称/颜色/相对顺序） ==========
+    const STAGE_PRESET_COLORS = ['#1677ff', '#52c41a', '#722ed1', '#fa8c16', '#eb2f96', '#13c2c2', '#f5222d', '#faad14'];
+    let stageActiveColor = '#fa8c16';
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function renderStageColorSwatches() {
+      const box = document.getElementById('stageColorSwatches');
+      box.innerHTML = STAGE_PRESET_COLORS.map(c =>
+        `<span class="stage-color-swatch${c === stageActiveColor ? ' active' : ''}" style="background:${c}" data-color="${c}" onclick="pickStageColor('${c}')"></span>`
+      ).join('');
+    }
+
+    function pickStageColor(c) {
+      stageActiveColor = c;
+      document.getElementById('newStageColor').value = c;
+      renderStageColorSwatches();
+    }
+
+    function showAddStageForm() {
+      renderStageColorSwatches();
+      buildStageOrderOptions();
+      document.getElementById('stageAddForm').classList.remove('hidden');
+      document.getElementById('stageAddBtn').style.display = 'none';
+      document.getElementById('newStageName').focus();
+    }
+
+    function buildStageOrderOptions() {
+      const sel = document.getElementById('newStageOrder');
+      const selected = [...document.querySelectorAll('#stageChips .proj-stage-chip:not(.proj-stage-add)')]
+        .filter(c => c.querySelector('input').checked);
+      let html = '<option value="first">放到最前面（所有已选阶段之前）</option>';
+      selected.forEach(c => {
+        const name = c.querySelector('span:last-child').textContent;
+        html += `<option value="after:${escapeHtml(name)}">放在「${escapeHtml(name)}」之后</option>`;
+      });
+      html += '<option value="last" selected>放到最后面（所有已选阶段之后）</option>';
+      sel.innerHTML = html;
+    }
+
+    function confirmAddStage() {
+      const name = document.getElementById('newStageName').value.trim() || '新阶段';
+      const color = stageActiveColor;
+      const order = document.getElementById('newStageOrder').value;
+      const chips = document.getElementById('stageChips');
+      const addBtn = document.getElementById('stageAddBtn');
+
+      // 1) 新增阶段 chip（自动选中）
+      const chip = document.createElement('label');
+      chip.className = 'proj-stage-chip selected';
+      chip.innerHTML = `<input type="checkbox" checked/> <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${color};margin-right:6px"></span><span>${escapeHtml(name)}</span>`;
+      if (order === 'first') chips.insertBefore(chip, chips.firstChild);
+      else if (order === 'last') chips.insertBefore(chip, addBtn);
+      else {
+        const targetName = order.split(':')[1];
+        let target = null;
+        document.querySelectorAll('#stageChips .proj-stage-chip:not(.proj-stage-add)').forEach(c => {
+          if (c.querySelector('span:last-child').textContent === targetName) target = c;
+        });
+        chips.insertBefore(chip, (target && target.nextElementSibling) ? target.nextElementSibling : addBtn);
+      }
+
+      // 2) 同步新增下方审批类型配置面板（按相同顺序）
+      const container = document.getElementById('stageAuditContainer');
+      const panel = document.createElement('div');
+      panel.className = 'proj-stage-audit-panel';
+      panel.setAttribute('data-name', name);
+      panel.innerHTML = `
+        <div class="proj-stage-audit-header">
+          <div class="proj-stage-audit-name" style="color:${color}"><i class="fa-solid fa-layer-group"></i> ${escapeHtml(name)}</div>
+          <span style="font-size:12px;color:#999">勾选该项目在本阶段需要的审批类型</span>
+        </div>
+        <div class="proj-stage-audit-types">
+          <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1677ff;margin-right:5px"></span><span>预筛</span></label>
+          <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#52c41a;margin-right:5px"></span><span>入组</span></label>
+          <label class="proj-audit-chip"><input type="checkbox"/> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#722ed1;margin-right:5px"></span><span>随机</span></label>
+        </div>`;
+      if (order === 'first') container.insertBefore(panel, container.firstChild);
+      else if (order === 'last') container.appendChild(panel);
+      else {
+        const targetName = order.split(':')[1];
+        let targetPanel = null;
+        document.querySelectorAll('#stageAuditContainer .proj-stage-audit-panel').forEach(p => {
+          if (p.getAttribute('data-name') === targetName) targetPanel = p;
+        });
+        container.insertBefore(panel, (targetPanel && targetPanel.nextElementSibling) ? targetPanel.nextElementSibling : null);
+      }
+
+      cancelAddStage();
+      requestAnimationFrame(drawConnections);
+    }
+
+    function cancelAddStage() {
+      document.getElementById('newStageName').value = '';
+      document.getElementById('stageAddForm').classList.add('hidden');
+      document.getElementById('stageAddBtn').style.display = '';
+    }
+
+    // 标题栏操作按钮（布局原型：仅占位，不实现业务逻辑）
+    function addCriteriaVersion() {}
+    function copyCriteriaVersion() {}
+    function deleteCriteriaVersion() {}
+    function showRefTemplateModal() {}
 
     // ========== 初始化 ==========
     function init() { initCollapsible(); drawConnections(); bindHover(); }
