@@ -5615,6 +5615,75 @@
       .flow-zoom-overlay { padding:10px; }
     }
 
+    /* ===== 编辑患者弹窗 ===== */
+    .edit-patient-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 100005; display: none; align-items: center; justify-content: center;
+    }
+    .edit-patient-overlay.show { display: flex; }
+    .edit-patient-modal {
+      width: 100%; max-width: 560px; background: #fff; border-radius: 10px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.18); animation: epModalIn 0.25s ease;
+      overflow: hidden;
+    }
+    @keyframes epModalIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .edit-patient-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid #f0f0f0;
+    }
+    .edit-patient-title {
+      font-size: 17px; font-weight: 600; color: #1a1a1a; margin: 0;
+    }
+    .edit-patient-close {
+      width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: #999; transition: all 0.2s; background: transparent; font-size: 14px;
+    }
+    .edit-patient-close:hover { background: #f5f5f5; color: #333; }
+    .edit-patient-body { padding: 20px 28px 12px; }
+    .ep-form-row {
+      display: flex; align-items: center; margin-bottom: 14px;
+    }
+    .ep-form-label {
+      width: 90px; flex-shrink: 0; font-size: 13px; font-weight: 500; color: #333;
+      text-align: right; padding-right: 10px; position: relative;
+    }
+    .ep-form-label.required::after { content: ' *'; color: #ff4d4f; }
+    .ep-form-input {
+      flex: 1; height: 34px; padding: 0 11px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;
+      box-sizing: border-box; min-width: 0;
+    }
+    .ep-form-input:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .ep-form-input[readonly] { background: #f5f5f5; color: #999; }
+    .ep-form-select {
+      flex: 1; height: 34px; padding: 0 8px; border: 1px solid #d9d9d9;
+      border-radius: 6px; font-size: 13px; outline: none; transition: border-color 0.2s;
+      background: #fff; cursor: pointer; box-sizing: border-box;
+    }
+    .ep-form-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+    .ep-highlight-box {
+      margin: 14px 0; padding: 12px 14px; background: linear-gradient(135deg,#fffbe6 0%,#fff7e6 100%);
+      border: 1.5px solid #ffd591; border-radius: 8px;
+    }
+    .ep-highlight-title {
+      font-size: 13px; font-weight: 600; color: #d46b08; display: flex; align-items: center; gap: 5px; margin-bottom: 4px;
+    }
+    .ep-highlight-text { font-size: 13px; color:#666; line-height: 1.6; }
+    .ep-radio-group { display: flex; gap: 20px; align-items: center; }
+    .ep-radio-item { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 13px; }
+    .ep-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 24px; border-top: 1px solid #f0f0f0;
+    }
+    @media (max-width: 768px) {
+      .edit-patient-modal { max-width: 92vw; }
+      .edit-patient-body { padding: 16px 20px 10px; }
+    }
+
   </style>
 </head>
 <body>
@@ -6887,6 +6956,7 @@ function updatePRDPanel(mod, sub) {
             <li><strong>预提交审批和提交审批</strong>：判断触发的审批阶段需要修改</li>
              <li><strong>匹配详情</strong>：入组阶段和预筛阶段写死的地方，需要根据项目配置 修改，匹配详情中可以查看患者基本信息和 病史与资料</li>
             <li><strong>审批记录 和审批页面也需要修改</strong>：需要展示项目配置的阶段，之前是写死的</li>
+             <li><strong>审批记录 和审批页面也需要修改</strong>：需要展示项目配置的阶段，之前是写死的</li>
            </ul>`
         },
       
@@ -7742,7 +7812,7 @@ function buildScPatientListContent() {
             </td>
             <td class="col-sticky-right-2">
               <div class="sc-action-links">
-                <a href="javascript:void(0)" onclick="event.stopPropagation();openScPatientDetail(${p.id}, '${schemeNo}')">查看</a><span>|</span>
+                <a href="javascript:void(0)" onclick="event.stopPropagation();openScPatientDetail(${p.id}, '${schemeNo}')">编辑</a><span>|</span>
                 <a href="javascript:void(0)">抄送</a><span>|</span>
                 <a href="javascript:void(0)" onclick="event.stopPropagation();openMatchDetail(${p.id}, '${schemeNo}')">匹配详情</a><span>|</span>
 
@@ -7781,22 +7851,66 @@ function scPatientAuditExport() { alert('导出审批记录…（原型演示）
 function scPatientColSettings() { alert('列设置…（原型演示）'); }
 function scPatientAdvancedSearch() { alert('高级搜索…（原型演示）'); }
 
-// 智能筛选患者列表 - 查看详情（跳转至新版匹配详情页）
+// 智能筛选患者列表 - 编辑患者（弹窗）
+let _scEditPatientId = null;
+let _scEditSchemeNo = null;
+
 function openScPatientDetail(patientId, schemeNo) {
   const patients = scPatientData[schemeNo] || [];
   const patient = patients.find(p => p.id === patientId);
   if (!patient) return;
-  const params = new URLSearchParams();
-  params.set('id', patient.id);
-  params.set('screenNo', patient.screenNo || '');
-  params.set('patientNo', patient.patientNo || '');
-  params.set('schemeNo', schemeNo);
-  params.set('age', patient.age || '');
-  params.set('gender', patient.gender || '');
-  params.set('centerNo', patient.centerNo || '');
-  params.set('center', patient.center || '');
-  params.set('projectName', patient.projectName || '');
-  window.location.href = 'match-detail-' + getPageVersion(schemeNo, 'match') + '.html?' + params.toString();
+
+  _scEditPatientId = patientId;
+  _scEditSchemeNo = schemeNo;
+
+  document.getElementById('epNameAbbr').value = patient.nameAbbr || '';
+  document.getElementById('epAge').value = patient.age || '';
+  document.getElementById('epGender').value = patient.gender || '男';
+  document.getElementById('epDiseaseArea').value = patient.domain || '';
+  document.getElementById('epPlanCode').value = patient.planNo || '';
+  document.getElementById('epCenter').value = patient.center || '';
+  document.getElementById('epCenterNo').value = patient.centerNo || '';
+  document.getElementById('epInformedTime').value = patient.informedTime || '';
+  document.getElementById('epScreenNo').value = patient.screenNo || '';
+
+  const failRadios = document.getElementsByName('epScreenFail');
+  const failVal = patient.screenFail === '是' ? '是' : '否';
+  for (let i = 0; i < failRadios.length; i++) {
+    failRadios[i].checked = failRadios[i].value === failVal;
+  }
+
+  document.getElementById('editPatientOverlay').classList.add('show');
+}
+
+function closeEditPatientModal() {
+  document.getElementById('editPatientOverlay').classList.remove('show');
+  _scEditPatientId = null;
+  _scEditSchemeNo = null;
+}
+
+function saveEditPatient() {
+  if (!_scEditPatientId || !_scEditSchemeNo) return;
+
+  const patients = scPatientData[_scEditSchemeNo] || [];
+  const patient = patients.find(p => p.id === _scEditPatientId);
+  if (!patient) return;
+
+  patient.age = document.getElementById('epAge').value.trim();
+  patient.gender = document.getElementById('epGender').value;
+  patient.domain = document.getElementById('epDiseaseArea').value;
+  patient.center = document.getElementById('epCenter').value;
+  patient.centerNo = document.getElementById('epCenterNo').value.trim();
+  patient.informedTime = document.getElementById('epInformedTime').value;
+  patient.screenNo = document.getElementById('epScreenNo').value.trim();
+
+  const failRadios = document.getElementsByName('epScreenFail');
+  for (let i = 0; i < failRadios.length; i++) {
+    if (failRadios[i].checked) patient.screenFail = failRadios[i].value;
+  }
+
+  closeEditPatientModal();
+  renderScPatientsTable(_scEditSchemeNo);
+  showWechatToast('保存成功');
 }
 
 // ==================== 匹配详情全屏页（原 match-detail-new.html） ====================
@@ -7856,7 +7970,7 @@ function openMatchDetail(patientId, schemeNo) {
   params.set('centerNo', p.centerNo || '');
   params.set('center', p.center || '');
   params.set('projectName', p.projectName || '');
-  window.location.href = 'match-detail-' + getPageVersion(schemeNo, 'match') + '.html?' + params.toString();
+  window.location.href = 'match-detail-new.html';
 }
 
 function closeMatchDetail() {
@@ -7894,7 +8008,7 @@ function goToNewMatchDetail() {
   params.set('centerNo', p.centerNo || '');
   params.set('center', p.center || '');
   params.set('projectName', p.projectName || '');
-  window.location.href = 'match-detail-new.html?' + params.toString();
+  window.location.href = 'match-detail-new.html' ;
 }
 
 function switchMdTab(tab) {
@@ -8885,7 +8999,7 @@ function renderAuditRecordContent(patientNo) {
     html += `
       <div class="audit-section">
         <div class="audit-section-header" onclick="toggleAuditSection(this)">
-          <span class="audit-section-title">预筛审批记录</span>
+          <span class="audit-section-title">预筛审批记录 </span>
           <span class="audit-section-toggle">^ 收起</span>
         </div>
         
@@ -9000,40 +9114,11 @@ function renderAuditRecordContent(patientNo) {
   <div class="prd-sidebar" style="position:static;width:380px;flex-shrink:0;border-left:2px solid #ffd591;max-height:80vh;overflow-y:auto;background:linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);padding:24px 20px">
     <h3 style="font-size:18px;font-weight:700;color:#d46b08;margin:0 0 20px 0;padding-bottom:12px;border-bottom:2px solid #ffd591">📋 非推荐流程标注说明</h3>
     <div style="margin-bottom:20px">
-      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 功能概述</h3>
-      <p style="font-size:13px;color:#666;line-height:1.8;margin:0">在审批过程中，如果用户选择了非推荐的审批流程，系统会在本次审批的所有环节中标注该变更，以提醒相关人员注意。</p>
+      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 修改</h3>
+     <ul <li>1. 原来的页面小标题需要跟项目配置保持一致，比如项目配置了 预筛、筛选，这个小标题也需要对应的修改。</li>
+      <li>2. 沟通的按钮名字 需要动态的改成一致的</li></ul>
     </div>
-    <div style="margin-bottom:20px">
-      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 标注规则</h3>
-      <ul style="font-size:13px;color:#666;line-height:1.8;margin:0;padding-left:20px">
-        <li><strong>触发条件：</strong>用户在提交审批时，未选择系统推荐的默认流程，而是手动选择了其他流程</li>
-        <li><strong>标注范围：</strong>从本次审批开始，到本次审批结束的所有节点（包括待审批、已审批、审批记录等）</li>
-        <li><strong>标注内容：</strong>显示红色警告框，提示"非正常流程"，并说明原因</li>
-        <li><strong>标注消失：</strong>本次审批完成后，如果后续审批按照推荐流程执行，则不再显示标注</li>
-      </ul>
-    </div>
-    <div style="margin-bottom:20px">
-      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 标注示例</h3>
-      <div style="background:#fff2f0;border-left:4px solid #ff4d4f;padding:12px;border-radius:4px;margin-bottom:8px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <span style="background:#ff4d4f;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;">非正常流程</span>
-          <span style="font-size:12px;color:#ff4d4f;font-weight:500;">提示：若需要走正常流程，请驳回重新提交审批</span>
-        </div>
-        <div style="font-size:12px;color:#666;line-height:1.8">
-          <strong style="color:#ff4d4f;">原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程
-        </div>
-      </div>
-    </div>
-    <div style="margin-bottom:20px">
-      <h3 style="font-size:14px;font-weight:700;color:#d46b08;margin:0 0 8px 0">| 开发要点</h3>
-      <ul style="font-size:13px;color:#666;line-height:1.8;margin:0;padding-left:20px">
-        <li>① 在审批页面顶部添加红色警告框，包含"非正常流程"标签和提示信息</li>
-        <li>② 警告框中显示选择非推荐流程的具体原因（由用户在提交时填写或系统自动生成）</li>
-        <li>③ 在审批记录列表中，每条记录都需要检查是否属于非推荐流程，如果是则显示标注</li>
-        <li>④ 标注只在当前审批周期内有效，下次审批如果选择推荐流程则不显示</li>
-        <li>⑤ 需要在数据库中添加字段记录本次审批是否使用了非推荐流程及原因</li>
-      </ul>
-    </div>
+   
     
   </div>`;
   
@@ -17907,6 +17992,90 @@ window.addEventListener('DOMContentLoaded', function() {
       <button class="btn btn-cancel" onclick="onAiMatchClose()" style="background:#f5f5f5;color:#666;border:1px solid #d9d9d9;">关闭</button>
       <button class="btn btn-primary" id="aiMatchBtn" onclick="onAiMatchConfirm()" style="background:#165DFF;">匹配并提交</button>
 
+    </div>
+  </div>
+</div>
+
+<!-- 编辑患者弹窗 -->
+<div class="edit-patient-overlay" id="editPatientOverlay" onclick="if(event.target===this) closeEditPatientModal()">
+  <div class="edit-patient-modal">
+    <div class="edit-patient-header">
+      <h3 class="edit-patient-title">编辑患者</h3>
+      <button class="edit-patient-close" onclick="closeEditPatientModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="edit-patient-body">
+     
+
+      <div class="ep-form-row">
+        <label class="ep-form-label required">姓名缩写：</label>
+        <input type="text" class="ep-form-input" id="epNameAbbr" readonly />
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">年龄：</label>
+        <input type="text" class="ep-form-input" id="epAge" />
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">性别：</label>
+        <select class="ep-form-select" id="epGender">
+          <option value="男">男性</option>
+          <option value="女">女性</option>
+        </select>
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label required">疾病领域：</label>
+        <select class="ep-form-select" id="epDiseaseArea">
+          <option value="">请选择</option>
+          <option value="乳腺癌">乳腺癌</option>
+          <option value="肺癌">肺癌</option>
+          <option value="消化肿瘤">消化肿瘤</option>
+          <option value="血液类疾病">血液类疾病</option>
+          <option value="风湿免疫性疾病">风湿免疫性疾病</option>
+          <option value="呼吸系统疾病">呼吸系统疾病</option>
+          <option value="心血管疾病">心血管疾病</option>
+        </select>
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">方案编号：</label>
+        <input type="text" class="ep-form-input" id="epPlanCode" readonly />
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">参研中心：</label>
+        <select class="ep-form-select" id="epCenter">
+          <option value="">请选择</option>
+          <option value="北京协和医院">北京协和医院</option>
+          <option value="上海瑞金医院">上海瑞金医院</option>
+          <option value="中山大学肿瘤医院">中山大学肿瘤医院</option>
+          <option value="江苏省省级机关医院">江苏省省级机关医院</option>
+          <option value="北京大学第一医院">北京大学第一医院</option>
+        </select>
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">中心号：</label>
+        <input type="text" class="ep-form-input" id="epCenterNo" />
+      </div>
+
+      <div class="ep-form-row">
+        <label class="ep-form-label">知情时间：</label>
+        <input type="date" class="ep-form-input" id="epInformedTime" />
+      </div>
+      <div class="ep-form-row">
+        <label class="ep-form-label">筛选号：</label>
+        <input type="text" class="ep-form-input" id="epScreenNo" placeholder="请输入筛选号" />
+      </div>
+
+      <div class="ep-form-row">
+        <label class="ep-form-label">是否筛败：</label>
+        <div class="ep-radio-group">
+          <label class="ep-radio-item"><input type="radio" name="epScreenFail" value="是"/> 是</label>
+          <label class="ep-radio-item"><input type="radio" name="epScreenFail" value="否" checked/> 否</label>
+        </div>
+      </div>
+    </div>
+    <div class="ep-footer">
+      <button class="btn btn-default" onclick="closeEditPatientModal()" style="padding:6px 20px;">取消</button>
+      <button class="btn btn-primary" onclick="saveEditPatient()" style="padding:6px 24px;"><i class="fas fa-check"></i> 保存</button>
     </div>
   </div>
 </div>

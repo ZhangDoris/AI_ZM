@@ -1345,13 +1345,13 @@
         </div>
       </div>
 
-        <!-- 合并症（按项目管理配置显示） -->
-        <div class="ai-section old-section" id="old-sec-comorbidity" style="display:none;">
+        <!-- 合并症 -->
+        <div class="ai-section old-section" id="old-sec-comorbidity">
           <div class="ai-section-title"><span><i class="fas fa-notes-medical"></i> 合并症AI识别</span></div>
           <div id="oldComorbidityList"></div>
         </div>
-        <!-- 合并药物（按项目管理配置显示） -->
-        <div class="ai-section old-section" id="old-sec-medication" style="display:none;">
+        <!-- 合并药物 -->
+        <div class="ai-section old-section" id="old-sec-medication">
           <div class="ai-section-title"><span><i class="fas fa-pills"></i> 合并药物AI识别</span></div>
           <div id="oldMedicationList"></div>
         </div>
@@ -1366,8 +1366,8 @@
               <li class="anchor-nav-item old-nav" data-anchor="old-sec-rate" onclick="scrollToSection('old-sec-rate')">3. 匹配度统计</li>
               <li class="anchor-nav-item old-nav" data-anchor="old-sec-ai" onclick="scrollToSection('old-sec-ai')">4. AI建议</li>
               <li class="anchor-nav-item old-nav" data-anchor="old-sec-detail" onclick="scrollToSection('old-sec-detail')">5. 匹配详情</li>
-              <li class="anchor-nav-item old-nav" id="old-anchor-comorbidity" data-anchor="old-sec-comorbidity" onclick="scrollToSection('old-sec-comorbidity')" style="display:none;">6. 合并症识别</li>
-              <li class="anchor-nav-item old-nav" id="old-anchor-medication" data-anchor="old-sec-medication" onclick="scrollToSection('old-sec-medication')" style="display:none;">7. 合并药物识别</li>
+              <li class="anchor-nav-item old-nav" id="old-anchor-comorbidity" data-anchor="old-sec-comorbidity" onclick="scrollToSection('old-sec-comorbidity')">6. 合并症识别</li>
+              <li class="anchor-nav-item old-nav" id="old-anchor-medication" data-anchor="old-sec-medication" onclick="scrollToSection('old-sec-medication')">7. 合并药物识别</li>
             </ul>
           </div>
         </div><!-- /ai-match-layout -->
@@ -2390,16 +2390,25 @@
 
 
     // 智能匹配版本切换
+    // 将历史版本类型（prescreen/consented/enrolled）解析为 matchVersionData 的数据键（v1/v2/v3）
+    function resolveDataKey(version) {
+      if (!version) return 'v1';
+      if (matchVersionData[version]) return version;
+      const hit = versionHistory.find(function (v) { return v.type === version; });
+      return hit ? hit.versionId : 'v1';
+    }
+
     function switchMatchVersion(version) {
-      if (!matchVersionData[version]) return;
-      currentMatchVersion = version;
+      const key = resolveDataKey(version);
+      const v = matchVersionData[key];
+      if (!v) return;
+      currentMatchVersion = key;
 
       // 更新版本标签激活状态
       document.querySelectorAll('#versionSwitcher .version-tag').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.version === version);
+        btn.classList.toggle('active', btn.dataset.version === key);
       });
 
-      const v = matchVersionData[version];
       renderVersionMeta(v);
       renderBasicInfo(v);
       renderConclusion(v);
@@ -2414,41 +2423,12 @@
       renderThinkChain(v.thinkChain);
     }
 
-    // ==================== 旧版：合并症 / 合并药物（按项目管理配置显示） ====================
-    // 项目管理后台可配置是否在匹配详情下方展示「合并症」「合并药物」模块。
-    // 演示覆盖：URL 参数 comorbidity=0 或 medication=0 可临时隐藏对应模块。
-    const projectConfig = {
-      comorbidity: urlParams.get('comorbidity') !== '0',
-      medication: urlParams.get('medication') !== '0'
-    };
-
-    // 根据项目管理配置渲染旧版匹配详情下方的合并症 / 合并药物
+    // ==================== 旧版：合并症 / 合并药物 ====================
+    // 始终渲染合并症和合并药物，不做隐藏控制
     function renderOldRecognition() {
       const v = matchVersionData[currentMatchVersion] || matchVersionData.v1;
-      const comSec = document.getElementById('old-sec-comorbidity');
-      const medSec = document.getElementById('old-sec-medication');
-      const comNav = document.getElementById('old-anchor-comorbidity');
-      const medNav = document.getElementById('old-anchor-medication');
-
-      // 合并症
-      if (projectConfig.comorbidity) {
-        if (comSec) comSec.style.display = '';
-        if (comNav) comNav.style.display = '';
-        renderRecognition('oldComorbidityList', v.comorbidity, 'comorbidity');
-      } else {
-        if (comSec) comSec.style.display = 'none';
-        if (comNav) comNav.style.display = 'none';
-      }
-
-      // 合并药物
-      if (projectConfig.medication) {
-        if (medSec) medSec.style.display = '';
-        if (medNav) medNav.style.display = '';
-        renderRecognition('oldMedicationList', v.medication, 'medication');
-      } else {
-        if (medSec) medSec.style.display = 'none';
-        if (medNav) medNav.style.display = 'none';
-      }
+      renderRecognition('oldComorbidityList', v.comorbidity, 'comorbidity');
+      renderRecognition('oldMedicationList', v.medication, 'medication');
     }
 
     // 保留旧版默认数据数组（兼容初始化）
@@ -2529,8 +2509,8 @@
       try { renderMatchDetailTable(); } catch (e) { console.error('renderMatchDetailTable', e); }
       try { renderPrescreenTable(); } catch (e) { console.error('renderPrescreenTable', e); }
 
-      // 新版内容初始化
-      try { switchMatchVersion('v1'); } catch (e) { console.error('switchMatchVersion', e); }
+      // 新版内容初始化（按当前版本解析数据键，原样展示对应版本的演示数据）
+      try { switchMatchVersion(currentVersion); } catch (e) { console.error('switchMatchVersion', e); }
 
       // 旧版：按项目管理配置渲染合并症 / 合并药物
       try { renderOldRecognition(); } catch (e) { console.error('renderOldRecognition', e); }
