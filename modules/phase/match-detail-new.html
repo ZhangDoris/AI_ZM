@@ -515,14 +515,14 @@
     }
 
     .detail-table th {
-      padding: 12px 16px;
+      padding: 10px 12px;
       text-align: left;
       font-weight: 500;
       white-space: nowrap;
     }
 
     .detail-table td {
-      padding: 12px 16px;
+      padding: 10px 12px;
       border-bottom: 1px solid #f0f0f0;
       vertical-align: top;
     }
@@ -541,6 +541,8 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+    .ai-risk-cell { color: #cf1322; font-size: 12px; line-height: 1.6; }
+    .ai-suggest-cell { color: #1677ff; font-size: 12px; line-height: 1.6; }
 
     .judge-badge {
       display: inline-flex;
@@ -1188,7 +1190,6 @@
         <div class="stage-stamp-inner">预筛<br>阶段</div>
       </div>
       <button class="btn-xs">标记储备</button>
-      <button class="btn-xs">病史与资料</button>
       <button class="btn-xs">编辑基本信息</button>
       <button class="btn-xs">审批记录</button>
       <button class="btn-xs">邮件记录</button>
@@ -1491,6 +1492,36 @@
                 </div>
                 <div class="conclusion-block-body" id="riskList"><!-- JS 渲染 --></div>
               </div>
+              <div class="conclusion-block pending" style="margin-top:16px">
+                <div class="conclusion-block-head">
+                  <i class="fas fa-folder-plus"></i>
+                  需补充资料
+                  <span class="cb-count">3</span>
+                </div>
+                <div class="conclusion-block-body" id="supplyList">
+                  <div class="conclusion-item">
+                    <span class="conclusion-item-icon">1</span>
+                    <div class="conclusion-item-main">
+                      <div class="conclusion-item-title">ECOG 体力状态评分</div>
+                      <div class="conclusion-item-desc">当前病历未记录 ECOG 评分，需补充最近一次评估结果【入选标准2】</div>
+                    </div>
+                  </div>
+                  <div class="conclusion-item">
+                    <span class="conclusion-item-icon">2</span>
+                    <div class="conclusion-item-main">
+                      <div class="conclusion-item-title">近期实验室检查（血常规 / 肝肾功能）</div>
+                      <div class="conclusion-item-desc">缺少 14 天内检验单，需补充以确认器官功能【入选标准5】</div>
+                    </div>
+                  </div>
+                  <div class="conclusion-item">
+                    <span class="conclusion-item-icon">3</span>
+                    <div class="conclusion-item-main">
+                      <div class="conclusion-item-title">合并用药清单</div>
+                      <div class="conclusion-item-desc">需补充完整用药记录以评估禁止合并用药【排除标准3】</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -1502,12 +1533,14 @@
               <table class="detail-table">
                 <thead>
                   <tr>
-                    <th style="width:50px">序号</th>
-                    <th style="width:100px">标准类型</th>
-                    <th style="min-width:250px">纳排内容</th>
-                    <th style="min-width:250px">源数据</th>
-                    <th style="min-width:280px">AI判断</th>
-                    <th style="width:160px">操作</th>
+                    <th style="width:44px">序号</th>
+                    <th style="width:84px">标准类型</th>
+                    <th style="min-width:180px">纳排内容</th>
+                    <th style="min-width:180px">源数据</th>
+                    <th style="min-width:240px">AI判断</th>
+                    <th style="min-width:165px">AI风险提示</th>
+                    <th style="min-width:165px">AI建议</th>
+                    <th style="width:140px">操作</th>
                   </tr>
                 </thead>
                 <tbody id="aiMatchDetailTable"><!-- JS 渲染 --></tbody>
@@ -2100,6 +2133,17 @@
     let currentMatchVersion = 'v1';
 
 
+    // 新版：根据判定结果生成 AI 风险提示 / AI建议（支持 item.aiRisk / item.aiSuggest 覆盖）
+    function aiRiskFor(item) {
+      if (item.judge === '不符合') return '存在排除标准冲突，可能影响入组资格，需人工复核。';
+      if (item.judge === '待定') return '信息不足，存在不确定性，建议谨慎评估。';
+      return '暂未发现明显风险。';
+    }
+    function aiSuggestFor(item) {
+      if (item.judge === '不符合') return '建议核实源数据并确认是否按排除标准处理。';
+      if (item.judge === '待定') return '建议补充相关资料后重新判定。';
+      return '可继续纳入匹配流程。';
+    }
     // 新版：匹配详情表格
     function renderNewMatchDetailTable(data) {
       const tbody = document.getElementById('aiMatchDetailTable');
@@ -2117,6 +2161,8 @@
               <span class="judge-badge judge-${item.judge}">${item.judgeText}</span>
             </div>
           </td>
+          <td><div class="cell-scroll ai-risk-cell">${item.aiRisk != null ? item.aiRisk : aiRiskFor(item)}</div></td>
+          <td><div class="cell-scroll ai-suggest-cell">${item.aiSuggest != null ? item.aiSuggest : aiSuggestFor(item)}</div></td>
           <td>
             <div class="action-links">
               <span class="action-link">病历溯源</span>
