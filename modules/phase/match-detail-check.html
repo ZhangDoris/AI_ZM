@@ -529,6 +529,20 @@
     .ai-risk-cell { color: #cf1322; font-size: 12px; line-height: 1.6; }
     .ai-suggest-cell { color: #1677ff; font-size: 12px; line-height: 1.6; }
 
+    /* 新版：匹配详情卡片式布局（替代表格，缓解拥挤） */
+    .match-card-list { display: flex; flex-direction: column; gap: 14px; }
+    .match-card { border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .match-card-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fafcff; border-bottom: 1px solid #f0f0f0; }
+    .match-index { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #165DFF; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
+    .match-type { font-weight: 500; color: #333; font-size: 13px; }
+    .match-judge { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .match-card-body { padding: 12px 14px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .match-field-label { font-size: 12px; color: #8c8c8c; margin-bottom: 4px; }
+    .match-field-label.risk { color: #cf1322; }
+    .match-field-label.suggest { color: #1677ff; }
+    .match-field-value { font-size: 13px; color: #333; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .match-card-foot { display: flex; gap: 16px; padding: 8px 14px; border-top: 1px solid #f0f0f0; background: #fafafa; }
+
     .judge-badge {
       display: inline-flex;
       align-items: center;
@@ -1175,7 +1189,6 @@
         <div class="stage-stamp-inner">预筛<br>阶段</div>
       </div>
       <button class="btn-xs">标记储备</button>
-      <button class="btn-xs">病史与资料</button>
       <button class="btn-xs">编辑基本信息</button>
       <button class="btn-xs">审批记录</button>
       <button class="btn-xs">邮件记录</button>
@@ -1503,23 +1516,7 @@
           <!-- 4. 匹配详情 -->
           <div class="ai-section" id="section-detail">
             <div class="ai-section-title"><span><i class="fas fa-table"></i> 匹配详情</span></div>
-            <div class="table-container">
-              <table class="detail-table">
-                <thead>
-                  <tr>
-                    <th style="width:44px">序号</th>
-                    <th style="width:84px">标准类型</th>
-                    <th style="min-width:180px">纳排内容</th>
-                    <th style="min-width:180px">源数据</th>
-                    <th style="min-width:240px">AI判断</th>
-                    <th style="min-width:165px">AI风险提示</th>
-                    <th style="min-width:165px">AI建议</th>
-                    <th style="width:140px">操作</th>
-                  </tr>
-                </thead>
-                <tbody id="aiMatchDetailTable"><!-- JS 渲染 --></tbody>
-              </table>
-            </div>
+            <div id="aiMatchDetailTable" class="match-card-list"><!-- JS 渲染 --></div>
           </div>
 
           <!-- 6. 合并症AI识别 -->
@@ -2126,38 +2123,58 @@
     function aiSuggestFor(item) {
       if (item.judge === '不符合') return '建议核实源数据并确认是否按排除标准处理。';
       if (item.judge === '待定') return '建议补充相关资料后重新判定。';
-      return '可继续纳入匹配流程。';
+      return '';
     }
     function renderNewMatchDetailTable(data) {
-      const tbody = document.getElementById('aiMatchDetailTable');
-      if (!tbody) return;
+      const box = document.getElementById('aiMatchDetailTable');
+      if (!box) return;
       const list = data || newMatchDetailData;
-      tbody.innerHTML = list.map((item, index) => `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${item.type}</td>
-          <td><div class="cell-scroll">${item.criteria}</div></td>
-          <td><div class="cell-scroll">${item.source}</div></td>
-          <td>
-              <div style="display:flex;align-items:flex-start;gap:6px">
-              ${getJudgeIcon(item.judge)}
-              <span class="judge-badge judge-${item.judge}">${item.judgeText}</span>
+      if (list.length === 0) {
+        box.innerHTML = '<div class="recognition-empty">暂无匹配详情数据</div>';
+        return;
+      }
+      box.innerHTML = list.map((item, index) => {
+        const riskText = item.aiRisk != null ? item.aiRisk : aiRiskFor(item);
+        const suggestText = item.aiSuggest != null ? item.aiSuggest : aiSuggestFor(item);
+        return `
+        <div class="match-card">
+          <div class="match-card-head">
+            <span class="match-index">${index + 1}</span>
+            <span class="match-type">${item.type}</span>
+          </div>
+          <div class="match-card-body">
+            <div class="match-field">
+              <div class="match-field-label">纳排内容</div>
+              <div class="match-field-value">${item.criteria}</div>
             </div>
-          </td>
-          <td><div class="cell-scroll ai-risk-cell">${item.aiRisk != null ? item.aiRisk : aiRiskFor(item)}</div></td>
-          <td><div class="cell-scroll ai-suggest-cell">${item.aiSuggest != null ? item.aiSuggest : aiSuggestFor(item)}</div></td>
-          <td>
-            <div class="action-links">
-              <span class="action-link">病历溯源</span>
-              <span class="action-link">结果修正</span>
+            <div class="match-field">
+              <div class="match-field-label">源数据</div>
+              <div class="match-field-value">${item.source}</div>
             </div>
-            <div class="action-links" style="margin-top:4px">
-              <span class="action-link" style="color:#999">修正记录</span>
-              <span class="action-link" style="color:#999">清空修正</span>
+            <div class="match-field">
+              <div class="match-field-label">AI判断</div>
+              <div class="match-field-value" style="display:flex;align-items:center;gap:6px">
+                ${getJudgeIcon(item.judge)}
+                <span class="judge-badge judge-${item.judge}">${item.judgeText}</span>
+              </div>
             </div>
-          </td>
-        </tr>
-      `).join('');
+            <div class="match-field">
+              <div class="match-field-label risk">风险提示</div>
+              <div class="match-field-value">
+                <div class="ai-risk-cell">${riskText}</div>
+                ${suggestText ? `<div class="ai-suggest-cell" style="margin-top:4px">AI建议：${suggestText}</div>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="match-card-foot">
+            <span class="action-link">病历溯源</span>
+            <span class="action-link">结果修正</span>
+            <span class="action-link" style="color:#999">修正记录</span>
+            <span class="action-link" style="color:#999">清空修正</span>
+          </div>
+        </div>
+        `;
+      }).join('');
     }
 
     // 新版：AI风险提示（与建议待定保持同样式：黄色结论块 + 圆形序号 + 标题/描述）
@@ -2599,7 +2616,9 @@ function updatePRDPanel(mod, sub) {
                 <li><strong style="color:red;">3. 新版本 跟旧版本的区别， AI建议 样式展示区别，匹配详情中加入 风险提示列</strong></li>
                 <li><strong style="color:red;"> 4. 基本信息 加患者的基本信息展示</strong></li>
                 <li><strong style="color:red;"> 5. 如果没有配置版本，就不需要显示 新旧版本切换的按钮</strong></li>
-            </ul>
+                    <li><strong style="color:red;"> 7. 思考链 的展示 需要跟 绑定的入排版本和审批阶段保持一致</strong></li>
+
+                </ul>
             `
         },
        
