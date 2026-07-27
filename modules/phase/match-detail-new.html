@@ -956,6 +956,121 @@
       }
     }
 
+    /* ==================== 病历溯源 独立右侧面板 ==================== */
+    .trace-side {
+      width: 40vw;
+      min-width: 380px;
+      max-width: 640px;
+      position: fixed;
+      top: 0; right: 0;
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid #e0e0e0;
+      box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .trace-side.open { transform: translateX(0); }
+    .trace-side-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 2px solid #1677ff;
+      background: #f0f5ff;
+    }
+    .trace-side-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1677ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .trace-side-close {
+      width: 30px; height: 30px;
+      border: none; border-radius: 6px;
+      background: #fff; color: #666;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 16px; transition: all .2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    .trace-side-close:hover { background: #f53f3f; color: #fff; }
+    .trace-side-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .trace-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0e4d3;
+    }
+    .trace-tb-count {
+      font-size: 13px;
+      color: #666;
+      font-weight: 500;
+      background: #f0f0f0;
+      padding: 2px 10px;
+      border-radius: 12px;
+      margin-right: auto;
+    }
+    .trace-tb-btn {
+      padding: 5px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .trace-tb-btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
+    .trace-tb-btn:disabled { color: #bfbfbf; background: #f5f5f5; cursor: not-allowed; opacity: .6; }
+    .trace-image-wrap {
+      background: #fafafa;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      max-width: 100%;
+    }
+    .trace-image-wrap img {
+      max-width: 100%;
+      max-height: 560px;
+      display: block;
+      margin: 0 auto;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+    }
+    .trace-image-name {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #666;
+    }
+    .trace-overlay-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    .trace-overlay-bg.show { opacity: 1; pointer-events: auto; }
+    @media (max-width: 768px) {
+      .trace-side { width: 90vw; min-width: 0; max-width: none; }
+    }
+
     /* ==================== 版本切换按钮 ==================== */
     .btn-version {
       position: relative;
@@ -1071,6 +1186,40 @@
     .unmatched-list { display: none; }
     .unmatched-item { display: none; }
 
+
+    /* 合并症/合并药物 - 操作列 */
+    .rec-action-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .rec-action-row {
+      display: flex;
+      gap: 6px;
+    }
+    .rec-action-btn {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .rec-action-btn.active {
+      background: #e6f4ff;
+      color: #1677ff;
+      border: 1px solid #91caff;
+    }
+    .rec-action-btn.active:hover {
+      background: #bae0ff;
+    }
+    .rec-action-btn.disabled {
+      background: #f5f5f5;
+      color: #bfbfbf;
+      border: 1px solid #e8e8e8;
+      cursor: default;
+    }
 
     /* 合并症 / 合并药物 AI识别 - 表格化 */
     .recognition-meta {
@@ -1622,14 +1771,24 @@
 
   <!-- PRD 右侧嵌入式面板（可收起） -->
   <aside class="prd-side" id="prdSide">
-    <div class="prd-side-head">
-      <span class="prd-side-title"><i class="fas fa-book-open"></i> 需求说明（PRD）</span>
-      <button class="prd-side-toggle" onclick="togglePRDSide()" title="收起面板"><i class="fas fa-chevron-right"></i></button>
+    <div class="prd-side-head" id="prdSideHead">
+      <span class="prd-side-title" id="prdSideTitle"><i class="fas fa-book-open"></i> 需求说明（PRD）</span>
+      <button class="prd-side-toggle" id="prdSideToggle" onclick="togglePRDSide()" title="收起面板"><i class="fas fa-chevron-right"></i></button>
     </div>
     <div class="prd-side-body" id="prdPanel"></div>
     <button class="prd-side-reopen" id="prdSideReopen" onclick="togglePRDSide()" title="展开需求说明"><i class="fas fa-book-open"></i> PRD</button>
   </aside>
   </div><!-- /app-shell -->
+
+  <!-- 病历溯源 独立右侧滑出面板 -->
+  <div class="trace-overlay-bg" id="traceOverlay" onclick="closeTraceView()"></div>
+  <aside class="trace-side" id="traceSide">
+    <div class="trace-side-head">
+      <span class="trace-side-title" id="traceSideTitle"><i class="fa-solid fa-file-medical"></i> 病历溯源</span>
+      <button class="trace-side-close" onclick="closeTraceView()" title="关闭"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="trace-side-body" id="traceBody"></div>
+  </aside>
   <script>
     // 从URL获取参数
     const urlParams = new URLSearchParams(window.location.search);
@@ -2227,30 +2386,29 @@
         box.innerHTML = '<div class="recognition-empty">未识别到相关记录</div>';
         return;
       }
-      const isMed = type === 'medication';
-      const titleName = isMed ? '合并用药' : '合并症';
+      const titleName = type === 'medication' ? '合并用药' : '合并症';
 
       const rows = list.map((item, i) => {
-        let name = item.name || '';
-        let dose = '';
-        // 合并用药：将 "药物名 规格 频次" 拆分，首段为药名，其余为规格/频次
-        if (isMed && name.indexOf(' ') > -1) {
-          const parts = name.split(' ');
-          name = parts.shift();
-          dose = parts.join(' ');
-        }
+        const name = item.name || '';
         return `
           <tr>
             <td>${i + 1}</td>
             <td><span class="rec-name-cell">${name}</span></td>
-            ${isMed ? `<td class="rec-dose-cell">${dose || '—'}</td>` : ''}
             <td><div class="rec-evidence-cell">${item.evidence || '—'}</div></td>
+            <td><div class="rec-action-links">
+              <div class="rec-action-row">
+                <span class="rec-action-btn active">结果修正</span>
+                <span class="rec-action-btn active" onclick="openTraceDrawer(['images/medical-record-sample.png'])">病历溯源</span>
+              </div>
+              <div class="rec-action-row">
+                <span class="rec-action-btn disabled">修正记录</span>
+                <span class="rec-action-btn disabled">清空修正</span>
+              </div>
+            </div></td>
           </tr>`;
       }).join('');
 
-      const headCols = isMed
-        ? `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th style="min-width:140px">规格 / 频次</th><th>证据来源</th>`
-        : `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th>证据来源</th>`;
+      const headCols = `<th style="width:50px">序号</th><th style="min-width:170px">${titleName}</th><th>证据来源</th><th style="width:150px">操作</th>`;
 
       box.innerHTML = `
         <div class="recognition-meta">
@@ -2666,6 +2824,58 @@ function closePRDPanel() { collapsePRDSide(); }
 function togglePRDDrawer() { togglePRDSide(); }
 function collapsePRDDrawer() { collapsePRDSide(); }
 function expandPRDDrawer() { expandPRDSide(); }
+
+/* ==================== 病历溯源（独立右侧面板） ==================== */
+let traceImages = [];
+let traceIndex = 0;
+
+function openTraceDrawer(images, startIndex) {
+  const side = document.getElementById('traceSide');
+  const overlay = document.getElementById('traceOverlay');
+  if (!side) return;
+
+  traceImages = Array.isArray(images) ? images : [];
+  if (!traceImages.length) traceImages = ['images/medical-record-sample.png'];
+  traceIndex = (typeof startIndex === 'number' && startIndex >= 0 && startIndex < traceImages.length) ? startIndex : 0;
+
+  side.classList.add('open');
+  if (overlay) overlay.classList.add('show');
+  renderTraceContent();
+}
+
+function renderTraceContent() {
+  const body = document.getElementById('traceBody');
+  if (!body) return;
+  const img = traceImages[traceIndex];
+  const src = typeof img === 'string' ? img : img.url;
+  const name = typeof img === 'string' ? ('病历报告 ' + (traceIndex + 1)) : (img.name || '病历报告 ' + (traceIndex + 1));
+
+  body.innerHTML = `
+    <div class="trace-toolbar">
+      <span class="trace-tb-count">(${traceIndex + 1}/${traceImages.length})</span>
+      <button class="trace-tb-btn" ${traceIndex <= 0 ? 'disabled' : ''} onclick="prevTraceImage()"><i class="fa-solid fa-chevron-left"></i> 上一个</button>
+      <button class="trace-tb-btn" ${traceIndex >= traceImages.length - 1 ? 'disabled' : ''} onclick="nextTraceImage()">下一个 <i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    <div class="trace-image-wrap">
+      <img id="traceImage" src="${src}" alt="病历溯源图片">
+      <div class="trace-image-name">${name}</div>
+    </div>
+  `;
+}
+
+function prevTraceImage() {
+  if (traceIndex > 0) { traceIndex--; renderTraceContent(); }
+}
+function nextTraceImage() {
+  if (traceIndex < traceImages.length - 1) { traceIndex++; renderTraceContent(); }
+}
+
+function closeTraceView() {
+  const side = document.getElementById('traceSide');
+  const overlay = document.getElementById('traceOverlay');
+  if (side) side.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
+}
   </script>
 </body>
 </html>
