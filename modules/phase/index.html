@@ -7618,8 +7618,8 @@ function updatePRDPanel(mod, sub, targetId) {
              <li><strong>项目管理的列表上加了 “页面版本”按钮</strong></li>
              <li><strong>功能优化： 1. 思考链 跟入排和筛选表绑定， 入排和筛选表在哪个阶段启用，就需要在不同阶段显示不同的思考链；2. 流程模板 删除判断的时候，加一个  删除的条件，只判断有效的患者数据是否启用，删除了的不算在内</strong></li>
             <li><strong>审批阶段设置（没选中审批阶段的时候，下面的 模块都是收缩起来的，点击收缩 会有对应的效果）</strong>：
-              <ul><li>项目编辑/新建页新增「审批阶段设置」模块，默认勾选 <strong>预筛 + 入组</strong>默认行为：</li><li>
-                新建项目时，默认勾选「预筛」和「入组」两个阶段。</li><li>
+              <ul><li>项目编辑/新建页新增「审批阶段设置」模块</li>
+             
                 阶段增删规则：</li><li>
                 可选范围：仅允许选择「系统管理 → 审批阶段配置」中状态为“已启用”的阶段。</li><li>
                 不可删除/取消勾选的条件（满足任一即锁定）：</li><li>
@@ -10034,7 +10034,7 @@ function buildAdminSidebar(active) {
         ${renderL3('dict','字典管理')}
         ${renderL3('disease-dict','疾病领域字典管理')}
         ${renderL3('hospitals','医院管理')}
-        ${renderL3('audit-type-config','审批类型配置', '1', '修改点 1 · 审批类型配置（独立功能）<br>系统管理下独立菜单「审批类型配置」，维护审批类型的名称/编码/排序/颜色/图标，原写死的审批类型改为从此配置引用。')}
+        ${renderL3('audit-type-config','审批类型配置', '1', '修改点 1 · 审批类型配置（独立功能）<br>系统管理下独立菜单「审批类型配置」，维护审批类型的名称/编码/排序/颜色，原写死的审批类型改为从此配置引用。')}
         ${renderL3('stage-config','审批阶段配置', '2', '修改点 2 · 阶段可配置<br>系统管理新增「审批阶段配置」，可增删改阶段（预筛阶段/筛选阶段/入组阶段/随机阶段等）并配置其包含的审批类型、启用停用。')}
         ${renderL3('workflow','审批流设置', '2')}
         ${renderL3('flow-template','流程模板管理')}
@@ -10052,11 +10052,19 @@ function buildAdminSidebar(active) {
       </div>
       <div class="sidebar-item-l3 ${window._adminActiveSub === 'screen-table-log' ? 'active' : ''}" data-label="筛选表日志（最新）" onclick="switchModule('admin','screen-table-log')">
         <span style="font-size:12px;color:${window._adminActiveSub === 'screen-table-log' ? '#1677ff' : '#ccc'}">•</span>
-        <span class="s-label">筛选表日志（最新）</span>
+        <span class="s-label">筛选表日志</span>
       </div>
       <div class="sidebar-item-l3 ${window._adminActiveSub === 'screen-table-history' ? 'active' : ''}" data-label="筛选表日志（历史）" onclick="switchModule('admin','screen-table-history')">
         <span style="font-size:12px;color:${window._adminActiveSub === 'screen-table-history' ? '#1677ff' : '#ccc'}">•</span>
-        <span class="s-label">筛选表日志（历史）</span>
+        <span class="s-label">思考链日志</span>
+      </div>
+       <div class="sidebar-item-l3 ${window._adminActiveSub === 'screen-table-history' ? 'active' : ''}" data-label="筛选表日志（历史）" onclick="switchModule('admin','screen-table-history')">
+        <span style="font-size:12px;color:${window._adminActiveSub === 'screen-table-history' ? '#1677ff' : '#ccc'}">•</span>
+        <span class="s-label">合并药物日志</span>
+      </div>
+       <div class="sidebar-item-l3 ${window._adminActiveSub === 'screen-table-history' ? 'active' : ''}" data-label="筛选表日志（历史）" onclick="switchModule('admin','screen-table-history')">
+        <span style="font-size:12px;color:${window._adminActiveSub === 'screen-table-history' ? '#1677ff' : '#ccc'}">•</span>
+        <span class="s-label">合并症日志</span>
       </div>
     </div>
     ${renderL2('apilog','🔌','接口调用记录')}
@@ -10117,11 +10125,11 @@ let _addStageSelColor = '#1677ff';
 // ==================== 审批类型配置（独立功能，不再归属字典） ====================
 // 每条审批类型维护：编码、名称、排序、颜色、图标、状态
 let _auditTypeConfigData = [
-  { code:'AT01', name:'预筛审批', order:1, color:'#1677ff', icon:'fa-solid fa-magnifying-glass', status:'enabled', updater:'张管理', time:'2026-06-22 10:30' },
-  { code:'AT02', name:'主知情审批', order:2, color:'#fa8c16', icon:'fa-solid fa-file-signature', status:'enabled', updater:'张管理', time:'2026-06-22 10:30' },
-  { code:'AT03', name:'导入审批', order:3, color:'#13c2c2', icon:'fa-solid fa-download', status:'enabled', updater:'李明', time:'2026-06-18 14:20' },
-  { code:'AT04', name:'入组审批', order:4, color:'#52c41a', icon:'fa-solid fa-user-plus', status:'enabled', updater:'张管理', time:'2026-06-15 09:15' },
-  { code:'AT05', name:'筛选审批', order:5, color:'#722ed1', icon:'fa-solid fa-filter', status:'enabled', updater:'李明', time:'2026-06-08 11:00' },
+  { code:'AT01', name:'预筛审批', order:1, color:'#1677ff',  status:'enabled', updater:'张管理', time:'2026-06-22 10:30' },
+  { code:'AT02', name:'主知情审批', order:2, color:'#fa8c16', status:'enabled', updater:'张管理', time:'2026-06-22 10:30' },
+  { code:'AT03', name:'导入审批', order:3, color:'#13c2c2', status:'enabled', updater:'李明', time:'2026-06-18 14:20' },
+  { code:'AT04', name:'入组审批', order:4, color:'#52c41a', status:'enabled', updater:'张管理', time:'2026-06-15 09:15' },
+  { code:'AT05', name:'筛选审批', order:5, color:'#722ed1',  status:'enabled', updater:'李明', time:'2026-06-08 11:00' },
 ];
 // 审批类型可选图标（Font Awesome）
 const _auditTypeIconOptions = [
@@ -10281,7 +10289,6 @@ function buildAuditTypeConfig(){
             <th style="width:50px">序号</th>
             <th style="width:110px">编码</th>
             <th style="width:140px">审批类型</th>
-            <th style="width:90px">图标</th>
             <th style="width:70px">排序</th>
             <th style="width:90px">颜色</th>
             <th style="width:90px">状态</th>
@@ -10317,10 +10324,7 @@ function buildAuditTypeConfig(){
               <input type="text" class="form-input" id="atColorHex" value="#1677FF" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)) document.getElementById('atColor').value=this.value" placeholder="#1677FF" style="width:140px;font-family:monospace;letter-spacing:1px"/>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">图标</label>
-            <input type="text" class="form-input" id="atIcon" />
-          </div>
+         
           <div class="form-group">
             <label class="form-label">状态</label>
             <div class="sc-status-radio">

@@ -839,6 +839,7 @@
       align-items: stretch;
       height: 100vh;
       overflow: hidden;
+      position: relative;
     }
     .app-main {
       flex: 1;
@@ -956,18 +957,17 @@
       }
     }
 
-    /* ==================== 病历溯源 独立右侧面板 ==================== */
+    /* ==================== 病历溯源 嵌入右侧面板（导航下方） ==================== */
     .trace-side {
       width: 40vw;
       min-width: 380px;
       max-width: 640px;
-      position: fixed;
-      top: 0; right: 0;
-      height: 100vh;
+      position: absolute;
+      top: 48px; right: 0; bottom: 0;
       background: #fff;
       border-left: 1px solid #e0e0e0;
       box-shadow: -4px 0 24px rgba(0,0,0,0.12);
-      z-index: 1000;
+      z-index: 50;
       display: flex;
       flex-direction: column;
       transform: translateX(100%);
@@ -1057,16 +1057,6 @@
       font-size: 13px;
       color: #666;
     }
-    .trace-overlay-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.3);
-      z-index: 999;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .3s;
-    }
-    .trace-overlay-bg.show { opacity: 1; pointer-events: auto; }
     @media (max-width: 768px) {
       .trace-side { width: 90vw; min-width: 0; max-width: none; }
     }
@@ -1778,10 +1768,8 @@
     <div class="prd-side-body" id="prdPanel"></div>
     <button class="prd-side-reopen" id="prdSideReopen" onclick="togglePRDSide()" title="展开需求说明"><i class="fas fa-book-open"></i> PRD</button>
   </aside>
-  </div><!-- /app-shell -->
 
-  <!-- 病历溯源 独立右侧滑出面板 -->
-  <div class="trace-overlay-bg" id="traceOverlay" onclick="closeTraceView()"></div>
+  <!-- 病历溯源 右侧嵌入面板（导航下方） -->
   <aside class="trace-side" id="traceSide">
     <div class="trace-side-head">
       <span class="trace-side-title" id="traceSideTitle"><i class="fa-solid fa-file-medical"></i> 病历溯源</span>
@@ -1789,6 +1777,7 @@
     </div>
     <div class="trace-side-body" id="traceBody"></div>
   </aside>
+  </div><!-- /app-shell -->
   <script>
     // 从URL获取参数
     const urlParams = new URLSearchParams(window.location.search);
@@ -2825,13 +2814,12 @@ function togglePRDDrawer() { togglePRDSide(); }
 function collapsePRDDrawer() { collapsePRDSide(); }
 function expandPRDDrawer() { expandPRDSide(); }
 
-/* ==================== 病历溯源（独立右侧面板） ==================== */
+/* ==================== 病历溯源（嵌入右侧面板） ==================== */
 let traceImages = [];
 let traceIndex = 0;
 
 function openTraceDrawer(images, startIndex) {
   const side = document.getElementById('traceSide');
-  const overlay = document.getElementById('traceOverlay');
   if (!side) return;
 
   traceImages = Array.isArray(images) ? images : [];
@@ -2839,7 +2827,6 @@ function openTraceDrawer(images, startIndex) {
   traceIndex = (typeof startIndex === 'number' && startIndex >= 0 && startIndex < traceImages.length) ? startIndex : 0;
 
   side.classList.add('open');
-  if (overlay) overlay.classList.add('show');
   renderTraceContent();
 }
 
@@ -2872,9 +2859,7 @@ function nextTraceImage() {
 
 function closeTraceView() {
   const side = document.getElementById('traceSide');
-  const overlay = document.getElementById('traceOverlay');
   if (side) side.classList.remove('open');
-  if (overlay) overlay.classList.remove('show');
 }
   </script>
 </body>
