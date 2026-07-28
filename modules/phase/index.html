@@ -11948,18 +11948,16 @@ async function openPageVersion(schemeNo, code, name) {
     '</div>' +
     '<div class="modal-body" style="display:flex;padding:0;overflow:hidden" onclick="if(event.target===this)closePageVersion()">' +
       '<div style="flex:1;min-width:0;padding:20px;overflow-y:auto">' +
-        '<div style="font-size:13px;color:#666;margin-bottom:6px">项目：<b style="color:#1a1a1a">' + (code||'—') + '</b>' + (name?' · '+name:'') + ' <span style="color:#999">（' + (key||'—') + '）</span></div>' +
+        '<div style="font-size:13px;color:#666;margin-bottom:6px">项目：<b style="color:#1a1a1a">' + (code||'—') + '</b></div>' +
 
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
           '<div style="font-weight:600;color:#333">页面版本配置列表</div>' +
-          '<button class="btn btn-primary btn-sm" onclick="pvAddRow()"><i class="fa-solid fa-plus"></i> 新增</button>' +
         '</div>' +
         '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px">' +
           '<thead><tr style="background:#fafbfc;text-align:left">' +
             '<th style="padding:8px;border-bottom:1px solid #eee">模块</th>' +
             '<th style="padding:8px;border-bottom:1px solid #eee">是否配置新版本 <span class="required">*</span></th>' +
             '<th style="padding:8px;border-bottom:1px solid #eee">默认查看</th>' +
-            '<th style="padding:8px;border-bottom:1px solid #eee">操作</th>' +
           '</tr></thead>' +
           '<tbody id="pvListBody">' + rowsHtml + '</tbody>' +
         '</table>' +
@@ -12016,6 +12014,24 @@ async function savePageVersion(key) {
   closePageVersion();
 }
 
+// 普通编辑：重置阶段配置，避免沿用上一次演示数据
+function editProject() {
+  _projectSelectedStages = JSON.parse(JSON.stringify(_defaultProjectSelectedStages));
+  switchModule('admin', 'project-edit');
+}
+
+// 第一条数据演示：阶段内审核类型顺序与模板（审核类型最多者）不一致
+function editFirstProjectDemo() {
+  // 模板基准顺序为 预筛审批 → 主知情审批 → 入组审批
+  // 此处故意将「入组审批」放在「预筛审批」之前，制造顺序不一致，点击保存时触发校验拦截
+  _projectSelectedStages = [
+    { id: '2', name: '入组阶段', color: '#00B42A', enabled: true, informedRequired: false, auditTypes: ['入组审批'] },
+    { id: '1', name: '筛选阶段', color: '#165DFF', enabled: true, informedRequired: false, auditTypes: ['预筛审批', '主知情审批'] }
+  ];
+  window._projectApprovalTemplates = []; // 走全局流程模板兜底（肿瘤类/常规模板审核类型最多且顺序一致）
+  switchModule('admin', 'project-edit');
+}
+
 function buildAdminProjects() {
   // 列设置状态（默认显示的列）—— 与截图列保持一致
   if(!window._projColConfig) {
@@ -12041,7 +12057,11 @@ function buildAdminProjects() {
     const btns = [];
     row.ops.forEach(op => {
       let onclick = '';
-      if(op === '编辑') onclick = `onclick="event.stopPropagation();switchModule('admin','project-edit')"`;
+      if(op === '编辑') {
+        // 第一条数据（index=1）演示「阶段审核类型顺序与模板不一致」场景
+        if(row.index === 1) onclick = `onclick="event.stopPropagation();editFirstProjectDemo()"`;
+        else onclick = `onclick="event.stopPropagation();editProject()"`;
+      }
       btns.push(`<span class="admin-op-btn" title="${op}" ${onclick}>${op}</span>`);
     });
     btns.push(`<span class="admin-op-btn  demo-circle" title="页面版本" onclick="event.stopPropagation();openPageVersion('${(row.schemeNo||row.code||'').replace(/'/g,'')}','${(row.code||'').replace(/'/g,'')}','${String(row.name||'').replace(/'/g,'').replace(/"/g,'')}')">页面版本</span>`);
@@ -15212,7 +15232,7 @@ function buildAdminProjectEdit(isNew) {
            <button class="btn btn-default" onclick="switchModule('admin','projects')">
           <i class="fa-solid fa-arrow-left"></i> 返回
         </button>
-          <button class="btn btn-default" onclick="saveAndPublish()">
+          <button class="btn btn-default" onclick="saveProject()">
             <i class="fa-solid fa-floppy-disk"></i> 保存
           </button>
           <button class="btn btn-primary" onclick="saveAndPublish()">
@@ -18245,11 +18265,118 @@ function hasMainFlow() {
   return false;
 }
 
+// 校验「审批阶段包含的审核类型顺序」与「审核模板审核流程（审核类型最多的模板）」是否一致
+function validateStageAuditOrder() {
+  // 1. 拼接项目审批阶段的审核类型顺序（按阶段顺序 + 阶段内审核类型顺序）
+  const projectSeq = [];
+  (_projectSelectedStages || []).forEach(stage => {
+    (stage.auditTypes || []).forEach(t => projectSeq.push(t));
+  });
+  if (projectSeq.length === 0) return { ok: true };
+
+  // 2. 取模板中审核类型最多的一个作为基准（优先用本项目引用的模板，否则用全部流程模板）
+  const templates = (window._projectApprovalTemplates && window._projectApprovalTemplates.length)
+    ? window._projectApprovalTemplates
+    : (_flowTemplateData || []);
+  let refTemplate = null;
+  templates.forEach(t => {
+    const cnt = (t.flows || []).length;
+    if (!refTemplate || cnt > (refTemplate.flows || []).length) refTemplate = t;
+  });
+  if (!refTemplate || !refTemplate.flows || refTemplate.flows.length === 0) return { ok: true };
+
+  const refSeq = refTemplate.flows.map(f => f.auditType);
+
+  // 3. 校验相对顺序一致：项目序列中任意两个审核类型的前后关系，不得与基准模板矛盾
+  const posMap = {};
+  refSeq.forEach((t, i) => { if (!(t in posMap)) posMap[t] = i; });
+  let lastPos = -1;
+  for (let i = 0; i < projectSeq.length; i++) {
+    const t = projectSeq[i];
+    if (t in posMap) {
+      const p = posMap[t];
+      if (p < lastPos) {
+        return { ok: false, templateName: refTemplate.name, refSeq, projectSeq };
+      }
+      lastPos = p;
+    }
+    // 模板中不存在的审核类型不参与顺序比较
+  }
+  return { ok: true };
+}
+
+// 顺序不一致提示弹窗
+function showStageOrderErrorModal(info) {
+  const exist = document.getElementById('stageOrderErrorModal');
+  if (exist) exist.remove();
+
+  const refText = (info.refSeq || []).join(' → ');
+  const projText = (info.projectSeq || []).join(' → ');
+
+  const modalHtml = `
+    <div class="modal-overlay" id="stageOrderErrorModal" style="display:flex;z-index:100000" onclick="if(event.target===this)closeStageOrderErrorModal()">
+      <div class="modal-panel" style="width:480px;max-height:80vh;animation:fadeInDown 0.3s ease">
+        <div class="modal-header">
+          <h3 style="color:#F53F3F;display:flex;align-items:center;gap:8px">
+            <i class="fa-solid fa-circle-exclamation" style="font-size:20px"></i> 顺序校验失败
+          </h3>
+          <button class="modal-close-btn" onclick="closeStageOrderErrorModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding:28px 24px;text-align:center">
+          <div style="font-size:56px;margin-bottom:18px">⚠️</div>
+          <div style="font-size:16px;color:#333;font-weight:600;margin-bottom:12px">审核阶段设置的顺序和审核模板不一致</div>
+          <div style="font-size:13px;color:#999;line-height:1.8;margin-bottom:8px">
+            对比基准模板：<strong style="color:#1677ff">${info.templateName || ''}</strong>
+          </div>
+          <div style="margin-top:16px;padding:12px 16px;background:#fff7e6;border:1px solid #ffe58f;border-radius:8px;text-align:left;font-size:12px;color:#8c8c8c;line-height:2">
+            <div><strong>模板审核流程顺序：</strong><br/>${refText || '（无）'}</div>
+            <div style="margin-top:8px"><strong>本项目阶段审核类型顺序：</strong><br/>${projText || '（无）'}</div>
+          </div>
+          <div style="margin-top:14px;font-size:12px;color:#999;line-height:1.8;text-align:left">
+            请调整「阶段设置」中各阶段勾选的审批类型顺序，使其与模板审核流程顺序保持一致后再保存。
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid #f0f0f0;padding:16px 20px;display:flex;justify-content:center">
+          <button class="btn btn-primary" onclick="closeStageOrderErrorModal()" style="background:#1677ff">
+            <i class="fa-solid fa-check"></i> 我知道了
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = modalHtml;
+  document.body.appendChild(tempDiv.firstElementChild);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeStageOrderErrorModal() {
+  const modal = document.getElementById('stageOrderErrorModal');
+  if (modal) {
+    modal.style.opacity = '0';
+    modal.style.transition = 'opacity 0.2s';
+    setTimeout(() => {
+      modal.remove();
+      document.body.style.overflow = '';
+    }, 200);
+  }
+}
+
 function saveProject() {
+  const orderCheck = validateStageAuditOrder();
+  if (!orderCheck.ok) {
+    showStageOrderErrorModal(orderCheck);
+    return;
+  }
   showWechatToast('项目保存成功！');
 }
 
 function saveAndPublish() {
+  const orderCheck = validateStageAuditOrder();
+  if (!orderCheck.ok) {
+    showStageOrderErrorModal(orderCheck);
+    return;
+  }
   if(!hasMainFlow()) {
     // 弹出警告弹窗，提示必须设置主流程
     showMainFlowRequiredModal();
