@@ -7665,11 +7665,13 @@ function updatePRDPanel(mod, sub, targetId) {
                 1.每个已选阶段独立配置本项目所需的审批类型，这个审核类型 用于后面 判断 在什么样的审核流下 进行不同阶段的匹配。</li><li>
                 2.默认值：所有启用的审批类型，默认选中该阶段在「系统管理 → 审批阶段配置」中维护的审批类型。</li><li>
                 3. 数据来源：「系统管理 → 审批类型配置」。</li><li>
-                4. 不同阶段的审批类型不能重复</li>
+                4. 不同阶段的审批类型不能重复</li><li>
+                5.顺序展示跟审批阶段启用的顺序保持一致， 保存的时候也是需要严格按照审核类型的先后顺序保存。</li><li>
+                5.选中的每个阶段 都必须选择至少一个审批类型。</li>
                 <li>这个地方开发和测试的时候注意一下：有一个逻辑的问题，就是 每个阶段包含的审核类型  不要随便组合测试，按照常用的测试，因为还跟 审核流程 有一点关系，比如审核流程的顺序是 预筛-主知情-入组，那在这边配置的时候 ，
                   就不能选择 预筛阶段 可以选择 预筛和入组，筛选阶段选择 主知情了，会乱掉，这两部分 从业务上 是有逻辑顺序的
                   <li>如果审批阶段配置的审核类型多于 审核模板，在审核的时候，以审核流程为主</li>
-                  <li>保存的时候，校验 阶段综合下来的 包含的审核类型顺序 是不是 跟 审核流程（以模板中审核类型最多的一个进行比较） 的顺序是一致的，如果不一致，就提示 审核阶段设置的顺序和审核模板不一致  不让保存</li>
+                  <li>保存的时候，校验审批阶段包含的审核类型顺序 是不是 跟 审核流程（以模板中审核类型最多的一个进行比较） 的顺序是一致的，如果不一致，就提示 审核阶段设置的顺序和审核模板不一致  不让保存</li>
                   </li>
                 </ul>
               </li>
@@ -7715,7 +7717,7 @@ function updatePRDPanel(mod, sub, targetId) {
         
         {
           title: '★ 审批流设置（本次修改）',
-          content: '<ul><li><strong>修改摘要</strong>：新增页面的审核类型 需要修改数据来源「系统管理 → 审批类型配置」</li></ul>'
+          content: '<ul><li><strong>修改摘要</strong>：新增页面和查询条件中的审核类型 需要修改数据来源「系统管理 → 审批类型配置」</li></ul>'
         },
          
        
@@ -10389,7 +10391,6 @@ function renderAuditTypeRows(filters){
     return '<tr><td>'+(i+1)+'</td>'
       +'<td><code style="background:#f2f3f5;padding:1px 6px;border-radius:4px;font-size:12px">'+d.code+'</code></td>'
       +'<td>'+d.name+'</td>'
-      +'<td style="font-size:12px;color:#666;font-family:monospace;word-break:break-all">'+d.icon+'</td>'
       +'<td>'+d.order+' <span style="display:inline-flex;gap:4px;margin-left:4px">'
         +'<a href="javascript:void(0)" onclick="moveAuditType(\''+d.code+'\',\'up\')" class="'+(i===0?'table-action-disabled':'table-action')+'" title="上移"><i class="fa-solid fa-arrow-up"></i></a>'
         +'<a href="javascript:void(0)" onclick="moveAuditType(\''+d.code+'\',\'down\')" class="'+(i===rows.length-1?'table-action-disabled':'table-action')+'" title="下移"><i class="fa-solid fa-arrow-down"></i></a>'
