@@ -1231,6 +1231,34 @@
     }
     .recognition-empty { padding: 30px 0; text-align: center; color: #999; font-size: 13px; }
 
+    /* 提取状态：提取中 / 提取失败 */
+    .recognition-status-box {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      padding: 40px 20px; text-align: center;
+    }
+    .recognition-status-box .rs-icon { font-size: 30px; line-height: 1; }
+    .recognition-status-box.extracting .rs-icon { color: #165DFF; }
+    .recognition-status-box.failed .rs-icon { color: #F53F3F; }
+    .recognition-status-box .rs-text { font-size: 14px; color: #4e5969; }
+    .recognition-status-box .rs-hint { font-size: 12px; color: #86909c; }
+    .btn-disabled { background: #f2f3f5 !important; color: #c9cdd4 !important; border-color: #f2f3f5 !important; cursor: not-allowed; }
+
+    /* 原型演示控制面板 */
+    .demo-panel {
+      position: fixed; right: 16px; bottom: 16px; width: 230px;
+      background: #fff; border: 1px solid #e5e6eb; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12); padding: 12px; z-index: 9999; font-size: 12px;
+    }
+    .demo-panel h4 { margin: 0 0 10px; font-size: 13px; color: #1d2129; }
+    .demo-panel .demo-row { margin-bottom: 10px; }
+    .demo-panel .demo-row > span { display: block; margin-bottom: 5px; color: #4e5969; }
+    .demo-panel .demo-btns { display: flex; gap: 4px; }
+    .demo-panel .demo-btns button {
+      flex: 1; padding: 5px 4px; font-size: 12px;
+      border: 1px solid #e5e6eb; background: #f7f8fa; border-radius: 4px; cursor: pointer;
+    }
+    .demo-panel .demo-btns button.active { background: #165DFF; color: #fff; border-color: #165DFF; }
+
 
     .think-summary { display: flex; flex-direction: column; gap: 8px; }
     .think-step { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6; color: #555; }
@@ -2367,9 +2395,107 @@
 
 
     // 新版：合并症 / 合并药物 AI识别（表格化输出：名称 / 规格频次 / 证据来源）
+    // ==================== 合并症 / 合并药物：提取状态 ====================
+    // 提取状态：success(成功) | extracting(提取中) | failed(提取失败)
+    // 实际项目中状态应由后端返回，此处用全局变量模拟以便原型演示
+    const recognitionStatus = {
+      comorbidity: 'extracting', // 默认演示“提取中”
+      medication: 'failed'      // 默认演示“提取失败”
+    };
+    // 当前用户是否为超级管理员（实际应从登录态获取，此处用全局变量模拟）
+    let CURRENT_USER_IS_SUPER_ADMIN = true;
+
+    // 提取中状态展示
+    function renderExtracting(type) {
+      const titleName = type === 'medication' ? '合并用药' : '合并症';
+      if (CURRENT_USER_IS_SUPER_ADMIN) {
+        return `
+          <div class="recognition-status-box extracting">
+            <div class="rs-icon"><i class="fas fa-spinner fa-spin"></i></div>
+            <div class="rs-text">${titleName}提取中…</div>
+            <button class="btn-sm btn-primary" onclick="reExtract('${type}')"><i class="fas fa-redo"></i> 重新提取</button>
+          </div>`;
+      }
+      return `
+        <div class="recognition-status-box extracting">
+          <div class="rs-icon"><i class="fas fa-spinner fa-spin"></i></div>
+          <div class="rs-text">${titleName}提取中…</div>
+          <button class="btn-sm btn-disabled" disabled><i class="fas fa-redo"></i> 重新提取</button>
+          <div class="rs-hint">仅超级管理员可重新提取</div>
+        </div>`;
+    }
+
+    // 提取失败状态展示（所有人可点击“重新提取”）
+    function renderFailed(type) {
+      const titleName = type === 'medication' ? '合并用药' : '合并症';
+      return `
+        <div class="recognition-status-box failed">
+          <div class="rs-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="rs-text">${titleName}提取失败，请重新提取</div>
+          <button class="btn-sm btn-primary" onclick="reExtract('${type}')"><i class="fas fa-redo"></i> 重新提取</button>
+        </div>`;
+    }
+
+    // 重新提取：进入“提取中”，模拟 1.5s 后回到“成功”
+    function reExtract(type) {
+      if (type !== 'comorbidity' && type !== 'medication') return;
+      recognitionStatus[type] = 'extracting';
+      rerenderAllRecognition(type);
+      setTimeout(function () {
+        recognitionStatus[type] = 'success';
+        rerenderAllRecognition(type);
+      }, 1500);
+    }
+
+    // 重新渲染某类型对应的全部容器（旧版 / 新版各一份）
+    function rerenderAllRecognition(type) {
+      const v = matchVersionData[currentMatchVersion] || matchVersionData.v1;
+      const targets = {
+        comorbidity: ['comorbidityList', 'comorbidityListNew', 'oldComorbidityList'],
+        medication: ['medicationList', 'medicationListNew', 'oldMedicationList']
+      };
+      (targets[type] || []).forEach(function (id) {
+        renderRecognition(id, v[type], type);
+      });
+    }
+
+    // 原型演示控制面板（仅用于演示提取状态/角色，可删除）
+    function initDemoPanel() {
+      const roleBtns = document.getElementById('demoRoleBtns');
+      const comBtns = document.getElementById('demoComorbidityBtns');
+      const medBtns = document.getElementById('demoMedicationBtns');
+      if (!roleBtns || !comBtns || !medBtns) return;
+      function setActive(container, btn) {
+        container.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+        btn.classList.add('active');
+      }
+      roleBtns.addEventListener('click', function (e) {
+        const b = e.target.closest('button'); if (!b) return;
+        CURRENT_USER_IS_SUPER_ADMIN = (b.dataset.role === 'super');
+        setActive(roleBtns, b);
+        rerenderAllRecognition('comorbidity');
+        rerenderAllRecognition('medication');
+      });
+      comBtns.addEventListener('click', function (e) {
+        const b = e.target.closest('button'); if (!b) return;
+        recognitionStatus.comorbidity = b.dataset.st;
+        setActive(comBtns, b);
+        rerenderAllRecognition('comorbidity');
+      });
+      medBtns.addEventListener('click', function (e) {
+        const b = e.target.closest('button'); if (!b) return;
+        recognitionStatus.medication = b.dataset.st;
+        setActive(medBtns, b);
+        rerenderAllRecognition('medication');
+      });
+    }
+
     function renderRecognition(boxId, data, type) {
       const box = document.getElementById(boxId);
       if (!box) return;
+      const status = recognitionStatus[type] || 'success';
+      if (status === 'extracting') { box.innerHTML = renderExtracting(type); return; }
+      if (status === 'failed') { box.innerHTML = renderFailed(type); return; }
       const list = data || [];
       if (list.length === 0) {
         box.innerHTML = '<div class="recognition-empty">未识别到相关记录</div>';
@@ -2741,6 +2867,9 @@
 
       // 初始化 PRD 面板（须在函数定义之后调用）
       try { updatePRDPanel('audit'); } catch (e) { console.error('updatePRDPanel', e); }
+
+      // 初始化原型演示控制面板
+      try { initDemoPanel(); } catch (e) { console.error('initDemoPanel', e); }
     });
 
 // ==================== PRD 需求说明面板 ====================
@@ -2862,5 +2991,32 @@ function closeTraceView() {
   if (side) side.classList.remove('open');
 }
   </script>
+  <!-- 原型演示控制面板（仅用于演示提取状态/角色，可删除） -->
+  <div class="demo-panel" id="demoPanel">
+    <h4>原型演示控制</h4>
+    <div class="demo-row">
+      <span>当前角色</span>
+      <div class="demo-btns" id="demoRoleBtns">
+        <button data-role="super" class="active">超级管理员</button>
+        <button data-role="normal">普通用户</button>
+      </div>
+    </div>
+    <div class="demo-row">
+      <span>合并症状态</span>
+      <div class="demo-btns" id="demoComorbidityBtns">
+        <button data-st="success">成功</button>
+        <button data-st="extracting" class="active">提取中</button>
+        <button data-st="failed">失败</button>
+      </div>
+    </div>
+    <div class="demo-row">
+      <span>合并药物状态</span>
+      <div class="demo-btns" id="demoMedicationBtns">
+        <button data-st="success">成功</button>
+        <button data-st="extracting">提取中</button>
+        <button data-st="failed" class="active">失败</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
