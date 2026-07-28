@@ -1289,6 +1289,30 @@
     .ai-result-待审 { color: #1677ff; }
     .ai-result-待定 { color: #FA8C16; }
 
+    /* ====== 合并症/合并药物 修正相关 ====== */
+    .corrected-card { border: 1px solid #1677ff; background: #f0f7ff; }
+    .corrected-tag { margin-left: auto; font-size: 11px; color: #1677ff; background: rgba(22,119,255,.1); padding: 1px 8px; border-radius: 10px; }
+    .como-name { font-weight: 600; }
+    .form-row { display: flex; align-items: center; margin-bottom: 10px; }
+    .form-row label { width: 64px; font-size: 13px; color: #666; flex-shrink: 0; }
+    .como-input { flex: 1; padding: 7px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; }
+    .como-input:focus { border-color: #1677ff; outline: none; }
+    .record-item-block { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
+    .record-time { font-size: 12px; color: #1677ff; margin-bottom: 4px; }
+    .record-change { font-size: 12px; color: #666; line-height: 1.6; }
+
+    /* ====== 通用弹窗（H5 内复用） ====== */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 100001; }
+    .modal-panel { background: #fff; border-radius: 12px; width: 90%; max-width: 420px; max-height: 85vh; overflow: auto; box-shadow: 0 8px 30px rgba(0,0,0,.2); animation: fadeInDown .25s ease; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; }
+    .modal-header h3 { font-size: 15px; margin: 0; color: #1a1a1a; }
+    .modal-close-btn { border: none; background: transparent; font-size: 22px; line-height: 1; color: #999; cursor: pointer; }
+    .modal-body { padding: 16px 18px; }
+    .modal-footer { padding: 12px 18px; border-top: 1px solid #f0f0f0; display: flex; justify-content: flex-end; gap: 10px; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 1px solid transparent; }
+    .btn-default { background: #fff; border-color: #d9d9d9; color: #333; }
+    .btn-primary { background: #1677ff; color: #fff; }
+
     /* ====== 新版：AI 建议（结论 / 风险提示 / 需补充资料） ====== */
     .ai-suggest-new { font-size: 13px; }
     .ai-conclusion { display: flex; align-items: flex-start; gap: 8px; line-height: 1.6; }
@@ -1644,14 +1668,14 @@
 
             <div class="record-section">
               <div class="record-section-header" onclick="toggleRecordSection(this)">
-                <span class="record-section-title">预筛审核记录</span>
+                <span class="record-section-title demo-circle">预筛审核记录</span>
                 <span class="record-section-toggle">收起 <i class="fas fa-chevron-up" style="font-size:11px"></i></span>
               </div>
               <div class="record-actions">
                 <div class="record-action-btn secondary" onclick="toastMini('撤销提交')">撤销提交</div>
                 <div class="record-action-btn secondary" onclick="toastMini('催办')">催办</div>
                 <div class="record-action-btn secondary" onclick="toastMini('下载')">下载</div>
-                <div class="record-action-btn" onclick="toastMini('预筛沟通')">预筛沟通</div>
+                <div class="record-action-btn  demo-circle" onclick="toastMini('预筛沟通')">预筛沟通</div>
               </div>
               <div class="record-timeline" id="recordTimeline">
                 <!-- 由 JS 渲染 -->
@@ -1747,7 +1771,7 @@
         </div>
         <div class="sh-footer">
           <button class="cancel-btn" onclick="closeAudit()">取消</button>
-          <button class="submit-btn" id="auditSubmitBtn" onclick="submitAudit()">确定</button>
+          <button class="submit-btn  demo-circle" id="auditSubmitBtn" onclick="submitAudit()">确定</button>
         </div>
       </div>
 
@@ -1807,7 +1831,7 @@
           </div>
         </div>
         <div class="approve-footer">
-          <button class="approve-btn outline" onclick="onApprovePreCom()">预筛沟通</button>
+          <button class="approve-btn outline demo-circle" onclick="onApprovePreCom()">预筛沟通</button>
           <button class="approve-btn blue" onclick="onApproveReject()">驳回</button>
           <button class="approve-btn blue" onclick="onApprovePass()">通过</button>
         </div>
@@ -1885,16 +1909,14 @@
     <h4 id="prd-pin-5"><span class="pin">5</span>项目匹配</h4>
     <ul>
       <li>项目匹配逻辑与 PC 端保持一致。</li>
-      <li>ZWMS（跨阶段）直接匹配；HGKD 等多版本患者需选择入排版本。</li>
-      <li>支持「仅项目匹配」或「匹配并预提交」。</li>
+      <li style="color: red;">前端不用修改，后端需要改对应的匹配逻辑。</li>
     </ul>
 
-    <h4 id="prd-pin-6"><span class="pin">6</span>AI 智能匹配（跨阶段自动提交）</h4>
+    <h4 id="prd-pin-6"><span class="pin">6</span>提交审核/补充审核/单独点预提交  </h4>
     <ul>
-      <li>患者<b>跨阶段提交审批</b>（如从「预筛」跨到「入组」）时，弹出「AI 智能匹配」提示框。</li>
-      <li >提交审核的检测阶段是否匹配的文案修改：「检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交」 改成  “检测到您已跨阶段，匹配成功后系统将自动为您提交。”。</li>
-      <li>多版本患者（如 HGKD 配置了 <code>inExVersions</code>）自动追加版本选择提示，入排版本下拉与「项目匹配确认弹窗」保持完全一致。</li>
-      <li>点击「匹配并提交」→ 执行匹配并自动提交审批；点击「关闭」→ 提示尚未完成匹配，保持提交弹窗不关闭。</li>
+      <li>1. 一直展示知情时间和筛选号，必填校验跟项目配置保持一致，</li>
+      <li >2. 涉及前端的 一个文案提示修改：提交审核的检测阶段是否匹配的文案修改：「检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交」 改成  “检测到您已跨阶段，匹配成功后系统将自动为您提交。”。</li>
+    <li>3. 匹配的逻辑跟PC保持一致</li>
     </ul>
 
     <h4 id="prd-pin-7"><span class="pin">7</span>匹配详情（新旧版本）</h4>
@@ -1932,7 +1954,7 @@
       { id: 'ST03', name: '入组阶段', informedRequired: true, auditTypes: ['入组审核'] }
     ];
     const _comorbidityData = { stages: ['ST01', 'ST03'] };
-    const _conmedData = { stages: ['ST03'] };
+    const _conmedData = { stages: ['ST01', 'ST03'] };
     const PV_STATE = {
       list: [
         { module: 'match', configureNew: true, defaultView: 'new' },
@@ -1978,14 +2000,14 @@
           { no: 22, type: '排除', content: '存在其他严重身体或实验室检查异常，可能增加风险或干扰结果，研究者认为不适合参与', judge: '待定', source: '含研究者主观判断，按规则判待定', risk: '需研究者综合判断是否适合', suggest: '研究者评估是否适合参与研究' }
         ],
         comorbidity: [
-          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可' },
-          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%' },
-          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复' }
+          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-06-12' },
+          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-05-20' },
+          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03' }
         ],
         conmed: [
-          { name: '氨氯地平', dose: '5mg qd', reason: '高血压' },
-          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病' },
-          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗' }
+          { name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-06-12' },
+          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-05-20' },
+          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-06-01' }
         ],
         run: { model: 'Hunyuan + RAG', start: '2026-07-10 10:32:15', end: '2026-07-10 10:36:56', rag: '00:42', llm: '03:59', total: '04:41', version: 'preScreen-1.0', range: '2026-07-10 10:32 ~ 10:36' },
         basic: { patientNo: 'WYNA-CN053', center: '安阳市肿瘤医院', centerNo: 'CN001', screenNo: 'S-003', inExVersion: 'preScreen-1.0（2026-07-08 更新）' },
@@ -2022,15 +2044,15 @@
           { no: 4, type: '排除', content: '其他严重异常研究者认为不适合入组', judge: '待定', source: '研究者判断', risk: '需研究者综合评估', suggest: '研究者评估' }
         ],
         comorbidity: [
-          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可' },
-          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%' },
-          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复' }
+          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-07-08' },
+          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-06-30' },
+          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03' }
         ],
         conmed: [
-          { name: '氨氯地平', dose: '5mg qd', reason: '高血压' },
-          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病' },
-          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗' },
-          { name: '阿贝西利', dose: '150mg qd', reason: 'CDK4/6 抑制剂联合内分泌' }
+          { name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-07-08' },
+          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-06-30' },
+          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-07-01' },
+          { name: '阿贝西利', dose: '150mg qd', reason: 'CDK4/6 抑制剂联合内分泌', spec: '150mg/片', source: '处方：肿瘤科 2026-07-02' }
         ],
         run: { model: 'hunyuan + RAG', start: '2026-07-12 14:02:31', end: '2026-07-12 14:08:10', rag: '00:51', llm: '04:48', total: '05:39', version: 'enroll-2.0', range: '2026-07-12 14:02 ~ 14:08' },
         basic: { patientNo: 'WYNA-CN053', center: '安阳市肿瘤医院', centerNo: 'CN001', screenNo: 'S-011', inExVersion: 'enroll-2.0（2026-07-11 更新）' },
@@ -2062,13 +2084,11 @@
     // 动态生成 AI 智能匹配提示文案：与项目匹配逻辑一致，共用 _projectSelectedStages / inExVersions
     function buildAiMatchDesc(cur) {
       const target = (cur && cur.matchStage) || lastSelectedStageId();
-      const short = stageShortName(target) || '入组';
       const needVersion = cur && Array.isArray(cur.inExVersions) && cur.inExVersions.length > 0;
-      let txt = `检测到您已跨阶段，需要进行${short}匹配`;
+      let txt = '检测到您已跨阶段，匹配成功后系统将自动为您提交。';
       if (needVersion) {
-        txt += '，请选择入排版本后系统将按该版本进行匹配';
+        txt += '请选择入排版本后，系统将按该版本进行匹配。';
       }
-      txt += '，匹配成功后系统会自动帮您提交';
       return txt;
     }
 
@@ -2129,6 +2149,7 @@
     let currentMdVersion = 'new';      // 匹配详情版本：new / old
     let currentMdTabName = 'match';    // 匹配详情子 Tab：match / screen / tc
     let currentDetailPatientId = null; // 当前匹配详情对应的患者 id
+    let detailBackScreen = 'patient';   // 匹配详情返回目标：智能筛选='patient'，审核列表='audit'
 
     // ========= 思考链数据源（与 match-detail-new.html 一致） =========
     const tcResultsByType = {
@@ -2465,6 +2486,7 @@ HDL-C：1.09 mmol/L
     function openPtDetail(id) {
       // 找到与审核列表思考链 4 态一一对应的患者，匹配 state
       currentDetailPatientId = id;
+      detailBackScreen = 'patient'; // 从智能筛选进入，返回应回到患者列表
       const pt = PATIENT_DATA.find(d => d.id === id);
       // 在 AUDIT_DATA 中找同 thinkStatus 的数据，复用详情渲染
       const matched = AUDIT_DATA.find(a => a.thinkStatus === pt.thinkStatus) || AUDIT_DATA[0];
@@ -2810,8 +2832,8 @@ HDL-C：1.09 mmol/L
             </div>
               <div class="action-bar">
               <div class="act-btn">抄送</div>
-              <div class="act-btn" onclick="openDetail(${d.id})">匹配详情</div>
-              <div class="act-btn primary" onclick="event.stopPropagation();openApprove()">审核</div>
+              <div class="act-btn demo-circle" onclick="openDetail(${d.id})">匹配详情</div>
+              <div class="act-btn primary demo-circle" onclick="event.stopPropagation();openApprove()">审核</div>
             </div>
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料
@@ -2822,9 +2844,15 @@ HDL-C：1.09 mmol/L
       }).join('');
     }
 
-    // ========= 进入详情 =========
+    // ========= 进入详情（审核列表入口） =========
     function openDetail(id) {
       currentDetail = AUDIT_DATA.find(d => d.id === id);
+      detailBackScreen = 'audit'; // 从审核列表进入，返回应回到审核列表
+      // 阶段/版本与智能筛选入口保持一致：默认取项目选中阶段第一个，版本按 PC 配置
+      currentDetailStage = (_projectSelectedStages[0] || {}).id || 'ST01';
+      currentMdVersion = getPageVersion('match');
+      renderStageTabs();
+      renderVersionToggle();
       goScreen('detail');
       // 标题
       document.getElementById('detailTitle').textContent =
@@ -2962,38 +2990,185 @@ HDL-C：1.09 mmol/L
         </div>`;
     }
 
-    // 合并症 / 合并药物（配置驱动，两个版本都展示；旧版导航锚点用 id 定位）
+    // 合并症 / 合并药物 修正状态（key = stage-kind-idx）
+    const _comoCorrections = {};
+    function comoKey(stage, kind, idx) { return stage + '-' + kind + '-' + idx; }
+
+    // 单条合并症/合并药物卡片：展示 名称 / 规格(药品)或分级·状态 / 证据来源，并带 结果修正 / 修正记录 / 清空修正
+    function comorbidityItemCard(stage, kind, idx, item) {
+      const key = comoKey(stage, kind, idx);
+      const corr = _comoCorrections[key];
+      const corrected = !!corr;
+      const name = corr ? corr.name : item.name;
+      const source = corr ? corr.source : (item.source || '—');
+
+      let bodyHtml, tag;
+      if (kind === 'como') {
+        tag = '合并症';
+        bodyHtml = `
+          <div class="kv-row"><span class="como-name">${name}</span></div>
+          <div class="m-field"><div class="match-field-label">证据来源</div><div class="match-field-value">${source}</div></div>`;
+      } else {
+        const spec = corr ? corr.spec : (item.spec || '—');
+        tag = '合并药物';
+        bodyHtml = `
+          <div class="kv-row" style="align-items:baseline"><span class="como-name">${name}</span><span style="color:#999">${spec}</span></div>
+          <div class="m-field"><div class="match-field-label">证据来源</div><div class="match-field-value">${source}</div></div>`;
+      }
+
+      const foot = `
+        <div class="match-card-foot">
+          <span class="match-foot-btn" onclick="openComoCorrect('${stage}','${kind}',${idx})">结果修正</span>
+          <span class="match-foot-btn ${corrected ? '' : 'disabled'}" onclick="showComoRecord('${stage}','${kind}',${idx})">修正记录</span>
+          <span class="match-foot-btn ${corrected ? '' : 'disabled'}" onclick="clearComoCorrect('${stage}','${kind}',${idx})">清空修正</span>
+        </div>`;
+
+      return `
+        <div class="match-card ${corrected ? 'corrected-card' : ''}" id="como-card-${key}">
+          <div class="match-card-head">
+            <span class="match-index" style="background:${kind === 'como' ? '#722ed1' : '#13c2c2'}">${kind === 'como' ? '±' : '℞'}</span>
+            <span class="match-type">${tag}</span>
+            ${corrected ? '<span class="corrected-tag">已修正</span>' : ''}
+          </div>
+          <div class="match-card-body">${bodyHtml}</div>
+          ${foot}
+        </div>`;
+    }
+
+    // 合并症 / 合并药物（配置驱动，两个版本都展示）
     function comorbidityBlocks(stage) {
       const md = MATCH_DETAIL[stage];
       if (!md) return '';
       let html = '';
       if (isComorbidityEnabled(stage)) {
-        const rows = (md.comorbidity || []).map(c =>
-          `<div class="kv-row"><span>${c.name}</span><span>${c.grade} · ${c.status}</span></div>
-           <div class="match-field-value" style="color:#999;margin-bottom:6px">${c.note}</div>`).join('');
-        html += `
-          <div class="match-card" id="sec-como">
-            <div class="match-card-head">
-              <span class="match-index" style="background:#722ed1">±</span>
-              <span class="match-type">合并症</span>
-            </div>
-            <div class="match-card-body">${rows}</div>
-          </div>`;
+        const cards = (md.comorbidity || []).map((c, i) => comorbidityItemCard(stage, 'como', i, c)).join('');
+        html += `<div id="sec-como">${cards}</div>`;
       }
       if (isConmedEnabled(stage)) {
-        const rows = (md.conmed || []).map(c =>
-          `<div class="kv-row"><span>${c.name}</span><span>${c.dose} · ${c.reason}</span></div>`).join('');
-        html += `
-          <div class="match-card" id="sec-conmed">
-            <div class="match-card-head">
-              <span class="match-index" style="background:#13c2c2">℞</span>
-              <span class="match-type">合并药物</span>
-            </div>
-            <div class="match-card-body">${rows}</div>
-          </div>`;
+        const cards = (md.conmed || []).map((c, i) => comorbidityItemCard(stage, 'conmed', i, c)).join('');
+        html += `<div id="sec-conmed">${cards}</div>`;
       }
       return html;
     }
+
+    // ========= 合并症/合并药物 结果修正 / 修正记录 / 清空修正 =========
+    function fieldLabel(f) {
+      return ({ name: '名称', grade: '分级', status: '状态', note: '备注', source: '证据来源', spec: '规格', reason: '用药原因' })[f] || f;
+    }
+
+    function openComoCorrect(stage, kind, idx) {
+      const md = MATCH_DETAIL[stage];
+      if (!md) return;
+      const item = (kind === 'como' ? md.comorbidity : md.conmed)[idx];
+      const corr = _comoCorrections[comoKey(stage, kind, idx)] || {};
+      const cur = {
+        name: corr.name != null ? corr.name : item.name,
+        source: corr.source != null ? corr.source : (item.source || ''),
+        spec: corr.spec != null ? corr.spec : (item.spec || '')
+      };
+      const isComo = kind === 'como';
+      const fields = isComo ? [
+        { k: 'name', label: '名称', val: cur.name },
+        { k: 'source', label: '证据来源', val: cur.source }
+      ] : [
+        { k: 'name', label: '名称', val: cur.name },
+        { k: 'spec', label: '规格', val: cur.spec },
+        { k: 'source', label: '证据来源', val: cur.source }
+      ];
+      const fieldHtml = fields.map(f => `
+        <div class="form-row">
+          <label>${f.label}</label>
+          <input class="como-input" data-k="${f.k}" value="${(f.val == null ? '' : String(f.val)).replace(/"/g, '&quot;')}" />
+        </div>`).join('');
+      const html = `
+        <div class="modal-overlay" id="comoCorrectModal" onclick="if(event.target===this)closeComoCorrectModal()">
+          <div class="modal-panel">
+            <div class="modal-header">
+              <h3>结果修正 - ${isComo ? '合并症' : '合并药物'}</h3>
+              <button class="modal-close-btn" onclick="closeComoCorrectModal()">×</button>
+            </div>
+            <div class="modal-body">${fieldHtml}
+              <div style="font-size:12px;color:#999;margin-top:8px">说明：修正后的内容将覆盖 AI 提取结果，并记录修正历史。</div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-default" onclick="closeComoCorrectModal()">取消</button>
+              <button class="btn btn-primary" onclick="saveComoCorrect('${stage}','${kind}',${idx})">保存修正</button>
+            </div>
+          </div>
+        </div>`;
+      openGenericModalHtml(html);
+    }
+
+    function saveComoCorrect(stage, kind, idx) {
+      const modal = document.getElementById('comoCorrectModal');
+      if (!modal) return;
+      const vals = {};
+      modal.querySelectorAll('.como-input').forEach(inp => { vals[inp.dataset.k] = inp.value.trim(); });
+      const md = MATCH_DETAIL[stage];
+      const item = (kind === 'como' ? md.comorbidity : md.conmed)[idx];
+      const key = comoKey(stage, kind, idx);
+      const prev = _comoCorrections[key] || null;
+      const changes = [];
+      ['name', 'grade', 'status', 'note', 'source', 'spec', 'reason'].forEach(f => {
+        const oldV = prev ? prev[f] : item[f];
+        const newV = vals[f] != null ? vals[f] : (item[f] || '');
+        if (String(oldV) !== String(newV)) changes.push({ field: f, old: oldV, now: newV });
+      });
+      const now = new Date();
+      const time = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      const entry = { name: vals.name || item.name, source: vals.source };
+      if (kind === 'como') { /* 合并症仅修正名称/证据来源 */ }
+      else { entry.spec = vals.spec; }
+      entry.correctedAt = time;
+      entry.history = (prev ? prev.history : []).concat([{ time, by: '当前用户', changes }]);
+      _comoCorrections[key] = entry;
+      closeComoCorrectModal();
+      renderMdBody('match');
+      if (typeof showWechatToast === 'function') showWechatToast('修正已保存');
+    }
+
+    function showComoRecord(stage, kind, idx) {
+      const key = comoKey(stage, kind, idx);
+      const corr = _comoCorrections[key];
+      let bodyHtml;
+      if (!corr || !corr.history || corr.history.length === 0) {
+        bodyHtml = '<div style="text-align:center;color:#999;padding:24px 0">暂无修正记录</div>';
+      } else {
+        bodyHtml = corr.history.map(h => `
+          <div class="record-item-block">
+            <div class="record-time">${h.time} · ${h.by}</div>
+            ${h.changes.map(c => `<div class="record-change">${fieldLabel(c.field)}：${c.old || '—'} → ${c.now || '—'}</div>`).join('')}
+          </div>`).join('');
+      }
+      const html = `
+        <div class="modal-overlay" id="comoRecordModal" onclick="if(event.target===this)closeComoRecordModal()">
+          <div class="modal-panel">
+            <div class="modal-header">
+              <h3>修正记录 - ${kind === 'como' ? '合并症' : '合并药物'}（${corr ? corr.name : ''}）</h3>
+              <button class="modal-close-btn" onclick="closeComoRecordModal()">×</button>
+            </div>
+            <div class="modal-body" style="max-height:60vh;overflow:auto">${bodyHtml}</div>
+            <div class="modal-footer"><button class="btn btn-default" onclick="closeComoRecordModal()">关闭</button></div>
+          </div>
+        </div>`;
+      openGenericModalHtml(html);
+    }
+
+    function clearComoCorrect(stage, kind, idx) {
+      const key = comoKey(stage, kind, idx);
+      if (!_comoCorrections[key]) return;
+      delete _comoCorrections[key];
+      renderMdBody('match');
+      if (typeof showWechatToast === 'function') showWechatToast('已清空修正');
+    }
+
+    function openGenericModalHtml(html) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      document.body.appendChild(temp.firstElementChild);
+    }
+    function closeComoCorrectModal() { const m = document.getElementById('comoCorrectModal'); if (m) m.remove(); }
+    function closeComoRecordModal() { const m = document.getElementById('comoRecordModal'); if (m) m.remove(); }
 
     // 匹配详情主渲染：新版=智能匹配（卡片式），旧版=匹配详情（卡片式）
     // 两个版本均对齐 match-detail-new.html 的新/旧版结构
