@@ -7659,7 +7659,7 @@ function updatePRDPanel(mod, sub, targetId) {
                 3. 业务影响：调整后的顺序即为该项目后续实际执行的审批流顺序。</li></ul></li><li>
                 4. 知情同意完整性校验，设置了哪些阶段 选中，这个阶段的知情时间和 筛选号 就是必填项，需要做检验，跟 提交审核的页面和编辑的页面  这俩是不是 必填项 直接关联。</li><li>
                 </ul>
-                <li>修改审批阶段的逻辑：
+                <li >修改审批阶段的逻辑：
                   <ul>
                     <li>项目中始终可以编辑，每次编辑 后台都会做一个版本管理</li>
                     <li>初始化配置版本为1，历史患者也都设置版本为1，比方说10号更新了一次配置，版本号升为2，期间新增的患者也把版本升为2，后面判断患者的阶段都根据版本去查配置</li>
@@ -15504,7 +15504,7 @@ function renderCriteriaVersionContent(ver) {
           ${stageTds}
           <td class="action-cell">
             <span class="config-action" onclick="openCriteriaRemarkModal('${ver}','${type}',${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注</span>
-            <span class="config-action" onclick="openCriteriaThinkChainModal('${ver}','${type}',${idx})"><i class="fa-solid fa-brain"></i> 思考链${(item.thinkingChain && item.thinkingChain.length) ? `<em class="think-badge">${item.thinkingChain.length}</em>` : ''}</span>
+            <span class="config-action" onclick="openRowThinkChain('inclusion','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('inclusion','${item.id}')}</span>
             ${items.length > 1 ? `<span class="delete-action" onclick="deleteProjectCriteriaRow('${ver}', '${type}', ${idx})">删除</span>` : ''}
           </td>
         </tr>
@@ -16187,7 +16187,7 @@ function renderScreeningContent() {
         ${stageTds}
         <td class="action-cell">
           <span class="config-action" onclick="openScreeningRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
-          <span class="config-action" onclick="openScreeningThinkChainModal(${idx})"><i class="fa-solid fa-brain"></i> 思考链${(item.thinkingChain && item.thinkingChain.length) ? `<em class="think-badge">${item.thinkingChain.length}</em>` : ''}</span>
+          <span class="config-action" onclick="openRowThinkChain('screening','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('screening','${item.id}')}</span>
           ${items.length > 1 ? `<span class="delete-action" onclick="deleteScreeningRow(${idx})">删除</span>` : ''}
         </td>
       </tr>
@@ -16951,6 +16951,25 @@ function closeProjThinkChainEdit() {
   const modal = document.getElementById('projectThinkChainEditModal');
   if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
 }
+// 入排/筛选表操作列「思考链」直接复用「新增思考链」页面，并按行关联
+function openRowThinkChain(pageType, linkId) {
+  const existing = _projThinkChains.filter(function(c){ return c.type === pageType && c.link === linkId; })[0];
+  if (existing) { openProjThinkChainEdit(existing.id); return; }
+  openProjThinkChainEdit(null);
+  _projTcType = pageType;
+  setProjTcType(pageType);
+  const linkEl = document.getElementById('projTcLink');
+  if (linkEl) linkEl.value = linkId;
+}
+// 操作列思考链徽标：依据行关联的项目级思考链显示步骤数
+function projTcLinkedBadge(type, linkId) {
+  const c = _projThinkChains.filter(function(x){ return x.type === type && x.link === linkId; })[0];
+  if (!c) return '';
+  let steps = 0;
+  if (c.stageSteps) { Object.keys(c.stageSteps).forEach(function(k){ steps += (c.stageSteps[k] || []).length; }); }
+  else if (c.steps) { steps = c.steps.length; }
+  return '<em class="think-badge">' + (steps ? steps : '✓') + '</em>';
+}
 function renderProjTcStageSection() {
   const wrap = document.getElementById('projTcStageSection');
   if (!wrap) return;
@@ -17064,8 +17083,12 @@ function loadProjTcInclusionOptions() {
   const linkSel = document.getElementById('projTcLink');
   if (verSel) verSel.innerHTML = criteriaVersions.map(function(v){ return '<option value="'+v.version+'">'+v.name+'</option>'; }).join('');
   if (linkSel) {
-    const inc = (_projectCriteriaData[activeCriteriaVersion] && _projectCriteriaData[activeCriteriaVersion].inclusion) || [];
-    linkSel.innerHTML = '<option value="">请选择关联入排标准</option>' + inc.map(function(it){ return '<option value="'+it.id+'">'+escapeTc(it.content)+'</option>'; }).join('');
+    const verData = _projectCriteriaData[activeCriteriaVersion] || { inclusion: [], exclusion: [] };
+    const inc = verData.inclusion || [];
+    const exc = verData.exclusion || [];
+    linkSel.innerHTML = '<option value="">请选择关联入排标准</option>'
+      + '<optgroup label="入选标准">' + inc.map(function(it){ return '<option value="'+it.id+'">'+escapeTc(it.content)+'</option>'; }).join('') + '</optgroup>'
+      + '<optgroup label="排除标准">' + exc.map(function(it){ return '<option value="'+it.id+'">'+escapeTc(it.content)+'</option>'; }).join('') + '</optgroup>';
   }
 }
 function loadProjTcScreeningOptions() {
