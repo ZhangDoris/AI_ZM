@@ -16917,7 +16917,7 @@ function openProjThinkChainEdit(id) {
   if (id) chain = _projThinkChains.filter(function(c){ return c.id === id; })[0];
   if (chain) {
     _projTcType = chain.type;
-    _projTcEditStages = (chain.stages && chain.stages.length) ? chain.stages.slice() : _projectSelectedStages.map(function(s){ return s.id; });
+    _projTcEditStages = (chain.stages && chain.stages.length) ? chain.stages.slice() : []; // 无明确阶段则默认不勾选，由用户自主选择
     _projTcStageSteps = {};
     _projTcEditStages.forEach(function(sid){
       const arr = (chain.stageSteps && chain.stageSteps[sid]) ? chain.stageSteps[sid] : [];
@@ -16993,6 +16993,19 @@ function renderProjTcStageSection() {
     const stg = allStages.filter(function(s){ return s.id === sid; })[0];
     return '<label class="tc-copy-check"><input type="checkbox" value="' + sid + '" checked /> ' + escapeTc(stg ? stg.name : sid) + '</label>';
   }).join('');
+  const stepInner = applicable.length
+    ? ('<div class="tc-stage-tabs" id="projTcStageTabs">' + tabHtml + '</div>'
+       + '<div class="tc-stage-tabpage">'
+       +   (copyChecks
+              ? '<div class="tc-copy-bar"><i class="fa-solid fa-copy tc-copy-bar-ico"></i><span class="tc-copy-bar-label">将「' + escapeTc(stageName(_projTcActiveStage)) + '」的步骤复制到</span><div class="tc-copy-checks" id="projTcCopyChecks">' + copyChecks + '</div><button type="button" class="btn btn-primary btn-sm" onclick="copyProjTcStepsToSelected()">复制</button></div>'
+              : '')
+       +   '<div class="tc-steps-head"><span class="tc-steps-head-label">步骤设置</span><span class="tc-steps-head-hint" id="tcStepsCount">' + (_projTcStageSteps[_projTcActiveStage] || []).length + ' 步</span></div>'
+       +   '<div class="tc-edit-steps" id="projTcSteps"></div>'
+       +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'
+       +     '<button type="button" class="criteria-add-btn" onclick="addProjThinkChainStep()"><i class="fa-solid fa-plus"></i> 添加步骤</button>'
+       +   '</div>'
+       + '</div>')
+    : '<div style="color:#999;font-size:12px;padding:12px 0;background:#fafafa;border:1px dashed #d9d9d9;border-radius:6px;text-align:center;">请先在上方勾选「适用阶段」，再为各阶段分别配置对应的思考链步骤。</div>';
   wrap.innerHTML = ''
     + '<div class="tc-field">'
     +   '<label>适用阶段（勾选后该思考链在所选阶段生效；可对全部阶段用同一套步骤，也可逐阶段分别配置）</label>'
@@ -17000,17 +17013,7 @@ function renderProjTcStageSection() {
     + '</div>'
     + '<div class="tc-field">'
     +   '<label>按阶段配置步骤</label>'
-    +   '<div class="tc-stage-tabs" id="projTcStageTabs">' + tabHtml + '</div>'
-    +   '<div class="tc-stage-tabpage">'
-    +     (copyChecks
-            ? '<div class="tc-copy-bar"><i class="fa-solid fa-copy tc-copy-bar-ico"></i><span class="tc-copy-bar-label">将「' + escapeTc(stageName(_projTcActiveStage)) + '」的步骤复制到</span><div class="tc-copy-checks" id="projTcCopyChecks">' + copyChecks + '</div><button type="button" class="btn btn-primary btn-sm" onclick="copyProjTcStepsToSelected()">复制</button></div>'
-            : '')
-    +     '<div class="tc-steps-head"><span class="tc-steps-head-label">步骤设置</span><span class="tc-steps-head-hint" id="tcStepsCount">' + (_projTcStageSteps[_projTcActiveStage] || []).length + ' 步</span></div>'
-    +     '<div class="tc-edit-steps" id="projTcSteps"></div>'
-    +     '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'
-    +       '<button type="button" class="criteria-add-btn" onclick="addProjThinkChainStep()"><i class="fa-solid fa-plus"></i> 添加步骤</button>'
-    +     '</div>'
-    +   '</div>'
+    +   stepInner
     + '</div>';
   renderProjThinkChainSteps();
 }
@@ -17102,6 +17105,7 @@ function loadProjTcScreeningOptions() {
 function renderProjThinkChainSteps() {
   const wrap = document.getElementById('projTcSteps');
   if (!wrap) return;
+  if (!_projTcActiveStage) { wrap.innerHTML = '<div style="color:#999;font-size:12px;padding:8px 0;">请先在上方勾选「适用阶段」。</div>'; return; }
   const steps = _projTcStageSteps[_projTcActiveStage] || [];
   const cnt = document.getElementById('tcStepsCount');
   if (cnt) cnt.textContent = steps.length + ' 步';
