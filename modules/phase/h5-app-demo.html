@@ -1264,10 +1264,20 @@
     /* ====== 新版匹配详情卡片 ====== */
     .match-card-list { display: flex; flex-direction: column; gap: 14px; }
     .match-card { border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
-    .match-card-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #fafcff; border-bottom: 1px solid #f0f0f0; }
-    .match-index { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #165DFF; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; }
-    .match-type { font-weight: 500; color: #333; font-size: 13px; }
-    .match-card-body { padding: 12px 14px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .match-card-head { display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px; background: #fafcff; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .match-index { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #165DFF; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+    .match-type { font-weight: 500; color: #333; font-size: 13px; flex-shrink: 0; }
+    .match-title-text { font-size: 13px; color: #333; line-height: 1.5; flex: 1; min-width: 0; word-break: break-word; }
+    .match-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
+    .match-result-row { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.6; }
+    .match-result-row i { margin-top: 2px; flex-shrink: 0; font-size: 14px; }
+    .match-result-row.match { color: #00B42A; }
+    .match-result-row.pending { color: #FA8C16; }
+    .match-result-row.exclude { color: #F53F3F; }
+    .match-result-row .result-label { font-weight: 600; }
+    .ai-risk-card { border-color: #ffe58f; }
+    .ai-risk-hint { font-size: 12px; color: #FA8C16; display: flex; align-items: center; gap: 6px; margin-top: 4px; padding-top: 8px; border-top: 1px dashed #eee; }
+    .ai-risk-hint i { font-size: 12px; color: #FA8C16; }
     .match-field-label { font-size: 12px; color: #8c8c8c; margin-bottom: 4px; }
     .match-field-label.risk { color: #cf1322; }
     .match-field-label.suggest { color: #1677ff; }
@@ -1924,7 +1934,7 @@
     <h4 id="prd-pin-7"><span class="pin">7</span>匹配详情（新旧版本）</h4>
     <ul>
       <li>顶部阶段标签根据项目配置动态生成（预筛、入组等），点击切换不同阶段的匹配详情。</li>
-      <li>根据 PC 端页面版本配置（<code>configureNew</code>）展示旧版或新版匹配详情，版本切换条默认取 <code>defaultView</code>（match 模块默认新版），可手动切换；两个版本结构对齐 <code>match-detail-new.html</code>。</li>
+      <li>根据 PC 端页面版本配置（<code>configureNew</code>）展示旧版或新版匹配详情，版本切换条默认取 <code>defaultView</code>（按照版本配置默认页面展示），可手动切换；两个版本结构对齐 <code>match-detail-new.html</code>。</li>
       <li><b>新版（智能匹配，卡片式）</b>：顶部 基本信息 + AI 建议（结论 + 风险提示 + 需补充资料）+ 卡片式入选/排除标准 + 合并症 / 合并药物。</li>
       <li><b>旧版（匹配详情，卡片式）</b>：基本信息 + 方案协议卡（方案号 / 完整标题 / 入排标准 / 更新时间）+ 匹配度统计卡（匹配度 / 待定占比 / 统计描述）+ AI 建议卡（结论 + 排除原因列表）+ 卡片式入选/排除标准（不展示源数据，保留 <b>结果修正 / 修正记录 / 清空修正</b>）+ 合并症 / 合并药物。</li>
       <li>合并症 / 合并药物按项目管理配置显隐（<code>isComorbidityEnabled</code> / <code>isConmedEnabled</code>）：预筛阶段显示合并症、入组阶段显示合并症 + 合并药物；新版以卡片、旧版也以卡片展示，两个版本均可见。</li>
@@ -1987,29 +1997,33 @@
         aiResult: '待审',
         aiDetail: '基础信息匹配，部分器官功能与合并疾病需补充评估后方可判定。',
         inclusion: [
-          { no: 1, type: '入选', content: '年龄18~75岁（含两端值）的女性', judge: '符合', source: '病历：女性，45岁', risk: '', suggest: '' },
-          { no: 7, type: '入选', content: '月经状态满足以下任意一条者：双侧卵巢切除术后；年龄≥60岁；自然停经≥12个月等', judge: '符合', source: '2023-08-11 行腹腔镜双侧卵巢和输卵管切除术（去势）', risk: '', suggest: '' },
-          { no: 9, type: '入选', content: '器官功能水平须符合：中性粒细胞≥1.5×10⁹/L；Hb≥10g/dL；肌酐清除率≥50mL/min；胆红素≤1.5×ULN；AST/ALT≤2.5×ULN（肝转移≤5×ULN）；LVEF≥50%；QTcF≤470ms 等（筛选前14天内未输血/升白升板）', judge: '待定', source: '近期检查缺失（总胆红素、PT、APTT、尿蛋白、LVEF、QTcF等）；中性粒细胞1.34×10⁹/L偏低', risk: '需补充筛选期14天内器官功能检查', suggest: '补充血常规、生化、凝血、心超、心电图等检查' },
-          { no: 10, type: '入选', content: '有生育能力的女性须同意避孕且入组前7天内hCG阴性、非哺乳期', judge: '符合', source: '已行双侧卵巢切除术，无生育能力', risk: '', suggest: '' }
+          { no: 1, type: '入选', content: '年龄18~75岁（含两端值）的女性', judge: '符合', result: '匹配', resultDesc: '患者为女性，当前年龄36岁（2026年），在18~75岁范围内，完全符合标准。' },
+          { no: 2, type: '入选', content: 'ECOG体力状态（PS）0~1分', judge: '待定', result: '待定', resultDesc: '病历中未明确记录ECOG体力状态评分，尽管出院记录中描述“患者一般状况良好，精神、食欲可”，但无正式ECOG评分，无法直接判定是否符合0~1分。' }
         ],
         exclusion: [
-          { no: 1, type: '排除', content: '既往接受过HRS-8080或其他新型口服SERD、新型ER靶点药物、新型SERM（他莫昔芬、托瑞米芬除外）治疗', judge: '符合', source: '既往使用托瑞米芬/他莫昔芬（标准除外SERM），未用其他新型药物', risk: '', suggest: '' },
-          { no: 5, type: '排除', content: '疾病进展迅速、研究者判断不适宜使用内分泌治疗的（如大量积液、癌性淋巴管炎等）', judge: '待定', source: '近期肺转移内分泌治疗后进展，未明确是否进展迅速/是否适合化疗', risk: '需研究者评估是否适宜继续内分泌治疗', suggest: '研究者综合评估疾病进展速度及内脏危象' },
-          { no: 7, type: '排除', content: '临床严重的心血管疾病史（心衰、不稳定性心绞痛、近期心梗、需治疗心律失常、房颤等）', judge: '待定', source: '病历未提及心血管病史', risk: '需补充完整心血管病史及检查', suggest: '补充心内科评估、心电图、心脏超声' },
-          { no: 13, type: '排除', content: '未经治疗的活动性肝炎（HBsAg阳性且HBV-DNA≥500IU/ml；或丙肝抗体阳性且HCV-RNA阳性）', judge: '符合', source: 'HBsAg 0.010 IU/ml（阴性），Anti-HCV 0.002（阴性）', risk: '', suggest: '' },
-          { no: 15, type: '排除', content: '有遗传性或获得性出血倾向（如血友病、凝血功能障碍等）', judge: '待定', source: 'TT 20.1s 轻度延长，肝损伤病史可能影响凝血；无明确诊断', risk: '需进一步评估出血倾向', suggest: '复查凝血功能并评估肝损伤影响' },
-          { no: 17, type: '排除', content: '有影响口服药物的多种因素或活动性胃肠道疾病等导致明显影响药物吸收/代谢/排泄的因素', judge: '待定', source: '肝损伤病史，未提供近期肝功能及具体情况', risk: '需排除肝损伤对药物代谢影响', suggest: '补充近期肝功能及肝损伤详情' },
-          { no: 22, type: '排除', content: '存在其他严重身体或实验室检查异常，可能增加风险或干扰结果，研究者认为不适合参与', judge: '待定', source: '含研究者主观判断，按规则判待定', risk: '需研究者综合判断是否适合', suggest: '研究者评估是否适合参与研究' }
+          { no: 1, type: '排除', content: '既往接受过HRS-8080或其他新型口服SERD、新型ER靶点药物、新型SERM（他莫昔芬、托瑞米芬除外）治疗', judge: '符合', result: '匹配', resultDesc: '既往使用托瑞米芬/他莫昔芬（标准除外SERM），未用其他新型药物，符合排除标准。' },
+          { no: 5, type: '排除', content: '疾病进展迅速、研究者判断不适宜使用内分泌治疗的（如大量积液、癌性淋巴管炎等）', judge: '待定', result: '待定', resultDesc: '近期肺转移内分泌治疗后进展，未明确是否进展迅速/是否适合化疗，需研究者综合评估。' },
+          { no: 7, type: '排除', content: '临床严重的心血管疾病史（心衰、不稳定性心绞痛、近期心梗、需治疗心律失常、房颤等）', judge: '待定', result: '待定', resultDesc: '病历未提及心血管病史，需补充完整心血管病史及检查后方可判定。' },
+          { no: 13, type: '排除', content: '未经治疗的活动性肝炎（HBsAg阳性且HBV-DNA≥500IU/ml；或丙肝抗体阳性且HCV-RNA阳性）', judge: '符合', result: '匹配', resultDesc: 'HBsAg 0.010 IU/ml（阴性），Anti-HCV 0.002（阴性），无活动性肝炎。' },
+          { no: 15, type: '排除', content: '有遗传性或获得性出血倾向（如血友病、凝血功能障碍等）', judge: '待定', result: '待定', resultDesc: 'TT 20.1s 轻度延长，肝损伤病史可能影响凝血；无明确诊断，需进一步评估出血倾向。' },
+          { no: 17, type: '排除', content: '有影响口服药物的多种因素或活动性胃肠道疾病等导致明显影响药物吸收/代谢/排泄的因素', judge: '待定', result: '待定', resultDesc: '肝损伤病史，未提供近期肝功能及具体情况，需排除肝损伤对药物代谢影响。' },
+          { no: 22, type: '排除', content: '存在其他严重身体或实验室检查异常，可能增加风险或干扰结果，研究者认为不适合参与', judge: '待定', result: '待定', resultDesc: '含研究者主观判断，按规则判待定，需研究者综合判断是否适合参与研究。' }
         ],
         comorbidity: [
-          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-06-12' },
-          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-05-20' },
-          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03' }
+          { no: 1, name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-06-12', result: '匹配', resultDesc: '高血压1级，长期口服氨氯地平控制稳定，不影响入组。' },
+          { no: 2, name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-05-20', result: '匹配', resultDesc: '2型糖尿病，口服二甲双胍控制可，HbA1c 7.1%，不影响入组。' },
+          { no: 3, name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03', result: '待定', resultDesc: '既往肝损伤病史，需确认是否已恢复并评估对药物代谢的影响。' }
         ],
         conmed: [
-          { name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-06-12' },
-          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-05-20' },
-          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-06-01' }
+          { no: 1, name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-06-12', result: '匹配', resultDesc: '降压药，与研究药物无明确相互作用。' },
+          { no: 2, name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-05-20', result: '匹配', resultDesc: '降糖药，与研究药物无明确相互作用。' },
+          { no: 3, name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-06-01', result: '匹配', resultDesc: '内分泌治疗药物，符合方案允许用药。' }
+        ],
+        screening: [
+          { no: 1, type: '实验室检查', item: '血常规', result: '匹配', resultDesc: '白细胞、血红蛋白、血小板均在正常范围。' },
+          { no: 2, type: '实验室检查', item: '生化全套', result: '待定', resultDesc: '总胆红素、PT、APTT、尿蛋白等指标近期检查缺失，需补充。' },
+          { no: 3, type: '影像学检查', item: '心电图/心脏超声', result: '待定', resultDesc: 'LVEF、QTcF 等心脏功能指标近期检查缺失，需补充。' },
+          { no: 4, type: '影像学检查', item: '可测量病灶评估', result: '匹配', resultDesc: '现有影像可确认病灶长径≥10mm，满足可测量病灶要求。' }
         ],
         run: { model: 'Hunyuan + RAG', start: '2026-07-10 10:32:15', end: '2026-07-10 10:36:56', rag: '00:42', llm: '03:59', total: '04:41', version: 'preScreen-1.0', range: '2026-07-10 10:32 ~ 10:36' },
         basic: { patientNo: 'WYNA-CN053', center: '安阳市肿瘤医院', centerNo: 'CN001', screenNo: 'S-003', inExVersion: 'preScreen-1.0（2026-07-08 更新）' },
@@ -2034,27 +2048,33 @@
         aiResult: '待定',
         aiDetail: '需补充入组前14天检查及研究者评估后方可判定是否可入组。',
         inclusion: [
-          { no: 1, type: '入选', content: '已完成预筛阶段审核并签署主知情', judge: '符合', source: '预筛审核通过，主知情已签（2026-07-12）', risk: '', suggest: '' },
-          { no: 2, type: '入选', content: 'ECOG PS 0~1分', judge: '符合', source: 'ECOG 1分', risk: '', suggest: '' },
-          { no: 3, type: '入选', content: '入组前14天内器官功能达标（同预筛要求）', judge: '待定', source: '部分指标缺失', risk: '需补充入组前检查', suggest: '补查血常规/生化/心超' },
-          { no: 4, type: '入选', content: '无妊娠/哺乳，已同意避孕', judge: '符合', source: '已去势，无生育能力', risk: '', suggest: '' }
+          { no: 1, type: '入选', content: '已完成预筛阶段审核并签署主知情', judge: '符合', result: '匹配', resultDesc: '预筛审核通过，主知情已签署（2026-07-12），符合入选条件。' },
+          { no: 2, type: '入选', content: 'ECOG PS 0~1分', judge: '符合', result: '匹配', resultDesc: '病历记录 ECOG 1分，符合0~1分要求。' },
+          { no: 3, type: '入选', content: '入组前14天内器官功能达标（同预筛要求）', judge: '待定', result: '待定', resultDesc: '部分入组前14天内器官功能指标缺失，需补充血常规、生化、心超等检查。' },
+          { no: 4, type: '入选', content: '无妊娠/哺乳，已同意避孕', judge: '符合', result: '匹配', resultDesc: '已去势，无生育能力，符合避孕及妊娠相关要求。' }
         ],
         exclusion: [
-          { no: 1, type: '排除', content: '入组前4周内接受主要脏器手术/细胞毒药物/放疗等', judge: '符合', source: '无近期治疗记录', risk: '', suggest: '' },
-          { no: 2, type: '排除', content: '活动性脑转移、癌性脑膜炎、脊髓压迫', judge: '符合', source: '无脑转移史', risk: '', suggest: '' },
-          { no: 3, type: '排除', content: '严重心血管疾病史', judge: '待定', source: '需确认', risk: '需补充心血管评估', suggest: '心内科评估' },
-          { no: 4, type: '排除', content: '其他严重异常研究者认为不适合入组', judge: '待定', source: '研究者判断', risk: '需研究者综合评估', suggest: '研究者评估' }
+          { no: 1, type: '排除', content: '入组前4周内接受主要脏器手术/细胞毒药物/放疗等', judge: '符合', result: '匹配', resultDesc: '无近期手术、细胞毒药物或放疗记录，符合排除标准。' },
+          { no: 2, type: '排除', content: '活动性脑转移、癌性脑膜炎、脊髓压迫', judge: '符合', result: '匹配', resultDesc: '无脑转移史，无癌性脑膜炎或脊髓压迫证据。' },
+          { no: 3, type: '排除', content: '严重心血管疾病史', judge: '待定', result: '待定', resultDesc: '严重心血管病史需进一步确认，建议心内科评估并补充心电图、心超。' },
+          { no: 4, type: '排除', content: '其他严重异常研究者认为不适合入组', judge: '待定', result: '待定', resultDesc: '含研究者主观判断，需研究者综合评估是否适合入组。' }
         ],
         comorbidity: [
-          { name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-07-08' },
-          { name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-06-30' },
-          { name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03' }
+          { no: 1, name: '高血压', grade: '1级', status: '稳定', note: '长期口服氨氯地平控制可', source: '病历：门诊随访记录 2026-07-08', result: '匹配', resultDesc: '高血压1级，长期口服氨氯地平控制稳定，不影响入组。' },
+          { no: 2, name: '2型糖尿病', grade: '2级', status: '可控', note: '二甲双胍治疗，HbA1c 7.1%', source: '病历：内分泌科门诊 2026-06-30', result: '匹配', resultDesc: '2型糖尿病，口服二甲双胍控制可，HbA1c 7.1%，不影响入组。' },
+          { no: 3, name: '肝损伤病史', grade: '—', status: '需评估', note: '既往肝损伤，需确认是否已恢复', source: '病历：既往出院小结 2025-11-03', result: '待定', resultDesc: '既往肝损伤病史，需确认是否已恢复并评估对药物代谢的影响。' }
         ],
         conmed: [
-          { name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-07-08' },
-          { name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-06-30' },
-          { name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-07-01' },
-          { name: '阿贝西利', dose: '150mg qd', reason: 'CDK4/6 抑制剂联合内分泌', spec: '150mg/片', source: '处方：肿瘤科 2026-07-02' }
+          { no: 1, name: '氨氯地平', dose: '5mg qd', reason: '高血压', spec: '5mg/片', source: '处方：门诊处方 2026-07-08', result: '匹配', resultDesc: '降压药，与研究药物无明确相互作用。' },
+          { no: 2, name: '二甲双胍', dose: '0.5g bid', reason: '2型糖尿病', spec: '0.5g/片', source: '处方：内分泌科 2026-06-30', result: '匹配', resultDesc: '降糖药，与研究药物无明确相互作用。' },
+          { no: 3, name: '来曲唑', dose: '2.5mg qd', reason: '内分泌治疗', spec: '2.5mg/片', source: '处方：肿瘤科 2026-07-01', result: '匹配', resultDesc: '内分泌治疗药物，符合方案允许用药。' },
+          { no: 4, name: '阿贝西利', dose: '150mg qd', reason: 'CDK4/6 抑制剂联合内分泌', spec: '150mg/片', source: '处方：肿瘤科 2026-07-02', result: '匹配', resultDesc: 'CDK4/6 抑制剂联合内分泌治疗，符合方案允许用药。' }
+        ],
+        screening: [
+          { no: 1, type: '实验室检查', item: '血常规', result: '匹配', resultDesc: '白细胞、血红蛋白、血小板均在正常范围。' },
+          { no: 2, type: '实验室检查', item: '生化全套', result: '待定', resultDesc: '入组前14天内生化指标部分缺失，需补充肝肾功能、电解质等。' },
+          { no: 3, type: '影像学检查', item: '心电图/心脏超声', result: '待定', resultDesc: '入组前14天内心功能检查缺失，需补充心电图、心超。' },
+          { no: 4, type: '影像学检查', item: '可测量病灶评估', result: '匹配', resultDesc: '现有影像可确认病灶长径≥10mm，满足可测量病灶要求。' }
         ],
         run: { model: 'hunyuan + RAG', start: '2026-07-12 14:02:31', end: '2026-07-12 14:08:10', rag: '00:51', llm: '04:48', total: '05:39', version: 'enroll-2.0', range: '2026-07-12 14:02 ~ 14:08' },
         basic: { patientNo: 'WYNA-CN053', center: '安阳市肿瘤医院', centerNo: 'CN001', screenNo: 'S-011', inExVersion: 'enroll-2.0（2026-07-11 更新）' },
@@ -2915,14 +2935,12 @@ HDL-C：1.09 mmol/L
       if (name === 'match') {
         body.innerHTML = renderMatchDetail();
       } else if (name === 'screen') {
+        const md = MATCH_DETAIL[currentDetailStage];
+        const list = md && md.screening ? md.screening : [];
         body.innerHTML = `
-          <div class="md-section">
-            <div class="md-card">
-              <div style="text-align:center;color:#999;padding:30px 0">
-                <i class="far fa-file-alt" style="font-size:32px;display:block;margin-bottom:8px;color:#d9d9d9"></i>
-                筛选表内容
-              </div>
-            </div>
+          <div class="match-card-list">
+            <div class="section-title">筛选表</div>
+            ${list.length ? list.map(screeningCard).join('') : '<div class="md-card"><div style="text-align:center;color:#999;padding:30px 0"><i class="far fa-file-alt" style="font-size:32px;display:block;margin-bottom:8px;color:#d9d9d9"></i>暂无筛选表数据</div></div>'}
           </div>
         `;
       } else if (name === 'tc') {
@@ -2941,26 +2959,29 @@ HDL-C：1.09 mmol/L
       }
     }
 
-    // 单条标准的卡片（新版）
+    // 标准卡片（新版/旧版统一为图片格式：序号 + 类型 + 内容，状态说明，操作按钮）
+    function resultRow(item) {
+      const r = item.result || item.judge || '待定';
+      const desc = item.resultDesc || item.source || '';
+      let cls = 'pending';
+      let icon = 'fa-clock';
+      if (r === '匹配' || r === '符合') { cls = 'match'; icon = 'fa-check-circle'; }
+      if (r === '不匹配' || r === '不符合') { cls = 'exclude'; icon = 'fa-times-circle'; }
+      return `<div class="match-result-row ${cls}"><i class="fas ${icon}"></i><span><span class="result-label">${r}：</span>${desc}</span></div>`;
+    }
+
     function criteriaCard(item) {
       const exclude = item.type === '排除';
-      const jcls = 'judge-' + item.judge;
-      const riskHtml = item.risk
-        ? `<div class="m-field"><div class="match-field-label risk">风险提示</div><div class="ai-risk-cell">${item.risk}</div></div>` : '';
-      const sugHtml = item.suggest
-        ? `<div class="m-field"><div class="match-field-label suggest">AI建议</div><div class="ai-suggest-cell">${item.suggest}</div></div>` : '';
       return `
         <div class="match-card">
           <div class="match-card-head">
             <span class="match-index ${exclude ? 'exclude' : ''}">${item.no}</span>
             <span class="match-type">${item.type}：</span>
+            <span class="match-title-text">${item.content}</span>
           </div>
           <div class="match-card-body">
-            <div class="m-field"><div class="match-field-label">纳排内容</div><div class="match-field-value">${item.content}</div></div>
-            <div class="m-field"><div class="match-field-label">源数据</div><div class="match-field-value">${item.source}</div></div>
-            <div class="m-field"><div class="match-field-label">AI判断</div><span class="judge-badge ${jcls}">${item.judge}</span></div>
-            ${riskHtml}
-            ${sugHtml}
+            ${resultRow(item)}
+            <div class="ai-risk-hint"><i class="fas fa-exclamation-triangle"></i>风险提示：AI判定结果仅供参考，请以原始病历核对为准</div>
           </div>
           <div class="match-card-foot">
             <span class="match-foot-btn">结果修正</span>
@@ -2970,56 +2991,29 @@ HDL-C：1.09 mmol/L
         </div>`;
     }
 
-    // 单条标准的卡片（旧版）：不展示源数据，保留结果修正/修正记录/清空修正
+    // 旧版卡片与新版统一
     function criteriaCardOld(item) {
-      const exclude = item.type === '排除';
-      const jcls = 'judge-' + item.judge;
-      const riskHtml = item.risk
-        ? `<div class="m-field"><div class="match-field-label risk">风险提示</div><div class="ai-risk-cell">${item.risk}</div></div>` : '';
-      return `
-        <div class="match-card">
-          <div class="match-card-head">
-            <span class="match-index ${exclude ? 'exclude' : ''}">${item.no}</span>
-            <span class="match-type">${item.type}：</span>
-          </div>
-          <div class="match-card-body">
-            <div class="m-field"><div class="match-field-label">纳排内容</div><div class="match-field-value">${item.content}</div></div>
-            <div class="m-field"><div class="match-field-label">AI判断</div><span class="judge-badge ${jcls}">${item.judge}</span></div>
-            ${riskHtml}
-          </div>
-          <div class="match-card-foot">
-            <span class="match-foot-btn">结果修正</span>
-            <span class="match-foot-btn disabled">修正记录</span>
-            <span class="match-foot-btn disabled">清空修正</span>
-          </div>
-        </div>`;
+      return criteriaCard(item);
     }
 
     // 合并症 / 合并药物 修正状态（key = stage-kind-idx）
     const _comoCorrections = {};
     function comoKey(stage, kind, idx) { return stage + '-' + kind + '-' + idx; }
 
-    // 单条合并症/合并药物卡片：展示 名称 / 规格(药品)或分级·状态 / 证据来源，并带 结果修正 / 修正记录 / 清空修正
+    // 单条合并症/合并药物卡片：展示 名称 + 证据来源
     function comorbidityItemCard(stage, kind, idx, item) {
       const key = comoKey(stage, kind, idx);
       const corr = _comoCorrections[key];
       const corrected = !!corr;
       const name = corr ? corr.name : item.name;
       const source = corr ? corr.source : (item.source || '—');
+      const no = (item.no != null ? item.no : idx + 1);
+      const bgColor = kind === 'como' ? '#722ed1' : '#13c2c2';
+      const tag = kind === 'como' ? '合并症' : '合并药物';
+      const subtitle = kind === 'conmed' ? (corr ? corr.spec : (item.spec || '—')) : '';
+      const titleHtml = `<span class="match-type">${tag}：</span><span class="match-title-text">${name}${subtitle ? '<span style="color:#999;font-weight:400;margin-left:4px">' + subtitle + '</span>' : ''}</span>`;
 
-      let bodyHtml, tag;
-      if (kind === 'como') {
-        tag = '合并症';
-        bodyHtml = `
-          <div class="kv-row"><span class="como-name">${name}</span></div>
-          <div class="m-field"><div class="match-field-label">证据来源</div><div class="match-field-value">${source}</div></div>`;
-      } else {
-        const spec = corr ? corr.spec : (item.spec || '—');
-        tag = '合并药物';
-        bodyHtml = `
-          <div class="kv-row" style="align-items:baseline"><span class="como-name">${name}</span><span style="color:#999">${spec}</span></div>
-          <div class="m-field"><div class="match-field-label">证据来源</div><div class="match-field-value">${source}</div></div>`;
-      }
+      const bodyHtml = `<div class="m-field"><div class="match-field-label">证据来源</div><div class="match-field-value">${source}</div></div>`;
 
       const foot = `
         <div class="match-card-foot">
@@ -3031,12 +3025,32 @@ HDL-C：1.09 mmol/L
       return `
         <div class="match-card ${corrected ? 'corrected-card' : ''}" id="como-card-${key}">
           <div class="match-card-head">
-            <span class="match-index" style="background:${kind === 'como' ? '#722ed1' : '#13c2c2'}">${kind === 'como' ? '±' : '℞'}</span>
-            <span class="match-type">${tag}</span>
+            <span class="match-index" style="background:${bgColor}">${no}</span>
+            ${titleHtml}
             ${corrected ? '<span class="corrected-tag">已修正</span>' : ''}
           </div>
           <div class="match-card-body">${bodyHtml}</div>
           ${foot}
+        </div>`;
+    }
+
+    // 筛选表卡片
+    function screeningCard(item) {
+      return `
+        <div class="match-card">
+          <div class="match-card-head">
+            <span class="match-index">${item.no}</span>
+            <span class="match-type">${item.type}：</span>
+            <span class="match-title-text">${item.item}</span>
+          </div>
+          <div class="match-card-body">
+            ${resultRow(item)}
+          </div>
+          <div class="match-card-foot">
+            <span class="match-foot-btn">结果修正</span>
+            <span class="match-foot-btn disabled">修正记录</span>
+            <span class="match-foot-btn disabled">清空修正</span>
+          </div>
         </div>`;
     }
 
@@ -3047,11 +3061,11 @@ HDL-C：1.09 mmol/L
       let html = '';
       if (isComorbidityEnabled(stage)) {
         const cards = (md.comorbidity || []).map((c, i) => comorbidityItemCard(stage, 'como', i, c)).join('');
-        html += `<div id="sec-como">${cards}</div>`;
+        html += `<div id="sec-como"><div class="match-group-label">合并症识别</div>${cards}</div>`;
       }
       if (isConmedEnabled(stage)) {
         const cards = (md.conmed || []).map((c, i) => comorbidityItemCard(stage, 'conmed', i, c)).join('');
-        html += `<div id="sec-conmed">${cards}</div>`;
+        html += `<div id="sec-conmed"><div class="match-group-label">合并药物识别</div>${cards}</div>`;
       }
       return html;
     }
@@ -3222,6 +3236,15 @@ HDL-C：1.09 mmol/L
           <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
         </div>`;
 
+      const aiRiskWarning = `
+          <div class="match-card ai-risk-card">
+            <div class="match-card-head" style="background:#fffbe6;border-bottom:1px solid #ffe58f">
+              <i class="fas fa-exclamation-triangle" style="color:#FA8C16;font-size:14px"></i>
+              <span style="font-weight:600;color:#FA8C16;font-size:13px">AI 风险提示</span>
+            </div>
+          
+          </div>`;
+
       let bodyHtml;
       if (currentMdVersion === 'new') {
         // ========= 新版（智能匹配）=========
@@ -3255,13 +3278,24 @@ HDL-C：1.09 mmol/L
             <div class="section-title">匹配详情</div>
             <div class="match-group-label">入选标准</div>
             ${(md.inclusion || []).map(criteriaCard).join('')}
+      
             <div class="match-group-label">排除标准</div>
             ${(md.exclusion || []).map(criteriaCard).join('')}
             ${comorbidityBlocks(stage)}
           </div>`;
 
+        const statCard = `
+          <div class="md-card stats-card" id="sec-stat">
+            <div class="stats-main">
+              <div class="stat-big"><div class="stat-big-val">${md.pct}</div><div class="stat-big-lbl">匹配度</div></div>
+              <div class="stat-big"><div class="stat-big-val">${md.pending}</div><div class="stat-big-lbl">待定占比</div></div>
+            </div>
+            <div class="stats-desc">${md.summary}</div>
+          </div>`;
+
         bodyHtml = `
           <div class="md-section">
+            ${statCard}
             ${aiCard}
             ${matchCards}
           </div>`;
@@ -3305,6 +3339,7 @@ HDL-C：1.09 mmol/L
           <div class="match-card-list">
             <div class="section-title">入选标准</div>
             ${(md.inclusion || []).map(criteriaCardOld).join('')}
+            ${aiRiskWarning}
             <div class="section-title">排除标准</div>
             ${(md.exclusion || []).map(criteriaCardOld).join('')}
           </div>`;
