@@ -1012,6 +1012,56 @@
     @media (max-width: 768px) {
       .reminder-drawer { width: 100vw; max-width: 100vw; }
     }
+
+    /* 邮件记录 抽屉（在当前页面右侧滑出，按阶段分块） */
+    .email-drawer-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 100002; display: none; align-items: flex-start; justify-content: flex-end;
+    }
+    .email-drawer-overlay.open { display: flex; }
+    .email-drawer {
+      width: 720px; max-width: 96vw; height: 100vh; background: #fff;
+      box-shadow: -4px 0 28px rgba(0,0,0,0.12);
+      transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .email-drawer-overlay.open .email-drawer { transform: translateX(0); }
+    .email-drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+    }
+    .email-drawer-header h3 { font-size: 16px; font-weight: 600; color: #262626; margin: 0; }
+    .email-drawer-close {
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: #f5f5f5;
+      color: #999; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    }
+    .email-drawer-close:hover { background: #ff4d4f; color: #fff; }
+    .email-drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .email-stage-block { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+    .email-stage-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 12px 14px; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap;
+    }
+    .email-stage-title { font-size: 14px; font-weight: 600; color: #262626; display: flex; align-items: center; gap: 8px; }
+    .email-stage-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .email-stage-actions { display: flex; gap: 8px; }
+    .email-btn { padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #d9d9d9; background: #fff; color: #595959; white-space: nowrap; }
+    .email-btn.primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .email-btn.secondary { color: #1677ff; border-color: #1677ff; }
+    .email-table-wrap { overflow-x: auto; }
+    .email-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 12px; }
+    .email-table thead { background: #fafafa; }
+    .email-table th, .email-table td { padding: 10px; text-align: center; border-bottom: 1px solid #f5f5f5; white-space: nowrap; }
+    .email-table th { color: #666; font-weight: 600; }
+    .email-status { padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+    .email-status.green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .email-status.gray { background: #fafafa; color: #999; border: 1px solid #e8e8e8; }
+    .email-op { color: #1677ff; cursor: pointer; }
+    .email-empty { text-align: center; color: #bbb; font-size: 13px; padding: 24px 0; }
+    @media (max-width: 768px) {
+      .email-drawer { width: 100vw; max-width: 100vw; }
+    }
+
     .prd-section {
       margin-bottom: 16px;
     }
@@ -6314,6 +6364,17 @@
 <div class="audit-record-overlay" id="auditRecordOverlay"></div>
 <!-- Match Detail Overlay (匹配详情全屏页) -->
 <div class="match-detail-overlay" id="matchDetailOverlay"></div>
+
+<!-- ============ 邮件记录 抽屉（当前页面右侧滑出） ============ -->
+<div class="email-drawer-overlay" id="emailDrawerOverlay" onclick="closeEmailDrawer()">
+  <div class="email-drawer" onclick="event.stopPropagation()">
+    <div class="email-drawer-header">
+      <h3 id="emailDrawerTitle demo-circle>邮件记录</h3>
+      <button class="email-drawer-close" onclick="closeEmailDrawer()" title="关闭"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="email-drawer-body" id="emailDrawerBody"></div>
+  </div>
+</div>
 <!-- 移动端 PRD 切换按钮 -->
 <button class="mobile-prd-btn" id="mobilePrdBtn" onclick="toggleMobilePRD()" title="查看PRD说明">
   <i class="fas fa-book-open"></i>
@@ -8236,7 +8297,7 @@ function buildAuditContent() {
               <span class="action-sep">|</span>
               <span class="action-link demo-circle" onclick="openAuditRecordModal('${r.patientNo}')">审批记录</span>
               <span class="action-sep">|</span>
-              <span class="action-link">邮件记录</span>
+              <span class="action-link demo-circle" onclick="openEmailDrawer('${r.patientNo}')">邮件记录</span>
             </td>
           </tr>`).join('')}
         </tbody>
@@ -8513,7 +8574,7 @@ function buildScPatientListContent() {
 
                 <a href="javascript:void(0)" class="demo-circle" onclick="event.stopPropagation();openSubmitAuditModal('${schemeNo}', ${i})">${p.isEnrolled ? '补充审批' : '提交审批'}</a><span>|</span>
                 <a href="javascript:void(0)" class="demo-circle" onclick="event.stopPropagation();openAuditRecordModal('${p.patientNo}')">审批记录</a><span>|</span>
-                <a href="javascript:void(0)">邮件记录</a>
+                <a class="demo-circle" href="javascript:void(0)" onclick="event.stopPropagation();openEmailDrawer('${p.patientNo}','${p.nameAbbr}')">邮件记录</a>
               </div>
             </td>
           </tr>`).join('')}
@@ -8797,7 +8858,7 @@ function buildMatchDetailContent(p) {
       <button class="btn-sm">病史与资料</button>
       <button class="btn-sm">编辑基本信息</button>
       <button class="btn-sm" onclick="openAuditRecordModal('${p.patientNo}')">审批记录</button>
-      <button class="btn-sm">邮件记录</button>
+      <button class="btn-sm" onclick="openEmailDrawer('${p.patientNo}','${p.nameAbbr}')">邮件记录</button>
     </div>
   </div>
 
@@ -10152,6 +10213,70 @@ let _workflowData = [
   { ver:'v1.2.0', name:'入组审批流程V1.2', type:'入组审批', status:'cancelled', creator:'系统', updater:'张管理', time:'2026-04-20 10:00', isDefault:false },
   { ver:'v1.0.0', name:'入组审批流程V1.0', type:'入组审批', status:'cancelled', creator:'系统', updater:'系统', time:'2026-04-15 08:00', isDefault:false },
 ];
+
+// ==================== 邮件记录 抽屉 ====================
+const _emailRecordsData = {
+  'PT_CN001_0001': {
+    ST01: [
+      { sendTime:'2026-07-10 14:32:15', sender:'刘雪红', recipient:'研究者A', cc:'CRA专员188', subject:'预筛审核通知 - ZWMS', status:'已发送', statusClass:'green' },
+      { sendTime:'2026-07-09 09:18:42', sender:'系统', recipient:'刘雪红', cc:'-', subject:'预筛资料补充提醒', status:'已保存', statusClass:'gray' }
+    ],
+    ST03: [
+      { sendTime:'2026-07-12 11:05:33', sender:'刘雪红', recipient:'研究者A', cc:'CRC专员', subject:'入组确认邮件 - ZWMS', status:'已发送', statusClass:'green' }
+    ]
+  },
+  'PT_CN001_0002': {
+    ST01: [
+      { sendTime:'2026-07-08 16:45:20', sender:'张丽', recipient:'研究者B', cc:'CRA专员1881', subject:'预筛审核通知 - HGKD', status:'已发送', statusClass:'green' }
+    ]
+  }
+};
+function buildEmailStageSection(stage, records) {
+  const list = records || [];
+  const rows = list.map(r => `
+    <tr>
+      <td>${r.sendTime}</td>
+      <td>${r.sender}</td>
+      <td>${r.recipient}</td>
+      <td>${r.cc || '-'}</td>
+      <td>${r.subject}</td>
+      <td><span class="email-status ${r.statusClass || 'gray'}">${r.status}</span></td>
+      <td><span class="email-op" onclick="alert('查看邮件：${r.subject}')">查看</span></td>
+    </tr>`).join('');
+  return `
+    <div class="email-stage-block">
+      <div class="email-stage-head">
+        <div class="email-stage-title"><span class="email-stage-dot" style="background:${stage.color || '#1677ff'}"></span>${stage.name}邮件记录</div>
+        <div class="email-stage-actions">
+          <button class="email-btn secondary" onclick="alert('邮件模板')">邮件模板</button>
+          <button class="email-btn primary" onclick="alert('发起审核邮件')">发起审核邮件</button>
+        </div>
+      </div>
+      <div class="email-table-wrap">
+        <table class="email-table">
+          <thead><tr><th>发送/保存时间</th><th>发送人/保存人</th><th>收件人</th><th>抄送人</th><th>邮件主题</th><th>邮件状态</th><th>操作</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${list.length ? '' : '<div class="email-empty">暂无数据</div>'}
+      </div>
+    </div>`;
+}
+// 打开邮件记录抽屉：在当前页面按项目配置的阶段分块展示
+function openEmailDrawer(patientNo, patientName) {
+  const stages = _stageConfigData.filter(s => s.status === 'enabled').sort((a, b) => a.order - b.order);
+  const data = _emailRecordsData[patientNo] || {};
+  const title = (patientName ? patientName + ' · ' : '') + (patientNo || '邮件记录');
+  const tEl = document.getElementById('emailDrawerTitle');
+  const bEl = document.getElementById('emailDrawerBody');
+  if (tEl) tEl.textContent = title;
+  if (bEl) bEl.innerHTML = stages.map(s => buildEmailStageSection(s, data[s.id])).join('');
+  const ov = document.getElementById('emailDrawerOverlay');
+  if (ov) ov.classList.add('open');
+}
+function closeEmailDrawer() {
+  const ov = document.getElementById('emailDrawerOverlay');
+  if (ov) ov.classList.remove('open');
+}
 
 // ==================== 审批阶段配置 ====================
 // 审批阶段（阶段层）：引用「审批类型配置」决定每个阶段默认包含的审批类型
