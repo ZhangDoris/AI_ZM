@@ -18639,6 +18639,25 @@ const submitAuditFlows = [
   { value:'enroll',    label:'入组审批', reviewerHint:'可审批：张丽、陈伟、刘洋、王强、李明、吴磊、马芸' }
 ];
 
+// 根据审批流程判断其所属阶段是否开启「知情同意完整性校验」（知情必填）
+// 项目未显式关闭（informedRequired !== false）即视为必填，跟项目配置保持一致
+function getStageInformedRequiredByFlow(flowValue) {
+  const flow = submitAuditFlows.find(f => f.value === flowValue);
+  if (!flow) return false;
+  const stages = (_projectSelectedStages && _projectSelectedStages.length)
+    ? _projectSelectedStages
+    : (_stageConfigData || []).filter(s => s.status === 'enabled');
+  const stage = stages.find(s => s.auditTypes && s.auditTypes.includes(flow.label));
+  return !!(stage && stage.informedRequired !== false);
+}
+// 提交审批弹窗：筛选号 / 知情时间始终必填，保持红色必填标记
+function updateSubmitConsentRequired() {
+  const lbl1 = document.getElementById('submitAuditScreenNoLabel');
+  const lbl2 = document.getElementById('submitAuditInformedLabel');
+  if (lbl1) lbl1.classList.add('required');
+  if (lbl2) lbl2.classList.add('required');
+}
+
 // 当前提交审批弹窗的推荐流程（用于判断是否选择非推荐流程）
 let currentRecommendedFlow = null;
 
@@ -18850,6 +18869,9 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
   // 保存当前推荐的流程，用于提交时判断
   currentRecommendedFlow = recommended.flow;
 
+  // 筛选号 / 知情时间在提交审批中始终必填（始终显示红色必填标记）
+  const consentReq = true;
+
   // 先移除已有的弹窗（如有）
   let modal = document.getElementById('submitAuditModal');
   if(modal) modal.remove();
@@ -18884,20 +18906,18 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
             <input type="text" class="submit-audit-input readonly" value="${patient.patientNo} - ${patient.nameAbbr}" readonly />
           </div>
         </div>
-        ${isPreSubmit ? `
-        <div class="submit-audit-form-row" id="preSubmitRequiredFields">
-          <label class="submit-audit-form-label required">筛选号</label>
+        <div class="submit-audit-form-row">
+          <label class="submit-audit-form-label ${consentReq ? 'required' : ''}" id="submitAuditScreenNoLabel">筛选号</label>
           <div class="submit-audit-form-control">
             <input type="text" class="submit-audit-input" id="submitAuditScreenNo" value="${patient.screenNo || ''}" placeholder="请输入筛选号" />
           </div>
         </div>
         <div class="submit-audit-form-row">
-          <label class="submit-audit-form-label required">知情时间</label>
+          <label class="submit-audit-form-label ${consentReq ? 'required' : ''}" id="submitAuditInformedLabel">知情时间</label>
           <div class="submit-audit-form-control">
             <input type="datetime-local" class="submit-audit-input" id="submitAuditInformedTime" placeholder="请选择知情时间" />
           </div>
         </div>
-        ` : ''}
          <div class="submit-audit-for -row">
           <label class="submit-audit-form-label required">审批模板：</label>
           <div class="submit-audit-form-control">
@@ -19018,6 +19038,7 @@ function openSubmitAuditModal(schemeNo, patientIndex, isPreSubmit) {
       }
       // 自动展开联想下拉，方便快速选择推荐审批人
       if(selectedFlow) { showAllReviewers(); }
+      updateSubmitConsentRequired();
     });
   }
 
@@ -19099,24 +19120,18 @@ function submitAudit(schemeNo, patientIndex) {
   const flow = document.getElementById('submitAuditFlow')?.value;
   const remark = document.getElementById('submitAuditRemark')?.value || '';
 
-  // 预提交场景下，校验筛选号与知情时间
-  if(window._submitIsPreSubmit) {
-    const patients = scPatientData[schemeNo] || [];
-    const patient = patients[patientIndex];
-    const patientStatus = patient ? patient.patientStatus : '';
-    // 仅「主知情通过-入组预提交（入组审批）」与「提交导入期审批（导入审批）」时必填
-    const needRequired = (flow === 'enroll' && patientStatus === '主知情通过') || flow === 'import';
-    if(needRequired) {
-      const screenNo = document.getElementById('submitAuditScreenNo')?.value.trim();
-      const informedTime = document.getElementById('submitAuditInformedTime')?.value.trim();
-      if(!screenNo) {
-        showWechatToast('当前审批类型必须填写筛选号');
-        return;
-      }
-      if(!informedTime) {
-        showWechatToast('当前审批类型必须填写知情时间');
-        return;
-      }
+  // 校验筛选号与知情时间：提交审批中始终必填
+  const consentRequired = true;
+  if(consentRequired) {
+    const screenNo = document.getElementById('submitAuditScreenNo')?.value.trim();
+    const informedTime = document.getElementById('submitAuditInformedTime')?.value.trim();
+    if(!screenNo) {
+      showWechatToast('当前审批类型必须填写筛选号');
+      return;
+    }
+    if(!informedTime) {
+      showWechatToast('当前审批类型必须填写知情时间');
+      return;
     }
   }
 
