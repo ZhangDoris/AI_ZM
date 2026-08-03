@@ -106,9 +106,9 @@
     <div id="importModal" class="modal-overlay modal-hidden fixed inset-0 z-[110] flex items-center justify-center" onclick="if(event.target===this)closeImportModal()">
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col" style="max-height:88vh">
         <!-- 头部 -->
-        <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#165DFF] to-[#4080FF] text-white">
-          <h3 class="text-lg font-semibold flex items-center"><i class="fas fa-file-import mr-2"></i>中心数据导入</h3>
-          <button onclick="closeImportModal()" class="text-white/80 hover:text-white transition"><i class="fas fa-times text-lg"></i></button>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+          <h3 class="text-lg font-semibold text-gray-800 flex items-center"><i class="fas fa-file-import text-[#165DFF] mr-2"></i>中心数据导入</h3>
+          <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-times text-lg"></i></button>
         </div>
 
         <!-- 步骤条 -->
@@ -308,31 +308,185 @@
 
     <!-- ===== 成员交接弹窗（图3：离职/停用交接） ===== -->
     <div id="memberHandoverModal" class="modal-overlay modal-hidden fixed inset-0 z-[115] flex items-center justify-center" onclick="if(event.target===this)closeHandover()">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
           <h3 class="text-lg font-semibold text-gray-800">成员交接</h3>
           <button onclick="closeHandover()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
         </div>
-        <div class="px-6 py-5 space-y-4">
-          <p id="hoHint" class="text-sm text-gray-600">成员 <b id="hoMemberName">--</b> 停用确认。</p>
+        <div class="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
+          <p class="text-sm text-gray-600">成员 <b id="hoMemberName">--</b> 停用 / 交接确认。</p>
+          <p id="hoHint" class="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></p>
+
+          <!-- 患者交接范围 -->
           <div>
-            <label class="text-sm text-gray-700 font-medium">交接给（本中心其他成员）</label>
+            <label class="text-sm text-gray-700 font-medium">患者交接范围</label>
+            <div class="flex gap-3 mt-1.5">
+              <label class="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-[#165DFF]">
+                <input type="radio" name="hoScope" value="all" checked onchange="switchHoScope()" class="accent-[#165DFF]">
+                <span class="text-sm">交接全部患者</span>
+              </label>
+              <label class="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-[#165DFF]">
+                <input type="radio" name="hoScope" value="part" onchange="switchHoScope()" class="accent-[#165DFF]">
+                <span class="text-sm">交接部分患者</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 名下患者列表 -->
+          <div id="hoPatientBox">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-sm text-gray-700 font-medium">名下在管患者（<span id="hoPatientTotal">0</span> 名）</label>
+              <span id="hoPartTip" class="text-[12px] text-gray-400" style="display:none;">勾选需要交接的患者</span>
+            </div>
+            <div id="hoPatientList" class="border border-gray-200 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50"></div>
+            <p id="hoPatientEmpty" class="text-[12px] text-gray-400 mt-1.5" style="display:none;">该成员名下暂无可交接的患者。</p>
+          </div>
+
+          <!-- 交接给 -->
+          <div>
+            <label class="text-sm text-gray-700 font-medium">交接给（本中心其他成员） <span id="hoTargetReq" class="text-red-500">*</span></label>
             <select id="hoTarget" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none"></select>
           </div>
+
           <div>
             <label class="text-sm text-gray-700 font-medium">交接说明</label>
             <textarea id="hoNote" rows="2" placeholder="请输入交接说明（选填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#165DFF] outline-none"></textarea>
           </div>
         </div>
-        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0">
           <button onclick="closeHandover()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
           <button onclick="confirmHandover()" class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">确认交接并停用</button>
         </div>
       </div>
     </div>
 
-    <!-- ===== 中心日志弹窗（患者转移日志 + 成员变更日志） ===== -->
-    <div id="centerLogModal" class="modal-overlay modal-hidden fixed inset-0 z-[110] flex items-center justify-center" onclick="if(event.target===this)closeCenterLog()">
+    <!-- ===== 中心日志弹窗（患者转移日志 + 成员交接日志） ===== -->
+
+  <!-- ===== 成员患者管理弹窗 ===== -->
+  <div id="memberPatientModal" class="modal-overlay fixed inset-0 z-[115] flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeMemberPatient()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden flex flex-col" style="max-height:88vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">成员患者管理</h3>
+          <p class="text-xs text-gray-500 mt-0.5" id="mpMemberInfo">--</p>
+        </div>
+        <button onclick="closeMemberPatient()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+      </div>
+
+      <!-- 工具栏 -->
+      <div class="px-6 py-3 border-b border-gray-100 bg-white shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="text-[13px] text-gray-500">共 <b id="mpTotalCount" class="text-gray-700">0</b> 名在管患者</span>
+          <button onclick="openMpBatchHandover()" class="ml-auto bg-[#165DFF] text-white px-3 py-1.5 rounded text-[13px] font-medium hover:bg-blue-600 transition">
+            <i class="fas fa-exchange-alt mr-1"></i>全部患者交接
+          </button>
+        </div>
+      </div>
+
+      <!-- 患者列表 -->
+      <div class="px-6 py-3 overflow-y-auto flex-1 min-h-0">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-t border-gray-200">
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-10"><input type="checkbox" id="mpSelectAll" onchange="toggleMpSelectAll()" class="accent-[#165DFF]"></th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-12">序号</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者编号</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">姓名缩写</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">年龄</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">性别</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">领域</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者状态</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] text-center w-24">操作</th>
+            </tr>
+          </thead>
+          <tbody id="mpTableBody"></tbody>
+        </table>
+        <p id="mpEmptyTip" class="text-center text-gray-400 text-sm py-8" style="display:none;">该成员名下暂无在管患者。</p>
+      </div>
+
+      <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50 shrink-0">
+        <span class="text-[12px] text-gray-400" id="mpSelectedInfo"></span>
+        <div class="flex items-center gap-2">
+          <button onclick="openMpBatchHandover()" id="mpBatchBtn" class="px-3 py-1.5 bg-[#165DFF] text-white text-[13px] rounded-lg hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+            交接选中（<b id="mpSelectedCount">0</b>）
+          </button>
+          <button onclick="closeMemberPatient()" class="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 成员患者单条交接弹窗 ===== -->
+  <div id="mpSingleHoModal" class="modal-overlay fixed inset-0 z-[120] flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeMpSingleHo()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-800"><i class="fas fa-exchange-alt text-[#165DFF] mr-2"></i>患者交接</h3>
+        <button onclick="closeMpSingleHo()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600">患者：</span>
+            <span class="text-sm font-medium text-gray-800" id="mpsPatientInfo">--</span>
+          </div>
+          <div class="flex items-center justify-between mt-1">
+            <span class="text-sm text-gray-600">当前负责人：</span>
+            <span class="text-sm text-gray-800" id="mpsFromMember">--</span>
+          </div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接给 <span class="text-red-500">*</span></label>
+          <select id="mpsTarget" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none">
+            <option value="">请选择接收人</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接说明</label>
+          <textarea id="mpsNote" rows="2" placeholder="请输入交接说明（选填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#165DFF] outline-none"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeMpSingleHo()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
+        <button onclick="confirmMpSingleHo()" class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">
+          <i class="fas fa-check mr-1"></i>确认交接
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 成员患者批量交接弹窗 ===== -->
+  <div id="mpBatchHoModal" class="modal-overlay fixed inset-0 z-[120] flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeMpBatchHo()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-800"><i class="fas fa-exchange-alt text-[#165DFF] mr-2"></i>批量患者交接</h3>
+        <button onclick="closeMpBatchHo()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      <div class="px-5 py-4 space-y-4">
+        <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
+          <p class="text-sm text-gray-700">将 <b id="mbpPatientCount">0</b> 名患者从 <b id="mbpFromName">--</b> 名下交接出去</p>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接给 <span class="text-red-500">*</span></label>
+          <select id="mbpTarget" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none">
+            <option value="">请选择接收人</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接说明</label>
+          <textarea id="mbpNote" rows="2" placeholder="请输入交接说明（选填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#165DFF] outline-none"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeMpBatchHo()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
+        <button onclick="confirmMpBatchHo()" class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">
+          <i class="fas fa-check mr-1"></i>确认批量交接
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 中心日志弹窗（患者转移日志 + 成员交接日志） ===== -->
+  <div id="centerLogModal" class="modal-overlay modal-hidden fixed inset-0 z-[110] flex items-center justify-center" onclick="if(event.target===this)closeCenterLog()">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col" style="max-height:85vh">
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800">中心日志 — <span id="clCenterName">--</span></h3>
@@ -341,7 +495,7 @@
         <div class="px-6 py-4 flex-1 overflow-auto">
           <div class="flex gap-3 mb-3">
             <button id="clTabTransfer" onclick="switchLogTab('transfer')" class="px-3 py-1.5 text-[13px] rounded-lg bg-[#165DFF] text-white">患者转移日志</button>
-            <button id="clTabMember" onclick="switchLogTab('member')" class="px-3 py-1.5 text-[13px] rounded-lg bg-gray-100 text-gray-600">成员变更日志</button>
+            <button id="clTabMember" onclick="switchLogTab('member')" class="px-3 py-1.5 text-[13px] rounded-lg bg-gray-100 text-gray-600">成员交接日志</button>
           </div>
           <div id="clTransferPanel">
             <!-- 患者转移日志 查询条件 -->
@@ -374,7 +528,7 @@
             </table>
           </div>
           <div id="clMemberPanel" class="hidden">
-            <!-- 成员变更日志 查询条件 -->
+            <!-- 成员交接日志 查询条件 -->
             <div class="flex flex-wrap items-end gap-3 mb-3 bg-gray-50/60 border border-gray-100 rounded-lg px-4 py-3">
               <div class="flex flex-col gap-1">
                 <label class="text-[12px] text-gray-500">变更时间</label>
@@ -423,9 +577,9 @@
             </div>
             <table class="w-full text-left border-collapse">
               <thead><tr class="bg-gray-50">
-                <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">时间</th>
-                <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">动作</th>
-                <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">角色</th>
+                <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">患者编号</th>
+                <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">姓名缩写</th>
+                 <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">交接时间</th>
                 <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原交接人</th>
                 <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原手机号</th>
                 <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">新交接人</th>
@@ -509,7 +663,7 @@
   </main>
 
   <!-- 成功提示 Toast -->
-  <div id="successToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[80] hidden">
+  <div id="successToast" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[9999] hidden">
     <div class="bg-[#52C41A] text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2">
       <i class="fas fa-check-circle"></i>
       <span class="text-sm font-medium"></span>
@@ -610,7 +764,7 @@
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">年龄</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">性别</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">领域</th>
-              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">筛选号</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者编号</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建时间</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建人</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者状态</th>
@@ -950,15 +1104,15 @@
         { id: 'P001', name: '张三', age: 58, gender: '男', field: '肺部', screenNo: 'SCR-001', createTime: '2025-03-12 09:30', creator: '李明', status: '未提交', statusClass: 'status-unaudited' },
         { id: 'P002', name: '李四', age: 47, gender: '女', field: '肺部', screenNo: 'SCR-002', createTime: '2025-03-15 14:20', creator: '王芳', status: '通过', statusClass: 'status-passed' },
         { id: 'P003', name: '王五', age: 62, gender: '男', field: '肝部', screenNo: 'SCR-003', createTime: '2025-04-01 10:00', creator: '赵协调', status: '审核中', statusClass: 'status-auditing' },
-        { id: 'P004', name: '赵六', age: 51, gender: '女', field: '乳腺', screenNo: 'SCR-004', createTime: '2025-04-08 16:45', creator: '李明', status: '未提交', statusClass: 'status-unaudited' },
+        { id: 'P004', name: '赵六', age: 51, gender: '女', field: '乳腺', screenNo: 'SCR-004', createTime: '2025-04-08 16:45', creator: '刘妍', status: '未提交', statusClass: 'status-unaudited' },
         { id: 'P005', name: '钱七', age: 45, gender: '男', field: '肺部', screenNo: 'SCR-005', createTime: '2025-04-12 11:30', creator: '王芳', status: '通过', statusClass: 'status-passed' },
-        { id: 'P006', name: '孙八', age: 54, gender: '女', field: '肝部', screenNo: 'SCR-006', createTime: '2025-04-20 08:15', creator: '赵协调', status: '审核中', statusClass: 'status-auditing' },
+        { id: 'P006', name: '孙八', age: 54, gender: '女', field: '肝部', screenNo: 'SCR-006', createTime: '2025-04-20 08:15', creator: '张三', status: '审核中', statusClass: 'status-auditing' },
         { id: 'P007', name: '周九', age: 49, gender: '男', field: '肺部', screenNo: 'SCR-007', createTime: '2025-05-03 13:50', creator: '李明', status: '未提交', statusClass: 'status-unaudited' },
-        { id: 'P008', name: '吴十', age: 63, gender: '男', field: '乳腺', screenNo: 'SCR-008', createTime: '2025-05-10 09:00', creator: '王芳', status: '通过', statusClass: 'status-passed' },
+        { id: 'P008', name: '吴十', age: 63, gender: '男', field: '乳腺', screenNo: 'SCR-008', createTime: '2025-05-10 09:00', creator: '刘妍', status: '通过', statusClass: 'status-passed' },
         { id: 'P009', name: '郑十一', age: 41, gender: '女', field: '肝部', screenNo: 'SCR-009', createTime: '2025-05-18 15:20', creator: '李明', status: '未提交', statusClass: 'status-unaudited' },
-        { id: 'P010', name: '冯十二', age: 56, gender: '男', field: '肺部', screenNo: 'SCR-010', createTime: '2025-06-02 10:40', creator: '赵协调', status: '审核中', statusClass: 'status-auditing' },
+        { id: 'P010', name: '冯十二', age: 56, gender: '男', field: '肺部', screenNo: 'SCR-010', createTime: '2025-06-02 10:40', creator: '张三', status: '审核中', statusClass: 'status-auditing' },
         { id: 'P011', name: '陈十三', age: 48, gender: '女', field: '乳腺', screenNo: 'SCR-011', createTime: '2025-06-11 14:10', creator: '王芳', status: '通过', statusClass: 'status-passed' },
-        { id: 'P012', name: '褚十四', age: 52, gender: '男', field: '肝部', screenNo: 'SCR-012', createTime: '2025-06-20 11:30', creator: '李明', status: '未提交', statusClass: 'status-unaudited' }
+        { id: 'P012', name: '褚十四', age: 52, gender: '男', field: '肝部', screenNo: 'SCR-012', createTime: '2025-06-20 11:30', creator: '刘妍', status: '未提交', statusClass: 'status-unaudited' }
       ],
       '安阳市人民医院': [
         { id: 'P101', name: '刘一', age: 55, gender: '女', field: '肺部', screenNo: 'SCR-101', createTime: '2025-04-05 08:30', creator: '陈CRA', status: '未提交', statusClass: 'status-unaudited' },
@@ -1060,7 +1214,7 @@
 
     // 各中心患者转移日志
     var transferLog = [];
-    // 各中心成员变更日志
+    // 各中心成员交接日志
     var memberChangeLog = [];
     var handoverLog = []; // 成员交接日志
     // 各中心删除日志（删除原因 + 删除时间）
@@ -1483,9 +1637,10 @@
           // 已停用：提供「启用」按钮，可直接恢复
           html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="enableMember(\'' + m.id + '\')">启用</a>';
         }
-        // 删除按钮始终展示，格式：删除（患者数）；无患者=红色可点击，有患者=灰色不可点击
+        // 删除按钮始终展示，格式：删除（患者数）
         if (hasPatient) {
-          html += '<a class="text-gray-400 text-[13px] cursor-not-allowed ml-2" title="该成员名下有患者，不可删除，请先停用并交接">删除（' + patCount + '）</a>';
+          html += '<a class="text-red-400 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')" title="该成员名下有患者，需先停用并交接">删除（' + patCount + '）</a>';
+          html += '<a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberPatient(\'' + m.id + '\')">患者交接</a>';
         } else {
           html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')">删除（' + patCount + '）</a>';
         }
@@ -1845,22 +2000,57 @@
       var m = null;
       for (var i = 0; i < list.length; i++) { if (list[i].id === memberId) { m = list[i]; break; } }
       if (!m) return;
-      document.getElementById('hoMemberName').textContent = m.name + '（' + m.role + '）';
-      // 名下是否有在管患者
+
+      // 名下在管患者（按 creator === 成员名 筛选）
       var pats = patientData[currentCenterName] || [];
-      var hasP = false;
-      for (var pi = 0; pi < pats.length; pi++) { if (pats[pi].creator === m.name) { hasP = true; break; } }
-      document.getElementById('hoHint').textContent = hasP
-        ? '该成员名下有在管患者，停用前必须将患者交接给本中心其他成员。'
-        : '该成员无在管患者，可直接停用；如需也可将职责交接给其他人。';
-      // 交接目标：本中心其他成员
-      var sel = document.getElementById('hoTarget');
-      sel.innerHTML = '<option value="">' + (hasP ? '请选择交接人（必选）' : '可选：选择交接人') + '</option>';
-      for (var j = 0; j < list.length; j++) {
-        if (list[j].id !== memberId) sel.innerHTML += '<option value="' + list[j].id + '">' + list[j].name + '（' + list[j].role + '）</option>';
+      var ownPats = [];
+      for (var pi = 0; pi < pats.length; pi++) { if (pats[pi].creator === m.name) ownPats.push(pats[pi]); }
+
+      if (ownPats.length > 0) {
+        // 有在管患者：不弹窗，仅提示需先交接
+        var auditing = 0;
+        for (var ai = 0; ai < ownPats.length; ai++) {
+          if (ownPats[ai].status === '审核中' || ownPats[ai].status === '待审核') auditing++;
+        }
+        showToast('该成员名下仍有 ' + ownPats.length + ' 名在管患者（其中 ' + auditing + ' 名「审核中」），请先在「患者管理」中完成交接后再停用。', 'warn');
+        return;
       }
-      document.getElementById('hoNote').value = '';
-      document.getElementById('memberHandoverModal').classList.remove('modal-hidden');
+
+      // 无在管患者：直接停用，不弹窗
+      m.status = '停用';
+      showToast('成员「' + m.name + '」已停用');
+      renderMemberList(currentCenterName);
+    }
+
+    function renderHoPatientList(memberName, ownPats) {
+      var box = document.getElementById('hoPatientList');
+      if (ownPats.length === 0) { box.innerHTML = ''; return; }
+      var html = '';
+      for (var i = 0; i < ownPats.length; i++) {
+        var p = ownPats[i];
+        html += '<label class="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 cursor-pointer">';
+        html += '<input type="checkbox" class="ho-pat-check accent-[#165DFF]" data-id="' + escapeHtml(p.id) + '" checked>';
+        html += '<span class="text-sm text-gray-800 font-medium">' + escapeHtml(p.id) + '</span>';
+        html += '<span class="text-[12px] text-gray-400">' + escapeHtml(p.name || '') + '</span>';
+        html += '</label>';
+      }
+      box.innerHTML = html;
+    }
+
+    // 切换交接范围：全部 → 全部勾选且禁用；部分 → 可手动勾选
+    function switchHoScope() {
+      var scope = 'all';
+      var rad = document.querySelector('input[name="hoScope"]:checked');
+      if (rad) scope = rad.value;
+      var checks = document.querySelectorAll('.ho-pat-check');
+      var partTip = document.getElementById('hoPartTip');
+      if (scope === 'all') {
+        checks.forEach(function(c) { c.checked = true; c.disabled = true; });
+        if (partTip) partTip.style.display = 'none';
+      } else {
+        checks.forEach(function(c) { c.disabled = false; });
+        if (partTip) partTip.style.display = 'inline';
+      }
     }
     function closeHandover() {
       document.getElementById('memberHandoverModal').classList.add('modal-hidden');
@@ -1875,18 +2065,41 @@
         if (list[i].id === targetId) t = list[i];
       }
       if (!m) return;
-      // 名下是否有在管患者
+
+      // 确认时再次检查：若仍有审核中患者，阻止停用
       var patients = patientData[currentCenterName] || [];
-      var moved = 0;
-      for (var k = 0; k < patients.length; k++) {
-        if (patients[k].creator === m.name) { moved++; }
+      var stillAuditing = 0;
+      for (var ck = 0; ck < patients.length; ck++) {
+        if (patients[ck].creator === m.name && patients[ck].status === '审核中') stillAuditing++;
       }
+      if (stillAuditing > 0) {
+        showToast('该成员名下仍有 ' + stillAuditing + ' 名「审核中」状态的患者，请先在「患者管理」中完成交接后再停用。', 'warn');
+        return;
+      }
+
+      // 名下在管患者（排除审核中）
+      var ownPats = [];
+      for (var k = 0; k < patients.length; k++) {
+        if (patients[k].creator === m.name) ownPats.push(patients[k]);
+      }
+      // 交接范围：选中的患者
+      var scope = 'all';
+      var rad = document.querySelector('input[name="hoScope"]:checked');
+      if (rad) scope = rad.value;
+      var selectedIds = [];
+      if (scope === 'all') {
+        selectedIds = ownPats.map(function(p) { return p.id; });
+      } else {
+        var checks = document.querySelectorAll('.ho-pat-check');
+        checks.forEach(function(c) { if (c.checked) selectedIds.push(c.getAttribute('data-id')); });
+      }
+      var moved = selectedIds.length;
       // 有患者必须选择交接人
-      if (moved > 0 && !t) { alert('该成员名下有 ' + moved + ' 名在管患者，必须交接给其他人'); return; }
-      // 交接：名下患者转移给交接人
-      if (t) {
+      if (moved > 0 && !t) { alert('该成员名下有 ' + ownPats.length + ' 名在管患者，需交接 ' + moved + ' 名，必须选择交接人'); return; }
+      // 交接：选中的患者转移给交接人
+      if (t && moved > 0) {
         for (var k2 = 0; k2 < patients.length; k2++) {
-          if (patients[k2].creator === m.name) { patients[k2].owner = t.name; }
+          if (selectedIds.indexOf(patients[k2].id) !== -1 && patients[k2].creator === m.name) { patients[k2].owner = t.name; }
         }
         // 若是待审核人（CRA/医学），待审核人改为交接人
         if (isAuditRole(m.role) && (pendingReviewers[currentCenterName] || []).indexOf(m.name) !== -1) {
@@ -1989,10 +2202,10 @@
         if (patients[k].creator === m.name) { hasPatient = true; break; }
       }
       if (hasPatient) {
-        alert('该成员名下仍有在管患者，不可删除，请使用「停用」进行交接。');
+        showToast('该成员名下仍有在管患者，不可直接删除，请先点击「停用」完成患者交接。', 'warn');
         return;
       }
-      if (!confirm('确定删除该成员吗？')) return;
+      if (!confirm('确定删除该成员「' + m.name + '」吗？')) return;
       for (var i2 = 0; i2 < list.length; i2++) {
         if (list[i2].id === memberId) { list.splice(i2, 1); break; }
       }
@@ -2062,6 +2275,302 @@
       closeBatchTransfer();
       renderPatientList(currentCenterName);
       showToast('已转移 ' + movedCount + ' 名患者至「' + target + '」（原因：' + reason + '，审核：' + getDefaultAuditors(target).join('、') + '）。');
+    }
+
+    // ========== 成员患者管理弹窗 ==========
+    var mpMemberId = null;  // 当前查看的成员ID
+    var mpSelectedIds = []; // 已勾选的患者患者编号
+
+    /** 将 memberData（按中心分组）合并为扁平数组 */
+    function getAllMembers() {
+      var arr = [];
+      if (typeof memberData === 'undefined' || !memberData) return arr;
+      var centerNames = Object.keys(memberData);
+      for (var i=0;i<centerNames.length;i++) {
+        var list = memberData[centerNames[i]];
+        if (list && list.length) {
+          for (var j=0;j<list.length;j++) arr.push(list[j]);
+        }
+      }
+      return arr;
+    }
+
+    /** 打开成员患者管理弹窗 */
+    function openMemberPatient(memberId) {
+      try {
+        mpMemberId = memberId;
+        if (typeof memberData === 'undefined' || !memberData) { alert('数据未初始化'); return; }
+        var allMembers = getAllMembers();
+        var m = null;
+        for (var i=0;i<allMembers.length;i++){ if(allMembers[i].id === memberId){ m = allMembers[i]; break; } }
+        if (!m) return;
+
+        document.getElementById('mpMemberInfo').textContent = m.name + '（' + m.role + '）';
+
+        // 按 creator 字段筛选该成员名下的所有患者（遍历所有中心）
+        var pats = [];
+        if (typeof patientData !== 'undefined' && patientData) {
+          var centerNames = Object.keys(patientData);
+          for (var ci=0;ci<centerNames.length;ci++) {
+            var centerPats = patientData[centerNames[ci]];
+            if (centerPats) {
+              for (var pi=0;pi<centerPats.length;pi++) {
+                if (centerPats[pi].creator === m.name) {
+                  pats.push(centerPats[pi]);
+                }
+              }
+            }
+          }
+        }
+
+        document.getElementById('mpTotalCount').textContent = pats.length;
+
+        // 重置全选
+        mpSelectedIds = [];
+        document.getElementById('mpSelectAll').checked = false;
+        updateMpBatchBtn();
+
+        renderMpTable(m, pats);
+        document.getElementById('memberPatientModal').style.display = 'flex';
+      } catch(err) { alert('openMemberPatient 出错：'+(err&&err.message?err.message:err)); }
+    }
+
+    function closeMemberPatient() {
+      document.getElementById('memberPatientModal').style.display = 'none';
+      mpMemberId = null;
+      mpSelectedIds = [];
+    }
+
+    /** 渲染患者列表 */
+    function renderMpTable(member, patients) {
+      var tbody = document.getElementById('mpTableBody');
+      var emptyTip = document.getElementById('mpEmptyTip');
+      if (!patients || patients.length === 0) {
+        tbody.innerHTML = '';
+        emptyTip.style.display = '';
+        return;
+      }
+      emptyTip.style.display = 'none';
+      var html = '';
+      for (var i=0;i<patients.length;i++) {
+        var p = patients[i];
+        html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
+        html += '<td class="px-3 py-2"><input type="checkbox" value="'+p.screenNo+'" onchange="toggleMpItem(this)" class="accent-[#165DFF] mp-cb"></td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-500 text-center">'+(i+1)+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-800 font-medium">'+(p.id||'--')+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-700">'+p.nameAbbr+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-600">'+p.age+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-600">'+p.gender+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-600">'+(p.field||'-')+'</td>';
+        html += '<td class="px-3 py-2"><span class="text-xs px-1.5 py-0.5 rounded '+p.statusClass+'">'+p.status+'</span></td>';
+        html += '<td class="px-3 py-2 text-center"><button onclick="openMpSingleHo(\''+p.screenNo+'\',\''+escapeHtml(p.nameAbbr)+'\')" class="text-[#165DFF] hover:text-blue-700 text-[13px]">交接</button></td>';
+        html += '</tr>';
+      }
+      tbody.innerHTML = html;
+    }
+
+    /** 单个 checkbox 变更 */
+    function toggleMpItem(cb) {
+      var val = cb.value;
+      if (cb.checked) {
+        if (mpSelectedIds.indexOf(val)===-1) mpSelectedIds.push(val);
+      } else {
+        mpSelectedIds = mpSelectedIds.filter(function(v){ return v!==val; });
+      }
+      updateMpSelectAllState();
+      updateMpBatchBtn();
+    }
+
+    /** 全选 */
+    function toggleMpSelectAll() {
+      var checked = document.getElementById('mpSelectAll').checked;
+      var cbs = document.querySelectorAll('.mp-cb');
+      for (var i=0;i<cbs.length;i++) {
+        cbs[i].checked = checked;
+      }
+      if (checked) {
+        mpSelectedIds = Array.prototype.map.call(cbs, function(el){ return el.value; });
+      } else {
+        mpSelectedIds = [];
+      }
+      updateMpBatchBtn();
+    }
+
+    function updateMpSelectAllState() {
+      var cbs = document.querySelectorAll('.mp-cb');
+      var sa = document.getElementById('mpSelectAll');
+      if (cbs.length===0) { sa.checked=false; return; }
+      var checkedCount = document.querySelectorAll('.mp-cb:checked').length;
+      sa.indeterminate = checkedCount>0 && checkedCount<cbs.length;
+      sa.checked = checkedCount===cbs.length;
+    }
+
+    function updateMpBatchBtn() {
+      var btn = document.getElementById('mpBatchBtn');
+      var cntEl = document.getElementById('mpSelectedCount');
+      var infoEl = document.getElementById('mpSelectedInfo');
+      cntEl.textContent = mpSelectedIds.length;
+      btn.disabled = mpSelectedIds.length===0;
+      infoEl.textContent = mpSelectedIds.length>0 ? '已选 '+mpSelectedIds.length+' 名患者' : '';
+    }
+
+    // ---- 单条交接 ----
+    var mpSingleScreenNo = null;
+
+    function openMpSingleHo(screenNo, nameAbbr) {
+      mpSingleScreenNo = screenNo;
+      var allM = getAllMembers();
+      var m = null;
+      for (var mi=0;mi<allM.length;mi++){ if(allM[mi].id===mpMemberId){ m = allM[mi]; break; } }
+      document.getElementById('mpsPatientInfo').textContent = screenNo + '（' + nameAbbr + '）';
+      document.getElementById('mpsFromMember').textContent = m ? m.name : '--';
+      document.getElementById('mpsNote').value = '';
+
+      // 填充接收人（排除自己）
+      var sel = document.getElementById('mpsTarget');
+      sel.innerHTML = '<option value="">请选择接收人</option>';
+      for (var i=0;i<memberData.length;i++) {
+        if (memberData[i].id !== mpMemberId) {
+          sel.innerHTML += '<option value="'+memberData[i].id+'">'+memberData[i].name+'（'+memberData[i].role+'）</option>';
+        }
+      }
+      document.getElementById('mpSingleHoModal').style.display = 'flex';
+    }
+
+    function closeMpSingleHo() {
+      document.getElementById('mpSingleHoModal').style.display = 'none';
+      mpSingleScreenNo = null;
+    }
+
+    function confirmMpSingleHo() {
+      var targetId = document.getElementById('mpsTarget').value;
+      if (!targetId) { showToast('请选择接收人','warn'); return; }
+      var note = document.getElementById('mpsNote').value.trim();
+      var allM = getAllMembers();
+      var targetM = null, fromM = null;
+      for (var mi=0;mi<allM.length;mi++){
+        if(allM[mi].id===targetId) targetM = allM[mi];
+        if(allM[mi].id===mpMemberId) fromM = allM[mi];
+      }
+
+      // 模拟交接：遍历所有中心，按 creator 找到该患者并转移
+      if (typeof patientData !== 'undefined' && patientData && fromM) {
+        var centerNames = Object.keys(patientData);
+        for (var ci=0;ci<centerNames.length;ci++) {
+          var pats = patientData[centerNames[ci]];
+          if (!pats) continue;
+          var idx = -1;
+          for (var i=0;i<pats.length;i++){ if(pats[i].screenNo===mpSingleScreenNo && pats[i].creator===fromM.name){ idx=i; break; } }
+          if (idx>=0) {
+            var pat = pats.splice(idx,1)[0];
+            pat.creator = targetM ? targetM.name : '未知';
+            pats.push(pat); // 放回同一中心，creator已变
+            break;
+          }
+        }
+      }
+
+      closeMpSingleHo();
+      openMemberPatient(mpMemberId);
+      renderMemberList();
+      showToast('患者「'+mpSingleScreenNo+'」已交接给「'+(targetM?targetM.name:'')+'」');
+    }
+
+    // ---- 批量交接（全部或选中）----
+    var mpBatchMode = 'all'; // 'all' | 'selected'
+
+    /** 获取某成员名下所有患者（遍历中心按creator筛选） */
+    function getPatientsByCreator(memberName) {
+      var result = [];
+      if (typeof patientData === 'undefined' || !patientData) return result;
+      var centerNames = Object.keys(patientData);
+      for (var ci=0;ci<centerNames.length;ci++) {
+        var pats = patientData[centerNames[ci]];
+        if (pats) {
+          for (var pi=0;pi<pats.length;pi++) {
+            if (pats[pi].creator === memberName) result.push(pats[pi]);
+          }
+        }
+      }
+      return result;
+    }
+
+    function openMpBatchHandover() {
+      mpBatchMode = 'selected';
+      var allM = getAllMembers();
+      var m = null;
+      for (var mi=0;mi<allM.length;mi++){ if(allM[mi].id===mpMemberId){ m = allM[mi]; break; } }
+      var allPats = m ? getPatientsByCreator(m.name) : [];
+
+      if (mpSelectedIds.length === 0) { mpBatchMode = 'all'; }
+
+      var count = mpBatchMode==='all' ? allPats.length : mpSelectedIds.length;
+      document.getElementById('mbpPatientCount').textContent = count;
+      document.getElementById('mbpFromName').textContent = m ? m.name : '--';
+      document.getElementById('mbpNote').value = '';
+
+      var sel = document.getElementById('mbpTarget');
+      sel.innerHTML = '<option value="">请选择接收人</option>';
+      for (var i=0;i<memberData.length;i++) {
+        if (memberData[i].id !== mpMemberId) {
+          sel.innerHTML += '<option value="'+memberData[i].id+'">'+memberData[i].name+'（'+memberData[i].role+'）</option>';
+        }
+      }
+      document.getElementById('mpBatchHoModal').style.display = 'flex';
+    }
+
+    function closeMpBatchHo() {
+      document.getElementById('mpBatchHoModal').style.display = 'none';
+    }
+
+    function confirmMpBatchHo() {
+      var targetId = document.getElementById('mbpTarget').value;
+      if (!targetId) { showToast('请选择接收人','warn'); return; }
+      var note = document.getElementById('mbpNote').value.trim();
+      var allM = getAllMembers();
+      var targetM = null, fromM = null;
+      for (var mi=0;mi<allM.length;mi++){
+        if(allM[mi].id===targetId) targetM = allM[mi];
+        if(allM[mi].id===mpMemberId) fromM = allM[mi];
+      }
+
+      // 遍历所有中心，按 creator 找到患者并转移
+      if (typeof patientData !== 'undefined' && patientData && fromM) {
+        var centerNames = Object.keys(patientData);
+        var movedTotal = 0;
+        for (var ci=0;ci<centerNames.length;ci++) {
+          var pats = patientData[centerNames[ci]];
+          if (!pats) continue;
+          var toMove = [];
+          var remaining = [];
+          for (var i=0;i<pats.length;i++) {
+            if (pats[i].creator !== fromM.name) { remaining.push(pats[i]); continue; }
+            if (mpBatchMode === 'all') {
+              toMove.push(pats[i]);
+            } else {
+              if (mpSelectedIds.indexOf(pats[i].screenNo)>=0) {
+                toMove.push(pats[i]);
+              } else {
+                remaining.push(pats[i]);
+              }
+            }
+          }
+          // 修改 creator 并放回
+          for (var j=0;j<toMove.length;j++) {
+            toMove[j].creator = targetM ? targetM.name : '未知';
+            remaining.push(toMove[j]);
+            movedTotal++;
+          }
+          patientData[centerNames[ci]] = remaining;
+        }
+      }
+
+      closeMpBatchHo();
+      document.getElementById('memberPatientModal').style.display = 'none';
+      mpMemberId = null;
+      mpSelectedIds = [];
+      renderMemberList();
+      showToast('已将 '+ (mpBatchMode==='all'? '全部': mpSelectedIds.length) +' 名患者交接给「'+(targetM?targetM.name:'')+'」');
     }
 
     // ========== 中心日志弹窗 ==========
@@ -2136,7 +2645,7 @@
         mList.push(mlog);
       }
       var mh = '';
-      if (mList.length === 0) mh = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400 text-sm">暂无成员变更日志</td></tr>';
+      if (mList.length === 0) mh = '<tr><td colspan="8" class="px-3 py-6 text-center text-gray-400 text-sm">暂无成员交接日志</td></tr>';
       else {
         for (var c = 0; c < mList.length; c++) {
           var x = mList[c];
@@ -2168,7 +2677,7 @@
       document.getElementById('tlTo').value = '';
       renderCenterLog(document.getElementById('clCenterName').textContent);
     }
-    // 重置成员变更日志查询条件
+    // 重置成员交接日志查询条件
     function mlReset() {
       document.getElementById('mlFrom').value = '';
       document.getElementById('mlTo').value = '';

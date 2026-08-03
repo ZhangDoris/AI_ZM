@@ -1,6 +1,8 @@
 <!--
   项目成员通讯录 - 产品原型
-  功能：展示项目中所有成员的通讯录信息，支持按中心名称、角色、姓名筛选查询
+  功能：展示项目中所有成员的通讯录信息，支持筛选查询；
+        每个成员支持 编辑 / 停用(含交接) / 启用 / 删除，
+        删除时若名下有患者则禁止；停用时若有患者必须先做交接。
   使用方法：直接在浏览器中打开即可查看完整交互效果
 -->
 <!DOCTYPE html>
@@ -25,13 +27,103 @@
     .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
     .center-tag { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 4px; font-size: 13px; text-decoration: none; transition: all 0.15s; white-space: nowrap; }
     .center-tag:hover { box-shadow: 0 1px 4px rgba(22,93,255,0.25); }
+    .tag-green { background-color: #e8ffea; color: #00B42A; }
+    .tag-gray { background-color: #f2f3f5; color: #86909c; }
+
+    /* 中心列表折叠展示 */
+    .center-list { position: relative; }
+    .center-list.expanded .center-tag {
+      display: block; margin: 0; border-radius: 0;
+      border-bottom: 1px solid rgba(22,93,255,0.12); padding: 5px 8px; font-size: 12.5px;
+    }
+    .center-list.expanded {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px;
+      max-height: 208px; overflow-y: auto; border: 1px solid #e5edff;
+      border-radius: 6px; padding: 2px 4px; background: #f8fbff;
+    }
+    .center-toggle {
+      display: inline-flex; align-items: center; gap: 3px; margin-top: 4px;
+      padding: 2px 10px; font-size: 12px; color: #165DFF; background: #eaf2ff;
+      border-radius: 10px; cursor: pointer; user-select: none; transition: background 0.15s;
+    }
+    .center-toggle:hover { background: #d6e6ff; }
+    .center-empty { color: #d1d5db; font-size: 13px; }
+
+    /* 搜索式多选中心选择器 */
+    .multi-select-wrap { position: relative; }
+    .ms-trigger {
+      display: flex; align-items: center; gap: 6px;
+      min-height: 38px; padding: 4px 10px 4px 10px;
+      border: 1px solid #D0D5DD; border-radius: 8px;
+      background: #fff; cursor: text; transition: all 0.15s;
+      flex-wrap: wrap;
+    }
+    .ms-trigger:hover { border-color: #165DFF; }
+    .ms-trigger.ms-focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); }
+    .ms-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; background: #E8F3FF; color: #165DFF;
+      border-radius: 4px; font-size: 12px; white-space: nowrap; max-width: 180px;
+    }
+    .ms-tag .ms-tag-close {
+      cursor: pointer; color: #86909c; line-height: 1;
+      transition: color 0.15s;
+    }
+    .ms-tag .ms-tag-close:hover { color: #F53F3F; }
+    .ms-placeholder { color: #C9CDD4; font-size: 13px; }
+    .ms-input {
+      flex: 1; min-width: 100px; border: none; outline: none;
+      font-size: 13px; padding: 2px 0; background: transparent;
+    }
+    .ms-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      z-index: 50; background: #fff; border: 1px solid #e5e6eb;
+      border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      max-height: 260px; overflow-y: auto; display: none;
+    }
+    .ms-dropdown.ms-open { display: block; }
+    .ms-search-bar {
+      position: sticky; top: 0; z-index: 1; background: #fff;
+      padding: 8px 10px; border-bottom: 1px solid #f0f0f0;
+    }
+    .ms-search-bar input {
+      width: 100%; border: 1px solid #D0D5DD; border-radius: 6px;
+      padding: 5px 10px 5px 28px; font-size: 13px; outline: none;
+      box-sizing: border-box;
+    }
+    .ms-search-bar input:focus { border-color: #165DFF; }
+    .ms-search-icon {
+      position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+      color: #86909c; font-size: 12px;
+    }
+    .ms-toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 10px; border-bottom: 1px solid #f0f0f0;
+      background: #FAFBFC; font-size: 12px; color: #86909c;
+    }
+    .ms-toolbar a { cursor: pointer; color: #165DFF; text-decoration: none; }
+    .ms-toolbar a:hover { text-decoration: underline; }
+    .ms-list { padding: 4px 0; }
+    .ms-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px; cursor: pointer; font-size: 13px; color: #333;
+      transition: background 0.1s;
+    }
+    .ms-item:hover { background: #F2F7FF; }
+    .ms-item.ms-checked { background: #F0F5FF; }
+    .ms-item input[type="checkbox"] { accent-color: #165DFF; width: 15px; height: 15px; }
+    .ms-item-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
   </style>
 </head>
 <body class="bg-gray-50">
 
   <!-- 页面标题栏 -->
-  <header class="bg-white border-b border-gray-200 px-5 py-3 sticky top-0 z-10">
+  <header class="bg-white border-b border-gray-200 px-5 py-3 sticky top-0 z-10 flex items-center gap-3">
     <h1 class="text-base font-semibold text-gray-800">项目成员通讯录【SHR-1819-306】</h1>
+    <span class="text-xs text-gray-400">（停用 / 交接 / 删除需校验名下患者）</span>
   </header>
 
   <main class="p-5">
@@ -70,13 +162,11 @@
       <button onclick="doReset()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
         <i class="fas fa-redo mr-1"></i> 重置
       </button>
-      <button onclick="openModal('addMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-1.5 rounded text-[13px] font-medium flex items-center gap-1.5 btn-click">
+      <button onclick="openAddMember()" class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-1.5 rounded text-[13px] font-medium flex items-center gap-1.5 btn-click">
         <i class="fas fa-plus"></i> 新增成员
       </button>
-      <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
-        <i class="fas fa-download mr-1"></i> 下载模板
-      </button>
-      <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
+    
+      <button onclick="openImportModal()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
         <i class="fas fa-upload mr-1"></i> 导入
       </button>
       <button class="bg-[#f59e0b] hover:bg-amber-500 text-white px-4 py-1.5 rounded text-[13px] font-medium btn-click ml-auto">
@@ -95,77 +185,15 @@
             <th class="px-3 py-2.5 text-left">负责中心</th>
             <th class="px-3 py-2.5 text-left">仅查看授权中心</th>
             <th class="px-3 py-2.5 text-left">手机号</th>
+            <th class="px-3 py-2.5 text-left">状态</th>
             <th class="px-3 py-2.5 text-center">操作</th>
           </tr>
         </thead>
-        <tbody id="memberTableBody">
-          <!-- 第1行：王慧柳 -->
-          <tr>
-            <td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>
-            <td class="px-3 py-2.5 font-medium text-gray-800">王慧柳</td>
-            <td class="px-3 py-2.5 text-gray-600">医学经理</td>
-            <td class="px-3 py-2.5 max-w-md">
-              <div class="flex flex-wrap">
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN015·淄博市中心医院·宋贵霞</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN029·聊城市人民医院·王 岐</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN028·沧州市中心医院·刘卫卫</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN027·山西白求恩医院·张彦萍</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN026·内蒙古包钢医院·徐嘉娜</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN025·北京大学第三医院·闫燕</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN024·北京大学第一医院·刘秀琴</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN023·郑州市中心医院·廖一玉杰</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN022·陕西省人民医院·刘 刚</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN021·西安交通大学第一附属医院·权芳</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN020·西安交通大学第二附属医院·郑康</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN019·河北医科大学第三医院·娄峰</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN018·河北省人民医院·屈永涛</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN017·山东省第二人民医院·史萌</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN016·烟台毓璜顶医院·刘丽萍</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN014·山西医科大学第一医院·冯意</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN013·山西省肿瘤医院·第二病区·赵长青</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN012·天津市人民医院·刘百祥</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN011·甘肃省人民医院·卫建东</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN010·宁夏医科大学总医院·高小平</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN009·宁夏回族自治区人民医院·李 冰</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN008·包头市中心医院·许锡东</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN007·内蒙古自治区肿瘤医院·郭晓波</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN006·新疆医科大学第一附属医院·阳玉泽</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN005·哈尔滨医科大学附属第四医院·孙亚雯</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN004·中国医科大学附属盛京医院·魏庆宇</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN003·中国医科大学附属盛京医院·曹志伟</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN002·吉林大学第一医院·王宇声</span>
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN001·首都医科大学附属北京同仁医院·张罗/王成硕</span>
-              </div>
-            </td>
-            <td class="px-3 py-2.5 text-gray-400">-</td>
-            <td class="px-3 py-2.5 text-gray-600">186****4409</td>
-            <td class="px-3 py-2.5 text-center">
-              <button onclick="openModal('editMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click mr-1">编辑</button>
-              <button onclick="openModal('deleteConfirmModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click">删除</button>
-            </td>
-          </tr>
-          <!-- 第2行：刘雪红 -->
-          <tr>
-            <td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>
-            <td class="px-3 py-2.5 font-medium text-gray-800">刘雪红</td>
-            <td class="px-3 py-2.5 text-gray-600">CRA专员</td>
-            <td class="px-3 py-2.5 max-w-md">
-              <div class="flex flex-wrap">
-                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN001·首都医科大学附属北京同仁医院·张罗/王成硕</span>
-              </div>
-            </td>
-            <td class="px-3 py-2.5 text-gray-400">-</td>
-            <td class="px-3 py-2.5 text-gray-600">139****3242</td>
-            <td class="px-3 py-2.5 text-center">
-              <button onclick="openModal('editMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click mr-1">编辑</button>
-              <button onclick="openModal('deleteConfirmModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click">删除</button>
-            </td>
-          </tr>
-        </tbody>
+        <tbody id="memberTableBody"></tbody>
       </table>
       <!-- 分页 -->
       <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200">
-        <span class="text-[12px] text-gray-500">共 2 条</span>
+        <span class="text-[12px] text-gray-500" id="totalCount">共 0 条</span>
         <div class="flex items-center gap-1">
           <select class="border border-gray-300 rounded px-2 py-1 text-[12px] text-gray-600">
             <option>10条/页</option><option>20条/页</option><option>50条/页</option>
@@ -181,105 +209,167 @@
     </div>
   </main>
 
-  <!-- ========== 新增成员弹窗 ========== -->
-  <div id="addMemberModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-800">新增成员</h3>
-        <button onclick="closeModal('addMemberModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+  <!-- ========== 人员选择弹窗 ========== -->
+  <div id="userSelectModal" class="modal-overlay modal-hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeUserSelect()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-800"><i class="fas fa-user-plus text-[#165DFF] mr-2"></i>选择人员</h3>
+        <button onclick="closeUserSelect()" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
       </div>
-      <div class="px-6 py-5 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
-            <input type="text" placeholder="请输入姓名" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">角色 <span class="text-red-500">*</span></label>
-            <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">请选择</option>
-              <option>SMO-PM</option>
-              <option>中央项目管理</option>
-              <option>临床协调员</option>
-              <option>CRA专员</option>
-              <option>运营部PM</option>
-              <option>医学经理</option>
-              <option>CRC</option>
-            </select>
-          </div>
+      <div class="px-5 py-4">
+        <!-- 搜索框 -->
+        <div class="relative mb-3">
+          <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+          <input id="usSearch" type="text" placeholder="搜索姓名 / 工号 / 部门" oninput="renderUserList()" class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 text-sm outline-none focus:border-[#165DFF]">
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
-          <input type="text" placeholder="请输入手机号" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">负责中心</label>
-          <div class="border border-gray-300 rounded-lg max-h-48 overflow-y-auto p-2">
-            <div class="space-y-1.5">
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN001 首都医科大学附属北京同仁医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN002 吉林大学第一医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN003 中国医科大学附属盛京医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN004 中国医科大学附属盛京医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN005 哈尔滨医科大学附属第四医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN006 新疆医科大学第一附属医院</span></label>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <button onclick="closeModal('addMemberModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
-        <button onclick="closeModal('addMemberModal'); showToast('新增成员成功！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button>
+        <!-- 列表 -->
+        <div id="usList" class="max-h-72 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50"></div>
+        <p class="text-[12px] text-gray-400 mt-2 text-center" id="usEmpty" style="display:none;">未找到匹配的人员</p>
       </div>
     </div>
   </div>
 
-  <!-- ========== 编辑成员弹窗 ========== -->
-  <div id="editMemberModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-semibold text-gray-800">编辑成员</h3>
-        <button onclick="closeModal('editMemberModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+  <!-- ========== 新增 / 编辑 成员弹窗 ========== -->
+  <div id="memberFormModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeModal('memberFormModal')">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 flex flex-col" style="max-height:88vh;">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <h3 class="text-lg font-semibold text-gray-800" id="mfTitle">新增成员</h3>
+        <button onclick="closeModal('memberFormModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
       </div>
-      <div class="px-6 py-5 space-y-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-            <input type="text" value="王慧柳" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+      <div class="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
+        <input type="hidden" id="mfEditId" value="">
+        <input type="hidden" id="mfUserId" value="">
+        <!-- 姓名 单独一行 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+          <div class="flex mt-1.5 gap-2">
+            <input id="mfName" type="text" readonly placeholder="请选择人员" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-50 outline-none">
+            <button onclick="openUserSelect()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 bg-white whitespace-nowrap">选择</button>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
-            <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option>SMO-PM</option>
-              <option>中央项目管理</option>
-              <option>临床协调员</option>
-              <option>CRA专员</option>
-              <option selected>医学经理</option>
-              <option>运营部PM</option>
-              <option>CRC</option>
-            </select>
-          </div>
+        </div>
+        <!-- 用户ID 单独一行（只读） -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">用户ID</label>
+          <input id="mfUserShowId" type="text" readonly placeholder="选择人员后自动填充" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-500 outline-none cursor-not-allowed">
+        </div>
+        <!-- 角色 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">角色 <span class="text-red-500">*</span></label>
+          <select id="mfRole" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+            <option value="">请选择</option>
+            <option>SMO-PM</option>
+            <option>中央项目管理</option>
+            <option>临床协调员</option>
+            <option>CRA专员</option>
+            <option>运营部PM</option>
+            <option>医学经理</option>
+            <option>CRC</option>
+          </select>
+        </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
-          <input type="text" value="186****4409" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          <input id="mfPhone" type="text" placeholder="请输入手机号" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
         </div>
+
+        <!-- 负责中心 - 搜索式多选 -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">负责中心</label>
-          <div class="border border-gray-300 rounded-lg max-h-48 overflow-y-auto p-2">
-            <div class="space-y-1.5">
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN001 首都医科大学附属北京同仁医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN002 吉林大学第一医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN003 中国医科大学附属盛京医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN004 中国医科大学附属盛京医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN005 哈尔滨医科大学附属第四医院</span></label>
-              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN006 新疆医科大学第一附属医院</span></label>
+          <div class="multi-select-wrap" id="msCentersWrap">
+            <div class="ms-trigger" onclick="toggleMsDropdown('msCenters')" id="msCentersTrigger">
+              <div id="msCentersTags"></div>
+              <input class="ms-input" placeholder="请选择中心（可多选）" readonly onfocus="toggleMsDropdown('msCenters')" id="msCentersInput">
+            </div>
+            <div class="ms-dropdown" id="msCentersDropdown">
+              <div class="ms-search-bar" style="position:relative;">
+                <i class="fas fa-search ms-search-icon"></i>
+                <input type="text" placeholder="搜索中心名称或编号..." oninput="filterMsOptions('msCenters',this.value)" id="msCentersSearch">
+              </div>
+              <div class="ms-toolbar">
+                <span id="msCentersCount">已选 0 项</span>
+                <a onclick="msSelectAll('msCenters')">全选</a>
+              </div>
+              <div class="ms-list" id="msCentersList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 仅查看权限中心 - 搜索式多选 -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">仅查看权限中心</label>
+          <div class="multi-select-wrap" id="msViewWrap">
+            <div class="ms-trigger" onclick="toggleMsDropdown('msView')" id="msViewTrigger">
+              <div id="msViewTags"></div>
+              <input class="ms-input" placeholder="请选择中心（可多选）" readonly onfocus="toggleMsDropdown('msView')" id="msViewInput">
+            </div>
+            <div class="ms-dropdown" id="msViewDropdown">
+              <div class="ms-search-bar" style="position:relative;">
+                <i class="fas fa-search ms-search-icon"></i>
+                <input type="text" placeholder="搜索中心名称或编号..." oninput="filterMsOptions('msView',this.value)" id="msViewSearch">
+              </div>
+              <div class="ms-toolbar">
+                <span id="msViewCount">已选 0 项</span>
+                <a onclick="msSelectAll('msView')">全选</a>
+              </div>
+              <div class="ms-list" id="msViewList"></div>
             </div>
           </div>
         </div>
       </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0">
+        <button onclick="closeModal('memberFormModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="saveMemberForm()" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 成员交接弹窗（停用 / 离职交接） ========== -->
+  <div id="handoverModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">成员交接</h3>
+        <button onclick="closeHandover()" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <p id="hoHint" class="text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></p>
+
+        <!-- 患者交接范围（部分/全部） -->
+        <div>
+          <label class="text-sm text-gray-700 font-medium">患者交接范围</label>
+          <div class="flex gap-3 mt-1.5">
+            <label class="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-[#165DFF]">
+              <input type="radio" name="hoScope" value="all" checked onchange="switchHoScope()" class="accent-[#165DFF]">
+              <span class="text-sm">交接全部患者</span>
+            </label>
+            <label class="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:border-[#165DFF]">
+              <input type="radio" name="hoScope" value="part" onchange="switchHoScope()" class="accent-[#165DFF]">
+              <span class="text-sm">交接部分患者</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 名下患者列表 -->
+        <div id="hoPatientBox">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-sm text-gray-700 font-medium">名下在管患者（<span id="hoPatientTotal">0</span> 名）</label>
+            <span id="hoPartTip" class="text-[12px] text-gray-400" style="display:none;">勾选需要交接的患者</span>
+          </div>
+          <div id="hoPatientList" class="border border-gray-200 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50"></div>
+          <p id="hoPatientEmpty" class="text-[12px] text-gray-400 mt-1.5" style="display:none;">该成员名下暂无可交接的患者。</p>
+        </div>
+
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接给（项目内其他成员） <span id="hoTargetReq" class="text-red-500">*</span></label>
+          <select id="hoTarget" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1.5 focus:outline-none"></select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">交接说明</label>
+          <textarea id="hoNote" rows="2" placeholder="请输入交接说明（选填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#165DFF] outline-none"></textarea>
+        </div>
+      </div>
       <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <button onclick="closeModal('editMemberModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
-        <button onclick="closeModal('editMemberModal'); showToast('修改成功！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button>
+        <button onclick="closeHandover()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="confirmHandover()" class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium btn-click">确认交接并停用</button>
       </div>
     </div>
   </div>
@@ -292,17 +382,200 @@
           <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
         </div>
         <h3 class="text-base font-semibold text-gray-800 mb-2">确认删除</h3>
-        <p class="text-sm text-gray-500">确定要删除该成员吗？此操作不可撤销。</p>
+        <p class="text-sm text-gray-500" id="delConfirmText">确定要删除该成员吗？此操作不可撤销。</p>
       </div>
       <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
         <button onclick="closeModal('deleteConfirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
-        <button onclick="closeModal('deleteConfirmModal'); showToast('已删除！')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认删除</button>
+        <button onclick="confirmDelete()" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 成员患者管理（交接）弹窗 ========== -->
+  <div id="memberPatientModal" class="modal-overlay modal-hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeMemberPatient()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden flex flex-col" style="max-height:88vh">
+      <!-- 头部 -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">患者管理 · <span id="mpMemberName"></span></h3>
+          <p class="text-xs text-gray-400 mt-0.5">查看该成员名下患者，可单条或批量交接给其他成员</p>
+        </div>
+        <button onclick="closeMemberPatient()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <!-- 工具栏 -->
+      <div class="flex items-center justify-between px-6 py-3 border-b border-gray-100 bg-gray-50">
+        <div class="text-sm text-gray-500">共 <span id="mpCount" class="font-semibold text-gray-700">0</span> 名患者</div>
+        <button onclick="openMpBatchHandover()" id="mpBatchBtn" disabled
+          class="px-4 py-2 rounded-lg text-sm font-medium bg-[#165DFF] text-white hover:bg-[#0E42D6] transition disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="fa-solid fa-people-arrows mr-1.5"></i>全部患者交接
+        </button>
+      </div>
+      <!-- 表格 -->
+      <div class="flex-1 overflow-auto px-6 py-2">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-white">
+            <tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="py-3 pr-3 w-10"><input type="checkbox" id="mpSelectAll" onclick="toggleMpSelectAll(this)" class="w-4 h-4 cursor-pointer"></th>
+              <th class="py-3 pr-3 font-medium w-12">序号</th>
+              <th class="py-3 pr-3 font-medium">患者编号</th>
+              <th class="py-3 pr-3 font-medium">姓名缩写</th>
+              <th class="py-3 pr-3 font-medium w-16">年龄</th>
+              <th class="py-3 pr-3 font-medium w-12">性别</th>
+              <th class="py-3 pr-3 font-medium">领域</th>
+              <th class="py-3 pr-3 font-medium">状态</th>
+              <th class="py-3 pl-3 font-medium text-right w-24">操作</th>
+            </tr>
+          </thead>
+          <tbody id="mpTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 单条患者交接弹窗 ========== -->
+  <div id="mpSingleHoModal" class="modal-overlay modal-hidden fixed inset-0 z-[125] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeMpSingleHo()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-800">交接患者</h3>
+        <button onclick="closeMpSingleHo()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="text-sm text-gray-500">将患者 <span id="mpSingleName" class="font-semibold text-gray-800"></span> 交接给</div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">接收人（成员）</label>
+          <select id="mpSingleTo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#165DFF]"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">交接说明（选填）</label>
+          <textarea id="mpSingleNote" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#165DFF]"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+        <button onclick="closeMpSingleHo()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition">取消</button>
+        <button onclick="confirmMpSingleHo()" class="px-4 py-2 rounded-lg text-sm font-medium bg-[#165DFF] text-white hover:bg-[#0E42D6] transition">确认交接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 批量患者交接弹窗 ========== -->
+  <div id="mpBatchHoModal" class="modal-overlay modal-hidden fixed inset-0 z-[125] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeMpBatchHo()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-md mx-4 overflow-hidden" style="max-width:28rem;max-height:88vh;display:flex;flex-direction:column;">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h3 class="text-lg font-semibold text-gray-800">交接 <span id="mpBatchTitle"></span></h3>
+        <button onclick="closeMpBatchHo()" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4 overflow-auto">
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">接收人（成员）</label>
+          <select id="mpBatchTo" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#165DFF]"></select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-400 mb-1.5">交接说明（选填）</label>
+          <textarea id="mpBatchNote" rows="3" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#165DFF]"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-100">
+        <button onclick="closeMpBatchHo()" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition">取消</button>
+        <button onclick="confirmMpBatchHo()" class="px-4 py-2 rounded-lg text-sm font-medium bg-[#165DFF] text-white hover:bg-[#0E42D6] transition">确认交接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 成员导入弹窗 ========== -->
+  <div id="importModal" class="modal-overlay modal-hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/40" onclick="if(event.target===this)closeImportModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden flex flex-col" style="max-height:88vh">
+      <!-- 头部 -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+        <h3 class="text-lg font-semibold text-gray-800 flex items-center"><i class="fas fa-file-import text-[#165DFF] mr-2"></i>成员数据导入</h3>
+        <button onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition"><i class="fas fa-times text-lg"></i></button>
+      </div>
+
+      <!-- 步骤条 -->
+      <div class="flex items-center px-6 py-4 border-b border-gray-100 text-[13px]">
+        <div class="flex items-center gap-2 text-[#165DFF] font-medium">
+          <span class="w-6 h-6 rounded-full bg-[#165DFF] text-white flex items-center justify-center text-[12px]">1</span>
+          <span>下载模板</span>
+        </div>
+        <div class="flex-1 h-px bg-gray-200 mx-3"></div>
+        <div class="flex items-center gap-2 text-[#165DFF] font-medium">
+          <span class="w-6 h-6 rounded-full bg-[#165DFF] text-white flex items-center justify-center text-[12px]">2</span>
+          <span>上传文件</span>
+        </div>
+      </div>
+
+      <div class="px-6 py-5 flex-1 overflow-auto">
+        <!-- 备注提醒 -->
+        <div class="mb-4 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-[13px]">
+          <i class="fas fa-exclamation-circle mt-0.5"></i>
+          <span>请务必按照模板导入数据，否则将导致导入失败或数据错乱。</span>
+        </div>
+
+        <!-- 操作区：下载模板按钮 + 导入区域 -->
+        <div class="mb-4 flex items-center gap-3">
+          <button onclick="downloadImportTemplate()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-[#165DFF] text-[#165DFF] text-[13px] rounded-lg hover:bg-blue-50 transition font-medium">
+            <i class="fas fa-download"></i>下载模板
+          </button>
+          <span class="text-[12px] text-gray-400">仅支持 .xlsx 格式，文件大小不超过 10MB</span>
+        </div>
+
+        <!-- 拖拽/点选上传区 -->
+        <div id="dropZone"
+             class="relative mb-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/60 px-6 py-10 flex flex-col items-center justify-center text-center cursor-pointer transition hover:border-[#165DFF] hover:bg-blue-50/40"
+             onclick="document.getElementById('importFile').click()"
+             ondragover="event.preventDefault();this.classList.add('border-[#165DFF]','bg-blue-50/60')"
+             ondragleave="event.preventDefault();this.classList.remove('border-[#165DFF]','bg-blue-50/60')"
+             ondrop="event.preventDefault();this.classList.remove('border-[#165DFF]','bg-blue-50/60');handleDrop(event)">
+          <div class="w-14 h-14 rounded-full bg-blue-50 text-[#165DFF] flex items-center justify-center text-2xl mb-3">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <p class="text-[14px] text-gray-700">
+            将文件拖拽到此处，或
+            <span class="text-[#165DFF] font-medium">点击选择文件</span>
+          </p>
+          <p class="text-[12px] text-gray-400 mt-1">支持 .xlsx 格式</p>
+          <input id="importFile" type="file" accept=".xlsx" class="hidden" onchange="handleImportFile(this)">
+        </div>
+
+        <!-- 已选文件 -->
+        <div id="importFileChip" class="hidden mb-4 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-[13px] text-[#165DFF]">
+          <i class="fas fa-file-excel"></i>
+          <span id="importFileName"></span>
+          <i class="fas fa-check-circle text-[#00B42A]"></i>
+          <button onclick="clearImportFile()" class="ml-1 text-gray-400 hover:text-red-500 transition" title="移除"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- 解析状态提示 -->
+        <div id="importStatus" class="hidden mb-4"></div>
+
+        <!-- 导入失败错误描述 -->
+        <div id="importErrorBox" class="hidden">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 text-[#F53F3F] text-[12px] font-medium">
+              <i class="fas fa-exclamation-triangle"></i>导入失败说明
+            </span>
+            <span id="importErrorCount" class="text-[12px] text-gray-400"></span>
+          </div>
+          <p class="text-[12px] text-gray-500 mb-2">以下为导入失败的具体数据及其问题字段，请按提示修正后重新上传：</p>
+          <div id="importErrorList" class="rounded-xl border border-red-100 bg-red-50/40 p-4 space-y-3"></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <span id="importFooterStat" class="text-[12px] text-gray-400"></span>
+        <div class="flex items-center gap-3">
+          <button onclick="closeImportModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">取消</button>
+          <button id="importConfirmBtn" onclick="uploadImport()" disabled class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition inline-flex items-center gap-2">
+            <i id="importBtnSpinner" class="fas fa-spinner fa-spin hidden"></i>
+            <span id="importBtnText">上传导入</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Toast 提示 -->
-  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-5 py-2.5 rounded-lg shadow-lg text-sm font-medium z-[999] hidden flex items-center gap-2">
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-5 py-2.5 rounded-lg shadow-lg text-sm font-medium z-[9999] hidden flex items-center gap-2">
     <i class="fas fa-check-circle"></i>
     <span id="toastMsg"></span>
   </div>
@@ -312,13 +585,77 @@
     .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
     .modal-hidden { opacity: 0; pointer-events: none; }
     .modal-hidden .modal-content { transform: scale(0.95); opacity: 0; }
+    /* 患者状态标签（来自 center-management 患者交接弹窗） */
+    .status-tag { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; }
+    .status-unaudited { background: #f2f3f5; color: #4e5969; }
+    .status-auditing { background: #fff7e6; color: #d46b08; }
+    .status-passed { background: #e8ffea; color: #00b42a; }
   </style>
 
   <script>
-    // ========== Toast 提示 ==========
-    function showToast(msg) {
+    // 全局错误捕获：把真实报错显示在页面顶部，便于定位
+    window.addEventListener('error', function(e) {
+      var bar = document.getElementById('errBar');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'errBar';
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#F53F3F;color:#fff;padding:8px 14px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.2)';
+        document.body.appendChild(bar);
+      }
+      bar.textContent = '运行错误：' + (e.message || e.error) + '  (行 ' + (e.lineno || '?') + ')';
+      bar.style.display = 'block';
+    });
+
+    // ========== 数据 ==========
+    // 王慧柳负责中心（演示 29 个）
+    var wangCenters = [
+      'CN015·淄博市中心医院·宋贵霞','CN029·聊城市人民医院·王 岐','CN028·沧州市中心医院·刘卫卫',
+      'CN027·山西白求恩医院·张彦萍','CN026·内蒙古包钢医院·徐嘉娜','CN025·北京大学第三医院·闫燕',
+      'CN024·北京大学第一医院·刘秀琴','CN023·郑州市中心医院·廖一玉杰','CN022·陕西省人民医院·刘 刚',
+      'CN021·西安交通大学第一附属医院·权芳','CN020·西安交通大学第二附属医院·郑康','CN019·河北医科大学第三医院·娄峰',
+      'CN018·河北省人民医院·屈永涛','CN017·山东省第二人民医院·史萌','CN016·烟台毓璜顶医院·刘丽萍',
+      'CN014·山西医科大学第一医院·冯意','CN013·山西省肿瘤医院·第二病区·赵长青','CN012·天津市人民医院·刘百祥',
+      'CN011·甘肃省人民医院·卫建东','CN010·宁夏医科大学总医院·高小平','CN009·宁夏回族自治区人民医院·李 冰',
+      'CN008·包头市中心医院·许锡东','CN007·内蒙古自治区肿瘤医院·郭晓波','CN006·新疆医科大学第一附属医院·阳玉泽',
+      'CN005·哈尔滨医科大学附属第四医院·孙亚雯','CN004·中国医科大学附属盛京医院·魏庆宇','CN003·中国医科大学附属盛京医院·曹志伟',
+      'CN002·吉林大学第一医院·王宇声','CN001·首都医科大学附属北京同仁医院·张罗/王成硕'
+    ];
+
+    var memberData = [
+      { id:'m1', name:'王慧柳', role:'医学经理', phone:'186****4409', status:'启用',
+        centers: wangCenters, viewCenters: ['-'] },
+      { id:'m2', name:'刘雪红', role:'CRA专员', phone:'139****3242', status:'启用',
+        centers: ['CN001·首都医科大学附属北京同仁医院·张罗/王成硕'], viewCenters: ['-'] },
+      { id:'m3', name:'陈CRA', role:'CRA专员', phone:'137****7788', status:'停用',
+        centers: ['CN030·北京医院·李华'], viewCenters: ['-'] },
+      { id:'m4', name:'周CRC', role:'CRC', phone:'135****2233', status:'启用',
+        centers: ['CN031·上海瑞金医院·张明'], viewCenters: ['-'] }
+    ];
+
+    // 各成员名下患者（按成员姓名分组；每个患者对象含 id/screenNo/nameAbbr/age/gender/field/status/statusClass/creator）。
+    // 用于删除/停用校验，以及「患者交接」弹窗展示。
+    var patientData = {
+      '王慧柳': [   // 有患者 → 删除禁用、停用须交接
+        { id: 'P-A01', screenNo: 'SCR-A01', nameAbbr: '患A', age: 58, gender: '男', field: '肺部', status: '审核中', statusClass: 'status-auditing', creator: '王慧柳' },
+        { id: 'P-A02', screenNo: 'SCR-A02', nameAbbr: '患B', age: 47, gender: '女', field: '肝部', status: '未提交', statusClass: 'status-unaudited', creator: '王慧柳' },
+        { id: 'P-A03', screenNo: 'SCR-A03', nameAbbr: '患C', age: 62, gender: '男', field: '乳腺', status: '通过', statusClass: 'status-passed', creator: '王慧柳' }
+      ],
+      '刘雪红': [],                              // 无患者 → 可直接删除/停用
+      '陈CRA': [],                              // 已停用，无患者
+      '周CRC': [   // 有患者
+        { id: 'P-D01', screenNo: 'SCR-D01', nameAbbr: '患D', age: 51, gender: '女', field: '乳腺', status: '审核中', statusClass: 'status-auditing', creator: '周CRC' }
+      ]
+    };
+
+    // ========== Toast ==========
+    function showToast(msg, type) {
       var t = document.getElementById('toast');
       document.getElementById('toastMsg').textContent = msg;
+      if (type === 'warn') {
+        t.classList.remove('bg-green-500'); t.classList.add('bg-amber-500');
+      } else {
+        t.classList.remove('bg-amber-500'); t.classList.add('bg-green-500');
+      }
       t.classList.remove('hidden');
       setTimeout(function() { t.classList.add('hidden'); }, 2500);
     }
@@ -330,14 +667,921 @@
       overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.add('modal-hidden'); });
     });
 
-    // ========== 筛选查询 ==========
-    function doSearch() { showToast('查询完成'); }
+    // ========== 筛选 / 渲染 ==========
+    function getFilteredMembers() {
+      var fc = (document.getElementById('filterCenter').value || '').trim().toLowerCase();
+      var fr = document.getElementById('filterRole').value || '';
+      var fn = (document.getElementById('filterName').value || '').trim().toLowerCase();
+      return memberData.filter(function(m) {
+        if (fc) {
+          var hit = (m.centers || []).some(function(c) { return c.toLowerCase().indexOf(fc) !== -1; });
+          if (!hit) return false;
+        }
+        if (fr && m.role !== fr) return false;
+        if (fn && (m.name || '').toLowerCase().indexOf(fn) === -1) return false;
+        return true;
+      });
+    }
+
+    function renderMemberTable() {
+      var list = getFilteredMembers();
+      document.getElementById('totalCount').textContent = '共 ' + list.length + ' 条';
+      var html = '';
+      for (var i = 0; i < list.length; i++) {
+        var m = list[i];
+        var status = m.status || '启用';
+        var statusTag = status === '启用'
+          ? '<span class="px-2 py-0.5 rounded text-[12px] tag-green">启用</span>'
+          : '<span class="px-2 py-0.5 rounded text-[12px] tag-gray">停用</span>';
+
+        // 名下患者数
+        var pats = patientData[m.name] || [];
+        var patCount = pats.length;
+        var hasPatient = patCount > 0;
+
+        // 负责中心标签
+        var centerHtml = '<div class="center-list" data-max="4">';
+        for (var c = 0; c < m.centers.length; c++) {
+          centerHtml += '<span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">' + m.centers[c] + '</span>';
+        }
+        centerHtml += '</div>';
+        // 仅查看授权中心
+        var viewHtml = '<div class="center-list" data-max="4">';
+        if (m.viewCenters && m.viewCenters.length && m.viewCenters[0] !== '-') {
+          for (var v = 0; v < m.viewCenters.length; v++) {
+            viewHtml += '<span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">' + m.viewCenters[v] + '</span>';
+          }
+        } else {
+          viewHtml += '<span class="center-empty">-</span>';
+        }
+        viewHtml += '</div>';
+
+        html += '<tr>';
+        html += '<td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>';
+        html += '<td class="px-3 py-2.5 font-medium text-gray-800">' + m.name + '</td>';
+        html += '<td class="px-3 py-2.5 text-gray-600">' + m.role + '</td>';
+        html += '<td class="px-3 py-2.5 max-w-md">' + centerHtml + '</td>';
+        html += '<td class="px-3 py-2.5 max-w-[180px]">' + viewHtml + '</td>';
+        html += '<td class="px-3 py-2.5 text-gray-600">' + m.phone + '</td>';
+        html += '<td class="px-3 py-2.5 text-center">' + statusTag + '</td>';
+        html += '<td class="px-3 py-2.5 text-center whitespace-nowrap">';
+        html += '<a class="text-[#165DFF] text-[13px] cursor-pointer" onclick="openEditMember(\'' + m.id + '\')">编辑</a>';
+
+        if (status === '启用') {
+          // 停用时若有患者必须先交接
+          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openHandover(\'' + m.id + '\')">停用</a>';
+         html += '<a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberPatient(\'' + m.id + '\')">患者交接</a>';
+
+        } else {
+          html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="enableMember(\'' + m.id + '\')">启用</a>';
+        }
+
+        // 删除：无患者=红色可点，有患者=灰色不可点
+        if (hasPatient) {
+          html += '<a class="text-gray-400 text-[13px] cursor-not-allowed ml-2" title="该成员名下有患者，不可删除，请先停用并交接">删除（' + patCount + '）</a>';
+        } else {
+          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openDelete(\'' + m.id + '\')">删除（' + patCount + '）</a>';
+        }
+        html += '</td></tr>';
+      }
+      if (list.length === 0) {
+        html = '<tr><td colspan="8" class="px-3 py-8 text-center text-gray-400 text-sm">未找到匹配的成员</td></tr>';
+      }
+      document.getElementById('memberTableBody').innerHTML = html;
+      setupCenterLists();
+    }
+
+    function doSearch() { renderMemberTable(); showToast('查询完成'); }
     function doReset() {
       document.getElementById('filterCenter').value = '';
       document.getElementById('filterRole').value = '';
       document.getElementById('filterName').value = '';
+      renderMemberTable();
       showToast('已重置筛选条件');
     }
+
+    // ========== 中心列表折叠 ==========
+    function setupCenterLists() {
+      document.querySelectorAll('.center-list').forEach(function(list) {
+        var max = parseInt(list.getAttribute('data-max') || '4', 10);
+        var tags = list.querySelectorAll('.center-tag');
+        if (tags.length === 0) return;
+        if (tags.length <= max) return;
+        list.classList.add('collapsed');
+        for (var i = max; i < tags.length; i++) tags[i].style.display = 'none';
+        var toggle = document.createElement('span');
+        toggle.className = 'center-toggle';
+        toggle.innerHTML = '<i class="fas fa-chevron-down text-[10px]"></i>展开全部 (' + tags.length + ')';
+        list.appendChild(toggle);
+        toggle.addEventListener('click', function() {
+          if (list.classList.contains('expanded')) {
+            list.classList.remove('expanded');
+            list.classList.add('collapsed');
+            for (var i = max; i < tags.length; i++) tags[i].style.display = 'none';
+            toggle.innerHTML = '<i class="fas fa-chevron-down text-[10px]"></i>展开全部 (' + tags.length + ')';
+          } else {
+            list.classList.remove('collapsed');
+            list.classList.add('expanded');
+            for (var i = 0; i < tags.length; i++) tags[i].style.display = '';
+            toggle.innerHTML = '<i class="fas fa-chevron-up text-[10px]"></i>收起';
+          }
+        });
+      });
+    }
+
+    // ========== 搜索式多选中心选择器 ==========
+    // 生成 120 条模拟中心数据
+    var allCenterOptions = (function() {
+      var hospitals = [
+        '首都医科大学附属北京同仁医院','北京医院','北京大学第一医院','中日友好医院','复旦大学附属中山医院','上海交通大学医学院附属瑞金医院','上海交通大学医学院附属仁济医院','上海市第一人民医院','广东省人民医院','中山大学附属第一医院','南方医科大学南方医院','四川大学华西医院','华中科技大学同济医学院附属协和医院','浙江大学医学院附属第一医院','山东省立医院','江苏省人民医院','中国医学科学院肿瘤医院','中国人民解放军总医院（301）','天津医科大学总医院','西安交通大学医学院第一附属医院','河南省人民医院','湖南省湘雅医院','武汉协和医院','南京鼓楼医院','安徽省立医院','福建省立医院','吉林大学第一医院','哈尔滨医科大学附属第二医院','大连医科大学附属第一医院','青岛大学附属医院','南昌大学第一附属医院','贵州省人民医院','云南省第一人民医院','兰州大学第一医院','新疆维吾尔自治区人民医院','内蒙古自治区人民医院','广西壮族自治区人民医院','海南省人民医院'
+      ];
+      var pis = ['张罗','王成硕','李华','陈航','刘洋','赵敏','周明','吴芳','郑强','孙丽','钱进','韩梅','朱军','杨帆','何伟','林涛','高远','马超','徐静','谢峰'];
+      var list = [];
+      for (var i = 0; i < 120; i++) {
+        var hi = i % hospitals.length;
+        var pi = i % pis.length;
+        var code = 'CN' + String(i + 1).padStart(3, '0');
+        list.push({ id: code, label: code + '·' + hospitals[hi] + '·' + pis[pi], name: hospitals[hi] });
+      }
+      return list;
+    })();
+
+    // 两个选择器的选中状态
+    var msState = {
+      msCenters: { selected: [], open: false },
+      msView: { selected: [], open: false }
+    };
+
+    // 初始化多选下拉列表
+    function initMsDropdowns() {
+      renderMsList('msCenters');
+      renderMsList('msView');
+      // 点击外部关闭
+      document.addEventListener('click', function(e) {
+        ['msCenters','msView'].forEach(function(key) {
+          var wrap = document.getElementById(key + 'Wrap');
+          if (wrap && !wrap.contains(e.target)) closeMsDropdown(key);
+        });
+      });
+    }
+
+    function toggleMsDropdown(key) {
+      if (msState[key].open) { closeMsDropdown(key); }
+      else { openMsDropdown(key); }
+    }
+    function openMsDropdown(key) {
+      msState[key].open = true;
+      document.getElementById(key + 'Dropdown').classList.add('ms-open');
+      document.getElementById(key + 'Trigger').classList.add('ms-focus');
+      renderMsTags(key);
+      updateMsCount(key);
+    }
+    function closeMsDropdown(key) {
+      msState[key].open = false;
+      var dd = document.getElementById(key + 'Dropdown');
+      if (dd) dd.classList.remove('ms-open');
+      var tr = document.getElementById(key + 'Trigger');
+      if (tr) tr.classList.remove('ms-focus');
+    }
+
+    function renderMsList(key) {
+      var container = document.getElementById(key + 'List');
+      var html = '';
+      for (var i = 0; i < allCenterOptions.length; i++) {
+        var opt = allCenterOptions[i];
+        var checked = msState[key].selected.indexOf(opt.id) !== -1 ? 'checked' : '';
+        html += '<div class="ms-item ' + (checked?'ms-checked':'') + '" data-id="' + opt.id + '" onclick="toggleMsItem(\'' + key + '\',\'' + opt.id + '\')">';
+        html += '<input type="checkbox" ' + checked + ' onclick="event.stopPropagation();toggleMsItem(\'' + key + '\',\'' + opt.id + '\')">';
+        html += '<span class="ms-item-text">' + escapeHtml(opt.label) + '</span>';
+        html += '</div>';
+      }
+      container.innerHTML = html;
+    }
+
+    function filterMsOptions(key, keyword) {
+      keyword = (keyword || '').trim().toLowerCase();
+      var items = document.getElementById(key + 'List').children;
+      for (var i = 0; i < items.length; i++) {
+        var text = (items[i].querySelector('.ms-item-text') || {}).textContent || '';
+        if (!keyword || text.toLowerCase().indexOf(keyword) !== -1) {
+          items[i].style.display = '';
+        } else {
+          items[i].style.display = 'none';
+        }
+      }
+    }
+
+    function toggleMsItem(key, id) {
+      var idx = msState[key].selected.indexOf(id);
+      if (idx !== -1) {
+        msState[key].selected.splice(idx, 1);
+      } else {
+        msState[key].selected.push(id);
+      }
+      renderMsList(key);
+      renderMsTags(key);
+      updateMsCount(key);
+    }
+
+    function msSelectAll(key) {
+      var visibleItems = [];
+      var items = document.getElementById(key + 'List').children;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].style.display !== 'none') visibleItems.push(items[i].getAttribute('data-id'));
+      }
+      if (visibleItems.length === 0) return;
+      // 如果当前可见项全部已选中，则全取消；否则全选
+      var allSelected = visibleItems.every(function(id) { return msState[key].selected.indexOf(id) !== -1; });
+      if (allSelected) {
+        msState[key].selected = msState[key].selected.filter(function(id) { return visibleItems.indexOf(id) === -1; });
+      } else {
+        visibleItems.forEach(function(id) {
+          if (msState[key].selected.indexOf(id) === -1) msState[key].selected.push(id);
+        });
+      }
+      renderMsList(key);
+      renderMsTags(key);
+      updateMsCount(key);
+    }
+
+    function renderMsTags(key) {
+      var container = document.getElementById(key + 'Tags');
+      var sel = msState[key].selected;
+      if (sel.length === 0) {
+        container.innerHTML = '<span class="ms-placeholder">请选择中心（可多选）</span>';
+        return;
+      }
+      var html = '';
+      var showMax = 6;
+      for (var i = 0; i < sel.length && i < showMax; i++) {
+        var opt = allCenterOptions.find(function(o){ return o.id === sel[i]; });
+        var label = opt ? opt.label : sel[i];
+        html += '<span class="ms-tag"><span class="ms-tag-text" title="' + escapeHtml(label) + '">' + escapeHtml(label.length > 20 ? label.substring(0,18)+'...' : label) + '</span><i class="fas fa-times ms-tag-close" onclick="event.stopPropagation();toggleMsItem(\'' + key + '\',\'' + sel[i] + '\')"></i></span>';
+      }
+      if (sel.length > showMax) {
+        html += '<span class="ms-tag" style="background:#f2f3f5;color:#86909c">+' + (sel.length - showMax) + '</span>';
+      }
+      container.innerHTML = html;
+    }
+
+    function updateMsCount(key) {
+      document.getElementById(key + 'Count').textContent = '已选 ' + msState[key].selected.length + ' 项';
+    }
+
+    // 获取选中中心的 label 数组
+    function getMsSelectedLabels(key) {
+      return msState[key].selected.map(function(id) {
+        var opt = allCenterOptions.find(function(o){ return o.id === id; });
+        return opt ? opt.label : id;
+      });
+    }
+
+    // 设置选中状态（编辑回显用）
+    function setMsSelection(key, labels) {
+      msState[key].selected = [];
+      if (labels && labels.length) {
+        labels.forEach(function(lb) {
+          var opt = allCenterOptions.find(function(o){ return o.label === lb; });
+          if (opt) msState[key].selected.push(opt.id);
+          else {
+            // 模糊匹配：如果label包含某个id前缀则匹配上
+            var found = allCenterOptions.find(function(o){ return lb.indexOf(o.id) === 0; });
+            if (found) msState[key].selected.push(found.id);
+          }
+        });
+      }
+      renderMsList(key);
+      renderMsTags(key);
+      updateMsCount(key);
+    }
+
+    // ========== 人员选择 ==========
+    var allUserPool = [
+      { id: 'U1001', name: '王慧柳', dept: '医学部', phone: '138****1111' },
+      { id: 'U1002', name: '刘雪红', dept: '临床运营', phone: '139****2222' },
+      { id: 'U1003', name: '陈静', dept: '临床协调', phone: '137****3333' },
+      { id: 'U1004', name: '周明', dept: '临床协调', phone: '135****4444' },
+      { id: 'U1005', name: '李响', dept: 'CRA', phone: '136****5555' },
+      { id: 'U1006', name: '孙莉', dept: '临床协调', phone: '138****6666' },
+      { id: 'U1007', name: '赵敏', dept: '医学部', phone: '139****7777' },
+      { id: 'U1008', name: '钱进', dept: '项目管理', phone: '137****8888' },
+      { id: 'U1009', name: '吴芳', dept: '临床运营', phone: '135****9999' },
+      { id: 'U1010', name: '郑强', dept: 'CRA', phone: '136****0001' },
+      { id: 'U1011', name: '冯涛', dept: '临床协调', phone: '138****0002' },
+      { id: 'U1012', name: '韩梅', dept: '临床运营', phone: '139****0003' },
+      { id: 'U1013', name: '何伟', dept: '项目管理', phone: '137****0004' },
+      { id: 'U1014', name: '林涛', dept: '医学部', phone: '135****0005' },
+      { id: 'U1015', name: '高远', dept: 'CRA', phone: '136****0006' }
+    ];
+    function openUserSelect() {
+      document.getElementById('usSearch').value = '';
+      renderUserList();
+      openModal('userSelectModal');
+    }
+    function closeUserSelect() { closeModal('userSelectModal'); }
+    function renderUserList() {
+      var kw = (document.getElementById('usSearch').value || '').trim().toLowerCase();
+      var list = allUserPool.filter(function(u) {
+        if (!kw) return true;
+        return (u.name + u.id + u.dept).toLowerCase().indexOf(kw) !== -1;
+      });
+      var box = document.getElementById('usList');
+      var empty = document.getElementById('usEmpty');
+      if (list.length === 0) {
+        box.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      var html = '';
+      for (var i = 0; i < list.length; i++) {
+        var u = list[i];
+        html += '<div class="flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 cursor-pointer" onclick="selectUser(\'' + u.id + '\',\'' + u.name + '\',\'' + u.phone + '\')">';
+        html += '<div class="flex items-center gap-3">';
+        html += '<div class="w-8 h-8 rounded-full bg-[#165DFF]/10 text-[#165DFF] flex items-center justify-center text-[13px] font-medium">' + escapeHtml(u.name.charAt(0)) + '</div>';
+        html += '<div><div class="text-[13px] text-gray-800 font-medium">' + escapeHtml(u.name) + ' <span class="text-[12px] text-gray-400 font-normal">' + escapeHtml(u.id) + '</span></div>';
+        html += '<div class="text-[12px] text-gray-400">' + escapeHtml(u.dept) + ' · ' + escapeHtml(u.phone) + '</div></div>';
+        html += '</div>';
+        html += '<i class="fas fa-chevron-right text-gray-300 text-xs"></i>';
+        html += '</div>';
+      }
+      box.innerHTML = html;
+    }
+    function selectUser(uid, uname, uphone) {
+      document.getElementById('mfUserId').value = uid;
+      document.getElementById('mfName').value = uname;
+      document.getElementById('mfUserShowId').value = uid;
+      if (uphone) document.getElementById('mfPhone').value = uphone;
+      closeUserSelect();
+    }
+
+    // ========== 新增 / 编辑 成员 ==========
+    var currentEditId = null;
+    function openAddMember() {
+      currentEditId = null;
+      document.getElementById('mfTitle').textContent = '新增成员';
+      document.getElementById('mfEditId').value = '';
+      document.getElementById('mfName').value = '';
+      document.getElementById('mfUserId').value = '';
+      document.getElementById('mfUserShowId').value = '';
+      document.getElementById('mfRole').value = '';
+      document.getElementById('mfPhone').value = '';
+      setMsSelection('msCenters', []);
+      setMsSelection('msView', []);
+      openModal('memberFormModal');
+      initMsDropdowns();
+    }
+    function openEditMember(id) {
+      var m = memberData.find(function(x) { return x.id === id; });
+      if (!m) return;
+      currentEditId = id;
+      document.getElementById('mfTitle').textContent = '编辑成员';
+      document.getElementById('mfEditId').value = m.id;
+      document.getElementById('mfName').value = m.name;
+      document.getElementById('mfUserId').value = m.userId || (m.id ? 'U_' + m.id : '');
+      document.getElementById('mfUserShowId').value = m.userId || (m.id ? 'U_' + m.id : '');
+      document.getElementById('mfRole').value = m.role;
+      document.getElementById('mfPhone').value = m.phone;
+      // 回显中心选择
+      var centerLabels = (m.centers && m.centers[0] !== '-') ? m.centers : [];
+      var viewLabels = (m.viewCenters && m.viewCenters[0] !== '-') ? m.viewCenters : [];
+      setMsSelection('msCenters', centerLabels);
+      setMsSelection('msView', viewLabels);
+      openModal('memberFormModal');
+      initMsDropdowns();
+    }
+    function saveMemberForm() {
+      var name = document.getElementById('mfName').value.trim();
+      var uid = document.getElementById('mfUserId').value.trim();
+      var role = document.getElementById('mfRole').value;
+      var phone = document.getElementById('mfPhone').value.trim();
+      if (!name) { alert('请选择人员'); return; }
+      if (!role) { alert('请选择角色'); return; }
+      var selCenters = getMsSelectedLabels('msCenters');
+      var selViews = getMsSelectedLabels('msView');
+      if (currentEditId) {
+        var m = memberData.find(function(x) { return x.id === currentEditId; });
+        if (m) { m.name = name; m.userId = uid; m.role = role; m.phone = phone; m.centers = selCenters.length ? selCenters : ['-']; m.viewCenters = selViews.length ? selViews : ['-']; }
+        showToast('成员信息已更新');
+      } else {
+        memberData.push({ id: 'm' + Date.now(), name: name, userId: uid, role: role, phone: phone, status: '启用', centers: selCenters.length ? selCenters : ['-'], viewCenters: selViews.length ? selViews : ['-'] });
+        patientData[name] = [];
+        showToast('新增成员成功！');
+      }
+      closeModal('memberFormModal');
+      renderMemberTable();
+    }
+
+    // ========== 成员患者管理（交接） ==========
+    var mpCurrentMemberId = null;
+
+    function getAllMembers() {
+      // member-directory 中 memberData 为数组
+      return memberData || [];
+    }
+
+    function getPatientsByCreator(memberName) {
+      // member-directory 中 patientData 按成员姓名分组
+      return (patientData && patientData[memberName]) || [];
+    }
+
+    function openMemberPatient(memberId) {
+      var m = getAllMembers().find(function(x) { return x.id === memberId; });
+      if (!m) return;
+      mpCurrentMemberId = memberId;
+      document.getElementById('mpMemberName').textContent = m.name;
+      renderMpTable();
+      openModal('memberPatientModal');
+    }
+
+    function closeMemberPatient() {
+      closeModal('memberPatientModal');
+      mpCurrentMemberId = null;
+    }
+
+    function renderMpTable() {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var tbody = document.getElementById('mpTableBody');
+      tbody.innerHTML = '';
+      patients.forEach(function(p, i) {
+        var checked = p._selected ? 'checked' : '';
+        var tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-50 hover:bg-gray-50';
+        tr.setAttribute('data-pid', p.id);
+        tr.innerHTML =
+          '<td class="py-3 pr-3"><input type="checkbox" class="mp-item w-4 h-4 cursor-pointer" ' + checked + ' onchange="toggleMpItem(this)"></td>' +
+          '<td class="py-3 pr-3 text-gray-400">' + (i + 1) + '</td>' +
+          '<td class="py-3 pr-3 font-mono text-xs text-gray-600">' + (p.screenNo || '-') + '</td>' +
+          '<td class="py-3 pr-3 text-gray-800">' + (p.nameAbbr || p.name || '-') + '</td>' +
+          '<td class="py-3 pr-3 text-gray-600">' + (p.age != null ? p.age : '-') + '</td>' +
+          '<td class="py-3 pr-3 text-gray-600">' + (p.gender || '-') + '</td>' +
+          '<td class="py-3 pr-3 text-gray-600">' + (p.field || '-') + '</td>' +
+          '<td class="py-3 pr-3"><span class="status-tag ' + (p.statusClass || 'status-unaudited') + '">' + (p.status || '-') + '</span></td>' +
+          '<td class="py-3 pl-3 text-right"><a onclick="openMpSingleHo(\'' + p.id + '\')" class="text-[#165DFF] text-[13px] cursor-pointer hover:underline">交接</a></td>';
+        tbody.appendChild(tr);
+      });
+      document.getElementById('mpCount').textContent = patients.length;
+      updateMpBatchBtn();
+      updateMpSelectAllState();
+    }
+
+    function toggleMpItem(box) {
+      var tr = box.closest('tr');
+      var pid = tr.getAttribute('data-pid');
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var p = patients.find(function(x) { return x.id === pid; });
+      if (p) p._selected = box.checked;
+      updateMpBatchBtn();
+      updateMpSelectAllState();
+    }
+
+    function toggleMpSelectAll(box) {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      patients.forEach(function(p) { p._selected = box.checked; });
+      var items = document.querySelectorAll('.mp-item');
+      items.forEach(function(it) { it.checked = box.checked; });
+      updateMpBatchBtn();
+    }
+
+    function updateMpSelectAllState() {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var sel = patients.filter(function(p) { return p._selected; }).length;
+      var all = document.getElementById('mpSelectAll');
+      all.checked = patients.length > 0 && sel === patients.length;
+      all.indeterminate = sel > 0 && sel < patients.length;
+    }
+
+    function updateMpBatchBtn() {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var sel = patients.filter(function(p) { return p._selected; }).length;
+      var btn = document.getElementById('mpBatchBtn');
+      btn.disabled = sel === 0;
+      btn.textContent = sel > 0 ? '交接选中（' + sel + '）' : '全部患者交接';
+    }
+
+    function fillMpReceiver(selectId) {
+      var sel = document.getElementById(selectId);
+      sel.innerHTML = '';
+      getAllMembers().forEach(function(m) {
+        if (m.id === mpCurrentMemberId) return; // 排除自己
+        var opt = document.createElement('option');
+        opt.value = m.name;
+        opt.textContent = m.name + '（' + (m.role || '成员') + '）';
+        sel.appendChild(opt);
+      });
+      if (sel.options.length === 0) {
+        var opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = '暂无其他成员';
+        sel.appendChild(opt);
+      }
+    }
+
+    // 单条交接
+    var mpSinglePatientId = null;
+    function openMpSingleHo(patientId) {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var p = patients.find(function(x) { return x.id === patientId; });
+      if (!p) return;
+      mpSinglePatientId = patientId;
+      document.getElementById('mpSingleName').textContent = (p.screenNo || '') + ' ' + (p.nameAbbr || p.name || '');
+      document.getElementById('mpSingleNote').value = '';
+      fillMpReceiver('mpSingleTo');
+      openModal('mpSingleHoModal');
+    }
+    function closeMpSingleHo() { closeModal('mpSingleHoModal'); mpSinglePatientId = null; }
+    function confirmMpSingleHo() {
+      if (!mpSinglePatientId || !mpCurrentMemberId) return;
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      var sel = document.getElementById('mpSingleTo');
+      if (!sel.value) { showToast('请选择接收人', 'warn'); return; }
+      var patients = getPatientsByCreator(m.name);
+      var p = patients.find(function(x) { return x.id === mpSinglePatientId; });
+      if (p) {
+        p.creator = sel.value;
+        var arr = patientData[sel.value] || (patientData[sel.value] = []);
+        arr.push(p);
+        patients.splice(patients.indexOf(p), 1);
+      }
+      closeMpSingleHo();
+      renderMpTable();
+      renderMemberTable();
+      showToast('已将该患者交接给「' + sel.value + '」');
+    }
+
+    // 批量 / 全部交接
+    function openMpBatchHandover() {
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      if (!m) return;
+      var patients = getPatientsByCreator(m.name);
+      var sel = patients.filter(function(p) { return p._selected; });
+      var scope = sel.length > 0 ? sel : patients;
+      if (scope.length === 0) { showToast('该成员暂无患者', 'warn'); return; }
+      document.getElementById('mpBatchTitle').textContent = (sel.length > 0 ? '选中 ' + sel.length + ' 名' : '全部 ' + patients.length + ' 名') + '患者';
+      document.getElementById('mpBatchNote').value = '';
+      fillMpReceiver('mpBatchTo');
+      openModal('mpBatchHoModal');
+    }
+    function closeMpBatchHo() { closeModal('mpBatchHoModal'); }
+    function confirmMpBatchHo() {
+      if (!mpCurrentMemberId) return;
+      var m = getAllMembers().find(function(x) { return x.id === mpCurrentMemberId; });
+      var patients = getPatientsByCreator(m.name);
+      var sel = patients.filter(function(p) { return p._selected; });
+      var list = sel.length > 0 ? sel : patients.slice();
+      var toSel = document.getElementById('mpBatchTo');
+      if (!toSel.value) { showToast('请选择接收人', 'warn'); return; }
+      var toName = toSel.value;
+      list.forEach(function(p) {
+        p.creator = toName;
+        var arr = patientData[toName] || (patientData[toName] = []);
+        arr.push(p);
+      });
+      list.forEach(function(p) { var idx = patients.indexOf(p); if (idx > -1) patients.splice(idx, 1); });
+      closeMpBatchHo();
+      renderMpTable();
+      renderMemberTable();
+      showToast('已交接 ' + list.length + ' 名患者给「' + toName + '」');
+    }
+
+    // ========== 成员交接（停用） ==========
+    var handoverMemberId = null;
+    function openHandover(id) {
+      try {
+        handoverMemberId = id;
+        if (typeof memberData === 'undefined' || !memberData) { alert('数据未初始化，请刷新页面'); return; }
+        var m = memberData.find(function(x) { return x.id === id; });
+        if (!m) return;
+        var pats = (typeof patientData !== 'undefined' && patientData) ? (patientData[m.name] || []) : [];
+
+        if (pats.length > 0) {
+          // 有在管患者：不弹窗，仅提示需先交接
+          var auditing = 0;
+          for (var ai = 0; ai < pats.length; ai++) {
+            if (pats[ai].status === '审核中' || pats[ai].status === '待审核') auditing++;
+          }
+          showToast('该成员名下仍有 ' + pats.length + ' 名在管患者（其中 ' + auditing + ' 名「审核中」），请先在「患者管理」中完成交接后再停用。', 'warn');
+          return;
+        }
+
+        // 无在管患者：直接停用，不弹窗
+        m.status = '停用';
+        showToast('成员「' + m.name + '」已停用');
+        renderMemberTable();
+      } catch (err) {
+        alert('openHandover 出错：' + (err && err.message ? err.message : err));
+      }
+    }
+    function switchHoScope() {
+      var rad = document.querySelector('input[name="hoScope"]:checked');
+      var scope = rad ? rad.value : 'all';
+      var box = document.getElementById('hoPatientBox');
+      var tip = document.getElementById('hoPartTip');
+      if (scope === 'part') {
+        box.style.display = 'block';
+        if (tip) tip.style.display = 'block';
+        var checks = document.querySelectorAll('.ho-pat-check');
+        checks.forEach(function(c) { c.checked = false; });
+      } else {
+        if (tip) tip.style.display = 'none';
+        var checksAll = document.querySelectorAll('.ho-pat-check');
+        checksAll.forEach(function(c) { c.checked = true; });
+      }
+    }
+    function renderHoPatientList(memberName, ownPats) {
+      var box = document.getElementById('hoPatientList');
+      if (ownPats.length === 0) { box.innerHTML = ''; return; }
+      var html = '';
+      for (var i = 0; i < ownPats.length; i++) {
+        var p = ownPats[i];
+        html += '<label class="flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 cursor-pointer">';
+        html += '<input type="checkbox" class="ho-pat-check accent-[#165DFF]" data-id="' + escapeHtml(p.id) + '" checked>';
+        html += '<span class="text-sm text-gray-800 font-medium">' + escapeHtml(p.id) + '</span>';
+        html += '<span class="text-[12px] text-gray-400">' + escapeHtml(p.screenNo || '') + '</span>';
+        html += '</label>';
+      }
+      box.innerHTML = html;
+    }
+    function closeHandover() { closeModal('handoverModal'); handoverMemberId = null; }
+    function confirmHandover() {
+      var m = memberData.find(function(x) { return x.id === handoverMemberId; });
+      if (!m) return;
+
+      // 确认时再次检查：若仍有审核中患者，阻止停用
+      var pats = patientData[m.name] || [];
+      var stillAuditing = 0;
+      for (var ck = 0; ck < pats.length; ck++) {
+        if (pats[ck].status === '审核中' || pats[ck].status === '待审核') stillAuditing++;
+      }
+      if (stillAuditing > 0) {
+        showToast('该成员名下仍有 ' + stillAuditing + ' 名「审核中」状态的患者，请先在「患者管理」中完成交接后再停用。', 'warn');
+        return;
+      }
+
+      var targetId = document.getElementById('hoTarget').value;
+      var t = memberData.find(function(x) { return x.id === targetId; });
+      // 交接范围：选中的患者
+      var scope = 'all';
+      var rad = document.querySelector('input[name="hoScope"]:checked');
+      if (rad) scope = rad.value;
+      var selectedIds = [];
+      if (scope === 'all') {
+        for (var ai = 0; ai < pats.length; ai++) selectedIds.push(pats[ai].id);
+      } else {
+        var checks = document.querySelectorAll('.ho-pat-check');
+        checks.forEach(function(c) { if (c.checked) selectedIds.push(c.getAttribute('data-id')); });
+      }
+      var moved = selectedIds.length;
+      // 有患者必须选择交接人
+      if (moved > 0 && !t) {
+        alert('请选择至少 1 名需交接的患者并指定交接人');
+        return;
+      }
+      if (scope === 'part' && moved === 0) {
+        alert('请至少勾选 1 名需要交接的患者');
+        return;
+      }
+      // 交接：仅选中的患者转移给交接人
+      if (t && moved > 0) {
+        if (!patientData[t.name]) patientData[t.name] = [];
+        // 从 m 名下移除选中的，并加到 t 名下
+        var remaining = [];
+        for (var k = 0; k < pats.length; k++) {
+          if (selectedIds.indexOf(pats[k].id) !== -1) {
+            pats[k].creator = t.name;
+            patientData[t.name].push(pats[k]);
+          } else {
+            remaining.push(pats[k]);
+          }
+        }
+        patientData[m.name] = remaining;
+        showToast('成员「' + m.name + '」已停用，' + moved + '名患者交接给「' + t.name + '」');
+      } else {
+        showToast('成员「' + m.name + '」已停用');
+      }
+      m.status = '停用';
+      closeHandover();
+      renderMemberTable();
+    }
+
+    // ========== 启用 ==========
+    function enableMember(id) {
+      var m = memberData.find(function(x) { return x.id === id; });
+      if (!m) return;
+      m.status = '启用';
+      showToast('成员「' + m.name + '」已启用');
+      renderMemberTable();
+    }
+
+    // ========== 删除（校验患者） ==========
+    var deleteMemberId = null;
+    function openDelete(id) {
+      var m = memberData.find(function(x) { return x.id === id; });
+      if (!m) return;
+      var pats = patientData[m.name] || [];
+      if (pats.length > 0) {
+        alert('该成员名下有 ' + pats.length + ' 名在管患者，不可删除，请先使用「停用」进行交接。');
+        return;
+      }
+      deleteMemberId = id;
+      document.getElementById('delConfirmText').textContent = '确定要删除成员「' + m.name + '」吗？此操作不可撤销。';
+      openModal('deleteConfirmModal');
+    }
+    function confirmDelete() {
+      if (!deleteMemberId) return;
+      var m = memberData.find(function(x) { return x.id === deleteMemberId; });
+      memberData = memberData.filter(function(x) { return x.id !== deleteMemberId; });
+      if (m && patientData[m.name]) patientData[m.name] = [];
+      deleteMemberId = null;
+      closeModal('deleteConfirmModal');
+      renderMemberTable();
+      showToast('成员已删除');
+    }
+
+    // ========== 成员导入 ==========
+    var importParsedRows = [];
+    function openImportModal() {
+      document.getElementById('importFile').value = '';
+      document.getElementById('importFileName').textContent = '';
+      document.getElementById('importFileChip').classList.add('hidden');
+      document.getElementById('importStatus').classList.add('hidden');
+      document.getElementById('importErrorBox').classList.add('hidden');
+      document.getElementById('importErrorList').innerHTML = '';
+      document.getElementById('importFooterStat').textContent = '';
+      document.getElementById('importConfirmBtn').disabled = true;
+      var ispin = document.getElementById('importBtnSpinner'); if (ispin) ispin.classList.add('hidden');
+      var itxt = document.getElementById('importBtnText'); if (itxt) itxt.textContent = '上传导入';
+      document.getElementById('importModal').classList.remove('modal-hidden');
+    }
+    function closeImportModal() { document.getElementById('importModal').classList.add('modal-hidden'); }
+
+    function downloadImportTemplate() {
+      var header = '姓名,角色,手机号,负责中心,仅授权查看中心\n';
+      var example = '张三,CRC,138****0000,"CN001·XX医院·PI","CN002·YY医院·PI"\n';
+      var blob = new Blob(['﻿' + header + example], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = '成员导入模板.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleImportFile(input) {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      if (!/\.xlsx$/i.test(file.name)) {
+        alert('仅支持 .xlsx 格式的文件');
+        input.value = '';
+        return;
+      }
+      document.getElementById('importFileName').textContent = file.name;
+      document.getElementById('importFileChip').classList.remove('hidden');
+      document.getElementById('importConfirmBtn').disabled = false;
+    }
+
+    function handleDrop(e) {
+      var dt = e.dataTransfer;
+      var file = dt && dt.files && dt.files[0];
+      if (!file) return;
+      var input = document.getElementById('importFile');
+      input.files = dt.files;
+      if (!/\.xlsx$/i.test(file.name)) { alert('仅支持 .xlsx 格式的文件'); return; }
+      handleImportFile(input);
+    }
+
+    function clearImportFile() {
+      var input = document.getElementById('importFile');
+      input.value = '';
+      document.getElementById('importFileName').textContent = '';
+      document.getElementById('importFileChip').classList.add('hidden');
+      document.getElementById('importStatus').classList.add('hidden');
+      document.getElementById('importErrorBox').classList.add('hidden');
+      document.getElementById('importConfirmBtn').disabled = true;
+      var cspin = document.getElementById('importBtnSpinner'); if (cspin) cspin.classList.add('hidden');
+      var ctxt = document.getElementById('importBtnText'); if (ctxt) ctxt.textContent = '上传导入';
+      document.getElementById('importFooterStat').textContent = '';
+      importParsedRows = [];
+    }
+
+    // 解析选中文件（模拟上传至服务器后返回的结果）
+    function parseImportFile() {
+      return [
+        { name: '孙莉', role: 'CRC', phone: '138****1001', centers: ['CN040·天津市肿瘤医院·刘洋'], view: [], errors: {} },
+        { name: '李响', role: 'CRA专员', phone: '139****1002', centers: ['CN041·江苏省人民医院·陈航'], view: [], errors: {} },
+        { name: '', role: 'CRC', phone: '137****1003', centers: [], view: [], errors: { '姓名': '必填项为空' } },
+        { name: '王芳', role: '', phone: '136****1004', centers: [], view: [], errors: { '角色': '必填项为空' } },
+        { name: '赵敏', role: '医学经理', phone: '13x', centers: [], view: [], errors: { '手机号': '格式不正确（应为 11 位）' } }
+      ];
+    }
+
+    function renderImportErrors(rows) {
+      var errList = document.getElementById('importErrorList');
+      var failRows = rows.filter(function (r) { return Object.keys(r.errors).length > 0; });
+      if (failRows.length === 0) { document.getElementById('importErrorBox').classList.add('hidden'); return; }
+      var errHtml = '';
+      var failIdx = 0;
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var errKeys = Object.keys(r.errors);
+        if (errKeys.length === 0) continue;
+        failIdx++;
+        var rowLabel = r.name ? r.name : ('第 ' + (i + 1) + ' 行');
+        errHtml += '<div class="rounded-lg bg-white border border-red-100 p-3">';
+        errHtml += '<div class="flex items-center gap-2 mb-2">';
+        errHtml += '<span class="w-5 h-5 shrink-0 rounded-full bg-[#F53F3F] text-white flex items-center justify-center text-[11px] font-bold">' + failIdx + '</span>';
+        errHtml += '<span class="text-[13px] font-semibold text-gray-800">第 ' + (i + 1) + ' 行 · ' + escapeHtml(rowLabel) + '</span>';
+        errHtml += '<span class="text-[12px] text-gray-400">（' + errKeys.length + ' 项问题）</span>';
+        errHtml += '</div>';
+        errHtml += '<div class="overflow-hidden rounded-md border border-red-100">';
+        errHtml += '<table class="w-full text-[12px] border-collapse">';
+        errHtml += '<thead><tr class="bg-red-50 text-gray-500"><th class="text-left font-medium px-2.5 py-1.5 w-1/3">问题字段</th><th class="text-left font-medium px-2.5 py-1.5">问题描述</th></tr></thead>';
+        errHtml += '<tbody>';
+        for (var k = 0; k < errKeys.length; k++) {
+          var f = errKeys[k];
+          errHtml += '<tr class="border-t border-red-50">';
+          errHtml += '<td class="px-2.5 py-1.5 text-[#F53F3F] font-medium">' + escapeHtml(f) + '</td>';
+          errHtml += '<td class="px-2.5 py-1.5 text-gray-600">' + escapeHtml(r.errors[f]) + '</td>';
+          errHtml += '</tr>';
+        }
+        errHtml += '</tbody></table></div></div>';
+      }
+      errList.innerHTML = errHtml;
+      document.getElementById('importErrorCount').textContent = '（失败 ' + failRows.length + ' 条）';
+      document.getElementById('importErrorBox').classList.remove('hidden');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function setImportLoading(loading) {
+      var btn = document.getElementById('importConfirmBtn');
+      var spinner = document.getElementById('importBtnSpinner');
+      var text = document.getElementById('importBtnText');
+      if (loading) {
+        btn.disabled = true; spinner.classList.remove('hidden'); text.textContent = '导入中…';
+      } else {
+        spinner.classList.add('hidden'); text.textContent = '上传导入';
+        var file = document.getElementById('importFile').files && document.getElementById('importFile').files[0];
+        btn.disabled = !file;
+      }
+    }
+
+    function uploadImport() {
+      var file = document.getElementById('importFile').files && document.getElementById('importFile').files[0];
+      if (!file) { alert('请先选择要导入的文件'); return; }
+      setImportLoading(true);
+      setTimeout(function () {
+        importParsedRows = parseImportFile();
+        var successCount = 0, failCount = 0;
+        for (var i = 0; i < importParsedRows.length; i++) {
+          if (Object.keys(importParsedRows[i].errors).length === 0) successCount++; else failCount++;
+        }
+        // 落地成功数据到成员列表
+        for (var k = 0; k < importParsedRows.length; k++) {
+          var r = importParsedRows[k];
+          if (Object.keys(r.errors).length === 0 && r.name) {
+            var exists = memberData.some(function(m){ return m.name === r.name; });
+            if (!exists) {
+              memberData.push({ id: 'm' + Date.now() + '_' + k, name: r.name, role: r.role || 'CRC', phone: r.phone || '-', status: '启用', centers: r.centers && r.centers.length ? r.centers : ['-'], viewCenters: (r.view && r.view.length) ? r.view : ['-'] });
+              patientData[r.name] = [];
+            }
+          }
+        }
+        setImportLoading(false);
+        if (failCount === 0) {
+          renderMemberTable();
+          closeImportModal();
+          showToast('数据导入成功，共 ' + successCount + ' 条。');
+          return;
+        }
+        renderImportErrors(importParsedRows);
+        var statusBox = document.getElementById('importStatus');
+        statusBox.classList.remove('hidden');
+        statusBox.className = 'mb-4 p-3.5 rounded-xl text-sm border flex items-start gap-2';
+        statusBox.style.cssText = 'background:#FFF1F0;border-color:#FFA39E;color:#CF1322;';
+        statusBox.innerHTML = '<i class="fas fa-exclamation-circle mt-0.5"></i><div><b>导入失败 ' + failCount + ' 条</b>：具体数据及问题字段已列于下方，请修正后重新上传。成功导入的 ' + successCount + ' 条已添加至成员列表。</div>';
+        document.getElementById('importFooterStat').textContent = '成功 ' + successCount + ' 条 · 失败 ' + failCount + ' 条';
+      }, 900);
+    }
+
+    // ========== 初始化 ==========
+    document.addEventListener('DOMContentLoaded', function() { renderMemberTable(); });
   </script>
 </body>
 </html>
