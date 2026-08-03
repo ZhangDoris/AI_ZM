@@ -184,7 +184,10 @@
           <span id="importFooterStat" class="text-[12px] text-gray-400"></span>
           <div class="flex items-center gap-3">
             <button onclick="closeImportModal()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition">取消</button>
-            <button id="importConfirmBtn" onclick="uploadImport()" disabled class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition">上传导入</button>
+            <button id="importConfirmBtn" onclick="uploadImport()" disabled class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition inline-flex items-center gap-2">
+              <i id="importBtnSpinner" class="fas fa-spinner fa-spin hidden"></i>
+              <span id="importBtnText">上传导入</span>
+            </button>
           </div>
         </div>
       </div>
@@ -1610,6 +1613,9 @@
       document.getElementById('importErrorList').innerHTML = '';
       document.getElementById('importFooterStat').textContent = '';
       document.getElementById('importConfirmBtn').disabled = true;
+      // 重置「导入中」按钮状态
+      var ispin = document.getElementById('importBtnSpinner'); if (ispin) ispin.classList.add('hidden');
+      var itxt = document.getElementById('importBtnText'); if (itxt) itxt.textContent = '上传导入';
       document.getElementById('importModal').classList.remove('modal-hidden');
     }
 
@@ -1671,6 +1677,9 @@
       document.getElementById('importStatus').classList.add('hidden');
       document.getElementById('importErrorBox').classList.add('hidden');
       document.getElementById('importConfirmBtn').disabled = true;
+      // 重置「导入中」按钮状态
+      var cspin = document.getElementById('importBtnSpinner'); if (cspin) cspin.classList.add('hidden');
+      var ctxt = document.getElementById('importBtnText'); if (ctxt) ctxt.textContent = '上传导入';
       document.getElementById('importFooterStat').textContent = '';
       importParsedRows = [];
     }
@@ -1736,41 +1745,69 @@
       });
     }
 
-    // 上传导入：校验 -> 成功 toast / 失败展示具体原因
+    // 上传导入：点击 -> 导入中 -> 成功 toast / 失败展示具体原因
     function uploadImport() {
       var file = document.getElementById('importFile').files && document.getElementById('importFile').files[0];
       if (!file) { alert('请先选择要导入的文件'); return; }
-      importParsedRows = parseImportFile();
-      var successCount = 0, failCount = 0;
-      for (var i = 0; i < importParsedRows.length; i++) {
-        if (Object.keys(importParsedRows[i].errors).length === 0) successCount++; else failCount++;
-      }
 
-      // 落地成功数据到中心列表
-      for (var k = 0; k < importParsedRows.length; k++) {
-        var r = importParsedRows[k];
-        if (Object.keys(r.errors).length === 0 && r.name && allCenters.indexOf(r.name) === -1) {
-          allCenters.push(r.name);
-          centerStatus[r.name] = true;
+      // 进入「导入中」状态：禁用按钮并显示 spinner
+      setImportLoading(true);
+
+      // 模拟上传与后台校验耗时
+      setTimeout(function () {
+        importParsedRows = parseImportFile();
+        var successCount = 0, failCount = 0;
+        for (var i = 0; i < importParsedRows.length; i++) {
+          if (Object.keys(importParsedRows[i].errors).length === 0) successCount++; else failCount++;
         }
-      }
 
-      if (failCount === 0) {
-        // 全部成功
-        refreshCenterTable();
-        closeImportModal();
-        showToast('数据导入成功，共 ' + successCount + ' 条。');
-        return;
-      }
+        // 落地成功数据到中心列表
+        for (var k = 0; k < importParsedRows.length; k++) {
+          var r = importParsedRows[k];
+          if (Object.keys(r.errors).length === 0 && r.name && allCenters.indexOf(r.name) === -1) {
+            allCenters.push(r.name);
+            centerStatus[r.name] = true;
+          }
+        }
 
-      // 有失败：展示具体失败原因，不关闭弹窗
-      renderImportErrors(importParsedRows);
-      var statusBox = document.getElementById('importStatus');
-      statusBox.classList.remove('hidden');
-      statusBox.className = 'mb-4 p-3.5 rounded-xl text-sm border flex items-start gap-2';
-      statusBox.style.cssText = 'background:#FFF1F0;border-color:#FFA39E;color:#CF1322;';
-      statusBox.innerHTML = '<i class="fas fa-exclamation-circle mt-0.5"></i><div><b>导入失败 ' + failCount + ' 条</b>：具体数据及问题字段已列于下方，请修正后重新上传。成功导入的 ' + successCount + ' 条已添加至中心列表。</div>';
-      document.getElementById('importFooterStat').textContent = '成功 ' + successCount + ' 条 · 失败 ' + failCount + ' 条';
+        // 恢复按钮状态
+        setImportLoading(false);
+
+        if (failCount === 0) {
+          // 全部成功
+          refreshCenterTable();
+          closeImportModal();
+          showToast('数据导入成功，共 ' + successCount + ' 条。');
+          return;
+        }
+
+        // 有失败：展示具体失败原因，不关闭弹窗
+        renderImportErrors(importParsedRows);
+        var statusBox = document.getElementById('importStatus');
+        statusBox.classList.remove('hidden');
+        statusBox.className = 'mb-4 p-3.5 rounded-xl text-sm border flex items-start gap-2';
+        statusBox.style.cssText = 'background:#FFF1F0;border-color:#FFA39E;color:#CF1322;';
+        statusBox.innerHTML = '<i class="fas fa-exclamation-circle mt-0.5"></i><div><b>导入失败 ' + failCount + ' 条</b>：具体数据及问题字段已列于下方，请修正后重新上传。成功导入的 ' + successCount + ' 条已添加至中心列表。</div>';
+        document.getElementById('importFooterStat').textContent = '成功 ' + successCount + ' 条 · 失败 ' + failCount + ' 条';
+      }, 900);
+    }
+
+    // 切换上传按钮的「导入中」状态
+    function setImportLoading(loading) {
+      var btn = document.getElementById('importConfirmBtn');
+      var spinner = document.getElementById('importBtnSpinner');
+      var text = document.getElementById('importBtnText');
+      if (loading) {
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        text.textContent = '导入中…';
+      } else {
+        spinner.classList.add('hidden');
+        text.textContent = '上传导入';
+        // 仅当已选文件时才恢复可点击
+        var file = document.getElementById('importFile').files && document.getElementById('importFile').files[0];
+        btn.disabled = !file;
+      }
     }
 
     // ========== 图1：中心状态（启动/停用） ==========
