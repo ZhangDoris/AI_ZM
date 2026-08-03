@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>研究中心管理 · 业务流程图</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background:#F5F7FA; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    /* 流程图节点通用 */
+    .node { position: relative; }
+    /* 连接线（竖向 / 横向箭头用伪元素） */
+    .flow-arrow { display:flex; justify-content:center; color:#9CA3AF; }
+    .flow-arrow i { font-size:18px; }
+    .branch-line { border-left:2px solid #E5E7EB; }
+    .decision { background:#FFF7E6; border:2px solid #FFD666; }
+    .action { background:#E8F3FF; border:2px solid #91CAFF; }
+    .end { background:#F0FFED; border:2px solid #B7EB8F; }
+    .danger { background:#FFF1F0; border:2px solid #FFA39E; }
+    .log { background:#F9F0FF; border:2px solid #D3ADF7; }
+    .note { background:#FFFBE6; border:1px dashed #FFE58F; }
+  </style>
+</head>
+<body class="p-6">
+
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-800"><i class="fas fa-project-diagram text-[#165DFF] mr-2"></i>研究中心管理 · 业务流程图</h1>
+      <a href="center-management.html" class="text-[#165DFF] text-sm"><i class="fas fa-arrow-left mr-1"></i>返回中心管理原型</a>
+    </div>
+
+    <!-- ============ 图1：启动状态 ============ -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#165DFF] text-white text-sm mr-2">1</span>启动状态流程</h2>
+      <p class="text-sm text-gray-500 mb-5">参研中心 → 智能筛选 → 患者列表 → 编辑 / 提交审核，填写知情时间时校验中心是否已启动</p>
+
+      <div class="flex flex-col items-center text-center">
+        <div class="node action rounded-lg px-5 py-3 w-64">参研中心（启动状态）</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+        <div class="node action rounded-lg px-5 py-3 w-64">智能筛选</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+        <div class="node action rounded-lg px-5 py-3 w-64">患者列表</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+        <div class="flex gap-4 w-full justify-center">
+          <div class="flex flex-col items-center">
+            <div class="node action rounded-lg px-4 py-3 w-56">编辑页面</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+          </div>
+          <div class="flex flex-col items-center">
+            <div class="node action rounded-lg px-4 py-3 w-56">提交审核页面</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+          </div>
+        </div>
+
+        <!-- 判断：填写知情时间 -->
+        <div class="node decision rounded-lg px-5 py-3 w-80 font-medium">填写「知情同意时间」时<br>判断：本中心是否已启动？</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+
+        <!-- 分支 -->
+        <div class="flex gap-10 w-full justify-center mt-2">
+          <div class="flex flex-col items-center w-64">
+            <div class="text-green-600 text-sm font-semibold mb-1">已启动</div>
+            <div class="node end rounded-lg px-4 py-3 w-full">正常保存 / 提交审核</div>
+          </div>
+          <div class="flex flex-col items-center w-80">
+            <div class="text-red-500 text-sm font-semibold mb-1">未启动</div>
+            <div class="node danger rounded-lg px-4 py-3 w-full">弹窗提示：<br>「本中心暂未启动，是否立即启动？」</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+            <div class="flex gap-3 w-full justify-center">
+              <div class="flex flex-col items-center w-36">
+                <div class="text-gray-500 text-xs mb-1">取消</div>
+                <div class="node end rounded-lg px-4 py-3 w-full">正常保存 / 提交审核</div>
+              </div>
+              <div class="flex flex-col items-center w-40">
+                <div class="text-[#165DFF] text-xs mb-1">确定</div>
+                <div class="node action rounded-lg px-2 py-2 w-full">直接更新中心状态为「已启动」</div>
+                <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+                <div class="node end rounded-lg px-2 py-2 w-full">继续保存 / 提交审核</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-arrow my-2"><i class="fas fa-arrow-down"></i></div>
+        <div class="node log rounded-lg px-5 py-3 w-72">写入「中心状态变更日志」</div>
+      </div>
+    </section>
+
+    <!-- ============ 图2：患者转移 ============ -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#165DFF] text-white text-sm mr-2">2</span>患者转移流程</h2>
+      <p class="text-sm text-gray-500 mb-5">参研中心 → 选择「删除 / 患者转移」→ 全部转移 或 单个转移，审核人员随目标中心变动</p>
+
+      <div class="flex flex-col items-center text-center">
+        <div class="node action rounded-lg px-5 py-3 w-64">参研中心</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+        <div class="node action rounded-lg px-5 py-3 w-64">选择「删除 / 患者转移」</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+        <div class="node decision rounded-lg px-5 py-3 w-72 font-medium">转移方式？</div>
+        <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+
+        <!-- 分支：全部 / 单个 -->
+        <div class="flex gap-10 w-full justify-center mt-2">
+          <!-- 全部转移 -->
+          <div class="flex flex-col items-center w-96">
+            <div class="text-[#165DFF] text-sm font-semibold mb-1">全部患者转移</div>
+            <div class="node action rounded-lg px-4 py-3 w-full">选择目标中心</div>
+            <div class="note rounded px-3 py-2 my-2 text-xs text-gray-600 w-full text-left">
+              · 提交人：维持不变（仍为原中心提交人）<br>
+              · 审核人员：默认选中目标中心 <b>所有 CRA + 医学</b> 人员
+            </div>
+            <div class="node rounded-lg px-4 py-2 w-full bg-gray-100 border border-gray-200">提交转移申请</div>
+          </div>
+          <!-- 单个转移 -->
+          <div class="flex flex-col items-center w-96">
+            <div class="text-[#165DFF] text-sm font-semibold mb-1">单个患者转移</div>
+            <div class="node action rounded-lg px-4 py-3 w-full">选择目标中心</div>
+            <div class="note rounded px-3 py-2 my-2 text-xs text-gray-600 w-full text-left">
+              · 提交人：维持不变<br>
+              · 审核人员：默认选中目标中心 <b>所有 CRA + 医学</b> 人员
+            </div>
+            <div class="node rounded-lg px-4 py-2 w-full bg-gray-100 border border-gray-200">提交该患者转移申请</div>
+          </div>
+        </div>
+
+        <div class="flow-arrow my-2"><i class="fas fa-arrow-down"></i></div>
+        <div class="node end rounded-lg px-5 py-3 w-72">目标中心审核人员接审 → 转移完成</div>
+        <div class="flow-arrow my-2"><i class="fas fa-arrow-down"></i></div>
+        <div class="node log rounded-lg px-5 py-3 w-72">写入「患者转移日志」</div>
+      </div>
+    </section>
+
+    <!-- ============ 图3：成员管理 ============ -->
+    <section class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+      <h2 class="text-lg font-semibold text-gray-800 mb-1"><span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#165DFF] text-white text-sm mr-2">3</span>成员管理流程</h2>
+      <p class="text-sm text-gray-500 mb-5">本中心成员的增删改、患者交接、离职交接，以及对应的待审核人与日志</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- 左：新增成员 -->
+        <div class="border border-gray-100 rounded-lg p-4">
+          <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-user-plus text-[#165DFF] mr-1"></i>新增成员</h3>
+          <div class="flex flex-col items-center text-center">
+            <div class="node action rounded-lg px-4 py-2 w-72">本中心新增成员</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+            <div class="node decision rounded-lg px-4 py-2 w-72 font-medium">角色类型？</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+            <div class="flex gap-3 w-full justify-center">
+              <div class="flex flex-col items-center w-40">
+                <div class="text-[#165DFF] text-xs mb-1">CRA / 医学</div>
+                <div class="node rounded-lg px-2 py-2 w-full bg-[#E8F3FF] border border-[#91CAFF]">同步加入「待审核人」</div>
+              </div>
+              <div class="flex flex-col items-center w-40">
+                <div class="text-gray-500 text-xs mb-1">CRC / 协调员</div>
+                <div class="node rounded-lg px-2 py-2 w-full bg-gray-100 border border-gray-200">不涉及待审核人</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右：删除 / 停用 -->
+        <div class="border border-gray-100 rounded-lg p-4">
+          <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-user-minus text-red-500 mr-1"></i>删除 / 停用</h3>
+          <div class="flex flex-col items-center text-center">
+            <div class="node rounded-lg px-4 py-2 w-72 bg-gray-100 border border-gray-200">成员名下是否已有患者？</div>
+            <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+            <div class="flex gap-3 w-full justify-center">
+              <div class="flex flex-col items-center w-40">
+                <div class="text-green-600 text-xs mb-1">无患者</div>
+                <div class="node rounded-lg px-2 py-2 w-full bg-[#F0FFED] border border-[#B7EB8F]">可直接删除</div>
+              </div>
+              <div class="flex flex-col items-center w-44">
+                <div class="text-red-500 text-xs mb-1">有患者</div>
+                <div class="node rounded-lg px-2 py-2 w-full bg-[#FFF1F0] border border-[#FFA39E]">不可删除 → 改用「停用 + 交接」</div>
+                <div class="flow-arrow my-1"><i class="fas fa-arrow-down"></i></div>
+                <div class="node rounded-lg px-2 py-2 w-full bg-gray-100 border border-gray-200">患者交接给另一人</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 跨列：交接规则 -->
+        <div class="md:col-span-2 border border-gray-100 rounded-lg p-4">
+          <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-exchange-alt text-[#722ED1] mr-1"></i>交接与离职规则</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-medium text-gray-700 mb-1">CRC / 协调员 离职</div>
+              <ul class="text-gray-600 list-disc pl-4 space-y-1">
+                <li>数据权限变更为新接手人</li>
+                <li><b>创建人仍为原 CRC</b>（保留溯源）</li>
+                <li>名下患者交接给新人</li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-medium text-gray-700 mb-1">医学 / CRA 离职</div>
+              <ul class="text-gray-600 list-disc pl-4 space-y-1">
+                <li>原「待审核人」需改交接的人</li>
+                <li>在审任务转移给接手人</li>
+                <li>中心状态变更日志留痕</li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-3">
+              <div class="font-medium text-gray-700 mb-1">全局要求</div>
+              <ul class="text-gray-600 list-disc pl-4 space-y-1">
+                <li>所有动作保留操作日志</li>
+                <li>中心侧提供「患者转移日志」</li>
+                <li>中心侧提供「成员变更日志」</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center mt-5">
+        <div class="node log rounded-lg px-5 py-3 w-96">中心侧日志：患者转移日志 + 成员变更日志（全量留痕）</div>
+      </div>
+    </section>
+
+    <p class="text-center text-xs text-gray-400 mb-8">原型流程图 · 仅展示业务规则，非最终视觉稿</p>
+  </div>
+</body>
+</html>

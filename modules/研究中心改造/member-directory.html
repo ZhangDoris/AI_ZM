@@ -1,0 +1,343 @@
+<!--
+  项目成员通讯录 - 产品原型
+  功能：展示项目中所有成员的通讯录信息，支持按中心名称、角色、姓名筛选查询
+  使用方法：直接在浏览器中打开即可查看完整交互效果
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目成员通讯录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    .data-table th { background-color: #F5F7FA; font-weight: 600; color: #333; }
+    .data-table tbody tr { transition: background-color 0.15s; }
+    .data-table tbody tr:hover { background-color: rgba(22,93,255,0.04); }
+    .btn-click:active { transform: scale(0.96); }
+    .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
+    .center-tag { display: inline-block; padding: 2px 10px; margin: 2px 4px 2px 0; border-radius: 4px; font-size: 13px; text-decoration: none; transition: all 0.15s; white-space: nowrap; }
+    .center-tag:hover { box-shadow: 0 1px 4px rgba(22,93,255,0.25); }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 页面标题栏 -->
+  <header class="bg-white border-b border-gray-200 px-5 py-3 sticky top-0 z-10">
+    <h1 class="text-base font-semibold text-gray-800">项目成员通讯录【SHR-1819-306】</h1>
+  </header>
+
+  <main class="p-5">
+    <!-- 搜索筛选栏 -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <label class="text-[13px] text-gray-600 whitespace-nowrap">中心名称：</label>
+          <input id="filterCenter" type="text" placeholder="请输入中心名称" class="form-input border border-gray-300 rounded px-3 py-1.5 text-[13px] w-48 focus:outline-none">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-[13px] text-gray-600 whitespace-nowrap">角色：</label>
+          <select id="filterRole" class="form-input border border-gray-300 rounded px-3 py-1.5 text-[13px] w-36 focus:outline-none">
+            <option value="">请选择</option>
+            <option>SMO-PM</option>
+            <option>中央项目管理</option>
+            <option>临床协调员</option>
+            <option>CRA专员</option>
+            <option>运营部PM</option>
+            <option>医学经理</option>
+            <option>CRC</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-[13px] text-gray-600 whitespace-nowrap">姓名：</label>
+          <input id="filterName" type="text" placeholder="请输入" class="form-input border border-gray-300 rounded px-3 py-1.5 text-[13px] w-32 focus:outline-none">
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮行 -->
+    <div class="flex items-center gap-2 mb-4">
+      <button onclick="doSearch()" class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-1.5 rounded text-[13px] font-medium flex items-center gap-1.5 btn-click">
+        <i class="fas fa-search"></i> 查询
+      </button>
+      <button onclick="doReset()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
+        <i class="fas fa-redo mr-1"></i> 重置
+      </button>
+      <button onclick="openModal('addMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-4 py-1.5 rounded text-[13px] font-medium flex items-center gap-1.5 btn-click">
+        <i class="fas fa-plus"></i> 新增成员
+      </button>
+      <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
+        <i class="fas fa-download mr-1"></i> 下载模板
+      </button>
+      <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50 btn-click">
+        <i class="fas fa-upload mr-1"></i> 导入
+      </button>
+      <button class="bg-[#f59e0b] hover:bg-amber-500 text-white px-4 py-1.5 rounded text-[13px] font-medium btn-click ml-auto">
+        <i class="fas fa-sign-out-alt mr-1"></i> 导出
+      </button>
+    </div>
+
+    <!-- 成员列表表格 -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <table class="data-table w-full text-[13px]">
+        <thead>
+          <tr>
+            <th class="px-3 py-2.5 text-center w-10"><input type="checkbox" class="rounded"></th>
+            <th class="px-3 py-2.5 text-left">姓名</th>
+            <th class="px-3 py-2.5 text-left">角色</th>
+            <th class="px-3 py-2.5 text-left">负责中心</th>
+            <th class="px-3 py-2.5 text-left">仅查看授权中心</th>
+            <th class="px-3 py-2.5 text-left">手机号</th>
+            <th class="px-3 py-2.5 text-center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="memberTableBody">
+          <!-- 第1行：王慧柳 -->
+          <tr>
+            <td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>
+            <td class="px-3 py-2.5 font-medium text-gray-800">王慧柳</td>
+            <td class="px-3 py-2.5 text-gray-600">医学经理</td>
+            <td class="px-3 py-2.5 max-w-md">
+              <div class="flex flex-wrap">
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN015·淄博市中心医院·宋贵霞</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN029·聊城市人民医院·王 岐</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN028·沧州市中心医院·刘卫卫</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN027·山西白求恩医院·张彦萍</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN026·内蒙古包钢医院·徐嘉娜</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN025·北京大学第三医院·闫燕</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN024·北京大学第一医院·刘秀琴</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN023·郑州市中心医院·廖一玉杰</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN022·陕西省人民医院·刘 刚</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN021·西安交通大学第一附属医院·权芳</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN020·西安交通大学第二附属医院·郑康</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN019·河北医科大学第三医院·娄峰</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN018·河北省人民医院·屈永涛</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN017·山东省第二人民医院·史萌</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN016·烟台毓璜顶医院·刘丽萍</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN014·山西医科大学第一医院·冯意</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN013·山西省肿瘤医院·第二病区·赵长青</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN012·天津市人民医院·刘百祥</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN011·甘肃省人民医院·卫建东</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN010·宁夏医科大学总医院·高小平</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN009·宁夏回族自治区人民医院·李 冰</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN008·包头市中心医院·许锡东</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN007·内蒙古自治区肿瘤医院·郭晓波</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN006·新疆医科大学第一附属医院·阳玉泽</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN005·哈尔滨医科大学附属第四医院·孙亚雯</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN004·中国医科大学附属盛京医院·魏庆宇</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN003·中国医科大学附属盛京医院·曹志伟</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN002·吉林大学第一医院·王宇声</span>
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN001·首都医科大学附属北京同仁医院·张罗/王成硕</span>
+              </div>
+            </td>
+            <td class="px-3 py-2.5 text-gray-400">-</td>
+            <td class="px-3 py-2.5 text-gray-600">186****4409</td>
+            <td class="px-3 py-2.5 text-center">
+              <button onclick="openModal('editMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click mr-1">编辑</button>
+              <button onclick="openModal('deleteConfirmModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click">删除</button>
+            </td>
+          </tr>
+          <!-- 第2行：刘雪红 -->
+          <tr>
+            <td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>
+            <td class="px-3 py-2.5 font-medium text-gray-800">刘雪红</td>
+            <td class="px-3 py-2.5 text-gray-600">CRA专员</td>
+            <td class="px-3 py-2.5 max-w-md">
+              <div class="flex flex-wrap">
+                <span class="center-tag text-[#165DFF] bg-blue-50 hover:bg-blue-100">CN001·首都医科大学附属北京同仁医院·张罗/王成硕</span>
+              </div>
+            </td>
+            <td class="px-3 py-2.5 text-gray-400">-</td>
+            <td class="px-3 py-2.5 text-gray-600">139****3242</td>
+            <td class="px-3 py-2.5 text-center">
+              <button onclick="openModal('editMemberModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click mr-1">编辑</button>
+              <button onclick="openModal('deleteConfirmModal')" class="bg-[#165DFF] hover:bg-blue-600 text-white px-3 py-1 rounded text-[12px] btn-click">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!-- 分页 -->
+      <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200">
+        <span class="text-[12px] text-gray-500">共 2 条</span>
+        <div class="flex items-center gap-1">
+          <select class="border border-gray-300 rounded px-2 py-1 text-[12px] text-gray-600">
+            <option>10条/页</option><option>20条/页</option><option>50条/页</option>
+          </select>
+          <button class="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-chevron-left text-xs"></i></button>
+          <button class="w-7 h-7 flex items-center justify-center bg-[#165DFF] text-white rounded text-[12px] font-medium">1</button>
+          <button class="w-7 h-7 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-chevron-right text-xs"></i></button>
+          <span class="ml-2 text-[12px] text-gray-400">前往</span>
+          <input type="number" value="1" min="1" class="w-9 h-7 border border-gray-300 rounded text-center text-[12px] mx-1">
+          <span class="text-[12px] text-gray-400">页</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========== 新增成员弹窗 ========== -->
+  <div id="addMemberModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">新增成员</h3>
+        <button onclick="closeModal('addMemberModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+            <input type="text" placeholder="请输入姓名" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">角色 <span class="text-red-500">*</span></label>
+            <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">请选择</option>
+              <option>SMO-PM</option>
+              <option>中央项目管理</option>
+              <option>临床协调员</option>
+              <option>CRA专员</option>
+              <option>运营部PM</option>
+              <option>医学经理</option>
+              <option>CRC</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
+          <input type="text" placeholder="请输入手机号" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">负责中心</label>
+          <div class="border border-gray-300 rounded-lg max-h-48 overflow-y-auto p-2">
+            <div class="space-y-1.5">
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN001 首都医科大学附属北京同仁医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN002 吉林大学第一医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN003 中国医科大学附属盛京医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN004 中国医科大学附属盛京医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN005 哈尔滨医科大学附属第四医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN006 新疆医科大学第一附属医院</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('addMemberModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('addMemberModal'); showToast('新增成员成功！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 编辑成员弹窗 ========== -->
+  <div id="editMemberModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">编辑成员</h3>
+        <button onclick="closeModal('editMemberModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+            <input type="text" value="王慧柳" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">角色</label>
+            <select class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option>SMO-PM</option>
+              <option>中央项目管理</option>
+              <option>临床协调员</option>
+              <option>CRA专员</option>
+              <option selected>医学经理</option>
+              <option>运营部PM</option>
+              <option>CRC</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">手机号</label>
+          <input type="text" value="186****4409" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">负责中心</label>
+          <div class="border border-gray-300 rounded-lg max-h-48 overflow-y-auto p-2">
+            <div class="space-y-1.5">
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN001 首都医科大学附属北京同仁医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN002 吉林大学第一医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" checked class="rounded text-[#165DFF]"><span class="text-sm">CN003 中国医科大学附属盛京医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN004 中国医科大学附属盛京医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN005 哈尔滨医科大学附属第四医院</span></label>
+              <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" class="rounded text-[#165DFF]"><span class="text-sm">CN006 新疆医科大学第一附属医院</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('editMemberModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('editMemberModal'); showToast('修改成功！')" class="px-4 py-2 bg-[#165DFF] hover:bg-blue-600 text-white text-sm rounded-lg font-medium btn-click">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 删除确认弹窗 ========== -->
+  <div id="deleteConfirmModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="px-6 py-5 text-center">
+        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-gray-800 mb-2">确认删除</h3>
+        <p class="text-sm text-gray-500">确定要删除该成员吗？此操作不可撤销。</p>
+      </div>
+      <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('deleteConfirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="closeModal('deleteConfirmModal'); showToast('已删除！')" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 提示 -->
+  <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-5 py-2.5 rounded-lg shadow-lg text-sm font-medium z-[999] hidden flex items-center gap-2">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMsg"></span>
+  </div>
+
+  <style>
+    .modal-overlay { transition: opacity 0.3s ease; }
+    .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .modal-hidden { opacity: 0; pointer-events: none; }
+    .modal-hidden .modal-content { transform: scale(0.95); opacity: 0; }
+  </style>
+
+  <script>
+    // ========== Toast 提示 ==========
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(function() { t.classList.add('hidden'); }, 2500);
+    }
+
+    // ========== 模态框 ==========
+    function openModal(id) { document.getElementById(id).classList.remove('modal-hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('modal-hidden'); }
+    document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.add('modal-hidden'); });
+    });
+
+    // ========== 筛选查询 ==========
+    function doSearch() { showToast('查询完成'); }
+    function doReset() {
+      document.getElementById('filterCenter').value = '';
+      document.getElementById('filterRole').value = '';
+      document.getElementById('filterName').value = '';
+      showToast('已重置筛选条件');
+    }
+  </script>
+</body>
+</html>
