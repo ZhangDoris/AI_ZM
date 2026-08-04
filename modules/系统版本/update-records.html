@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>艾迪研EDC更新记录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* 连线元素高亮 */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.03); }
+    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.05); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    /* SVG 连线层 */
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* 版本列表 */
+    .version-item { transition: all 0.15s; cursor: pointer; border-left: 3px solid transparent; }
+    .version-item:hover { background-color: rgba(22,93,255,0.04); color: #165DFF; }
+    .version-item.active { background-color: rgba(22,93,255,0.08); color: #165DFF; border-left-color: #165DFF; }
+
+    /* 更新内容标签 */
+    .update-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .tag-feature { background-color: rgba(22,93,255,0.1); color: #165DFF; }
+    .tag-optimize { background-color: rgba(0,180,42,0.1); color: #00B42A; }
+    .tag-fix { background-color: rgba(245,63,63,0.1); color: #F53F3F; }
+
+    /* 模拟截图 */
+    .mock-screenshot { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .mock-screenshot-header { background: #F5F7FA; border-bottom: 1px solid #e5e7eb; padding: 8px 12px; font-size: 12px; color: #666; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 60vh; }
+      #divider { display: none; }
+      #right-panel { width: 100% !important; height: 40vh; border-top: 1px solid #e5e7eb; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+      .mobile-desc { display: block !important; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+    .mobile-desc { display: none; font-size: 12px; color: #d97706; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 6px; padding: 8px; margin-top: 8px; }
+
+    /* 右侧面板 */
+    #right-panel {
+      transition: width 0.3s ease, min-width 0.3s ease;
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible;
+      background: #fffbeb;
+      border-left: 2px dashed #fcd34d;
+    }
+    #right-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-left: none;
+    }
+    .drawer-handle {
+      position: absolute;
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #165DFF 0%, #0E47D1 100%);
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: -2px 0 8px rgba(22,93,255,0.25);
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .drawer-handle:hover {
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -4px 0 12px rgba(22,93,255,0.35);
+    }
+    .drawer-handle i { writing-mode: horizontal-tb; font-size: 16px; }
+    #left-panel {
+      transition: width 0.3s ease, flex-basis 0.3s ease;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn-click:active { transform: scale(0.96); }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <!-- 主容器 -->
+  <div id="app" class="flex h-screen relative">
+
+    <!-- 左侧：产品界面 -->
+    <div id="left-panel" class="overflow-y-auto bg-gray-50 relative">
+
+      <!-- 顶部标题栏 -->
+      <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-[#165DFF] rounded-lg flex items-center justify-center text-white font-bold text-sm">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <h1 class="text-xl font-bold text-gray-800">艾迪研EDC更新记录</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i>最后更新：2026-07-23</span>
+        </div>
+      </header>
+
+      <div class="flex h-[calc(100vh-65px)]">
+        <!-- 左侧版本列表 -->
+        <!-- ★ 连线 1：版本列表 -->
+        <aside class="proto-element w-56 bg-white border-r border-gray-200 overflow-y-auto" data-proto-id="1" id="versionSidebar">
+          <div class="p-4 border-b border-gray-100">
+            <h3 class="text-sm font-bold text-gray-700"><i class="fas fa-history mr-2 text-[#165DFF]"></i>更新记录</h3>
+          </div>
+          <nav class="py-2" id="versionList">
+            <!-- 版本项由 JS 生成 -->
+          </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6 overflow-y-auto" id="mainContent">
+          <div class="max-w-5xl mx-auto">
+            <!-- 页面标题 -->
+            <div class="flex items-center gap-2 mb-2">
+              <h2 class="text-base font-semibold text-gray-700">更新内容</h2>
+            </div>
+
+            <!-- 版本信息区 -->
+            <!-- ★ 连线 2：版本信息 -->
+            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="2" id="versionInfo">
+              <h2 class="text-3xl font-bold text-[#165DFF] mb-3" id="detailVersion">V1.8.9</h2>
+              <div class="flex flex-wrap gap-6 text-sm text-gray-600">
+                <div><span class="text-gray-400">系统版本号：</span><span id="detailVersionNum" class="font-medium text-gray-800">V1.8.9</span></div>
+                <div><span class="text-gray-400">系统更新时间：</span><span id="detailUpdateTime" class="font-medium text-gray-800">2026年7月23</span></div>
+              </div>
+            </div>
+
+            <!-- 功能更新区 -->
+            <!-- ★ 连线 3：功能更新 -->
+            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="3" id="featureSection">
+              <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-plus-circle text-[#165DFF]"></i>功能更新
+              </h3>
+              <div class="space-y-6" id="featureList">
+                <!-- 功能项由 JS 生成 -->
+              </div>
+            </div>
+
+            <!-- 优化更新区 -->
+            <!-- ★ 连线 4：优化更新 -->
+            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="4" id="optimizeSection">
+              <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-wrench text-[#00B42A]"></i>优化改进
+              </h3>
+              <div class="space-y-4" id="optimizeList">
+                <!-- 优化项由 JS 生成 -->
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div id="divider" class="w-px bg-gray-300"></div>
+
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[18%] lg:w-[16%]">
+      <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()" title="收起/展开说明面板">
+        <i class="fas fa-chevron-right" id="drawerIcon"></i>
+        <span>说明</span>
+      </button>
+      <div class="p-4 overflow-y-auto" style="max-height: 100vh;">
+        <!-- 原型说明标识 -->
+        <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">Prototype</span>
+            <span class="text-xs font-semibold text-amber-800">原型说明</span>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            以下内容为界面元素的功能说明，悬停左侧对应区域可高亮连线。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200">
+          <i class="fas fa-map-signs text-amber-600"></i>
+          <h2 class="text-sm font-bold text-amber-900">功能说明</h2>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 说明 1 -->
+          <div class="proto-desc p-3" data-proto-id="1">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">版本列表</h3>
+                <p class="text-xs text-gray-500 mt-1">展示所有历史版本及发布日期。点击任意版本可切换查看该版本的详细更新内容，当前选中项高亮显示。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 2 -->
+          <div class="proto-desc p-3" data-proto-id="2">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">版本信息</h3>
+                <p class="text-xs text-gray-500 mt-1">显示当前选中版本的版本号和系统更新时间，帮助用户快速识别本次查看的版本范围。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 3 -->
+          <div class="proto-desc p-3" data-proto-id="3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">功能更新</h3>
+                <p class="text-xs text-gray-500 mt-1">以【功能】标签归类本次版本新增的功能点。每条说明可附带界面截图，直观展示功能入口与效果。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 4 -->
+          <div class="proto-desc p-3" data-proto-id="4">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">优化改进</h3>
+                <p class="text-xs text-gray-500 mt-1">以【优化】标签归类性能提升、交互改进、异常处理等优化项，说明优化前后的差异与用户收益。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+
+  <script>
+    // ========== 版本数据 ==========
+    const versions = [
+      { id: 'V1.8.9', date: '2026-07-23', num: 'V1.8.9', time: '2026年7月23' },
+      { id: 'V1.8.8', date: '2026-07-16', num: 'V1.8.8', time: '2026年7月16' },
+      { id: 'V1.8.7', date: '2026-07-09', num: 'V1.8.7', time: '2026年7月9' },
+      { id: 'V1.8.6', date: '2026-07-02', num: 'V1.8.6', time: '2026年7月2' },
+      { id: 'V1.8.5', date: '2026-06-25', num: 'V1.8.5', time: '2026年6月25' },
+      { id: 'V1.8.4', date: '2026-06-16', num: 'V1.8.4', time: '2026年6月16' },
+      { id: 'V1.8.3', date: '2026-06-11', num: 'V1.8.3', time: '2026年6月11' },
+      { id: 'V1.8.2', date: '2026-06-04', num: 'V1.8.2', time: '2026年6月4' },
+      { id: 'V1.8.1', date: '2026-05-28', num: 'V1.8.1', time: '2026年5月28' },
+      { id: 'V1.8.0', date: '2026-05-21', num: 'V1.8.0', time: '2026年5月21' },
+      { id: 'V1.7.9', date: '2026-05-19', num: 'V1.7.9', time: '2026年5月19' },
+      { id: 'V1.7.8', date: '2026-05-14', num: 'V1.7.8', time: '2026年5月14' },
+      { id: 'V1.7.7', date: '2026-05-07', num: 'V1.7.7', time: '2026年5月7' },
+      { id: 'V1.7.6', date: '2026-04-29', num: 'V1.7.6', time: '2026年4月29' },
+      { id: 'V1.7.5', date: '2026-04-23', num: 'V1.7.5', time: '2026年4月23' },
+      { id: 'V1.7.4', date: '2026-04-16', num: 'V1.7.4', time: '2026年4月16' },
+      { id: 'V1.7.3', date: '2026-04-09', num: 'V1.7.3', time: '2026年4月9' },
+      { id: 'V1.7.2', date: '2026-04-02', num: 'V1.7.2', time: '2026年4月2' },
+      { id: 'V1.7.1', date: '2026-03-31', num: 'V1.7.1', time: '2026年3月31' },
+      { id: 'V1.7.0', date: '2026-03-26', num: 'V1.7.0', time: '2026年3月26' },
+      { id: 'V1.6.9', date: '2026-03-24', num: 'V1.6.9', time: '2026年3月24' },
+      { id: 'V1.6.8', date: '2026-03-19', num: 'V1.6.8', time: '2026年3月19' },
+      { id: 'V1.6.7', date: '2026-03-17', num: 'V1.6.7', time: '2026年3月17' },
+      { id: 'V1.6.6', date: '2026-03-12', num: 'V1.6.6', time: '2026年3月12' },
+      { id: 'V1.6.5', date: '2026-03-05', num: 'V1.6.5', time: '2026年3月5' }
+    ];
+
+    const versionDetails = {
+      'V1.8.9': {
+        features: [
+          { text: '在成员配置界面新增一个按照研究中心查找的查找栏，便于查看某中心账号开通情况。', hasScreenshot: 'member' },
+          { text: '新增生效的表单未被访视表引用的配置检测：提醒DM，如AE表单，用了两个都是生效状态且未确认用哪个，最终上线的时候可以检测出来，把没有被引用的失效掉或者删除。', hasScreenshot: false },
+          { text: '配置检查EC兼容主表控制内嵌表。', hasScreenshot: false },
+          { text: 'OCR识别字段库兼容策略为空。', hasScreenshot: false },
+          { text: '对多表关闭弹窗不触发刷新，保存或SDV后依然显示在对应行号。', hasScreenshot: false },
+          { text: 'AI辅助录入和OCR识别结果显示脱敏编号。', hasScreenshot: 'ocr' }
+        ],
+        optimizes: [
+          { text: '数值类的字段自动计算，如果CRC录入了非数值型数据，会导致表单保存时报错，无法保存。优化为可以直接保存表单，计算不出来的话就算了，不影响表单的保存。' },
+          { text: '患者管理对接配置时，手动对接并保存后，再点击自动匹配，会自动覆盖已手动对接的内容。优化为自动匹配不覆盖手动对接的内容。' },
+          { text: '导出数据管理报告、数据进展报告优化。' }
+        ]
+      }
+    };
+
+    // 为其他版本生成模拟数据
+    const mockFeatures = [
+      '优化表单填写体验，提升字段校验响应速度。',
+      '新增数据导出模板自定义功能。',
+      '研究中心权限配置支持批量操作。',
+      '患者随访计划支持按方案自动触发提醒。',
+      '新增EDC系统操作日志查询入口。'
+    ];
+    const mockOptimizes = [
+      '提升列表页加载速度，减少大数据量下页面卡顿。',
+      '优化报告导出格式，支持更多字段自适应列宽。',
+      '修复部分场景下权限缓存未及时刷新问题。',
+      '调整消息通知策略，减少重复提醒。'
+    ];
+
+    function getVersionDetail(versionId) {
+      if (versionDetails[versionId]) return versionDetails[versionId];
+      // 用版本号做伪随机种子，保证同一版本内容稳定
+      const seed = versionId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const idx1 = seed % mockFeatures.length;
+      const idx2 = (seed + 1) % mockFeatures.length;
+      const idx3 = (seed + 2) % mockOptimizes.length;
+      return {
+        features: [
+          { text: mockFeatures[idx1], hasScreenshot: false },
+          { text: mockFeatures[idx2], hasScreenshot: false }
+        ],
+        optimizes: [
+          { text: mockOptimizes[idx3] }
+        ]
+      };
+    }
+
+    let currentVersion = 'V1.8.9';
+
+    // ========== 渲染版本列表 ==========
+    function renderVersionList() {
+      const list = document.getElementById('versionList');
+      list.innerHTML = versions.map(v => `
+        <div class="version-item px-4 py-2.5 flex items-center justify-between ${v.id === currentVersion ? 'active' : ''}" data-version="${v.id}" onclick="switchVersion('${v.id}')">
+          <span class="text-sm font-medium">${v.id}</span>
+          <span class="text-xs text-gray-400">${v.date}</span>
+        </div>
+      `).join('');
+    }
+
+    // ========== 渲染模拟截图 ==========
+    function renderScreenshot(type) {
+      if (type === 'member') {
+        return `
+          <div class="mock-screenshot mt-3">
+            <div class="mock-screenshot-header flex items-center justify-between">
+              <span><i class="fas fa-users mr-1"></i>成员配置 - 按研究中心查找</span>
+              <span class="text-xs text-gray-400">示意图</span>
+            </div>
+            <div class="p-3">
+              <div class="flex items-center gap-2 mb-3 p-2 bg-[#F5F7FA] rounded border border-gray-200">
+                <span class="text-xs text-gray-500">研究中心：</span>
+                <div class="flex-1 h-7 bg-white border border-gray-300 rounded px-2 text-xs flex items-center text-gray-400">请选择研究中心</div>
+                <button class="bg-[#165DFF] text-white text-xs px-3 py-1 rounded">查询</button>
+              </div>
+              <table class="w-full text-xs">
+                <thead><tr class="bg-gray-100 text-gray-600"><th class="p-2 text-left">账号</th><th class="p-2 text-left">姓名</th><th class="p-2 text-left">研究中心</th><th class="p-2 text-center">状态</th></tr></thead>
+                <tbody>
+                  <tr class="border-b border-gray-100"><td class="p-2">u001</td><td class="p-2">张三</td><td class="p-2">北京协和</td><td class="p-2 text-center"><span class="text-[#00B42A]">已开通</span></td></tr>
+                  <tr class="border-b border-gray-100"><td class="p-2">u002</td><td class="p-2">李四</td><td class="p-2">北京协和</td><td class="p-2 text-center"><span class="text-[#00B42A]">已开通</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }
+      if (type === 'ocr') {
+        return `
+          <div class="mock-screenshot mt-3">
+            <div class="mock-screenshot-header flex items-center justify-between">
+              <span><i class="fas fa-magic mr-1"></i>AI辅助录入 / OCR识别</span>
+              <span class="text-xs text-gray-400">示意图</span>
+            </div>
+            <div class="p-3 space-y-2">
+              <div class="flex gap-3">
+                <div class="w-1/2 h-24 bg-gray-100 rounded border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400">原始影像</div>
+                <div class="w-1/2 p-2 bg-[#F5F7FA] rounded border border-gray-200 text-xs">
+                  <div class="mb-1"><span class="text-gray-500">识别编号：</span>***-****-1234</div>
+                  <div><span class="text-gray-500">脱敏状态：</span><span class="text-[#00B42A]">已脱敏</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    // ========== 渲染详情 ==========
+    function renderDetail(versionId) {
+      const v = versions.find(item => item.id === versionId);
+      const detail = getVersionDetail(versionId);
+
+      document.getElementById('detailVersion').textContent = v.id;
+      document.getElementById('detailVersionNum').textContent = v.num;
+      document.getElementById('detailUpdateTime').textContent = v.time;
+
+      const featureList = document.getElementById('featureList');
+      featureList.innerHTML = detail.features.map((f, i) => `
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <span class="update-tag tag-feature">功能</span>
+          </div>
+          <div class="flex-1 text-sm text-gray-700 leading-relaxed">
+            <p>${f.text}</p>
+            ${f.hasScreenshot ? renderScreenshot(f.hasScreenshot) : ''}
+            <div class="mobile-desc">新增功能点说明：${f.text}</div>
+          </div>
+        </div>
+      `).join('');
+
+      const optimizeList = document.getElementById('optimizeList');
+      optimizeList.innerHTML = detail.optimizes.map((o, i) => `
+        <div class="flex gap-3">
+          <div class="flex-shrink-0 mt-0.5">
+            <span class="update-tag tag-optimize">优化</span>
+          </div>
+          <div class="flex-1 text-sm text-gray-700 leading-relaxed">
+            <p>${o.text}</p>
+            <div class="mobile-desc">优化项说明：${o.text}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ========== 切换版本 ==========
+    function switchVersion(versionId) {
+      currentVersion = versionId;
+      renderVersionList();
+      renderDetail(versionId);
+      setTimeout(() => { init(); }, 50);
+    }
+
+    // ========== 连线绘制 ==========
+    const svg = document.getElementById('connections');
+    const connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+
+      if (rightPanelCollapsed) return;
+
+      const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(leftEl => {
+        const protoId = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${protoId}"]`);
+        if (!rightEl) return;
+
+        const leftRect = leftEl.getBoundingClientRect();
+        const rightRect = rightEl.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        const x1 = leftRect.right - svgRect.left;
+        const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        const x2 = rightRect.left - svgRect.left;
+        const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        const cp1x = x1 + (x2 - x1) * 0.5;
+        const cp1y = y1;
+        const cp2x = x1 + (x2 - x1) * 0.5;
+        const cp2y = y2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        svg.appendChild(path);
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX);
+        bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('class', 'connection-label');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId, path, leftEl, rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      const conn = connections.find(c => c.protoId === protoId);
+      if (!conn) return;
+      if (active) {
+        conn.path.classList.add('active');
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.classList.remove('active');
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // ========== 移动端切换 ==========
+    let mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      const leftPanel = document.getElementById('left-panel');
+      const rightPanel = document.getElementById('right-panel');
+      const btn = document.getElementById('mobileToggle');
+      if (mobileShowDesc) {
+        leftPanel.style.display = 'none'; rightPanel.style.height = '100vh'; btn.innerHTML = '<i class="fas fa-desktop"></i>';
+      } else {
+        leftPanel.style.display = ''; rightPanel.style.height = ''; btn.innerHTML = '<i class="fas fa-info"></i>';
+      }
+    }
+
+    // ========== 右侧面板抽屉 ==========
+    let rightPanelCollapsed = false;
+    function toggleRightPanel() {
+      rightPanelCollapsed = !rightPanelCollapsed;
+      const panel = document.getElementById('right-panel');
+      const icon = document.getElementById('drawerIcon');
+      const divider = document.getElementById('divider');
+      if (rightPanelCollapsed) {
+        panel.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        divider.style.display = 'none';
+      } else {
+        panel.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        divider.style.display = '';
+      }
+      setTimeout(drawConnections, 320);
+    }
+
+    // ========== 初始化 ==========
+    function init() {
+      renderVersionList();
+      renderDetail(currentVersion);
+      drawConnections();
+      bindHoverEvents();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+    document.getElementById('right-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+  </script>
+</body>
+</html>

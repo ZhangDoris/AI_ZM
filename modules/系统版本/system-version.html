@@ -1,0 +1,667 @@
+<!--
+  系统版本管理 - 产品原型
+  功能：展示系统版本列表，支持按系统名称筛选、查看版本详情、删除版本
+  使用方法：直接在浏览器中打开即可
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统版本管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* 连线元素高亮 */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.03); }
+    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.05); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    /* SVG 连线层 */
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* 表格 */
+    .data-table th { background-color: #F5F7FA; font-weight: 600; color: #333; white-space: nowrap; }
+    .data-table tbody tr { transition: background-color 0.15s; cursor: default; }
+    .data-table tbody tr:hover { background-color: rgba(22,93,255,0.04); }
+    .data-table tbody tr:nth-child(even) { background-color: #fafbfc; }
+    .data-table tbody tr:nth-child(even):hover { background-color: rgba(22,93,255,0.04); }
+
+    /* 按钮 */
+    .btn-click:active { transform: scale(0.96); }
+    .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
+
+    /* 模态框 */
+    .modal-overlay { transition: opacity 0.3s ease; }
+    .modal-content { transition: transform 0.3s ease, opacity 0.3s ease; }
+    .modal-hidden { opacity: 0; pointer-events: none; }
+    .modal-hidden .modal-content { transform: scale(0.95); opacity: 0; }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 60vh; }
+      #divider { display: none; }
+      #right-panel { width: 100% !important; height: 40vh; border-top: 1px solid #e5e7eb; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+
+    /* 右侧面板 — 嵌入布局 */
+    #right-panel {
+      transition: width 0.3s ease, min-width 0.3s ease;
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible;
+      background: #fffbeb;
+      border-left: 2px dashed #fcd34d;
+    }
+    #right-panel.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-left: none;
+    }
+    .drawer-handle {
+      position: absolute;
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #165DFF 0%, #0E47D1 100%);
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: -2px 0 8px rgba(22,93,255,0.25);
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .drawer-handle:hover {
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -4px 0 12px rgba(22,93,255,0.35);
+    }
+    .drawer-handle i {
+      writing-mode: horizontal-tb;
+      font-size: 16px;
+    }
+    #left-panel {
+      transition: width 0.3s ease, flex-basis 0.3s ease;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* 发布内容中的标签样式（与参考图一致） */
+    .content-tag {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 1px 7px; margin: 1px 3px 1px 0;
+      border-radius: 4px; font-size: 11.5px; line-height: 1.6;
+      white-space: nowrap;
+      background: #eaf2ff; color: #165DFF; border: 1px solid #d6e4ff;
+    }
+    .content-tag i { font-size: 10px; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <!-- 主容器 -->
+  <div id="app" class="flex h-screen relative">
+
+    <!-- 左侧：产品界面 -->
+    <div id="left-panel" class="overflow-y-auto bg-gray-50 relative">
+
+      <!-- 主内容区 -->
+      <main class="p-6">
+        <!-- 页面标题栏 -->
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-xl font-bold text-gray-800">系统版本管理</h2>
+          <div class="flex items-center gap-3">
+            <!-- ★ 连线 2：新增按钮 -->
+            <div class="proto-element" data-proto-id="2">
+              <button onclick="openModal('addVersionModal')" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 btn-click transition-colors">
+                <i class="fas fa-plus"></i> 新增
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ★ 连线 1：筛选栏 -->
+        <div class="proto-element bg-white rounded-lg border border-gray-200 p-4 mb-4" data-proto-id="1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <label class="text-sm text-gray-600 whitespace-nowrap">系统名称：</label>
+            <select id="filterSystem" onchange="renderTable()" disabled class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-52 bg-gray-100 text-gray-600 cursor-not-allowed">
+              <option value="AI">AI智能筛选系统</option>
+            </select>
+            <button onclick="renderTable()" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-5 py-2 rounded-lg text-sm font-medium btn-click transition-colors">
+              <i class="fas fa-search mr-1"></i> 查询
+            </button>
+            <button onclick="resetFilter()" class="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2 rounded-lg text-sm btn-click transition-colors">
+              <i class="fas fa-redo mr-1"></i> 重置
+            </button>
+          </div>
+        </div>
+
+        <!-- ★ 连线 3：数据表格 -->
+        <div class="proto-element bg-white rounded-lg border border-gray-200 overflow-hidden" data-proto-id="3">
+          <div class="overflow-x-auto">
+            <table class="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th class="px-4 py-3 text-left w-14">序号</th>
+                  <th class="px-4 py-3 text-left w-28">版本号</th>
+                  <th class="px-4 py-3 text-left">发布内容</th>
+                  <th class="px-4 py-3 text-left w-36">发布日期</th>
+                  <th class="px-4 py-3 text-center w-36">操作</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <!-- JS 渲染 -->
+              </tbody>
+            </table>
+          </div>
+          <!-- 分页 -->
+          <div class="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <span class="text-sm text-gray-500" id="totalCount">共 149 条</span>
+            <div class="flex items-center gap-1" id="pagination">
+              <!-- JS 渲染分页 -->
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+
+    <!-- 分隔线 -->
+    <div id="divider" class="w-px bg-gray-300"></div>
+
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[25%] lg:w-[22%]">
+      <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()" title="收起/展开说明面板">
+        <i class="fas fa-chevron-right" id="drawerIcon"></i>
+        <span>PRD</span>
+      </button>
+      <div class="p-4 overflow-y-auto" style="max-height: 100vh;">
+        <!-- 原型说明标识 -->
+        <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">Prototype</span>
+            <span class="text-xs font-semibold text-amber-800">原型说明</span>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            以下内容为界面元素的功能说明，悬停左侧对应区域可高亮连线。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200">
+          <i class="fas fa-map-signs text-amber-600"></i>
+          <h2 class="text-sm font-bold text-amber-900">功能说明</h2>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 说明 1 -->
+          <div class="proto-desc p-3" data-proto-id="1">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">筛选查询</h3>
+                <p class="text-xs text-gray-500 mt-1">支持按系统名称下拉筛选。点击「查询」按钮执行过滤，「重置」清空条件恢复全部数据。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 2 -->
+          <div class="proto-desc p-3" data-proto-id="2">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">新增版本</h3>
+                <p class="text-xs text-gray-500 mt-1">点击「新增」按钮打开弹窗，填写系统名称、版本号、发布内容和发布日期后保存。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 3 -->
+          <div class="proto-desc p-3" data-proto-id="3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">版本列表</h3>
+                <p class="text-xs text-gray-500 mt-1">以表格形式展示所有版本记录。包含序号、系统名称、版本号、发布内容（带标签）、发布日期和操作列。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明 4 -->
+          <div class="proto-desc p-3" data-proto-id="4">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">操作按钮</h3>
+                <p class="text-xs text-gray-500 mt-1">每行提供「编辑」和「删除」两个操作按钮。编辑可修改版本信息，删除需二次确认。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+
+  <!-- ========== 模态框：新增/编辑版本 ========== -->
+  <div id="addVersionModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800" id="versionModalTitle">新增版本</h3>
+        <button onclick="closeModal('addVersionModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">系统名称 <span class="text-red-500">*</span></label>
+            <select id="vSystem" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">请选择</option>
+              <option value="WHMS">WHMS</option>
+              <option value="CRC">CRC</option>
+              <option value="CRA">CRA</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">版本号 <span class="text-red-500">*</span></label>
+            <input type="text" id="vVersion" placeholder="如：V2.9.4" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">发布内容 <span class="text-red-500">*</span></label>
+          <textarea id="vContent" rows="5" placeholder="请输入发布内容，可用【】标记功能模块" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">发布日期 <span class="text-red-500">*</span></label>
+          <input type="date" id="vDate" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('addVersionModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="saveVersion()" class="px-4 py-2 bg-[#165DFF] hover:bg-[#0E42D6] text-white text-sm rounded-lg font-medium btn-click">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：删除确认 ========== -->
+  <div id="deleteConfirmModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="px-6 py-5 text-center">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+          <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">确认删除</h3>
+        <p class="text-sm text-gray-500">确定要删除该版本记录吗？此操作不可撤销。</p>
+      </div>
+      <div class="flex items-center justify-center gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('deleteConfirmModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">取消</button>
+        <button onclick="confirmDelete()" class="px-4 py-2 bg-[#F53F3F] hover:bg-red-600 text-white text-sm rounded-lg font-medium btn-click">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 数据 ==========
+    var versionData = [
+      {
+        id: 1,
+        system: 'WHMS',
+        version: 'V2.9.3',
+        date: '2026-01-15',
+        content: '【药物模块】● 新增药物信息配置重置 ● 新增药物配置里程碑配置提醒配置发送对边角色的解疑企业微信信中 ● 新增约束条量提醒配置提醒配置发送更近应角色的解疑企业微信中 ● 新增/放开号码等管能功更新新 ● 放放及持导入人和导出 ● 直增情况下，客服系统中店发配药两步CTMS ● 新增项目品总总 ● 高亮显示品条和效期修改 受试访视 阳试值中并行在行规 【对接模块】● 两类差据销售单整定CTMS差旅费用'
+      },
+      {
+        id: 2,
+        system: 'WHMS',
+        version: 'V2.9.2',
+        date: '2026-01-13',
+        content: '【监管模块】● 监查问题支持选'
+      },
+      {
+        id: 3,
+        system: 'WHMS',
+        version: 'V2.9.1',
+        date: '2025-12-25',
+        content: 'V2.9.1系统版本号：V2.9.1系统更新时间：2025年12月23日\n【功能】两步中心CRA人员信息至接收CTMS的功能更新\n移除外处理人 ● 监查问题状态分布 ● CRA角色新增(待审核tab页面) ● 创建问题时可新增受试者 ● 实施监查日不可选择未来日期 ● 报告审批 核状下暂不支持报版 做本版原日志支技放大图片查看 ● 导入支持在线修改异常数据'
+      },
+      {
+        id: 4,
+        system: 'WHMS',
+        version: 'V2.9.0',
+        date: '2025-12-30',
+        content: 'V2.9.0系统版本号：V2.9.0系统更新时间：2025年12月31日\n【设备模块】● 动画新版AE/SAE的功能更新 ● 能重新导入新版AE/SAE的功能更新1、下载导入模版2、填取数据、该文件操作行导入\入、若启动直联录入系统、若关联会留留导入人渠、修改高点点保存在上传文件上 ● 受到EDC导入AE/SAE至CTMS系统的功能更新 ● 系统对接新版的不要求作产品严重不等级量表导入新版SAE/SAE功能更新 【功能】支持EDC导入人/SAE至CTMS系统的功能更新5、【功能】系统对接新版的不要求作产品严重不等级表字段配置功能更新'
+      },
+      {
+        id: 5,
+        system: 'WHMS',
+        version: 'V2.8.6',
+        date: '2025-12-18',
+        content: 'V2.8.6系统版本号：V2.8.6系统更新时间：2025年12月18日\n根据征查量上线计划所有报表作为指来未日的的运营报告，进行报表自动归档一2、优先需要报告时生成保存 【监管模块】● 中心(1包括) ● 清加crc人员支持系统会启用和移外除人员 ● 配入日期自动序号录入人进入项目时间段； ● CRA/CRC完成配人后，该人员加入该中心的日期为 完成配入日期 ● 迎踪详情增加最近交问时间和实际完成时间 【设备模块】● 受试序列可按标签制筛、受试模块更新、增加现场访视和电话随访 ● TMS问题清单查看目自动同步到访视模块中 【功能】1、新增列表排序、所列页签级存在错误提示中的功能更新2、【功能】受试列表支持按标签筛选存在错误提示中的功能更新3、【功能】人员支持和实际功能更新的功能更新4、【功能】自动CRF人员、支持选择核全用户并外除人员功能更新5、【功能】监查报告截取还能变更时间、图文交互功能更新新的功能 【功能】人员自主动画步骤多用户加入该时间的动画核全更新 【功能】外试列表支持批量导出的功能更新 【功能】受试列表支持批量导出的功能更新10、【功能】受试核板'
+      },
+      {
+        id: 6,
+        system: 'WHMS',
+        version: 'V2.8.5',
+        date: '2025-12-11',
+        content: '【组遗更新】● 项目成员/列出组数据的 ● 入局展购初始化化入 ● 显示月入计划对比 【其他】● 受试序列优化PM增维者中心期间入组遗新测 ● 应获获/刷新合出当前适的中心内列数无端属军等复用 ● 主要针对使用中对中心的心情况做优化 ● 解决列的错化 ● 更新解决实际完成时间非必填的问题优化4、【功能】受试列表常规日期自动步幅配置功能更新5、【功能】受试入组列新核验功能更新6、【功能】中心名称去邮格核验功能更新7、【功能】导出行一并列畸留保有的功能更新8、【功能】增加节点允许自动册配置的功能更新 【功能】更新验证 ● 规能 ● 交接服核务加左删栏核蓝确的功能更新'
+      }
+    ];
+
+    // 当前编辑的ID
+    var editingId = null;
+    var deleteId = null;
+
+    // ========== 解析发布内容（将【xxx】转为标签） ==========
+    function parseContent(content) {
+      if (!content) return '';
+      // 匹配【xxx】模式，替换为标签
+      return content.replace(/【([^】]+)】/g, function(match, tagText) {
+        return '<span class="content-tag"><i class="fas fa-tag"></i>' + escapeHtml(tagText) + '</span>';
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ========== 渲染表格 ==========
+    function renderTable() {
+      var filterVal = document.getElementById('filterSystem').value.trim().toUpperCase();
+      var tbody = document.getElementById('tableBody');
+      var html = '';
+
+      var filtered = versionData.filter(function(item) {
+        if (filterVal && item.system.toUpperCase() !== filterVal) return false;
+        return true;
+      });
+
+      filtered.forEach(function(item, idx) {
+        html += '<tr data-id="' + item.id + '">'
+          + '<td class="px-4 py-3 text-gray-600">' + (idx + 1) + '</td>'
+          + '<td class="px-4 py-3 text-gray-700">' + escapeHtml(item.version) + '</td>'
+          + '<td class="px-4 py-3 text-gray-600 leading-relaxed max-w-md">' + parseContent(item.content) + '</td>'
+          + '<td class="px-4 py-3 text-gray-600 whitespace-nowrap">' + item.date + '</td>'
+          + '<td class="px-4 py-3 text-center">'
+          + '<div class="flex items-center justify-center gap-2">'
+          + '<button onclick="editVersion(' + item.id + ')" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-3 py-1.5 rounded text-xs font-medium btn-click transition-colors">编辑</button>'
+          + '<button onclick="deleteVersion(' + item.id + ')" class="bg-[#F53F3F] hover:bg-red-600 text-white px-3 py-1.5 rounded text-xs font-medium btn-click transition-colors">删除</button>'
+          + '</div></td></tr>';
+      });
+
+      tbody.innerHTML = html || '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">暂无数据</td></tr>';
+
+      document.getElementById('totalCount').textContent = '共 ' + filtered.length + ' 条';
+      renderPagination(filtered.length);
+    }
+
+    // ========== 分页 ==========
+    function renderPagination(total) {
+      var pg = document.getElementById('pagination');
+      var pageSize = 10;
+      var totalPages = Math.ceil(total / pageSize);
+      var html = '';
+      html += '<span class="text-sm text-gray-500 mr-2">' + pageSize + '条/页</span>';
+      html += '<button class="px-2.5 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-gray-50 btn-click"><i class="fas fa-angle-left"></i></button>';
+
+      for (var i = 1; i <= Math.min(totalPages, 7); i++) {
+        if (i === 1) {
+          html += '<button class="px-2.5 py-1 bg-[#165DFF] text-white rounded text-xs btn-click">' + i + '</button>';
+        } else {
+          html += '<button class="px-2.5 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-gray-50 btn-click">' + i + '</button>';
+        }
+      }
+
+      if (totalPages > 7) {
+        html += '<span class="text-xs text-gray-400 px-1">...</span>';
+        html += '<button class="px-2.5 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-gray-50 btn-click">' + totalPages + '</button>';
+      }
+
+      html += '<button class="px-2.5 py-1 border border-gray-300 rounded text-xs text-gray-500 hover:bg-gray-50 btn-click"><i class="fas fa-angle-right"></i></button>';
+      html += '<span class="text-sm text-gray-400 ml-2">前往</span>';
+      html += '<input type="text" value="1" class="w-10 h-7 border border-gray-300 rounded text-xs text-center mx-1">';
+      html += '<span class="text-sm text-gray-400">页</span>';
+
+      pg.innerHTML = html;
+    }
+
+    // ========== 重置筛选 ==========
+    function resetFilter() {
+      document.getElementById('filterSystem').value = '';
+      renderTable();
+    }
+
+    // ========== 新增/编辑 ==========
+    function editVersion(id) {
+      editingId = id;
+      var item = versionData.find(function(v) { return v.id === id; });
+      if (!item) return;
+      document.getElementById('versionModalTitle').textContent = '编辑版本';
+      document.getElementById('vSystem').value = item.system;
+      document.getElementById('vVersion').value = item.version;
+      document.getElementById('vContent').value = item.content;
+      document.getElementById('vDate').value = item.date;
+      openModal('addVersionModal');
+    }
+
+    function saveVersion() {
+      var sys = document.getElementById('vSystem').value;
+      var ver = document.getElementById('vVersion').value.trim();
+      var cont = document.getElementById('vContent').value.trim();
+      var dt = document.getElementById('vDate').value;
+
+      if (!sys || !ver || !cont || !dt) {
+        alert('请填写完整信息'); return;
+      }
+
+      if (editingId) {
+        var item = versionData.find(function(v) { return v.id === editingId; });
+        if (item) { item.system = sys; item.version = ver; item.content = cont; item.date = dt; }
+        editingId = null;
+      } else {
+        versionData.unshift({ id: Date.now(), system: sys, version: ver, content: cont, date: dt });
+      }
+
+      closeModal('addVersionModal');
+      renderTable();
+    }
+
+    // 重置新增弹窗
+    document.getElementById('addVersionModal').querySelector('.fa-times').parentElement.addEventListener('click', function() {
+      editingId = null;
+      document.getElementById('versionModalTitle').textContent = '新增版本';
+      document.getElementById('vSystem').value = '';
+      document.getElementById('vVersion').value = '';
+      document.getElementById('vContent').value = '';
+      document.getElementById('vDate').value = '';
+    });
+
+    // ========== 删除 ==========
+    function deleteVersion(id) {
+      deleteId = id;
+      openModal('deleteConfirmModal');
+    }
+
+    function confirmDelete() {
+      if (deleteId) {
+        versionData = versionData.filter(function(v) { return v.id !== deleteId; });
+        deleteId = null;
+      }
+      closeModal('deleteConfirmModal');
+      renderTable();
+    }
+
+    // ========== 模态框 ==========
+    function openModal(id) { document.getElementById(id).classList.remove('modal-hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('modal-hidden'); }
+    document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+      overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.classList.add('modal-hidden'); });
+    });
+
+    // ========== 移动端切换 ==========
+    var mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      var leftPanel = document.getElementById('left-panel');
+      var rightPanel = document.getElementById('right-panel');
+      var btn = document.getElementById('mobileToggle');
+      if (mobileShowDesc) {
+        leftPanel.style.display = 'none'; rightPanel.style.height = '100vh'; btn.innerHTML = '<i class="fas fa-desktop"></i>';
+      } else {
+        leftPanel.style.display = ''; rightPanel.style.height = ''; btn.innerHTML = '<i class="fas fa-info"></i>';
+      }
+    }
+
+    // ========== 右侧面板抽屉 ==========
+    var rightPanelCollapsed = false;
+    function toggleRightPanel() {
+      rightPanelCollapsed = !rightPanelCollapsed;
+      var panel = document.getElementById('right-panel');
+      var icon = document.getElementById('drawerIcon');
+      var divider = document.getElementById('divider');
+      if (rightPanelCollapsed) {
+        panel.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        divider.style.display = 'none';
+      } else {
+        panel.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        divider.style.display = '';
+      }
+      setTimeout(drawConnections, 320);
+    }
+
+    // ========== 连线绘制 ==========
+    var svg = document.getElementById('connections');
+    var connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+      if (rightPanelCollapsed) return;
+
+      var leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      var rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(function(leftEl) {
+        var protoId = leftEl.getAttribute('data-proto-id');
+        var rightEl = document.querySelector('.proto-desc[data-proto-id="' + protoId + '"]');
+        if (!rightEl) return;
+
+        var leftRect = leftEl.getBoundingClientRect();
+        var rightRect = rightEl.getBoundingClientRect();
+        var svgRect = svg.getBoundingClientRect();
+
+        var x1 = leftRect.right - svgRect.left;
+        var y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        var x2 = rightRect.left - svgRect.left;
+        var y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        var cp1x = x1 + (x2 - x1) * 0.5;
+        var cp1y = y1;
+        var cp2x = x1 + (x2 - x1) * 0.5;
+        var cp2y = y2;
+
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + x2 + ' ' + y2);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        svg.appendChild(path);
+
+        var midX = (x1 + x2) / 2;
+        var midY = (y1 + y2) / 2;
+        var bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX);
+        bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+
+        var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('class', 'connection-label');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId: protoId, path: path, leftEl: leftEl, rightEl: rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      var conn = connections.find(function(c) { return c.protoId === protoId; });
+      if (!conn) return;
+      if (active) {
+        conn.path.classList.add('active');
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.classList.remove('active');
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(function(el) {
+        el.addEventListener('mouseenter', function() { highlightConnection(el.getAttribute('data-proto-id'), true); });
+        el.addEventListener('mouseleave', function() { highlightConnection(el.getAttribute('data-proto-id'), false); });
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(function(el) {
+        el.addEventListener('mouseenter', function() { highlightConnection(el.getAttribute('data-proto-id'), true); });
+        el.addEventListener('mouseleave', function() { highlightConnection(el.getAttribute('data-proto-id'), false); });
+      });
+    }
+
+    // ========== 初始化 ==========
+    function init() { drawConnections(); bindHoverEvents(); }
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(init, 100);
+      renderTable();
+    });
+    var resizeTimer;
+    window.addEventListener('resize', function() { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', function() { requestAnimationFrame(drawConnections); });
+    document.getElementById('right-panel').addEventListener('scroll', function() { requestAnimationFrame(drawConnections); });
+  </script>
+</body>
+</html>

@@ -40,6 +40,13 @@
     .info-tip { background: #FFFBE6; border: 1px solid #FFE58F; }
     .btn-outline { border: 1px solid #d9d9d9; background: #fff; color: #333; }
     .btn-outline:hover { border-color: #165DFF; color: #165DFF; }
+    /* 中心状态 switch 开关 */
+    .cs-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+    .cs-switch input { opacity: 0; width: 0; height: 0; }
+    .cs-slider { position: absolute; cursor: pointer; inset: 0; background: #c9cdd4; border-radius: 22px; transition: .2s; }
+    .cs-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+    .cs-switch input:checked + .cs-slider { background: #00B42A; }
+    .cs-switch input:checked + .cs-slider:before { transform: translateX(20px); }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -98,6 +105,7 @@
         <button class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px] flex items-center gap-1"><i class="fas fa-download text-xs"></i>导出</button>
         <button class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px] flex items-center gap-1"><i class="fas fa-trash-alt text-xs"></i>删除选中 (0)</button>
         <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] flex items-center gap-1 hover:bg-gray-50" onclick="openDeleteLogModal()"><i class="fas fa-history text-xs"></i>删除日志</button>
+        <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] flex items-center gap-1 hover:bg-gray-50" onclick="openHandoverLog()"><i class="fas fa-exchange-alt text-xs"></i>交接日志</button>
 
       </div>
     </div>
@@ -228,7 +236,7 @@
             <td class="px-3 py-2.5">山东省</td>
             <td class="px-3 py-2.5">济南市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-green">是</span></td>
-            <td class="px-3 py-2.5 text-center"><span id="statusTag-山东省肿瘤医院" class="px-2 py-0.5 rounded text-[12px] tag-green cursor-pointer" onclick="openCenterStatus('山东省肿瘤医院')">已启动</span></td>
+            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-山东省肿瘤医院" checked onchange="toggleCenterStatus('山东省肿瘤医院', this)"><span class="cs-slider"></span></label></td>
             <td class="px-3 py-2.5 text-center whitespace-nowrap">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
@@ -251,7 +259,7 @@
             <td class="px-3 py-2.5">河南省</td>
             <td class="px-3 py-2.5">安阳市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-gray">否</span></td>
-            <td class="px-3 py-2.5 text-center"><span id="statusTag-安阳市人民医院" class="px-2 py-0.5 rounded text-[12px] tag-green cursor-pointer" onclick="openCenterStatus('安阳市人民医院')">已启动</span></td>
+            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-安阳市人民医院" onchange="toggleCenterStatus('安阳市人民医院', this)"><span class="cs-slider"></span></label></td>
             <td class="px-3 py-2.5 text-center whitespace-nowrap">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
@@ -274,7 +282,7 @@
             <td class="px-3 py-2.5">广东省</td>
             <td class="px-3 py-2.5">广州市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-gray">否</span></td>
-            <td class="px-3 py-2.5 text-center"><span id="statusTag-广东省人民医院" class="px-2 py-0.5 rounded text-[12px] tag-green cursor-pointer" onclick="openCenterStatus('广东省人民医院')">已启动</span></td>
+            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-广东省人民医院" checked onchange="toggleCenterStatus('广东省人民医院', this)"><span class="cs-slider"></span></label></td>
             <td class="px-3 py-2.5 text-center whitespace-nowrap">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
@@ -1965,31 +1973,46 @@
       }
     }
 
-    // ========== 图1：中心状态（启动/停用） ==========
+    // ========== 中心状态（启动/停用） —— switch 开关，不弹窗 ==========
     function openCenterStatus(centerName) {
-      document.getElementById('csCenterName').textContent = centerName;
-      var started = centerStatus[centerName] !== false;
-      document.getElementById('csCurrentStatus').textContent = started ? '已启动' : '未启动';
-      var tag = document.getElementById('statusTag-' + centerName);
-      document.getElementById('csEnableBtn').className = 'flex-1 px-3 py-2 ' + (started ? 'bg-[#00B42A] text-white' : 'bg-gray-300 text-gray-700') + ' text-sm rounded-lg hover:bg-green-600';
-      document.getElementById('csDisableBtn').className = 'flex-1 px-3 py-2 ' + (!started ? 'bg-[#F53F3F] text-white' : 'bg-gray-300 text-gray-700') + ' text-sm rounded-lg hover:bg-red-600';
-      currentCenterName = centerName;
-      document.getElementById('centerStatusModal').classList.remove('modal-hidden');
+      // 保留兼容：直接打开状态编辑逻辑入口（现已改用 switch，不再弹窗）
+      var sw = document.getElementById('statusSwitch-' + centerName);
+      if (sw) toggleCenterStatus(centerName, sw);
     }
     function closeCenterStatus() {
-      document.getElementById('centerStatusModal').classList.add('modal-hidden');
+      var modal = document.getElementById('centerStatusModal');
+      if (modal) modal.classList.add('modal-hidden');
+    }
+    // switch 切换处理：停用前校验本中心是否存在「未提交 / 待审核」患者
+    function toggleCenterStatus(centerName, checkbox) {
+      var wantStart = checkbox.checked;
+      if (!wantStart) {
+        // 停用：检查本中心是否有未提交 / 待审核（审核中）患者
+        var list = patientData[centerName] || [];
+        var blocking = 0;
+        for (var pi = 0; pi < list.length; pi++) {
+          var st = list[pi].status;
+          if (st === '未提交' || st === '待审核' || st === '审核中') blocking++;
+        }
+        if (blocking > 0) {
+          showToast('确认本中心患者都已完成审核或者是转移，才可以停用', 'warn');
+          checkbox.checked = true; // 回滚，保持启动
+          return;
+        }
+      }
+      applyCenterStatus(centerName, wantStart);
+    }
+    function applyCenterStatus(centerName, started) {
+      centerStatus[centerName] = started;
+      var sw = document.getElementById('statusSwitch-' + centerName);
+      if (sw) sw.checked = started;
+      addMemberLog(centerName, started ? '中心启动' : '中心停用', '—', '', '中心状态变更为' + (started ? '已启动' : '未启动'));
+      showToast('中心「' + centerName + '」已' + (started ? '启动' : '停用'));
     }
     function setCenterStatus(started) {
-      var name = currentCenterName;
-      centerStatus[name] = started;
-      var tag = document.getElementById('statusTag-' + name);
-      if (tag) {
-        tag.textContent = started ? '已启动' : '未启动';
-        tag.className = 'px-2 py-0.5 rounded text-[12px] cursor-pointer ' + (started ? 'tag-green' : 'tag-gray');
-      }
-      addMemberLog(name, started ? '中心启动' : '中心停用', '—', '', '中心状态变更为' + (started ? '已启动' : '未启动'));
+      if (!currentCenterName) return;
+      applyCenterStatus(currentCenterName, started);
       closeCenterStatus();
-      showToast('中心「' + name + '」已' + (started ? '启动' : '停用'));
     }
 
     // ========== 图3：成员交接（离职/停用） ==========
