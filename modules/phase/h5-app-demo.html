@@ -1935,9 +1935,8 @@
     <ul>
       <li>顶部阶段标签根据项目配置动态生成（预筛、入组等），点击切换不同阶段的匹配详情。</li>
       <li>根据 PC 端页面版本配置（<code>configureNew</code>）展示旧版或新版匹配详情，版本切换条默认取 <code>defaultView</code>（按照版本配置默认页面展示），可手动切换；两个版本结构对齐 <code>match-detail-new.html</code>。</li>
-      <li><b>新版（智能匹配，卡片式）</b>：顶部 基本信息 + AI 建议（结论 + 风险提示 + 需补充资料）+ 卡片式入选/排除标准 + 合并症 / 合并药物。</li>
+      <li><b>新版（智能匹配，卡片式）</b>：顶部 基本信息 + AI 建议（结论 + 风险提示 + 需补充资料）+ 卡片式入选/排除标准。</li>
       <li><b>旧版（匹配详情，卡片式）</b>：基本信息 + 方案协议卡（方案号 / 完整标题 / 入排标准 / 更新时间）+ 匹配度统计卡（匹配度 / 待定占比 / 统计描述）+ AI 建议卡（结论 + 排除原因列表）+ 卡片式入选/排除标准（不展示源数据，保留 <b>结果修正 / 修正记录 / 清空修正</b>）+ 合并症 / 合并药物。</li>
-      <li>合并症 / 合并药物按项目管理配置显隐（<code>isComorbidityEnabled</code> / <code>isConmedEnabled</code>）：预筛阶段显示合并症、入组阶段显示合并症 + 合并药物；新版以卡片、旧版也以卡片展示，两个版本均可见。</li>
     </ul>
 
     <h4 id="prd-pin-8"><span class="pin">8</span>审核记录与审核列表</h4>
@@ -3059,14 +3058,7 @@ HDL-C：1.09 mmol/L
       const md = MATCH_DETAIL[stage];
       if (!md) return '';
       let html = '';
-      if (isComorbidityEnabled(stage)) {
-        const cards = (md.comorbidity || []).map((c, i) => comorbidityItemCard(stage, 'como', i, c)).join('');
-        html += `<div id="sec-como"><div class="match-group-label">合并症识别</div>${cards}</div>`;
-      }
-      if (isConmedEnabled(stage)) {
-        const cards = (md.conmed || []).map((c, i) => comorbidityItemCard(stage, 'conmed', i, c)).join('');
-        html += `<div id="sec-conmed"><div class="match-group-label">合并药物识别</div>${cards}</div>`;
-      }
+      
       return html;
     }
 
