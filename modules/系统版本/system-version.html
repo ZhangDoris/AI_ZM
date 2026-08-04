@@ -11,6 +11,9 @@
   <title>系统版本管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Quill 富文本编辑器 -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; overflow: hidden; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -144,37 +147,30 @@
 
       <!-- 主内容区 -->
       <main class="p-6">
-        <!-- 页面标题栏 -->
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="text-xl font-bold text-gray-800">系统版本管理</h2>
-          <div class="flex items-center gap-3">
-            <!-- ★ 连线 2：新增按钮 -->
-            <div class="proto-element" data-proto-id="2">
-              <button onclick="openModal('addVersionModal')" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 btn-click transition-colors">
-                <i class="fas fa-plus"></i> 新增
-              </button>
-            </div>
-          </div>
-        </div>
+       
 
         <!-- ★ 连线 1：筛选栏 -->
         <div class="proto-element bg-white rounded-lg border border-gray-200 p-4 mb-4" data-proto-id="1">
+          <!-- 第一行：筛选条件 -->
           <div class="flex items-center gap-3 flex-wrap">
-            <label class="text-sm text-gray-600 whitespace-nowrap">系统名称：</label>
-            <select id="filterSystem" onchange="renderTable()" disabled class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-52 bg-gray-100 text-gray-600 cursor-not-allowed">
-              <option value="AI">AI智能筛选系统</option>
-            </select>
-            <label class="text-sm text-gray-600 whitespace-nowrap ml-2">版本号：</label>
+           
+            <label class="text-sm text-gray-600 whitespace-nowrap">版本号：</label>
             <input type="text" id="filterVersion" placeholder="如 V2.9.3" oninput="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
-            <label class="text-sm text-gray-600 whitespace-nowrap ml-2">发布时间：</label>
+            <label class="text-sm text-gray-600 whitespace-nowrap">发布时间：</label>
             <input type="date" id="filterDateStart" onchange="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
             <span class="text-gray-400">~</span>
             <input type="date" id="filterDateEnd" onchange="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
+          </div>
+          <!-- 第二行：操作按钮 -->
+          <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
             <button onclick="renderTable()" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-5 py-2 rounded-lg text-sm font-medium btn-click transition-colors">
               <i class="fas fa-search mr-1"></i> 查询
             </button>
             <button onclick="resetFilter()" class="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 px-5 py-2 rounded-lg text-sm btn-click transition-colors">
               <i class="fas fa-redo mr-1"></i> 重置
+            </button>
+            <button onclick="openModal('addVersionModal')" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 btn-click transition-colors">
+              <i class="fas fa-plus"></i> 新增
             </button>
           </div>
         </div>
@@ -290,7 +286,7 @@
 
   <!-- ========== 模态框：新增/编辑版本 ========== -->
   <div id="addVersionModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
         <h3 class="text-lg font-semibold text-gray-800" id="versionModalTitle">新增版本</h3>
         <button onclick="closeModal('addVersionModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
@@ -299,11 +295,8 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">系统名称 <span class="text-red-500">*</span></label>
-            <select id="vSystem" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">请选择</option>
-              <option value="WHMS">WHMS</option>
-              <option value="CRC">CRC</option>
-              <option value="CRA">CRA</option>
+            <select id="vSystem" disabled class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-600 cursor-not-allowed">
+              <option value="AI" selected>AI智能预筛系统</option>
             </select>
           </div>
           <div>
@@ -313,7 +306,8 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">发布内容 <span class="text-red-500">*</span></label>
-          <textarea id="vContent" rows="5" placeholder="请输入发布内容，可用【】标记功能模块" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"></textarea>
+          <div id="quillEditor" style="height: 220px; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden;"></div>
+          <textarea id="vContent" rows="5" placeholder="请输入发布内容，可用【】标记功能模块" class="form-input w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none hidden"></textarea>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">发布日期 <span class="text-red-500">*</span></label>
@@ -484,25 +478,69 @@
     }
 
     // ========== 新增/编辑 ==========
+    var quillEditor = null;
+
+    function initQuill() {
+      if (quillEditor) return;
+      quillEditor = new Quill('#quillEditor', {
+        theme: 'snow',
+        placeholder: '请输入发布内容...',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ header: 1 }, { header: 2 }],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            [{ script: 'sub' }, { script: 'super' }],
+            [{ indent: '-1' }, { indent: '+1' }],
+            [{ direction: 'rtl' }],
+            [{ size: [] }],
+            [{ header: [false, 1, 2, 3] }],
+            [{ color: [] }, { background: [] }],
+            [{ font: [] }],
+            [{ align: [] }],
+            ['clean'],
+            ['link', 'image', 'video']
+          ]
+        }
+      });
+    }
+
     function editVersion(id) {
       editingId = id;
       var item = versionData.find(function(v) { return v.id === id; });
       if (!item) return;
       document.getElementById('versionModalTitle').textContent = '编辑版本';
-      document.getElementById('vSystem').value = item.system;
+      // 系统名称固定不可改
+      document.getElementById('vSystem').value = 'AI';
       document.getElementById('vVersion').value = item.version;
-      document.getElementById('vContent').value = item.content;
       document.getElementById('vDate').value = item.date;
       openModal('addVersionModal');
+      // 延迟初始化 Quill 并回填内容
+      setTimeout(function() {
+        initQuill();
+        if (item.content) {
+          // 将纯文本【xxx】转为富文本格式
+          var htmlContent = parseToRichText(item.content);
+          quillEditor.root.innerHTML = htmlContent;
+        } else {
+          quillEditor.root.innerHTML = '';
+        }
+      }, 100);
     }
 
     function saveVersion() {
-      var sys = document.getElementById('vSystem').value;
+      var sys = 'AI'; // 固定 AI智能预筛系统
       var ver = document.getElementById('vVersion').value.trim();
-      var cont = document.getElementById('vContent').value.trim();
       var dt = document.getElementById('vDate').value;
+      var cont = '';
+      if (quillEditor) {
+        cont = quillEditor.root.innerHTML.trim();
+      } else {
+        cont = document.getElementById('vContent').value.trim();
+      }
 
-      if (!sys || !ver || !cont || !dt) {
+      if (!ver || !cont || !dt) {
         alert('请填写完整信息'); return;
       }
 
@@ -522,11 +560,20 @@
     document.getElementById('addVersionModal').querySelector('.fa-times').parentElement.addEventListener('click', function() {
       editingId = null;
       document.getElementById('versionModalTitle').textContent = '新增版本';
-      document.getElementById('vSystem').value = '';
+      document.getElementById('vSystem').value = 'AI';
       document.getElementById('vVersion').value = '';
-      document.getElementById('vContent').value = '';
       document.getElementById('vDate').value = '';
+      if (quillEditor) quillEditor.root.innerHTML = '';
     });
+
+    // 将纯文本发布内容转为富文本（【xxx】→ 加粗）
+    function parseToRichText(text) {
+      if (!text) return '';
+      var escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      escaped = escaped.replace(/\n/g, '<br>');
+      escaped = escaped.replace(/【([^】]+)】/g, '<strong>$1</strong>');
+      return escaped;
+    }
 
     // ========== 删除 ==========
     function deleteVersion(id) {
@@ -667,7 +714,7 @@
     }
 
     // ========== 初始化 ==========
-    function init() { drawConnections(); bindHoverEvents(); }
+    function init() { drawConnections(); bindHoverEvents(); initQuill(); }
     document.addEventListener('DOMContentLoaded', function() {
       setTimeout(init, 100);
       renderTable();

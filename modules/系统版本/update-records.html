@@ -15,8 +15,7 @@
 
     /* 连线元素高亮 */
     .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
-    .proto-element:hover { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color: rgba(22,93,255,0.03); }
-    .proto-element.active-highlight { box-shadow: 0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.2); background-color: rgba(22,93,255,0.05); }
+    .proto-element.active-highlight { background-color: rgba(22,93,255,0.04); }
 
     .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
     .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
@@ -32,7 +31,7 @@
     /* 版本列表 */
     .version-item { transition: all 0.15s; cursor: pointer; border-left: 3px solid transparent; }
     .version-item:hover { background-color: rgba(22,93,255,0.04); color: #165DFF; }
-    .version-item.active { background-color: rgba(22,93,255,0.08); color: #165DFF; border-left-color: #165DFF; }
+    .version-item.active { background-color: rgba(22,93,255,0.08); color: #165DFF; }
 
     /* 更新内容标签 */
     .update-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
@@ -109,6 +108,16 @@
       flex: 1;
       min-width: 0;
     }
+   .top-nav {
+      height: 56px; background: #fff; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; padding: 0 24px; gap: 16px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav .logo { font-size: 16px; font-weight: 700; color: #1677ff; display: flex; align-items: center; gap: 8px; }
+    .top-nav .nav-breadcrumb { font-size: 13px; color: #999; }
+    .top-nav .nav-breadcrumb b { color: #333; }
+    .top-nav .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; color: #666; font-size: 14px; }
+    .top-nav .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1677ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; }
 
     .btn-click:active { transform: scale(0.96); }
   </style>
@@ -126,18 +135,16 @@
     <!-- 左侧：产品界面 -->
     <div id="left-panel" class="overflow-y-auto bg-gray-50 relative">
 
-      <!-- 顶部标题栏 -->
-      <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 bg-[#165DFF] rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            <i class="fas fa-layer-group"></i>
-          </div>
-          <h1 class="text-xl font-bold text-gray-800">艾迪研EDC更新记录</h1>
-        </div>
-        <div class="flex items-center gap-4">
-          <span class="text-sm text-gray-500"><i class="fas fa-clock mr-1"></i>最后更新：2026-07-23</span>
-        </div>
-      </header>
+      <!-- 顶部导航：右侧版本号 + 登录人下拉 -->
+  <div class="top-nav" style="border-bottom:1px solid #f0f0f0;">
+    <div class="nav-right">
+   
+      <span id="versionBadge" style="font-size:14px;color:#1677ff;font-weight:600;cursor:pointer;">版本:V1.8.9</span>
+        <div class="nav-avatar">张</div>
+      <span>张琳</span>
+    
+    </div>
+  </div>
 
       <div class="flex h-[calc(100vh-65px)]">
         <!-- 左侧版本列表 -->
@@ -161,33 +168,19 @@
 
             <!-- 版本信息区 -->
             <!-- ★ 连线 2：版本信息 -->
-            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="2" id="versionInfo">
+            <div class="proto-element mb-6" data-proto-id="2" id="versionInfo">
               <h2 class="text-3xl font-bold text-[#165DFF] mb-3" id="detailVersion">V1.8.9</h2>
-              <div class="flex flex-wrap gap-6 text-sm text-gray-600">
+              <div class="text-sm text-gray-600 space-y-1">
                 <div><span class="text-gray-400">系统版本号：</span><span id="detailVersionNum" class="font-medium text-gray-800">V1.8.9</span></div>
                 <div><span class="text-gray-400">系统更新时间：</span><span id="detailUpdateTime" class="font-medium text-gray-800">2026年7月23</span></div>
               </div>
             </div>
 
-            <!-- 功能更新区 -->
-            <!-- ★ 连线 3：功能更新 -->
-            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="3" id="featureSection">
-              <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fas fa-plus-circle text-[#165DFF]"></i>功能更新
-              </h3>
-              <div class="space-y-6" id="featureList">
-                <!-- 功能项由 JS 生成 -->
-              </div>
-            </div>
-
-            <!-- 优化更新区 -->
-            <!-- ★ 连线 4：优化更新 -->
-            <div class="proto-element bg-white rounded-xl border border-gray-200 p-6 mb-6" data-proto-id="4" id="optimizeSection">
-              <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <i class="fas fa-wrench text-[#00B42A]"></i>优化改进
-              </h3>
-              <div class="space-y-4" id="optimizeList">
-                <!-- 优化项由 JS 生成 -->
+            <!-- 发布内容区（富文本填写的内容） -->
+            <!-- ★ 连线 3：发布内容 -->
+            <div class="proto-element mb-6" data-proto-id="3" id="publishContent">
+              <div class="text-sm text-gray-700 leading-relaxed" id="publishContentHtml">
+                <!-- 富文本 HTML 由 JS 注入 -->
               </div>
             </div>
           </div>
@@ -249,19 +242,8 @@
             <div class="flex items-start gap-2">
               <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
               <div>
-                <h3 class="text-sm font-semibold text-gray-800">功能更新</h3>
-                <p class="text-xs text-gray-500 mt-1">以【功能】标签归类本次版本新增的功能点。每条说明可附带界面截图，直观展示功能入口与效果。</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- 说明 4 -->
-          <div class="proto-desc p-3" data-proto-id="4">
-            <div class="flex items-start gap-2">
-              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
-              <div>
-                <h3 class="text-sm font-semibold text-gray-800">优化改进</h3>
-                <p class="text-xs text-gray-500 mt-1">以【优化】标签归类性能提升、交互改进、异常处理等优化项，说明优化前后的差异与用户收益。</p>
+                <h3 class="text-sm font-semibold text-gray-800">发布内容</h3>
+                <p class="text-xs text-gray-500 mt-1">展示该版本在系统版本配置中通过富文本框填写的发布内容，包含【功能】与【优化】说明，格式与录入时一致。</p>
               </div>
             </div>
           </div>
@@ -305,23 +287,20 @@
 
     const versionDetails = {
       'V1.8.9': {
-        features: [
-          { text: '在成员配置界面新增一个按照研究中心查找的查找栏，便于查看某中心账号开通情况。', hasScreenshot: 'member' },
-          { text: '新增生效的表单未被访视表引用的配置检测：提醒DM，如AE表单，用了两个都是生效状态且未确认用哪个，最终上线的时候可以检测出来，把没有被引用的失效掉或者删除。', hasScreenshot: false },
-          { text: '配置检查EC兼容主表控制内嵌表。', hasScreenshot: false },
-          { text: 'OCR识别字段库兼容策略为空。', hasScreenshot: false },
-          { text: '对多表关闭弹窗不触发刷新，保存或SDV后依然显示在对应行号。', hasScreenshot: false },
-          { text: 'AI辅助录入和OCR识别结果显示脱敏编号。', hasScreenshot: 'ocr' }
-        ],
-        optimizes: [
-          { text: '数值类的字段自动计算，如果CRC录入了非数值型数据，会导致表单保存时报错，无法保存。优化为可以直接保存表单，计算不出来的话就算了，不影响表单的保存。' },
-          { text: '患者管理对接配置时，手动对接并保存后，再点击自动匹配，会自动覆盖已手动对接的内容。优化为自动匹配不覆盖手动对接的内容。' },
-          { text: '导出数据管理报告、数据进展报告优化。' }
-        ]
+        publishContent: `
+          <p>本次版本发布包含以下更新内容：</p>
+          <p><strong>【功能】</strong>在成员配置界面新增一个按照研究中心查找的查找栏，便于查看某中心账号开通情况。</p>
+          <p><strong>【功能】</strong>新增生效的表单未被访视表引用的配置检测：提醒DM，如AE表单，用了两个都是生效状态且未确认用哪个，最终上线的时候可以检测出来，把没有被引用的失效掉或者删除。</p>
+          <p><strong>【功能】</strong>配置检查EC兼容主表控制内嵌表；OCR识别字段库兼容策略为空；对多表关闭弹窗不触发刷新，保存或SDV后依然显示在对应行号。</p>
+          <p><strong>【功能】</strong>AI辅助录入和OCR识别结果显示脱敏编号。</p>
+          <p><strong>【优化】</strong>数值类的字段自动计算，如果CRC录入了非数值型数据，会导致表单保存时报错，无法保存。优化为可以直接保存表单，计算不出来的话就算了，不影响表单的保存。</p>
+          <p><strong>【优化】</strong>患者管理对接配置时，手动对接并保存后，再点击自动匹配，会自动覆盖已手动对接的内容。优化为自动匹配不覆盖手动对接的内容。</p>
+          <p><strong>【优化】</strong>导出数据管理报告、数据进展报告优化。</p>
+        `
       }
     };
 
-    // 为其他版本生成模拟数据
+    // 为其他版本生成模拟发布内容
     const mockFeatures = [
       '优化表单填写体验，提升字段校验响应速度。',
       '新增数据导出模板自定义功能。',
@@ -344,13 +323,11 @@
       const idx2 = (seed + 1) % mockFeatures.length;
       const idx3 = (seed + 2) % mockOptimizes.length;
       return {
-        features: [
-          { text: mockFeatures[idx1], hasScreenshot: false },
-          { text: mockFeatures[idx2], hasScreenshot: false }
-        ],
-        optimizes: [
-          { text: mockOptimizes[idx3] }
-        ]
+        publishContent: `
+          <p><strong>【功能】</strong>${mockFeatures[idx1]}</p>
+          <p><strong>【功能】</strong>${mockFeatures[idx2]}</p>
+          <p><strong>【优化】</strong>${mockOptimizes[idx3]}</p>
+        `
       };
     }
 
@@ -424,32 +401,9 @@
       document.getElementById('detailVersionNum').textContent = v.num;
       document.getElementById('detailUpdateTime').textContent = v.time;
 
-      const featureList = document.getElementById('featureList');
-      featureList.innerHTML = detail.features.map((f, i) => `
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 mt-0.5">
-            <span class="update-tag tag-feature">功能</span>
-          </div>
-          <div class="flex-1 text-sm text-gray-700 leading-relaxed">
-            <p>${f.text}</p>
-            ${f.hasScreenshot ? renderScreenshot(f.hasScreenshot) : ''}
-            <div class="mobile-desc">新增功能点说明：${f.text}</div>
-          </div>
-        </div>
-      `).join('');
-
-      const optimizeList = document.getElementById('optimizeList');
-      optimizeList.innerHTML = detail.optimizes.map((o, i) => `
-        <div class="flex gap-3">
-          <div class="flex-shrink-0 mt-0.5">
-            <span class="update-tag tag-optimize">优化</span>
-          </div>
-          <div class="flex-1 text-sm text-gray-700 leading-relaxed">
-            <p>${o.text}</p>
-            <div class="mobile-desc">优化项说明：${o.text}</div>
-          </div>
-        </div>
-      `).join('');
+      // 发布内容：展示富文本填写的 HTML（与 system-version.html 中保存的内容一致）
+      const publishContentHtml = document.getElementById('publishContentHtml');
+      publishContentHtml.innerHTML = detail.publishContent || '<p class="text-gray-400">暂无发布内容</p>';
     }
 
     // ========== 切换版本 ==========

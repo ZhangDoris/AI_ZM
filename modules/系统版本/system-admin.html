@@ -1,0 +1,346 @@
+<!--
+  系统管理 - 系统版本配置入口页
+  功能：复用「系统管理」左侧菜单，新增「系统版本配置」菜单项，内容区嵌入 modules/系统版本/system-version.html
+  使用方法：直接在浏览器中打开即可
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>系统管理 - 系统版本配置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; }
+
+    /* ===== 顶部导航（简化版，复用原型风格） ===== */
+    .top-nav {
+      height: 56px; background: #fff; border-bottom: 1px solid #f0f0f0;
+      display: flex; align-items: center; padding: 0 24px; gap: 16px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .top-nav .logo { font-size: 16px; font-weight: 700; color: #1677ff; display: flex; align-items: center; gap: 8px; }
+    .top-nav .nav-breadcrumb { font-size: 13px; color: #999; }
+    .top-nav .nav-breadcrumb b { color: #333; }
+    .top-nav .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; color: #666; font-size: 14px; }
+    .top-nav .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: #1677ff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+
+    /* ===== 主体布局 ===== */
+    .app-body { display: flex; height: calc(100vh - 56px); }
+
+    /* ===== 左侧 Sidebar（复用原 index.html 系统管理菜单样式） ===== */
+    .left-sidebar {
+      width: 200px;
+      background: white;
+      border-right: 1px solid #f0f0f0;
+      flex-shrink: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 16px 0 16px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+      transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .left-sidebar.hidden { display: none; }
+    .left-sidebar.collapsed { width: 52px; }
+
+    .sidebar-toggle {
+      position: absolute; right: -13px; top: 20px;
+      width: 26px; height: 26px; background: white; border: 1px solid #e8e8e8; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #aaa; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      z-index: 10; transition: all 0.2s; user-select: none; flex-shrink: 0;
+    }
+    .sidebar-toggle:hover { color: #1677ff; border-color: #1677ff; box-shadow: 0 2px 8px rgba(22,119,255,0.2); }
+
+    .sidebar-title {
+      padding: 0 18px 10px; font-size: 11px; font-weight: 600; color: #bbb;
+      letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; overflow: hidden;
+      transition: opacity 0.2s, padding 0.25s;
+    }
+    .left-sidebar.collapsed .sidebar-title { opacity: 0; padding: 0 18px 10px; height: 0; overflow: hidden; }
+
+    .sidebar-item {
+      padding: 10px 18px; font-size: 13.5px; color: #555; cursor: pointer;
+      display: flex; align-items: center; gap: 9px; border-radius: 0 20px 20px 0; margin-right: 12px;
+      transition: all 0.18s; white-space: nowrap; overflow: hidden;
+    }
+    .sidebar-item:hover { background: #f5f7ff; color: #1677ff; }
+    .sidebar-item.active { background: #e8f0ff; color: #1677ff; font-weight: 600; }
+    .sidebar-item .s-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+    .sidebar-item .s-label { transition: opacity 0.15s; }
+    .left-sidebar.collapsed .sidebar-item { padding: 10px 0; justify-content: center; margin-right: 0; border-radius: 0; }
+    .left-sidebar.collapsed .sidebar-item .s-label { opacity: 0; width: 0; overflow: hidden; }
+    .left-sidebar.collapsed .sidebar-item .s-icon { width: 52px; text-align: center; font-size: 16px; }
+
+    .left-sidebar.collapsed .sidebar-item { position: relative; }
+    .left-sidebar.collapsed .sidebar-item:hover::after {
+      content: attr(data-label); position: absolute; left: 58px; top: 50%; transform: translateY(-50%);
+      background: #1a1a1a; color: white; font-size: 12px; padding: 5px 10px; border-radius: 6px;
+      white-space: nowrap; z-index: 999; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+
+    /* ===== Sidebar Group（系统管理分组） ===== */
+    .sidebar-group { overflow: hidden; }
+    .sidebar-group-header {
+      padding: 10px 18px; font-size: 13.5px; color: #555; cursor: pointer;
+      display: flex; align-items: center; gap: 9px; border-radius: 0 20px 20px 0; margin-right: 12px;
+      transition: all 0.18s; white-space: nowrap; overflow: hidden; user-select: none;
+    }
+    .sidebar-group-header:hover { background: #f5f7ff; color: #1677ff; }
+    .sidebar-group-header.active { background: #e8f0ff; color: #1677ff; font-weight: 600; }
+    .sidebar-group-header .s-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
+    .sidebar-group-header .s-label { flex: 1; }
+    .sidebar-group-arrow { font-size: 11px; color: #bbb; transition: transform 0.2s; flex-shrink: 0; }
+    .sidebar-group-arrow.open { transform: rotate(0deg); }
+    .sidebar-group-arrow.closed { transform: rotate(-90deg); }
+
+    .sidebar-group-body { overflow: hidden; transition: max-height 0.25s ease; }
+
+    /* 三级菜单 item */
+    .sidebar-item-l3 {
+      padding: 9px 18px 9px 44px; font-size: 13px; color: #666; cursor: pointer;
+      display: flex; align-items: center; gap: 7px; border-radius: 0 20px 20px 0; margin-right: 12px;
+      transition: all 0.18s; white-space: nowrap; overflow: hidden;
+    }
+    .sidebar-item-l3:hover { background: #f0f5ff; color: #1677ff; }
+    .sidebar-item-l3.active { background: #e8f0ff; color: #1677ff; font-weight: 600; }
+    .sidebar-item-l3 .s-dot { width: 6px; height: 6px; border-radius: 50%; background: #c5c5c5; flex-shrink: 0; }
+
+    .left-sidebar.collapsed .sidebar-group-header { padding: 10px 0; justify-content: center; margin-right: 0; border-radius: 0; }
+    .left-sidebar.collapsed .sidebar-group-header .s-label { opacity: 0; width: 0; overflow: hidden; }
+    .left-sidebar.collapsed .sidebar-group-header .s-icon { width: 52px; text-align: center; font-size: 16px; }
+    .left-sidebar.collapsed .sidebar-group-arrow { display: none; }
+    .left-sidebar.collapsed .sidebar-group-body { max-height: 0 !important; }
+
+    /* ===== Admin 后台侧边栏主题（蓝紫系主题，主色 #5d58dc，与 phase/index.html 一致） ===== */
+    .left-sidebar.admin-sidebar {
+      background: linear-gradient(180deg, #4a47c2 0%, #5d58dc 100%);
+      border-right: 1px solid #3a3799;
+      padding-top: 16px;
+    }
+    .admin-sidebar .sidebar-title { display: none; }
+    .admin-sidebar .sidebar-item,
+    .admin-sidebar .sidebar-group-header { color: #e2e0f7; }
+    .admin-sidebar .sidebar-item .s-label,
+    .admin-sidebar .sidebar-group-header .s-label { color: #e2e0f7; }
+    .admin-sidebar .sidebar-item:hover,
+    .admin-sidebar .sidebar-group-header:hover {
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+    }
+    .admin-sidebar .sidebar-item:hover .s-label,
+    .admin-sidebar .sidebar-group-header:hover .s-label { color: #fff; }
+    .admin-sidebar .sidebar-item.active,
+    .admin-sidebar .sidebar-group-header.active {
+      background: rgba(255,255,255,0.26);
+      color: #fff;
+      font-weight: 600;
+    }
+    .admin-sidebar .sidebar-item.active .s-label,
+    .admin-sidebar .sidebar-group-header.active .s-label { color: #fff; }
+    .admin-sidebar .sidebar-item.active { box-shadow: inset 3px 0 0 #d6d3f7; }
+    .admin-sidebar .sidebar-item-l3 { color: #cfcdf2; }
+    .admin-sidebar .sidebar-item-l3 .s-label { color: #cfcdf2; }
+    .admin-sidebar .sidebar-item-l3:hover {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+    }
+    .admin-sidebar .sidebar-item-l3:hover .s-label { color: #fff; }
+    .admin-sidebar .sidebar-item-l3.active {
+      background: rgba(255,255,255,0.22);
+      color: #fff;
+      font-weight: 600;
+    }
+    .admin-sidebar .sidebar-item-l3.active .s-label { color: #fff; }
+    .admin-sidebar .sidebar-item-l3.active > span:first-child { color: #d6d3f7 !important; }
+    .admin-sidebar .sidebar-submenu,
+    .admin-sidebar .sidebar-group-body { background: transparent; }
+    .admin-sidebar .sidebar-group-arrow,
+    .admin-sidebar .s-icon { color: #b9b6ea; }
+    .admin-sidebar .sidebar-item.active .s-icon,
+    .admin-sidebar .sidebar-group-header.active .s-icon,
+    .admin-sidebar .sidebar-item-l3.active .s-icon { color: #ffffff; }
+    .admin-sidebar .sidebar-toggle {
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      border-color: rgba(255,255,255,0.28);
+    }
+
+    /* ===== 右侧内容区 ===== */
+    .main-panel { flex: 1; min-width: 0; }
+    .content-iframe { width: 100%; height: 100%; border: none; background: #f5f7fa; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航：右侧版本号 + 登录人下拉 -->
+  <div class="top-nav" style="border-bottom:1px solid #f0f0f0;">
+    <div class="nav-right">
+   
+      <span id="versionBadge" style="font-size:14px;color:#1677ff;font-weight:600;cursor:pointer;">版本:V1.8.9</span>
+        <div class="nav-avatar">张</div>
+      <span>张琳</span>
+    
+    </div>
+  </div>
+
+  <!-- 登录人下拉菜单（邮箱 / 修改密码 / 退出登录） -->
+  <style>
+    .nav-right { position: relative; }
+    .user-dropdown-menu {
+      display:none; position:absolute; top:44px; right:0; min-width:140px;
+      background:#fff; border-radius:10px; box-shadow:0 6px 16px rgba(0,0,0,0.12);
+      padding:8px 0; z-index:200;
+    }
+    .nav-right.open .user-dropdown-menu { display:block; }
+    .user-dropdown-item {
+      display:flex; align-items:center; gap:10px; padding:9px 18px;
+      font-size:13px; color:#555; cursor:pointer; transition:background 0.15s;
+    }
+    .user-dropdown-item:hover { background:#f5f7fa; color:#1677ff; }
+    .user-dropdown-item i { width:16px; text-align:center; color:#999; }
+    .user-dropdown-item:hover i { color:#1677ff; }
+    .user-dropdown-divider { height:1px; background:#f0f0f0; margin:4px 14px; }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded',function(){
+      var nr=document.querySelector('.nav-right');
+      if(nr) nr.addEventListener('click',function(e){ e.stopPropagation(); this.classList.toggle('open'); });
+      document.addEventListener('click',function(){ var n=document.querySelector('.nav-right'); if(n)n.classList.remove('open'); });
+    });
+  </script>
+
+  <!-- 主体 -->
+  <div class="app-body" style="height:calc(100vh - 56px);">
+    <!-- 左侧 Sidebar -->
+    <aside class="left-sidebar admin-sidebar" id="leftSidebar">
+      <div class="sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="收起菜单">‹</div>
+
+      <!-- 系统管理（可展开的分组） -->
+      <div class="sidebar-group">
+        <div class="sidebar-group-header active" onclick="toggleAdminGroup()" data-label="系统管理">
+          <span class="s-icon">⚙️</span>
+          <span class="s-label">系统管理</span>
+          <span class="sidebar-group-arrow open" id="sysArrow">▼</span>
+        </div>
+        <div class="sidebar-group-body" id="sysBody" style="max-height: 800px;">
+          <div class="sidebar-item-l3" onclick="navTo('users')"><span class="s-dot"></span><span class="s-label">用户管理</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('roles')"><span class="s-dot"></span><span class="s-label">角色管理</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('dict')"><span class="s-dot"></span><span class="s-label">字典管理</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('disease-dict')"><span class="s-dot"></span><span class="s-label">疾病领域字典管理</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('hospitals')"><span class="s-dot"></span><span class="s-label">医院管理</span></div>
+          <!-- ★ 新增：系统版本配置（默认激活，指向系统版本页面） -->
+          <div class="sidebar-item-l3 active" onclick="navTo('sys-version')"><span class="s-dot"></span><span class="s-label">系统版本配置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('update-records')"><span class="s-dot"></span><span class="s-label">系统版本变更记录</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('audit-type-config')"><span class="s-dot"></span><span class="s-label">审批类型配置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('stage-config')"><span class="s-dot"></span><span class="s-label">审批阶段配置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('workflow')"><span class="s-dot"></span><span class="s-label">审批流设置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('flow-template')"><span class="s-dot"></span><span class="s-label">流程模板管理</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('sys-config')"><span class="s-dot"></span><span class="s-label">系统设置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('sys-text')"><span class="s-dot"></span><span class="s-label">系统文案配置</span></div>
+          <div class="sidebar-item-l3" onclick="navTo('menus')"><span class="s-dot"></span><span class="s-label">菜单管理</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧主内容区：嵌入系统版本页面 -->
+    <main class="main-panel">
+      <iframe class="content-iframe" id="contentFrame" src="../系统版本/system-version.html" title="系统版本配置"></iframe>
+    </main>
+  </div>
+
+  <script>
+    // 折叠/展开左侧菜单
+    function toggleSidebar() {
+      const sb = document.getElementById('leftSidebar');
+      const btn = document.getElementById('sidebarToggleBtn');
+      sb.classList.toggle('collapsed');
+      btn.textContent = sb.classList.contains('collapsed') ? '›' : '‹';
+      btn.title = sb.classList.contains('collapsed') ? '展开菜单' : '收起菜单';
+    }
+
+    // 展开/收起系统管理分组
+    function toggleAdminGroup() {
+      const body = document.getElementById('sysBody');
+      const arrow = document.getElementById('sysArrow');
+      const isOpen = body.style.maxHeight !== '0px';
+      if (isOpen) {
+        body.style.maxHeight = '0px';
+        arrow.className = 'sidebar-group-arrow closed';
+      } else {
+        body.style.maxHeight = '800px';
+        arrow.className = 'sidebar-group-arrow open';
+      }
+    }
+
+    // 菜单导航：切换到对应页面；系统版本配置指向本地文件，其余项暂用占位提示
+    function navTo(key) {
+      // 更新 active 高亮
+      document.querySelectorAll('.sidebar-item-l3').forEach(function(el) {
+        el.classList.remove('active');
+      });
+      event.currentTarget.classList.add('active');
+
+      const frame = document.getElementById('contentFrame');
+      const breadcrumb = document.querySelector('.nav-breadcrumb');
+
+      if (key === 'sys-version') {
+        frame.src = '../系统版本/system-version.html';
+        frame.style.display = 'block';
+        breadcrumb.innerHTML = '后台管理 / <b>系统管理</b> / <b>系统版本配置</b>';
+      } else if (key === 'update-records') {
+        frame.src = '../系统版本/update-records.html';
+        frame.style.display = 'block';
+        breadcrumb.innerHTML = '后台管理 / <b>系统管理</b> / <b>系统版本变更记录</b>';
+      } else {
+        // 其他菜单当前为占位（原型阶段），弹出提示并保持 iframe 显示系统版本配置
+        const label = event.currentTarget.querySelector('.s-label').textContent;
+        frame.style.display = 'none';
+        showPlaceholder(label);
+        breadcrumb.innerHTML = '后台管理 / <b>系统管理</b> / <b>' + label + '</b>（原型占位）';
+      }
+    }
+
+    // 占位提示（其他菜单未实现时显示）
+    function showPlaceholder(name) {
+      const main = document.querySelector('.main-panel');
+      let ph = document.getElementById('placeholderBox');
+      if (!ph) {
+        ph = document.createElement('div');
+        ph.id = 'placeholderBox';
+        ph.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#bbb;gap:12px;';
+        main.appendChild(ph);
+      }
+      ph.innerHTML = '<i class="fas fa-cog fa-3x"></i><div style="font-size:15px;">「' + name + '」原型页面开发中</div>';
+      ph.style.display = 'flex';
+      // 隐藏 iframe
+      document.getElementById('contentFrame').style.display = 'none';
+    }
+
+    // 当切换回系统版本或变更记录时恢复 iframe 显示并隐藏占位
+    document.addEventListener('click', function(e) {
+      const item = e.target.closest('.sidebar-item-l3');
+      if (item) {
+        const oc = item.getAttribute('onclick') || '';
+        if (oc.indexOf("'sys-version'") !== -1 || oc.indexOf("'update-records'") !== -1) {
+          const ph = document.getElementById('placeholderBox');
+          if (ph) ph.style.display = 'none';
+          document.getElementById('contentFrame').style.display = 'block';
+        }
+      }
+    });
+
+    // 点击版本号：整页跳转到 系统版本变更记录 页面（update-records.html）
+    const versionBadge = document.getElementById('versionBadge');
+    if (versionBadge) {
+      versionBadge.addEventListener('click', function(e) {
+        e.stopPropagation();
+        window.location.href = '../系统版本/update-records.html';
+      });
+    }
+  </script>
+</body>
+</html>
