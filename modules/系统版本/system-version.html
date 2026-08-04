@@ -164,6 +164,12 @@
             <select id="filterSystem" onchange="renderTable()" disabled class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-52 bg-gray-100 text-gray-600 cursor-not-allowed">
               <option value="AI">AI智能筛选系统</option>
             </select>
+            <label class="text-sm text-gray-600 whitespace-nowrap ml-2">版本号：</label>
+            <input type="text" id="filterVersion" placeholder="如 V2.9.3" oninput="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
+            <label class="text-sm text-gray-600 whitespace-nowrap ml-2">发布时间：</label>
+            <input type="date" id="filterDateStart" onchange="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
+            <span class="text-gray-400">~</span>
+            <input type="date" id="filterDateEnd" onchange="renderTable()" class="form-input border border-gray-300 rounded-lg px-3 py-2 text-sm w-40">
             <button onclick="renderTable()" class="bg-[#165DFF] hover:bg-[#0E42D6] text-white px-5 py-2 rounded-lg text-sm font-medium btn-click transition-colors">
               <i class="fas fa-search mr-1"></i> 查询
             </button>
@@ -405,12 +411,18 @@
 
     // ========== 渲染表格 ==========
     function renderTable() {
-      var filterVal = document.getElementById('filterSystem').value.trim().toUpperCase();
+      var versionVal = document.getElementById('filterVersion').value.trim().toLowerCase();
+      var dateStart = document.getElementById('filterDateStart').value;
+      var dateEnd = document.getElementById('filterDateEnd').value;
       var tbody = document.getElementById('tableBody');
       var html = '';
 
       var filtered = versionData.filter(function(item) {
-        if (filterVal && item.system.toUpperCase() !== filterVal) return false;
+        // 版本号模糊匹配
+        if (versionVal && item.version.toLowerCase().indexOf(versionVal) === -1) return false;
+        // 发布时间范围（含边界）
+        if (dateStart && item.date < dateStart) return false;
+        if (dateEnd && item.date > dateEnd) return false;
         return true;
       });
 
@@ -427,7 +439,7 @@
           + '</div></td></tr>';
       });
 
-      tbody.innerHTML = html || '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">暂无数据</td></tr>';
+      tbody.innerHTML = html || '<tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">暂无数据</td></tr>';
 
       document.getElementById('totalCount').textContent = '共 ' + filtered.length + ' 条';
       renderPagination(filtered.length);
@@ -465,7 +477,9 @@
 
     // ========== 重置筛选 ==========
     function resetFilter() {
-      document.getElementById('filterSystem').value = '';
+      document.getElementById('filterVersion').value = '';
+      document.getElementById('filterDateStart').value = '';
+      document.getElementById('filterDateEnd').value = '';
       renderTable();
     }
 
