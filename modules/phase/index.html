@@ -3280,9 +3280,10 @@
     .proj-inform-title { font-size: 13px; font-weight: 600; color: #333; }
     .proj-inform-hint { font-size: 12px; color: #999; }
     /* 项目管理：入排标准按阶段拆分 */
-    .proj-criteria-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .proj-criteria-table th { background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
-    .proj-criteria-table td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+    .table-scroll-wrapper { max-height: 340px; overflow: auto; border: 1px solid #e8e8e8; border-radius: 8px; }
+    .proj-criteria-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+    .proj-criteria-table thead th { position: sticky; top: 0; z-index: 2; background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+    .proj-criteria-table td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; background: #fff; }
     .proj-criteria-table tr:hover td { background: #fafbff; }
     .proj-criteria-table .num-cell { width: 36px; color: #999; padding-top: 18px; }
     .proj-criteria-table .content-cell { min-width: 280px; }
@@ -3291,6 +3292,7 @@
     .criteria-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
     .criteria-textarea::placeholder { color: #bbb; }
     .proj-criteria-table .action-cell { width: 92px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .proj-criteria-table thead th.action-cell { display: table-cell; padding-top: 10px; text-align: left; vertical-align: middle; }
     .thinking-chain-row td { background: #fffdf7 !important; padding: 0; }
     .thinking-chain-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px 6px; }
     .thinking-chain-title { font-size: 12px; color: #d48806; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -7436,7 +7438,7 @@ function switchModule(mod, sub) {
       else sidebar.classList.remove('collapsed');
       sidebar.innerHTML = buildAdminSidebar(currentSub);
       panel.innerHTML = buildAdminContent(currentSub);
-      if(currentSub === 'project-new' || currentSub === 'project-edit') { initProjectNavSpy(); applyStageGateCollapse(); }
+      if(currentSub === 'project-new' || currentSub === 'project-edit') { initProjectNavSpy(); applyStageGateCollapse(); fitAllProjectTables(); }
     } else if(mod === 'project-center') {
       currentSub = sub || 'center-list';
       sidebar.classList.remove('hidden');
@@ -15553,17 +15555,19 @@ function renderCriteriaVersionContent(ver) {
         <div class="proj-criteria-toolbar">
           <button type="button" class="criteria-add-btn" onclick="addProjectCriteriaRow('${ver}','${type}', ${items.length - 1})"><i class="fa-solid fa-plus"></i> 新增${type === 'inclusion' ? '入选' : '排除'}标准</button>
         </div>
-        <table class="proj-criteria-table">
-          <thead>
-            <tr>
-              <th class="num-cell">序号</th>
-              <th class="content-th">${type === 'inclusion' ? '入选标准内容' : '排除标准内容'}</th>
-              ${stageThs}
-              <th class="action-cell">操作</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="table-scroll-wrapper">
+          <table class="proj-criteria-table">
+            <thead>
+              <tr>
+                <th class="num-cell">序号</th>
+                <th class="content-th">${type === 'inclusion' ? '入选标准内容' : '排除标准内容'}</th>
+                ${stageThs}
+                <th class="action-cell">操作</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       </div>
     `;
   };
@@ -15941,6 +15945,7 @@ function refreshCriteriaSection() {
   }
   if(contentArea) {
     contentArea.innerHTML = renderCriteriaVersionContent(activeCriteriaVersion);
+    fitTableScrollToRows(contentArea, 10);
   }
 }
 
@@ -16259,7 +16264,8 @@ function renderScreeningContent() {
           </tr>
         </thead>
         <tbody>${rows}</tbody>
-      </table>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -16273,9 +16279,25 @@ function toggleScreeningSubRemark(idx) {
   if(toggle) toggle.classList.toggle('expanded', show);
 }
 
+// 表格可视高度固定为 340px，超过才出现滚动条（保持固定值，避免动态测量误差）
+function fitTableScrollToRows(contentArea, rows) {
+  if(!contentArea) return;
+  const tables = contentArea.querySelectorAll('.table-scroll-wrapper');
+  tables.forEach(function (wrapper) {
+    wrapper.style.maxHeight = '340px';
+  });
+}
+
+function fitAllProjectTables() {
+  const wrappers = document.querySelectorAll('.table-scroll-wrapper');
+  wrappers.forEach(function (wrapper) {
+    wrapper.style.maxHeight = '340px';
+  });
+}
+
 function refreshScreeningSection() {
   const contentArea = document.getElementById('screeningContentArea');
-  if(contentArea) contentArea.innerHTML = renderScreeningContent();
+  if(contentArea) { contentArea.innerHTML = renderScreeningContent(); fitTableScrollToRows(contentArea, 10); }
 }
 
 function updateScreeningContent(idx, value) {

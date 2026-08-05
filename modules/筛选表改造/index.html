@@ -3285,9 +3285,10 @@
     .proj-inform-title { font-size: 13px; font-weight: 600; color: #333; }
     .proj-inform-hint { font-size: 12px; color: #999; }
     /* 项目管理：入排标准按阶段拆分 */
-    .proj-criteria-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .proj-criteria-table th { background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
-    .proj-criteria-table td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+    .table-scroll-wrapper { max-height: 340px; overflow: auto; border: 1px solid #e8e8e8; border-radius: 8px; }
+    .proj-criteria-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+    .proj-criteria-table thead th { position: sticky; top: 0; z-index: 2; background: #fafbfc; padding: 10px 8px; text-align: left; border-bottom: 1px solid #e8e8e8; font-size: 12px; color: #666; font-weight: 600; white-space: nowrap; }
+    .proj-criteria-table tbody td { padding: 10px 8px; border-bottom: 1px solid #f5f5f5; vertical-align: top; background: #fff; }
     .proj-criteria-table tr:hover td { background: #fafbff; }
     .proj-criteria-table .num-cell { width: 36px; color: #999; padding-top: 18px; }
     .proj-criteria-table .content-cell { min-width: 280px; }
@@ -3296,6 +3297,7 @@
     .criteria-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
     .criteria-textarea::placeholder { color: #bbb; }
     .proj-criteria-table .action-cell { width: 92px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .proj-criteria-table thead th.action-cell { display: table-cell; padding-top: 10px; text-align: left; vertical-align: middle; }
     .thinking-chain-row td { background: #fffdf7 !important; padding: 0; }
     .thinking-chain-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px 6px; }
     .thinking-chain-title { font-size: 12px; color: #d48806; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -3304,9 +3306,17 @@
     .proj-criteria-table .thinking-chain-textarea:focus { border-color: #faad14; box-shadow: 0 0 0 2px rgba(250,173,20,0.12); }
     .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
     .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
-    .proj-criteria-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .proj-criteria-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
     .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
     .criteria-add-btn:hover { background: #0958d9; }
+    .criteria-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .criteria-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1; padding: 8px 14px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s ease; white-space: nowrap; }
+    .criteria-btn:active { transform: translateY(1px); }
+    .criteria-btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; box-shadow: 0 2px 6px rgba(22,119,255,0.25); }
+    .criteria-btn-primary:hover { background: #4096ff; border-color: #4096ff; box-shadow: 0 4px 10px rgba(22,119,255,0.32); }
+    .criteria-btn-ghost { background: #fff; color: #555; border-color: #d9d9d9; }
+    .criteria-btn-ghost:hover { color: #1677ff; border-color: #1677ff; background: #f0f6ff; }
+    .criteria-btn i { font-size: 12px; }
     .proj-criteria-table .stage-enable-th { width: 100px; text-align: center; }
     .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
     .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
@@ -7355,7 +7365,7 @@ function switchModule(mod, sub) {
       else sidebar.classList.remove('collapsed');
       sidebar.innerHTML = buildAdminSidebar(currentSub);
       panel.innerHTML = buildAdminContent(currentSub);
-      if(currentSub === 'project-new' || currentSub === 'project-edit') { initProjectNavSpy(); applyStageGateCollapse(); }
+      if(currentSub === 'project-new' || currentSub === 'project-edit') { initProjectNavSpy(); applyStageGateCollapse(); fitAllProjectTables(); }
     } else if(mod === 'project-center') {
       currentSub = sub || 'center-list';
       sidebar.classList.remove('hidden');
@@ -15500,17 +15510,19 @@ function renderCriteriaVersionContent(ver) {
         <div class="proj-criteria-toolbar">
           <button type="button" class="criteria-add-btn" onclick="addProjectCriteriaRow('${ver}','${type}', ${items.length - 1})"><i class="fa-solid fa-plus"></i> 新增${type === 'inclusion' ? '入选' : '排除'}标准</button>
         </div>
-        <table class="proj-criteria-table">
-          <thead>
-            <tr>
-              <th class="num-cell">序号</th>
-              <th class="content-th">${type === 'inclusion' ? '入选标准内容' : '排除标准内容'}</th>
-              ${stageThs}
-              <th class="action-cell">操作</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        <div class="table-scroll-wrapper">
+          <table class="proj-criteria-table">
+            <thead>
+              <tr>
+                <th class="num-cell">序号</th>
+                <th class="content-th">${type === 'inclusion' ? '入选标准内容' : '排除标准内容'}</th>
+                ${stageThs}
+                <th class="action-cell">操作</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
       </div>
     `;
   };
@@ -15892,6 +15904,7 @@ function refreshCriteriaSection() {
   }
   if(contentArea) {
     contentArea.innerHTML = renderCriteriaVersionContent(activeCriteriaVersion);
+    fitTableScrollToRows(contentArea, 10);
   }
 }
 
@@ -16188,27 +16201,31 @@ function renderScreeningContent() {
         <span class="group-title-left"><i class="fa-solid fa-magnifying-glass"></i> 筛选表（${items.length}条）</span>
       </div>
       <div class="proj-criteria-toolbar">
-        <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="importScreeningData()"><i class="fa-solid fa-upload"></i>导入</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="downloadScreeningTemplate()"><i class="fa-solid fa-download"></i>下载模板</button>
+        <button type="button" class="criteria-btn criteria-btn-primary" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
-      <table class="proj-criteria-table">
-        <thead>
-          <tr>
-            <th class="num-cell">序号</th>
-            <th class="content-th">提取项</th>
-            <th class="type-col-th">类型</th>
-            <th class="required-col-th">
-              <div class="required-col-name">必填</div>
-              <label class="stage-select-all">
-                <input type="checkbox" title="勾选/取消全部必填" onchange="toggleScreeningRequiredAll(this.checked)"/>
-                <span>全选</span>
-              </label>
-            </th>
-            ${stageThs}
-            <th class="action-cell">操作</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="table-scroll-wrapper">
+        <table class="proj-criteria-table">
+          <thead>
+            <tr>
+              <th class="num-cell">序号</th>
+              <th class="content-th">提取项</th>
+              <th class="type-col-th">类型</th>
+              <th class="required-col-th">
+                <div class="required-col-name">必填</div>
+                <label class="stage-select-all">
+                  <input type="checkbox" title="勾选/取消全部必填" onchange="toggleScreeningRequiredAll(this.checked)"/>
+                  <span>全选</span>
+                </label>
+              </th>
+              ${stageThs}
+              <th class="action-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -16222,9 +16239,25 @@ function toggleScreeningSubRemark(idx) {
   if(toggle) toggle.classList.toggle('expanded', show);
 }
 
+// 表格可视高度固定为 340px，超过才出现滚动条（保持固定值，避免动态测量误差）
+function fitTableScrollToRows(contentArea, rows) {
+  if(!contentArea) return;
+  const tables = contentArea.querySelectorAll('.table-scroll-wrapper');
+  tables.forEach(function (wrapper) {
+    wrapper.style.maxHeight = '340px';
+  });
+}
+
+function fitAllProjectTables() {
+  const wrappers = document.querySelectorAll('.table-scroll-wrapper');
+  wrappers.forEach(function (wrapper) {
+    wrapper.style.maxHeight = '340px';
+  });
+}
+
 function refreshScreeningSection() {
   const contentArea = document.getElementById('screeningContentArea');
-  if(contentArea) contentArea.innerHTML = renderScreeningContent();
+  if(contentArea) { contentArea.innerHTML = renderScreeningContent(); fitTableScrollToRows(contentArea, 10); }
 }
 
 function updateScreeningContent(idx, value) {
@@ -16254,6 +16287,12 @@ function toggleScreeningStageAll(stageId, checked) {
   if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
   refreshScreeningSection();
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
+}
+function importScreeningData() {
+  showWechatToast('请选择 Excel / CSV 文件导入筛选表（原型演示）');
+}
+function downloadScreeningTemplate() {
+  showWechatToast('正在下载筛选表导入模板（原型演示）');
 }
 function addScreeningRow(idx) {
   const items = _projectScreeningData.items;
@@ -16343,7 +16382,7 @@ function renderExtractContent() {
     const remarkCount = remarkStageList.length;
     const remarkSubTable = remarkCount ? `
       <tr class="sub-remark-row">
-        <td colspan="${5 + _projectSelectedStages.length}">
+        <td colspan="${4 + _projectSelectedStages.length}">
           <div class="sub-remark-inner">
             <div class="sub-remark-title" onclick="toggleExtractSubRemark(${idx})">
               <i class="fa-regular fa-note-sticky"></i> 按阶段备注（${remarkCount}）
@@ -16381,11 +16420,6 @@ function renderExtractContent() {
             ${EXTRACT_TYPE_OPTIONS.map(opt => `<option value="${opt}" ${item.type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
           </select>
         </td>
-        <td class="required-col-td">
-          <label class="required-col-label" title="该提取项目是否为必填项">
-            <input type="checkbox" class="required-col-check" ${item.required ? 'checked' : ''} onchange="updateExtractRequired(${idx}, this.checked)"/>
-          </label>
-        </td>
         ${stageTds}
         <td class="action-cell">
           <span class="config-action" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
@@ -16402,27 +16436,24 @@ function renderExtractContent() {
         <span class="group-title-left"><i class="fa-solid fa-key"></i> 提取要点（${items.length}条）</span>
       </div>
       <div class="proj-criteria-toolbar">
-        <button type="button" class="criteria-add-btn" onclick="addExtractRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="importExtractData()"><i class="fa-solid fa-upload"></i>导入</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="downloadExtractTemplate()"><i class="fa-solid fa-download"></i>下载模板</button>
+        <button type="button" class="criteria-btn criteria-btn-primary" onclick="addExtractRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
-      <table class="proj-criteria-table">
-        <thead>
-          <tr>
-            <th class="num-cell">序号</th>
-            <th class="content-th">项目</th>
-            <th class="type-col-th">类型</th>
-            <th class="required-col-th">
-              <div class="required-col-name">必填</div>
-              <label class="stage-select-all">
-                <input type="checkbox" title="勾选/取消全部必填" onchange="toggleExtractRequiredAll(this.checked)"/>
-                <span>全选</span>
-              </label>
-            </th>
-            ${stageThs}
-            <th class="action-cell">操作</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
+      <div class="table-scroll-wrapper">
+        <table class="proj-criteria-table">
+          <thead>
+            <tr>
+              <th class="num-cell">序号</th>
+              <th class="content-th">项目</th>
+              <th class="type-col-th">类型</th>
+              ${stageThs}
+              <th class="action-cell">操作</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -16438,7 +16469,7 @@ function toggleExtractSubRemark(idx) {
 
 function refreshExtractSection() {
   const contentArea = document.getElementById('extractContentArea');
-  if(contentArea) contentArea.innerHTML = renderExtractContent();
+  if(contentArea) { contentArea.innerHTML = renderExtractContent(); fitTableScrollToRows(contentArea, 10); }
 }
 
 function updateExtractItem(idx, value) {
@@ -16468,6 +16499,12 @@ function toggleExtractStageAll(stageId, checked) {
   if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
   refreshExtractSection();
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
+}
+function importExtractData() {
+  showWechatToast('请选择 Excel / CSV 文件导入提取要点（原型演示）');
+}
+function downloadExtractTemplate() {
+  showWechatToast('正在下载提取要点导入模板（原型演示）');
 }
 function addExtractRow(idx) {
   const items = _projectExtractData.items;
