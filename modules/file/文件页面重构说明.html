@@ -1081,9 +1081,9 @@
                     <th class="py-3 text-center font-semibold text-gray-600 w-44">操作</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="trashTableBody">
                   <!-- 删除文件夹 1 - 即将过期（红色警告） -->
-                  <tr class="file-row bg-red-50/40">
+                  <tr class="file-row bg-red-50/40" data-folder="旧版原始资料备份" data-exists="true">
                     <td class="pl-5 pr-2 py-3">
                       <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
                     </td>
@@ -1118,7 +1118,7 @@
                   </tr>
 
                   <!-- 删除文件夹 2 - 即将过期（橙色警告） -->
-                  <tr class="file-row">
+                  <tr class="file-row" data-folder="早期导入期资料" data-exists="false" data-path="入组阶段 / 导入期资料">
                     <td class="pl-5 pr-2 py-3">
                       <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
                     </td>
@@ -1153,7 +1153,7 @@
                   </tr>
 
                   <!-- 删除文件夹 3 - 正常状态（绿色） -->
-                  <tr class="file-row">
+                  <tr class="file-row" data-folder="基因检测存档-2025" data-exists="true">
                     <td class="pl-5 pr-2 py-3">
                       <div class="custom-checkbox" onclick="this.classList.toggle('checked')"></div>
                     </td>
@@ -1265,7 +1265,7 @@
                   <button class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-md text-gray-500 hover:border-gray-300 hover:text-gray-600 text-sm btn-click"><i class="fas fa-chevron-right"></i></button>
                 </div>
                 <div class="flex items-center gap-3">
-                  <button class="text-xs text-[#165DFF] hover:text-blue-700 font-medium btn-click" onclick="alert('批量恢复选中文件')"><i class="fas fa-undo-alt mr-1"></i>批量恢复</button>
+                  <button class="text-xs text-[#165DFF] hover:text-blue-700 font-medium btn-click" onclick="batchRecover()"><i class="fas fa-undo-alt mr-1"></i>批量恢复</button>
                   <button class="text-xs text-red-500 hover:text-red-700 font-medium btn-click" onclick="alert('永久删除选中文件')"><i class="fas fa-times-circle mr-1"></i>批量彻底删除</button>
                 </div>
               </div>
@@ -1834,6 +1834,40 @@
     </div>
   </div>
 
+  <!-- ========== 模态框：批量恢复 - 文件夹已不存在 ========== -->
+  <div id="batchRecoverNotExistModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-2">
+        <i class="fas fa-exclamation-circle text-red-500"></i>
+        <h3 class="text-lg font-semibold text-gray-800">部分文件夹已不存在</h3>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-gray-600 mb-3">以下文件夹已不存在，不支持批量恢复：</p>
+        <div id="batchRecoverNotExistList" class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600 font-medium leading-relaxed"></div>
+        <p class="text-sm text-gray-500 mt-3">如需恢复，请单独执行恢复操作。</p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('batchRecoverNotExistModal')" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 btn-click">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：批量恢复 - 信息提示 ========== -->
+  <div id="batchRecoverInfoModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="p-6 text-center">
+        <div id="batchRecoverInfoIcon" class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fas fa-undo-alt text-[#165DFF] text-2xl"></i>
+        </div>
+        <h3 id="batchRecoverInfoTitle" class="text-lg font-semibold text-gray-800 mb-2">操作提示</h3>
+        <p id="batchRecoverInfoText" class="text-sm text-gray-500"></p>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModal('batchRecoverInfoModal')" class="px-4 py-2 text-sm text-gray-600 bg-white border border-gray-300 hover:text-gray-800 btn-click rounded-lg">我知道了</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== 模态框：清空回收站 ========== -->
   <div id="emptyTrashModal" class="modal-overlay modal-hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
     <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
@@ -2354,6 +2388,41 @@
       if (confirm(`确定要永久删除文件夹「${folderName}」吗？\n\n此操作不可撤销！`)) {
         alert(`文件夹「${folderName}」已被永久删除。`);
       }
+    }
+
+    // ========== 批量恢复 ==========
+    function batchRecover() {
+      const rows = document.querySelectorAll('#trashTableBody .file-row');
+      const selected = [];
+      rows.forEach(row => {
+        const cb = row.querySelector('.custom-checkbox');
+        if (cb && cb.classList.contains('checked')) {
+          const name = row.getAttribute('data-folder') || '';
+          const exists = row.getAttribute('data-exists') !== 'false';
+          const path = row.getAttribute('data-path') || (name ? '' : '');
+          selected.push({ name, exists, path });
+        }
+      });
+      if (selected.length === 0) {
+        document.getElementById('batchRecoverInfoTitle').textContent = '请选择文件夹';
+        document.getElementById('batchRecoverInfoText').textContent = '请先勾选要恢复的文件夹。';
+        document.getElementById('batchRecoverInfoIcon').className = 'w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4';
+        document.getElementById('batchRecoverInfoIcon').innerHTML = '<i class="fas fa-undo-alt text-[#165DFF] text-2xl"></i>';
+        openModal('batchRecoverInfoModal');
+        return;
+      }
+      const notExist = selected.filter(f => !f.exists);
+      if (notExist.length > 0) {
+        const list = notExist.map(f => '【' + (f.path || f.name) + '】').join('、');
+        document.getElementById('batchRecoverNotExistList').textContent = list;
+        openModal('batchRecoverNotExistModal');
+        return;
+      }
+      document.getElementById('batchRecoverInfoTitle').textContent = '恢复成功';
+      document.getElementById('batchRecoverInfoText').textContent = `已成功批量恢复 ${selected.length} 个文件夹。`;
+      document.getElementById('batchRecoverInfoIcon').className = 'w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4';
+      document.getElementById('batchRecoverInfoIcon').innerHTML = '<i class="fas fa-check text-green-500 text-2xl"></i>';
+      openModal('batchRecoverInfoModal');
     }
 
     // ========== 永久删除 ==========
