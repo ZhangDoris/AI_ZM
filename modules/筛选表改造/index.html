@@ -1733,6 +1733,11 @@
       color: #fa8c16;
       border: 1px solid #ffd591;
     }
+    .edit-tag-purple {
+      background: #f9f0ff;
+      color: #722ed1;
+      border: 1px solid #d3adf7;
+    }
 
     /* 思考链配置（参考 chain_of_thought 模块） */
     .tc-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e8e8e8; }
@@ -8888,10 +8893,7 @@ function buildMatchDetailContent(p) {
     <div id="mdTabPrescreen" style="display:none">
       <div class="md-card">
         <div class="md-project-info" style="margin-bottom:16px;align-items:center">
-          <div>
-            <div class="md-version-label" style="margin-bottom:0">历史版本：</div>
-          </div>
-          <div class="md-version-tags" id="mdPrescreenVersionTags" style="flex:1;margin-left:8px"></div>
+        
           <div style="display:flex;gap:8px;margin-left:auto">
             <span style="padding:4px 12px;background:#f6ffed;color:#52c41a;border-radius:4px;font-size:12px">提取成功</span>
             <button class="btn-sm btn-primary">智能提取</button>
@@ -14573,6 +14575,18 @@ const _defaultProjectScreeningData = {
 const SCREENING_TYPE_OPTIONS = ['单行文本','多行文本','日期','时间','日期+时间','表格','时间轴'];
 let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
 
+// 提取要点数据：独立于筛选表，列表首列为「项目」、次列为「类型」，类型仅支持 文本/表格/时间轴
+const EXTRACT_TYPE_OPTIONS = ['文本','表格','时间轴'];
+const _defaultProjectExtractData = {
+  items: [
+    { id:'E01', item:'患者基本身份信息', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:true, stageRemarks:{}, thinkingChain:[] },
+    { id:'E02', item:'关键入排指标提取', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:true, stageRemarks:{}, thinkingChain:[] },
+    { id:'E03', item:'既往治疗史要点', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'E04', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] }
+  ]
+};
+let _projectExtractData = JSON.parse(JSON.stringify(_defaultProjectExtractData));
+
 // 试验方案上传文件列表（项目管理新增/编辑页）
 let uploadedFiles = [];
 
@@ -14593,6 +14607,8 @@ function buildAdminProjectEdit(isNew) {
     _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData));
     _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
     ensureProjectScreeningStageConfigForAllStages();
+    _projectExtractData = JSON.parse(JSON.stringify(_defaultProjectExtractData));
+    ensureProjectExtractStageConfigForAllStages();
     initProjThinkChains();
     activeCriteriaVersion = 'v2.0';
     const enabledTemplates = _flowTemplateData.filter(t => t.status === 'enabled');
@@ -14601,7 +14617,11 @@ function buildAdminProjectEdit(isNew) {
       (tpl.flows || []).forEach(f => { f.isActive = false; });
       return tpl;
     });
+  } else {
+    // 编辑模式：同步重置提取要点默认数据，避免沿用上次会话残留
+    _projectExtractData = JSON.parse(JSON.stringify(_defaultProjectExtractData));
   }
+  ensureProjectExtractStageConfigForAllStages();
   
   return `
     <div class="edit-project-page">
@@ -14615,6 +14635,7 @@ function buildAdminProjectEdit(isNew) {
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-stage" onclick="scrollToProjectSection('sec-stage', this)"><i class="fa-solid fa-puzzle-piece"></i> 阶段设置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-criteria" onclick="scrollToProjectSection('sec-criteria', this)"><i class="fa-solid fa-scale-balanced"></i> 项目入排标准</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-screening" onclick="scrollToProjectSection('sec-screening', this)"><i class="fa-solid fa-magnifying-glass"></i> 筛选表配置</a>
+          <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-extract" onclick="scrollToProjectSection('sec-extract', this)"><i class="fa-solid fa-key"></i> 提取要点配置</a>
 
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-approval" onclick="scrollToProjectSection('sec-approval', this)"><i class="fa-solid fa-circle-check"></i> 审批模板配置</a>
           <a class="edit-nav-item" href="javascript:void(0)" data-target="sec-thinkchain" onclick="scrollToProjectSection('sec-thinkchain', this)"><i class="fa-solid fa-brain"></i> 思考链配置</a>
@@ -14787,7 +14808,18 @@ function buildAdminProjectEdit(isNew) {
           ${renderProjectScreeningBody()}
         </div>
       </div>
-
+      <!-- 提取要点配置（独立于筛选表的数据表格，列表首列为「项目」、次列为「类型」） -->
+      <div class="edit-section-card" id="sec-extract">
+        <div class="edit-section-header" onclick="toggleEditSection(this)">
+          <div class="edit-section-title">
+            <span class="section-icon">🔑</span> 提取要点配置
+          </div>
+          <span class="edit-section-arrow" id="extractArrow">▼</span>
+        </div>
+        <div class="edit-section-body" id="extractBody">
+          ${renderProjectExtractBody()}
+        </div>
+      </div>
 
       <!-- 审批模板配置 -->
       <div class="edit-section-card" id="sec-approval">
@@ -14995,6 +15027,7 @@ function buildAdminProjectEdit(isNew) {
                 <div class="tc-edit-type-tabs" id="projTcTypeTabs">
                   <div class="tc-edit-type-tab active" data-type="inclusion" onclick="setProjTcType('inclusion')">入排标准</div>
                   <div class="tc-edit-type-tab" data-type="screening" onclick="setProjTcType('screening')">筛选表</div>
+                  <div class="tc-edit-type-tab" data-type="screening" onclick="setProjTcType('screening')">提取要点</div>
                 </div>
               </div>
               <div class="tc-field" id="projTcVersionField" style="display:none">
@@ -15515,6 +15548,7 @@ function toggleProjectStage(stageId) {
       });
       ensureProjectCriteriaStageConfig(stageId);
       ensureProjectScreeningStageConfig(stageId);
+      ensureProjectExtractStageConfig(stageId);
     }
   }
   // 按已选阶段的显式顺序排序
@@ -15523,6 +15557,7 @@ function toggleProjectStage(stageId) {
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
+  refreshExtractSection();
   applyStageGateCollapse();
   showWechatToast(idx >= 0 ? '已取消选择该阶段' : '阶段已添加，可在入排标准 / 筛选表中配置');
 }
@@ -15548,6 +15583,7 @@ function moveProjectStage(dir, stageId) {
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
+  refreshExtractSection();
   showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
@@ -15612,6 +15648,7 @@ function confirmAddProjectStage() {
   refreshProjectStageSettings();
   refreshCriteriaSection();
   refreshScreeningSection();
+  refreshExtractSection();
   applyStageGateCollapse();
   showWechatToast('已新增「' + name + '」，可在上方勾选启用');
 }
@@ -16236,6 +16273,282 @@ function deleteScreeningRow(idx) {
   showWechatToast('已删除该条筛选内容');
 }
 
+/* ========================================================================
+   提取要点配置（独立于筛选表，列表首列「项目」、次列「类型」）
+   - 结构与筛选表一致：启用/停用各阶段、按阶段备注、操作列配置思考链
+   ======================================================================== */
+function ensureProjectExtractStageConfig(stageId) {
+  (_projectExtractData.items || []).forEach(item => {
+    if(item.stageEnabled[stageId] == null) item.stageEnabled[stageId] = true;
+  });
+}
+function ensureProjectExtractStageConfigForAllStages() {
+  _projectSelectedStages.forEach(s => ensureProjectExtractStageConfig(s.id));
+}
+
+function renderProjectExtractBody() {
+  return `
+    <div class="criteria-content-area" id="extractContentArea">
+      ${renderExtractContent()}
+    </div>
+    <!-- 提取要点 · 按阶段备注弹窗 -->
+    <div class="modal-overlay" id="extractRemarkModal" style="display:none">
+      <div class="modal-panel" style="width:560px;max-height:88vh">
+        <div class="modal-header"><h3 id="extractRemarkTitle">配置备注</h3><button class="modal-close" onclick="closeExtractRemarkModal()">✕</button></div>
+        <div class="modal-body" style="padding:16px 20px">
+          <div class="criteria-stage-modal-tip"><i class="fa-solid fa-circle-info"></i> 备注按「阶段」分别配置，每个阶段可填写不同的说明，保存后仅对对应阶段生效。</div>
+          <div id="extractRemarkStages" class="stage-remark-list"></div>
+        </div>
+        <div class="modal-footer" style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fafbfc">
+          <button class="btn" style="color:#ff4d4f;border-color:#ffd6d6;background:#fff0f0" onclick="deleteExtractRemark()"><i class="fa-regular fa-trash-can"></i> 清空全部</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-default" onclick="closeExtractRemarkModal()">取消</button>
+            <button class="btn btn-primary" onclick="saveExtractRemark()">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderExtractContent() {
+  if(!_projectSelectedStages.length) {
+    return '<div class="proj-criteria-no-stage">请先完成上方「阶段设置」，选择至少一个阶段后再配置提取要点。</div>';
+  }
+  const items = _projectExtractData.items || [];
+  const stageThs = _projectSelectedStages.map(s => `
+    <th class="stage-enable-th">
+      <div class="stage-th-name">${s.name}</div>
+      <label class="stage-select-all">
+        <input type="checkbox" title="勾选/取消「${s.name}」全部" onchange="toggleExtractStageAll('${s.id}',this.checked)"/>
+        <span>全选</span>
+      </label>
+    </th>
+  `).join('');
+  const rows = items.map((item, idx) => {
+    const stageTds = _projectSelectedStages.map(s => {
+      const enabled = item.stageEnabled[s.id] != null ? item.stageEnabled[s.id] : true;
+      return `
+        <td class="stage-enable-td">
+          <div class="stage-enable-cell">
+            <label class="stage-enabled-label" title="该阶段是否启用此项">
+              <input type="checkbox" class="stage-enabled-check" ${enabled ? 'checked' : ''} onchange="updateExtractStageEnabled(${idx}, '${s.id}', this.checked)"/>
+              <span>启用</span>
+            </label>
+          </div>
+        </td>
+      `;
+    }).join('');
+    const remarkStageList = _projectSelectedStages.filter(s => (item.stageRemarks && (item.stageRemarks[s.id] || '').trim()));
+    const remarkCount = remarkStageList.length;
+    const remarkSubTable = remarkCount ? `
+      <tr class="sub-remark-row">
+        <td colspan="${5 + _projectSelectedStages.length}">
+          <div class="sub-remark-inner">
+            <div class="sub-remark-title" onclick="toggleExtractSubRemark(${idx})">
+              <i class="fa-regular fa-note-sticky"></i> 按阶段备注（${remarkCount}）
+              <i class="fa-solid fa-chevron-right sub-remark-toggle" id="extractSubRemarkToggle-${idx}"></i>
+            </div>
+            <div class="sub-remark-body-wrap" id="extractSubRemarkBody-${idx}" style="display:none">
+              <table class="sub-remark-table">
+                <thead><tr><th style="width:150px">阶段</th><th>备注内容</th><th style="width:130px">操作</th></tr></thead>
+                <tbody>
+                  ${remarkStageList.map(s => `
+                    <tr>
+                      <td class="sub-remark-stage"><i class="fa-solid fa-layer-group"></i> ${s.name}</td>
+                      <td class="sub-remark-content">${(item.stageRemarks[s.id] || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
+                      <td class="sub-remark-ops-cell">
+                        <span class="sub-remark-edit" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-pen-to-square"></i> 修改</span>
+                        <span class="sub-remark-del" onclick="deleteExtractStageRemark(${idx},'${s.id}')"><i class="fa-regular fa-trash-can"></i> 删除</span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </td>
+      </tr>
+    ` : '';
+    return `
+      <tr>
+        <td class="num-cell">${idx + 1}</td>
+        <td class="content-cell">
+          <textarea class="criteria-textarea" rows="3" placeholder="请输入提取项目" onchange="updateExtractItem(${idx}, this.value)">${item.item}</textarea>
+        </td>
+        <td class="type-col-td">
+          <select class="screening-type-select" onchange="updateExtractType(${idx}, this.value)">
+            ${EXTRACT_TYPE_OPTIONS.map(opt => `<option value="${opt}" ${item.type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+          </select>
+        </td>
+        <td class="required-col-td">
+          <label class="required-col-label" title="该提取项目是否为必填项">
+            <input type="checkbox" class="required-col-check" ${item.required ? 'checked' : ''} onchange="updateExtractRequired(${idx}, this.checked)"/>
+          </label>
+        </td>
+        ${stageTds}
+        <td class="action-cell">
+          <span class="config-action" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
+          <span class="config-action" onclick="openRowThinkChain('extract','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('extract','${item.id}')}</span>
+          ${items.length > 1 ? `<span class="delete-action" onclick="deleteExtractRow(${idx})">删除</span>` : ''}
+        </td>
+      </tr>
+      ${remarkSubTable}
+    `;
+  }).join('');
+  return `
+    <div class="proj-criteria-group">
+      <div class="proj-criteria-group-title screening">
+        <span class="group-title-left"><i class="fa-solid fa-key"></i> 提取要点（${items.length}条）</span>
+      </div>
+      <div class="proj-criteria-toolbar">
+        <button type="button" class="criteria-add-btn" onclick="addExtractRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
+      </div>
+      <table class="proj-criteria-table">
+        <thead>
+          <tr>
+            <th class="num-cell">序号</th>
+            <th class="content-th">项目</th>
+            <th class="type-col-th">类型</th>
+            <th class="required-col-th">
+              <div class="required-col-name">必填</div>
+              <label class="stage-select-all">
+                <input type="checkbox" title="勾选/取消全部必填" onchange="toggleExtractRequiredAll(this.checked)"/>
+                <span>全选</span>
+              </label>
+            </th>
+            ${stageThs}
+            <th class="action-cell">操作</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function toggleExtractSubRemark(idx) {
+  const body = document.getElementById('extractSubRemarkBody-' + idx);
+  const toggle = document.getElementById('extractSubRemarkToggle-' + idx);
+  if(!body) return;
+  const show = body.style.display === 'none' || body.style.display === '';
+  body.style.display = show ? 'block' : 'none';
+  if(toggle) toggle.classList.toggle('expanded', show);
+}
+
+function refreshExtractSection() {
+  const contentArea = document.getElementById('extractContentArea');
+  if(contentArea) contentArea.innerHTML = renderExtractContent();
+}
+
+function updateExtractItem(idx, value) {
+  const items = _projectExtractData.items;
+  if(items && items[idx]) items[idx].item = value;
+}
+function updateExtractType(idx, type) {
+  const items = _projectExtractData.items;
+  if(items && items[idx]) items[idx].type = type;
+}
+function updateExtractStageEnabled(idx, stageId, enabled) {
+  const items = _projectExtractData.items;
+  if(items && items[idx]) items[idx].stageEnabled[stageId] = enabled;
+}
+function updateExtractRequired(idx, required) {
+  const items = _projectExtractData.items;
+  if(items && items[idx]) items[idx].required = required;
+}
+function toggleExtractRequiredAll(checked) {
+  const items = _projectExtractData.items;
+  if(items) items.forEach(item => { item.required = checked; });
+  refreshExtractSection();
+  showWechatToast(checked ? '已全选必填' : '已取消全选必填');
+}
+function toggleExtractStageAll(stageId, checked) {
+  const items = _projectExtractData.items;
+  if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
+  refreshExtractSection();
+  showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
+}
+function addExtractRow(idx) {
+  const items = _projectExtractData.items;
+  if(!items) return;
+  const newId = 'E' + String(items.length + 1).padStart(2, '0');
+  const stageEnabled = {};
+  _projectSelectedStages.forEach(s => { stageEnabled[s.id] = true; });
+  items.splice(idx + 1, 0, { id:newId, item:'', type:'文本', thinkingChain:[], stageEnabled:stageEnabled, required:false, stageRemarks:{} });
+  refreshExtractSection();
+  showWechatToast('已新增一条提取要点');
+}
+function deleteExtractRow(idx) {
+  const items = _projectExtractData.items;
+  if(!items || items.length <= 1) return;
+  items.splice(idx, 1);
+  refreshExtractSection();
+  showWechatToast('已删除该条提取要点');
+}
+
+/* 提取要点 · 按阶段备注 */
+let _extractRemarkTarget = null; // idx
+function openExtractRemarkModal(idx) {
+  const items = _projectExtractData.items;
+  const item = items && items[idx];
+  if(!item) return;
+  _extractRemarkTarget = idx;
+  if(!item.stageRemarks) item.stageRemarks = {};
+  const titleEl = document.getElementById('extractRemarkTitle');
+  if(titleEl) titleEl.textContent = '配置备注 · 提取要点 第' + (idx + 1) + '条（按阶段）';
+  const wrap = document.getElementById('extractRemarkStages');
+  if(wrap) {
+    wrap.innerHTML = _projectSelectedStages.map(s => `
+      <div class="stage-remark-block">
+        <div class="stage-remark-head"><i class="fa-solid fa-layer-group"></i> ${s.name}</div>
+        <textarea class="criteria-textarea" rows="2" data-stage="${s.id}" placeholder="请输入「${s.name}」的备注说明……">${escapeStageRemark(item.stageRemarks[s.id])}</textarea>
+      </div>
+    `).join('');
+  }
+  const modal = document.getElementById('extractRemarkModal');
+  if(modal) { modal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+}
+function closeExtractRemarkModal() {
+  const modal = document.getElementById('extractRemarkModal');
+  if(modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+  _extractRemarkTarget = null;
+}
+function saveExtractRemark() {
+  if(_extractRemarkTarget == null) return;
+  const items = _projectExtractData.items;
+  const item = items && items[_extractRemarkTarget];
+  if(!item) return;
+  if(!item.stageRemarks) item.stageRemarks = {};
+  const wrap = document.getElementById('extractRemarkStages');
+  if(wrap) {
+    wrap.querySelectorAll('textarea[data-stage]').forEach(ta => {
+      item.stageRemarks[ta.getAttribute('data-stage')] = ta.value;
+    });
+  }
+  closeExtractRemarkModal();
+  refreshExtractSection();
+  showWechatToast('备注已保存');
+}
+function deleteExtractRemark() {
+  if(_extractRemarkTarget == null) return;
+  const items = _projectExtractData.items;
+  const item = items && items[_extractRemarkTarget];
+  if(item) item.stageRemarks = {};
+  closeExtractRemarkModal();
+  refreshExtractSection();
+  showWechatToast('已清空全部备注');
+}
+function deleteExtractStageRemark(idx, stageId) {
+  const items = _projectExtractData.items;
+  const item = items && items[idx];
+  if(item && item.stageRemarks) {
+    delete item.stageRemarks[stageId];
+    refreshExtractSection();
+    showWechatToast('已删除该阶段备注');
+  }
+}
+
 /* 筛选表 · 各阶段共用备注 */
 let _screeningRemarkTarget = null; // idx
 function openScreeningRemarkModal(idx) {
@@ -16364,7 +16677,7 @@ function initProjectNavSpy() {
 
 // 编辑项目交互函数
 // 依赖「项目审批阶段」的下游区块：未选择阶段时收起并禁止展开
-const _stageGateSections = ['sec-criteria','sec-screening','sec-approval','sec-thinkchain','sec-qa','sec-knowledge'];
+const _stageGateSections = ['sec-criteria','sec-screening','sec-extract','sec-approval','sec-thinkchain','sec-qa','sec-knowledge'];
 function isStageGateSection(id) {
   return _stageGateSections.indexOf(id) >= 0;
 }
@@ -16526,10 +16839,10 @@ function nowStr() {
   return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
 function getProjTcTypeName(type) {
-  return type === 'inclusion' ? '入排标准' : type === 'screening' ? '筛选表' : '自定义';
+  return type === 'inclusion' ? '入排标准' : type === 'screening' ? '筛选表' : type === 'extract' ? '提取要点' : '自定义';
 }
 function getProjTcTypeTag(type) {
-  const cls = type === 'inclusion' ? 'edit-tag-blue' : type === 'screening' ? 'edit-tag-green' : 'edit-tag-orange';
+  const cls = type === 'inclusion' ? 'edit-tag-blue' : type === 'screening' ? 'edit-tag-green' : type === 'extract' ? 'edit-tag-purple' : 'edit-tag-orange';
   return '<span class="edit-tag ' + cls + '">' + getProjTcTypeName(type) + '</span>';
 }
 function renderProjThinkChainTable() {

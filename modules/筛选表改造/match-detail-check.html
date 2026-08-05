@@ -1500,8 +1500,7 @@
     <div class="tab-nav-inner">
       <div class="tab-item active" onclick="switchTab('match')">匹配详情</div>
       <div class="tab-item" onclick="switchTab('prescreen')">筛选表</div>
-       <div class="tab-item" onclick="switchNewTab('thingk')">病史与资料</div>
-      <div class="tab-item" onclick="switchTab('prescreen')">思考链</div>
+      <div class="tab-item" onclick="switchTab('extract')">提取要点</div>
       <button class="btn-sm btn-version btn-primary version-switch-right" id="versionSwitchBtnOld" onclick="togglePageVersion()"><i class="fas fa-exchange-alt"></i> 新版本 <span class="new-badge">NEW</span></button>
 
     </div>
@@ -1662,17 +1661,49 @@
             <button class="btn-sm btn-primary">下载</button>
           </div>
         </div>
+        <div class="table-container" style="margin-top: 12px;">
+          <table class="detail-table">
+            <thead>
+              <tr>
+                <th style="width: 60px">序号</th>
+                <th style="width: 150px">项目</th>
+                <th>AI提取</th>
+                <th style="width: 220px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="prescreenTable">
+              <!-- 动态生成 -->
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: #fff7e6; border-radius: 4px; display: flex; align-items: center; gap: 8px; color: #fa8c16; font-size: 13px;">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: 提取要点（Word式文档视图，由原筛选表改造内容迁移而来） -->
+    <div id="tab-extract" class="tab-content" style="display:none;">
+      <div class="card" id="extractCard">
+        <div class="project-info" style="margin-bottom: 16px; align-items: center;">
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <span style="padding: 4px 12px; background: #f6ffed; color: #52c41a; border-radius: 4px; font-size: 12px;">提取成功</span>
+            <button class="btn-sm btn-primary">智能提取</button>
+            <button class="btn-sm btn-primary">下载</button>
+          </div>
+        </div>
         <div class="prescreen-doc-layout">
           <!-- 左侧页面导航 -->
-          <nav class="prescreen-nav" id="oldPrescreenNav">
+          <nav class="prescreen-nav" id="extractNav">
             <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
-            <div id="oldPrescreenNavList"><!-- JS 渲染 --></div>
+            <div id="extractNavList"><!-- JS 渲染 --></div>
           </nav>
           <!-- 右侧文档 -->
-          <div class="prescreen-doc" id="oldPrescreenDoc">
+          <div class="prescreen-doc" id="extractDoc">
             <h1 class="doc-h1">患者筛选信息采集表</h1>
-            <div class="doc-subtitle" id="oldPrescreenDocMeta">患者编号：WYNA-CN053 ｜ 性别/年龄：女/36岁 ｜ 方案：WYNA-CN053</div>
-            <div id="oldPrescreenSections"><!-- JS 渲染 --></div>
+            <div class="doc-subtitle" id="extractDocMeta">患者编号：PT_CN053_0001 ｜姓名缩写：WYNA ｜ 中心：CN053-安阳市肿瘤医院 ｜ 方案编号：WYNA-CN053 </div>
+            <div id="extractSections"><!-- JS 渲染 --></div>
             <div style="margin-top:24px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
               <i class="fas fa-exclamation-circle"></i>
               <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
@@ -1988,6 +2019,34 @@
       }).join('');
     }
 
+    // 渲染筛选表（平铺表格）- 旧版筛选表
+    function renderPrescreenTable() {
+      const tbody = document.getElementById('prescreenTable');
+      if (!tbody) return;
+
+      const version = window.currentVersion || urlParams.get('version') || 'prescreen';
+      const data = prescreenDataByVersion[version] || prescreenDataByVersion['prescreen'];
+
+      tbody.innerHTML = data.map(item => {
+        const key = '旧版-' + version + '-' + item.seq + '-' + item.item;
+        return `
+        <tr>
+          <td>${item.seq}</td>
+          <td>${item.item}</td>
+          <td>${item.value ? item.value.replace(/\n/g, '<br>') : '-'}</td>
+          <td>
+            <div class="doc-row-actions">
+              <span class="action-link" onclick="openTraceDrawer(['image.png'])">病历溯源</span>
+              <span class="action-link" onclick="openCaseCorrection('${key}')">病例修正</span>
+              <span class="action-link" onclick="openCorrectionRecord('${key}')">修正记录</span>
+              <span class="action-link" onclick="clearCorrection('${key}', this)">清空修正</span>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+    }
+
     // 切换预筛表版本 - 不跳转页面，只刷新数据
     function switchPrescreenVersion(versionType) {
       // 显示加载效果
@@ -2003,8 +2062,8 @@
         // 更新当前版本
         window.currentVersion = versionType;
         
-        // 重新渲染筛选表（Word式文档）
-        initPrescreenDoc('oldPrescreen');
+        // 重新渲染筛选表（平铺表格）
+        renderPrescreenTable();
         
         // 重新渲染版本标签（更新active状态）
         renderPrescreenVersionTags();
@@ -2418,8 +2477,10 @@
       });
       document.getElementById('tab-' + tab).style.display = 'block';
 
-      // 旧版本筛选表：切换为 Word式文档（与新版本一致）
-      if (tab === 'prescreen') { initPrescreenDoc('oldPrescreen'); }
+      // 旧版本筛选表：平铺表格
+      if (tab === 'prescreen') { renderPrescreenTable(); }
+      // 提取要点：Word式文档（由原筛选表改造内容迁移）
+      if (tab === 'extract') { initPrescreenDoc('extract'); }
     }
 
     // 返回上一页：来源为审核列表时回到审批列表，否则回到智能筛选患者列表
@@ -3232,7 +3293,7 @@
       try { renderVersionTags(); } catch (e) { console.error('renderVersionTags', e); }
       try { renderPrescreenVersionTags(); } catch (e) { console.error('renderPrescreenVersionTags', e); }
       try { renderMatchDetailTable(); } catch (e) { console.error('renderMatchDetailTable', e); }
-      try { initPrescreenDoc('oldPrescreen'); } catch (e) { console.error('initPrescreenDoc', e); }
+      try { renderPrescreenTable(); } catch (e) { console.error('renderPrescreenTable', e); }
 
       // 新版内容初始化
       try { switchMatchVersion('v1'); } catch (e) { console.error('switchMatchVersion', e); }
@@ -3276,14 +3337,10 @@ function updatePRDPanel(mod, sub) {
         {
           title: '★ 本次修改',
           content:  `<ul><li><strong style="color:red;">修改摘要</strong></li>
-                <li><strong style="color:red;">1. 匹配详情可以切换新旧版本</strong></li>
-                <li><strong style="color:#00b42a;">2. ✅ 旧版本 加右侧的页面导航</strong></li>
-                <li><strong style="color:red;">3. 新版本 跟旧版本的区别， AI建议 样式展示区别，匹配详情中加入 风险提示列</strong></li>
-                <li><strong style="color:red;"> 4. 基本信息 加患者的基本信息展示</strong></li>
-               <li><strong style="color:red;"> 5. 入排和筛选表的病例溯源也需要加 【旋转】和【放大】的按钮</strong></li>
-                <li><strong style="color:red;"> 6. 如果没有配置版本，就不需要显示 新旧版本切换的按钮</strong></li>
-                <li><strong style="color:red;"> 7. 思考链 的展示 需要跟 绑定的入排版本和审批阶段保持一致</strong></li>
-                <li><strong> 9. 匹配详情 人工修正以后，匹配度和AI建议都需要修改，保留有修改记录</strong></li>
+                <li><strong style="color:red;">1. 新旧版本都加一个提取要点的tab</strong></li>
+                <li><strong style="color:#00b42a;">2.提取要点的页面导航 是 配置的提取项目，也是每一个的小标题，小标题下展示的内容根据项目配置 是表格，文本或者是时间轴来展示 </strong></li>
+                <li><strong style="color:#00b42a;">3.下载是下载word </strong></li>
+
 
                 </ul>
             `
