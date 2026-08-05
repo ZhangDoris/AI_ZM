@@ -3299,9 +3299,15 @@
     .proj-criteria-table .thinking-chain-textarea:focus { border-color: #faad14; box-shadow: 0 0 0 2px rgba(250,173,20,0.12); }
     .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
     .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
-    .proj-criteria-toolbar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-    .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
-    .criteria-add-btn:hover { background: #0958d9; }
+    .proj-criteria-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .criteria-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .criteria-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1; padding: 8px 14px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; transition: all 0.2s ease; white-space: nowrap; }
+    .criteria-btn:active { transform: translateY(1px); }
+    .criteria-btn-primary { background: #1677ff; color: #fff; border-color: #1677ff; box-shadow: 0 2px 6px rgba(22,119,255,0.25); }
+    .criteria-btn-primary:hover { background: #4096ff; border-color: #4096ff; box-shadow: 0 4px 10px rgba(22,119,255,0.32); }
+    .criteria-btn-ghost { background: #fff; color: #555; border-color: #d9d9d9; }
+    .criteria-btn-ghost:hover { color: #1677ff; border-color: #1677ff; background: #f0f6ff; }
+    .criteria-btn i { font-size: 12px; }
     .proj-criteria-table .stage-enable-th { width: 100px; text-align: center; }
     .proj-criteria-table .stage-th-name { font-size: 12px; color: #333; font-weight: 600; margin-bottom: 5px; }
     .proj-criteria-table .stage-select-all { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #1677ff; cursor: pointer; justify-content: center; }
@@ -16231,9 +16237,9 @@ function renderScreeningContent() {
         <span class="group-title-left"><i class="fa-solid fa-magnifying-glass"></i> 筛选表（${items.length}条）</span>
       </div>
       <div class="proj-criteria-toolbar">
-                <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>导入</button>
-                        <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>下载模板</button>
-        <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="importScreeningData()"><i class="fa-solid fa-upload"></i>导入</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="downloadScreeningTemplate()"><i class="fa-solid fa-download"></i>下载模板</button>
+        <button type="button" class="criteria-btn criteria-btn-primary" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
       <table class="proj-criteria-table">
         <thead>
@@ -16299,6 +16305,12 @@ function toggleScreeningStageAll(stageId, checked) {
   if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
   refreshScreeningSection();
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
+}
+function importScreeningData() {
+  showWechatToast('请选择 Excel / CSV 文件导入筛选表（原型演示）');
+}
+function downloadScreeningTemplate() {
+  showWechatToast('正在下载筛选表导入模板（原型演示）');
 }
 function addScreeningRow(idx) {
   const items = _projectScreeningData.items;
