@@ -598,6 +598,13 @@
       text-decoration: underline;
     }
 
+    /* 筛选表每行四个操作（病历溯源/病例修正/修正记录）紧凑网格 */
+    .doc-row-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+    }
+
     /* 加载遮罩 */
     .loading-overlay {
       position: fixed;
@@ -1991,20 +1998,24 @@
       // 根据当前版本获取对应的数据
       const data = prescreenDataByVersion[version] || prescreenDataByVersion['prescreen'];
       
-      tbody.innerHTML = data.map(item => `
+      tbody.innerHTML = data.map(item => {
+        const key = '旧版-' + version + '-' + item.seq + '-' + item.item;
+        return `
         <tr>
           <td>${item.seq}</td>
           <td>${item.item}</td>
-          <td>${item.value || '-'}</td>
+          <td>${item.value ? item.value.replace(/\n/g, '<br>') : '-'}</td>
           <td>
-            <div class="action-links">
-              <span class="action-link">编辑</span>
-              <span class="action-link">病历溯源</span>
-              <span class="action-link" style="color:#999">修正记录</span>
+            <div class="doc-row-actions">
+              <span class="action-link" onclick="openTraceDrawer(['image.png'])">病历溯源</span>
+              <span class="action-link" onclick="openCaseCorrection('${key}')">病例修正</span>
+              <span class="action-link" onclick="openCorrectionRecord('${key}')">修正记录</span>
+              <span class="action-link" onclick="clearCorrection('${key}', this)">清空修正</span>
             </div>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // 模拟匹配详情数据
@@ -2059,6 +2070,61 @@
           </td>
         </tr>
       `).join('');
+    }
+
+    // ==================== 筛选表：行级操作（病历溯源/病例修正/修正记录/清空修正） ====================
+    // 通用内联演示弹窗
+    function showPrescreenModal(title, bodyHtml) {
+      let mask = document.getElementById('prescreenModalMask');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'prescreenModalMask';
+        mask.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;';
+        mask.innerHTML = `
+          <div style="background:#fff;border-radius:10px;width:420px;max-width:92vw;box-shadow:0 8px 30px rgba(0,0,0,.2);overflow:hidden;">
+            <div style="padding:14px 18px;border-bottom:1px solid #eee;font-weight:600;color:#333;display:flex;justify-content:space-between;align-items:center;">
+              <span id="prescreenModalTitle"></span>
+              <i class="fa-solid fa-xmark" style="cursor:pointer;color:#999;" onclick="closePrescreenModal()"></i>
+            </div>
+            <div id="prescreenModalBody" style="padding:18px;font-size:13px;color:#595959;line-height:1.8;"></div>
+            <div style="padding:12px 18px;border-top:1px solid #eee;text-align:right;">
+              <button class="btn-sm btn-primary" onclick="closePrescreenModal()">关闭</button>
+            </div>
+          </div>`;
+        document.body.appendChild(mask);
+        mask.addEventListener('click', function (e) { if (e.target === mask) closePrescreenModal(); });
+      }
+      document.getElementById('prescreenModalTitle').textContent = title;
+      document.getElementById('prescreenModalBody').innerHTML = bodyHtml;
+      mask.style.display = 'flex';
+    }
+    function closePrescreenModal() {
+      const mask = document.getElementById('prescreenModalMask');
+      if (mask) mask.style.display = 'none';
+    }
+
+    // 病例修正
+    function openCaseCorrection(itemKey) {
+      showPrescreenModal('病例修正', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）在此可手动修正 AI 提取结果，修正后将标记该记录为「已人工修正」并生成修正记录。</div>
+      `);
+    }
+
+    // 修正记录
+    function openCorrectionRecord(itemKey) {
+      showPrescreenModal('修正记录', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）该记录暂无历史修正记录。人工修正后会在此展示修改人、修改时间与前后对比。</div>
+      `);
+    }
+
+    // 清空修正
+    function clearCorrection(itemKey, btn) {
+      showPrescreenModal('清空修正', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）确认后将该记录恢复为 AI 原始提取结果，并清除人工修正标记。</div>
+      `);
     }
 
     // 获取判断图标
@@ -2578,20 +2644,24 @@
       const tbody = document.getElementById('newPrescreenTable');
       if (!tbody) return;
       const list = data || matchVersionData[currentMatchVersion].prescreen;
-      tbody.innerHTML = list.map(item => `
+      tbody.innerHTML = list.map(item => {
+        const key = '新版-' + (currentMatchVersion || '') + '-' + item.seq + '-' + item.item;
+        return `
         <tr>
           <td>${item.seq}</td>
           <td>${item.item}</td>
-          <td>${item.value || '-'}</td>
+          <td>${item.value ? item.value.replace(/\n/g, '<br>') : '-'}</td>
           <td>
-            <div class="action-links">
-              <span class="action-link">编辑</span>
-              <span class="action-link">病历溯源</span>
-              <span class="action-link" style="color:#999">修正记录</span>
+            <div class="doc-row-actions">
+              <span class="action-link" onclick="openTraceDrawer(['image.png'])">病历溯源</span>
+              <span class="action-link" onclick="openCaseCorrection('${key}')">病例修正</span>
+              <span class="action-link" onclick="openCorrectionRecord('${key}')">修正记录</span>
+              <span class="action-link" onclick="clearCorrection('${key}', this)">清空修正</span>
             </div>
           </td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // 思考链步骤输出：合并症 / 合并药物表格

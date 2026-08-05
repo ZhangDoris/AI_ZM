@@ -15,13 +15,17 @@
       min-height: 100vh;
     }
 
-    /* 顶部导航栏 */
+    /* 顶部导航栏 - 固定顶部不随滚动 */
     .top-header {
       background: #fff;
       padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       border-bottom: 1px solid #e8e8e8;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
@@ -107,7 +111,7 @@
       color: #fff;
     }
 
-    /* Tab导航 */
+    /* Tab导航 - 固定在顶部导航下方 */
     .tab-navigation {
       background: #fff;
       padding: 0 24px;
@@ -115,6 +119,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      position: sticky;
+      top: 52px;
+      z-index: 99;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
     /* 右侧突出的版本切换按钮 */
     .tab-navigation .version-switch-right {
@@ -1320,6 +1328,87 @@
     .anchor-nav-item.active { color: #1677ff; font-weight: 500; }
     .anchor-nav-item.active::before { height: 22px; }
 
+    /* ============ 筛选表：Word式文档视图 ============ */
+    .prescreen-doc-layout { display: flex; gap: 24px; align-items: flex-start; }
+    .prescreen-nav {
+      width: 220px; flex-shrink: 0; position: sticky; top: 16px;
+      background: #fff; border: 1px solid #f0f0f0; border-radius: 10px;
+      padding: 16px 14px; max-height: calc(100vh - 120px); overflow-y: auto;
+    }
+    .prescreen-nav-title {
+      font-size: 13px; font-weight: 600; color: #595959; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .prescreen-nav-item {
+      position: relative; padding: 9px 10px 9px 14px; font-size: 13.5px; color: #595959;
+      cursor: pointer; border-radius: 6px; line-height: 1.5; margin-bottom: 2px;
+      border-left: 3px solid transparent; transition: all .18s;
+    }
+    .prescreen-nav-item:hover { background: #f5f7fa; color: #1677ff; }
+    .prescreen-nav-item.active {
+      background: #e8f1ff; color: #1677ff; font-weight: 600; border-left-color: #1677ff;
+    }
+    .prescreen-doc { flex: 1; min-width: 0; background: #fff; border: 1px solid #f0f0f0; border-radius: 10px; padding: 32px 40px; }
+    .doc-h1 { font-size: 20px; font-weight: 700; color: #1f1f1f; text-align: center; margin: 0 0 6px; }
+    .doc-subtitle { text-align: center; font-size: 13px; color: #8c8c8c; margin-bottom: 28px; }
+    .doc-section { margin-bottom: 34px; scroll-margin-top: 16px; }
+    .doc-section-title {
+      font-size: 16px; font-weight: 700; color: #262626; margin: 0 0 16px;
+      padding-bottom: 10px; border-bottom: 2px solid #f0f0f0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .doc-section-title .sec-idx { color: #1677ff; font-weight: 700; }
+    .doc-section-desc { font-size: 13px; color: #8c8c8c; margin: -8px 0 14px; line-height: 1.6; }
+    .doc-text { font-size: 14px; color: #333; line-height: 1.9; white-space: pre-wrap; }
+    .doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .doc-table th, .doc-table td { border: 1px solid #e8e8e8; padding: 9px 12px; text-align: left; vertical-align: top; line-height: 1.6; }
+    .doc-table th { background: #fafafa; font-weight: 600; color: #333; white-space: nowrap; }
+    .doc-table tr:nth-child(even) td { background: #fcfcfc; }
+    .doc-table .val-up { color: #f53f3f; font-weight: 600; }
+    .doc-table .val-down { color: #165dff; font-weight: 600; }
+    .doc-table .val-pending { color: #fa8c16; font-weight: 600; }
+    .doc-table .doc-act-col { width: 200px; white-space: nowrap; }
+    .doc-table .doc-act-cell { vertical-align: middle; }
+    .doc-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tl-actions { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; }
+    .tl-actions .doc-row-actions { gap: 10px; }
+    /* 旧版筛选表：操作以 2×2 网格紧凑排列 */
+    .prescreen-table .doc-row-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+    .doc-pending-tag {
+      display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px;
+      background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; font-weight: 600;
+    }
+    /* 时间轴 */
+    .doc-timeline { position: relative; padding-left: 24px; }
+    .doc-timeline::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: #e8e8e8; }
+    .tl-item { position: relative; margin-bottom: 18px; }
+    .tl-item::before {
+      content: ''; position: absolute; left: -21px; top: 4px; width: 11px; height: 11px;
+      border-radius: 50%; background: #fff; border: 2px solid #1677ff;
+    }
+    .tl-item.instable::before { border-color: #fa8c16; background: #fff7e6; }
+    .tl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .tl-drug { font-size: 14px; font-weight: 600; color: #262626; }
+    .tl-date { font-size: 12.5px; color: #8c8c8c; }
+    .tl-badge { font-size: 12px; padding: 1px 8px; border-radius: 4px; background: #f5f7fa; color: #595959; border: 1px solid #e8e8e8; }
+    .tl-badge.warn { background: #fff7e6; color: #fa8c16; border-color: #ffd591; }
+    .tl-badge.ok { background: #e8f7ec; color: #00b42a; border-color: #b7eb8f; }
+    .tl-body { margin-top: 6px; font-size: 13px; color: #595959; line-height: 1.7; }
+    .tl-line { display: flex; gap: 6px; }
+    .tl-line .k { color: #8c8c8c; flex-shrink: 0; }
+    .doc-audit-box {
+      margin-top: 14px; padding: 14px 16px; background: #fafafa; border: 1px dashed #d9d9d9;
+      border-radius: 8px; font-size: 13px; line-height: 1.8; color: #595959;
+    }
+    .doc-audit-box .audit-q { display: flex; gap: 8px; margin-bottom: 4px; }
+    .doc-audit-box .audit-q .num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #1677ff; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .doc-audit-box .audit-concl { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e8e8e8; color: #333; }
+    @media (max-width: 900px) {
+      .prescreen-doc-layout { flex-direction: column; }
+      .prescreen-nav { width: 100%; position: static; max-height: none; }
+      .prescreen-doc { padding: 20px; }
+    }
+
     /* 思考链详情 */
     .think-chain { display: flex; flex-direction: column; padding-left: 8px; }
     .tc-step { position: relative; padding: 0 0 22px 28px; border-left: 2px solid #e8e8e8; }
@@ -1563,7 +1652,7 @@
         </div><!-- /ai-match-layout -->
       </div><!-- /tab-match -->
 
-    <!-- Tab 2: 筛选表 -->
+    <!-- Tab 2: 筛选表（Word式文档视图，与新版本一致） -->
     <div id="tab-prescreen" class="tab-content" style="display:none;">
       <div class="card" id="prescreenCard">
         <div class="project-info" style="margin-bottom: 16px; align-items: center;">
@@ -1573,25 +1662,22 @@
             <button class="btn-sm btn-primary">下载</button>
           </div>
         </div>
-        <div class="table-container">
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th style="width: 60px">序号</th>
-                <th style="width: 150px">项目</th>
-                <th>AI提取</th>
-                <th style="width: 200px">操作</th>
-              </tr>
-            </thead>
-            <tbody id="prescreenTable">
-              <!-- 动态生成 -->
-            </tbody>
-          </table>
-        
-        </div>
-        <div style="margin-top: 16px; padding: 12px; background: #fff7e6; border-radius: 4px; display: flex; align-items: center; gap: 8px; color: #fa8c16; font-size: 13px;">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+        <div class="prescreen-doc-layout">
+          <!-- 左侧页面导航 -->
+          <nav class="prescreen-nav" id="oldPrescreenNav">
+            <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
+            <div id="oldPrescreenNavList"><!-- JS 渲染 --></div>
+          </nav>
+          <!-- 右侧文档 -->
+          <div class="prescreen-doc" id="oldPrescreenDoc">
+            <h1 class="doc-h1">患者筛选信息采集表</h1>
+            <div class="doc-subtitle" id="oldPrescreenDocMeta">患者编号：WYNA-CN053 ｜ 性别/年龄：女/36岁 ｜ 方案：WYNA-CN053</div>
+            <div id="oldPrescreenSections"><!-- JS 渲染 --></div>
+            <div style="margin-top:24px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1741,28 +1827,23 @@
       </div>
     </div>
 
-    <!-- ========== 筛选表 ========== -->
+    <!-- ========== 筛选表（Word式文档视图） ========== -->
     <div id="tab-new-prescreen" class="new-tab-content" style="display:none;">
-      <div class="card">
-        <div class="card-title"><i class="fas fa-filter"></i> 筛选表</div>
-        <div class="table-container">
-          <table class="detail-table">
-            <thead>
-              <tr>
-                <th style="width:60px">序号</th>
-                <th style="width:150px">项目</th>
-                <th>AI提取</th>
-                <th style="width:200px">操作</th>
-              </tr>
-            </thead>
-            <tbody id="newPrescreenTable">
-              <!-- JS 渲染 -->
-            </tbody>
-          </table>
-        </div>
-        <div style="margin-top:16px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+      <div class="prescreen-doc-layout">
+        <!-- 左侧页面导航 -->
+        <nav class="prescreen-nav" id="prescreenNav">
+          <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
+          <div id="prescreenNavList"><!-- JS 渲染 --></div>
+        </nav>
+        <!-- 右侧文档 -->
+        <div class="prescreen-doc" id="prescreenDoc">
+          <h1 class="doc-h1">患者筛选信息采集表</h1>
+          <div class="doc-subtitle" id="prescreenDocMeta">患者编号：WYNA-CN053 ｜ 性别/年龄：女/36岁 ｜ 方案：WYNA-CN053</div>
+          <div id="prescreenSections"><!-- JS 渲染 --></div>
+          <div style="margin-top:24px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1922,8 +2003,8 @@
         // 更新当前版本
         window.currentVersion = versionType;
         
-        // 重新渲染筛选表
-        renderPrescreenTable();
+        // 重新渲染筛选表（Word式文档）
+        initPrescreenDoc('oldPrescreen');
         
         // 重新渲染版本标签（更新active状态）
         renderPrescreenVersionTags();
@@ -1956,31 +2037,251 @@
       window.location.href = window.location.pathname + '?' + params.toString();
     }
 
-    // 渲染筛选表 - 根据当前版本显示对应数据
-    function renderPrescreenTable() {
-      const tbody = document.getElementById('prescreenTable');
-      if (!tbody) return;
-      
-      // 使用全局变量或从URL获取当前版本
-      const version = window.currentVersion || urlParams.get('version') || 'prescreen';
-      
-      // 根据当前版本获取对应的数据
-      const data = prescreenDataByVersion[version] || prescreenDataByVersion['prescreen'];
-      
-      tbody.innerHTML = data.map(item => `
-        <tr>
-          <td>${item.seq}</td>
-          <td>${item.item}</td>
-          <td>${item.value || '-'}</td>
-          <td>
-            <div class="action-links">
-              <span class="action-link">编辑</span>
-              <span class="action-link">病历溯源</span>
-              <span class="action-link" style="color:#999">修正记录</span>
-            </div>
-          </td>
-        </tr>
+    // ==================== 筛选表：Word式结构化文档 ====================
+    // 每个项目为一个章节，按 display 类型渲染：text / table / timeline
+    const screeningProjects = [
+      {
+        id: 'p-study-history',
+        title: '既往临床研究参加情况',
+        display: 'table',
+        columns: ['参加时间', '研究项目', '组别', '结局', '出组时间'],
+        rows: [
+          ['2019-03 ~ 2019-07', 'XYZ-301（III期）', '试验组', '筛败', '-'],
+          ['2021-09 ~ 2022-05', 'ABC-118（II期）', '对照组', '导败（疾病进展）', '2022-05-18']
+        ]
+      },
+      {
+        id: 'p-basic',
+        title: '基础及人口统计学信息',
+        display: 'table',
+        columns: ['项目', '内容'],
+        rows: [
+          ['年龄', '36岁'],
+          ['性别', '女'],
+          ['过敏史', '青霉素过敏（皮疹）'],
+          ['吸烟史', '无'],
+          ['饮酒史', '偶饮酒'],
+          ['月经史', '已绝经（48岁）'],
+          ['手术史', '2020-10 右乳癌根治术']
+        ]
+      },
+      {
+        id: 'p-disease',
+        title: '本研究疾病信息',
+        display: 'table',
+        columns: ['项目', '内容'],
+        rows: [
+          ['首次症状日期', '2020-08-12（右乳无痛性肿块）'],
+          ['首次诊断日期', '2020-10-21（浸润性导管癌）'],
+          ['距病情描述', '约5年'],
+          ['疾病相关指标', 'ER（中强+90%）、PR（中强+70%）、HER2（0）、Ki-67（30%）']
+        ]
+      },
+      {
+        id: 'p-history-disease',
+        title: '既往病史 & 合并疾病',
+        display: 'table',
+        columns: ['疾病名称', '开始日期', '结束日期', '是否持续', '补充信息', '干预'],
+        rows: [
+          ['高血压病', '2018-05', '至今', '是', '最高160/100mmHg', '氨氯地平 5mg qd'],
+          ['2型糖尿病', '2020-03', '至今', '是', 'HbA1c 7.2%', '二甲双胍 0.5g bid'],
+          ['腰椎间盘突出', '2019-11', '2020-02', '否', '已愈', '理疗']
+        ]
+      },
+      {
+        id: 'p-medication',
+        title: '既往用药 & 合并用药',
+        display: 'table',
+        columns: ['药物名称', '给药方案', '治疗目的', '开始日期', '结束日期', '距筛选日时长'],
+        rows: [
+          ['氨氯地平', '5mg qd 口服', '控制血压', '2018-05-10', '至今', '持续用药'],
+          ['二甲双胍', '0.5g bid 口服', '控制血糖', '2020-03-02', '至今', '持续用药'],
+          ['阿托伐他汀', '20mg qn 口服', '降脂', '2023-01-15', '2024-06-30', '已洗脱约2年']
+        ]
+      },
+      {
+        id: 'p-lab',
+        title: '实验室检查',
+        display: 'table',
+        columns: ['检查项目', '结果'],
+        rows: [
+          ['白细胞计数', '3.1×10⁹/L <span class="val-down">↓（降低，正常3.5~9.5）</span>'],
+          ['中性粒细胞', '1.6×10⁹/L <span class="val-down">↓（降低，正常1.8~6.3）</span>'],
+          ['ALT', '68 U/L <span class="val-up">↑（升高，正常7~40）</span>'],
+          ['AST', '55 U/L <span class="val-up">↑（升高，正常13~35）</span>'],
+          ['肌酐', '62 μmol/L（正常41~73）'],
+          ['总胆红素', '21 μmol/L（正常3.4~20.5）']
+        ]
+      },
+      {
+        id: 'p-imaging',
+        title: '影像学检查',
+        display: 'table',
+        columns: ['检查', '诊断描述', '诊断提示'],
+        rows: [
+          ['胸部CT（2024-05-10）', '双肺纹理增多，右肺上叶见结节影约8mm', '考虑转移可能，建议随访'],
+          ['腹部超声（2024-05-10）', '肝实质回声均匀，未见占位', '未见明显异常']
+        ]
+      },
+      {
+        id: 'p-vitals',
+        title: '生命体征 & 体格检查',
+        display: 'table',
+        columns: ['项目', '内容'],
+        rows: [
+          ['体温', '36.5℃'],
+          ['脉搏', '78次/分'],
+          ['呼吸频率', '18次/分'],
+          ['收缩压/舒张压', '128/82 mmHg'],
+          ['体格检查-头颈部', '未见异常'],
+          ['体格检查-胸部', '双肺呼吸音清'],
+          ['体格检查-腹部', '腹软，无压痛'],
+          ['体格检查-脊柱四肢', '活动正常'],
+          ['体格检查-皮肤', '无黄染、无皮损']
+        ]
+      },
+      {
+        id: 'p-lipid-therapy',
+        title: '降脂治疗稳定性 & 审核',
+        display: 'timeline',
+        timeline: [
+          { drug: '阿托伐他汀', dose: '40mg qn', start: '2023-01-15', adjust: '—', stop: '—', stableDays: '稳定≥2周', badge: 'ok', badgeText: '已稳定', concl: '筛选前稳定≥2周，导入期继续稳定≥2周', lines: [
+            ['剂量', '40mg 每晚口服'], ['开始日期', '2023-01-15'], ['调整日期', '无'], ['停药日期', '无'], ['稳定天数', '约2年']
+          ] },
+          { drug: '依折麦布', dose: '10mg qd', start: '2023-03-01', adjust: '2024-02-10（改为5mg）', stop: '—', stableDays: '调整后稳定≥4周', badge: 'warn', badgeText: '剂量调整', concl: '2024-02-10调整剂量，调整后稳定≥4周', lines: [
+            ['剂量', '10mg→5mg 每日口服'], ['开始日期', '2023-03-01'], ['调整日期', '2024-02-10'], ['停药日期', '无'], ['稳定天数', '调整后≥4周']
+          ] },
+          { drug: '非诺贝特', dose: '160mg qd', start: '<span class="doc-pending-tag">待确认</span>', adjust: '—', stop: '2024-06-30', stableDays: '<span class="doc-pending-tag">待确认</span>', badge: 'warn', badgeText: '起始待确认', concl: '缺少起始日期或剂量，标记“待确认”', lines: [
+            ['剂量', '160mg 每日口服'], ['开始日期', '<span class="doc-pending-tag">待确认</span>'], ['调整日期', '无'], ['停药日期', '2024-06-30'], ['稳定天数', '<span class="doc-pending-tag">待确认</span>']
+          ] }
+        ],
+        audit: {
+          questions: [
+            '是否使用阿托伐他汀40/80 mg或瑞舒伐他汀20 mg',
+            '不耐受者是否有最大耐受剂量的医学记录',
+            '筛选前已稳定≥2周者，导入期是否继续稳定≥2周',
+            '筛选前稳定不足2周或进行剂量调整者，调整后是否稳定≥4周',
+            '依折麦布或非诺贝特如继续使用，种类和剂量是否保持稳定'
+          ],
+          conclusion: '阿托伐他汀40mg已稳定≥2周，导入期继续稳定；依折麦布剂量调整后稳定≥4周；非诺贝特缺少起始日期与剂量，标记“待确认”，需补充资料。'
+        }
+      }
+    ];
+
+    // 渲染页面导航（支持多实例：prefix 区分新/旧版容器）
+    function renderPrescreenNav(prefix) {
+      const list = document.getElementById(prefix + 'NavList');
+      if (!list) return;
+      list.innerHTML = screeningProjects.map((p, i) => `
+        <div class="prescreen-nav-item" data-target="sec-${prefix}-${p.id}" onclick="scrollToPrescreen('sec-${prefix}-${p.id}', '${prefix}')">
+          ${i + 1}. ${p.title}
+        </div>
       `).join('');
+    }
+
+    // 渲染文档章节
+    function renderPrescreenSections(prefix) {
+      const box = document.getElementById(prefix + 'Sections');
+      if (!box) return;
+      box.innerHTML = screeningProjects.map((p, i) => `
+        <div class="doc-section" id="sec-${prefix}-${p.id}">
+          <h2 class="doc-section-title"><span class="sec-idx">${i + 1}.</span> ${p.title}</h2>
+          ${p.desc ? `<div class="doc-section-desc">${p.desc}</div>` : ''}
+          ${renderScreeningBody(p)}
+        </div>
+      `).join('');
+    }
+
+    // 按显示类型渲染内容
+    // 生成一行/一条记录的操作条：病历溯源 / 病例修正 / 修正记录 / 清空修正
+    function prescreenRowActions(itemKey) {
+      return `<div class="doc-row-actions">
+        <span class="action-link" onclick="openTraceDrawer(['image.png'])">病历溯源</span>
+        <span class="action-link" onclick="openCaseCorrection('${itemKey}')">病例修正</span>
+        <span class="action-link" onclick="openCorrectionRecord('${itemKey}')">修正记录</span>
+        <span class="action-link" onclick="clearCorrection('${itemKey}', this)">清空修正</span>
+      </div>`;
+    }
+
+    function renderScreeningBody(p) {
+      if (p.display === 'table') {
+        return `<table class="doc-table">
+          <thead><tr>${p.columns.map(c => `<th>${c}</th>`).join('')}<th class="doc-act-col">操作</th></tr></thead>
+          <tbody>${p.rows.map((r, ri) => `
+            <tr>
+              ${r.map(c => `<td>${c}</td>`).join('')}
+              <td class="doc-act-cell">${prescreenRowActions(p.id + '-row-' + ri)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+      }
+      if (p.display === 'timeline') {
+        const tl = `<div class="doc-timeline">${p.timeline.map((t, ti) => `
+          <div class="tl-item ${t.badge === 'warn' ? 'instable' : ''}">
+            <div class="tl-head">
+              <span class="tl-drug">${t.drug}</span>
+              <span class="tl-date">${t.dose}</span>
+              <span class="tl-badge ${t.badge === 'ok' ? 'ok' : 'warn'}">${t.badgeText}</span>
+              <span class="tl-date">${t.stableDays}</span>
+            </div>
+            <div class="tl-body">
+              ${t.lines.map(l => `<div class="tl-line"><span class="k">${l[0]}：</span><span>${l[1]}</span></div>`).join('')}
+              <div class="tl-line"><span class="k">结论：</span><span>${t.concl}</span></div>
+            </div>
+            <div class="tl-actions">${prescreenRowActions(p.id + '-tl-' + ti)}</div>
+          </div>`).join('')}</div>`;
+        const audit = p.audit ? `<div class="doc-audit-box">
+          <div style="font-weight:600;color:#333;margin-bottom:8px;">审核要点</div>
+          ${p.audit.questions.map((q, idx) => `<div class="audit-q"><span class="num">${idx + 1}</span><span>${q}</span></div>`).join('')}
+          <div class="audit-concl"><strong>审核结论：</strong>${p.audit.conclusion}</div>
+        </div>` : '';
+        return tl + audit;
+      }
+      // 默认 text
+      return `<div class="doc-text">${p.text || ''}</div>`;
+    }
+
+    // 导航点击滚动（prefix 限定作用域，避免新旧版互相干扰）
+    function scrollToPrescreen(id, prefix) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (!window._psScope) return;
+      window._psScope.forEach(pf => {
+        document.querySelectorAll('#' + pf + 'NavList .prescreen-nav-item').forEach(n => n.classList.remove('active'));
+      });
+      const nav = document.querySelector('#' + prefix + 'NavList .prescreen-nav-item[data-target="' + id + '"]');
+      if (nav) nav.classList.add('active');
+    }
+
+    // 筛选表章节滚动高亮
+    function initPrescreenObserver(prefix) {
+      const sections = document.querySelectorAll('#' + prefix + 'Sections .doc-section');
+      if (sections.length === 0) return;
+      if (window._psObserver) window._psObserver.disconnect();
+      window._psObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            window._psScope.forEach(pf => {
+              document.querySelectorAll('#' + pf + 'NavList .prescreen-nav-item').forEach(n => n.classList.remove('active'));
+            });
+            const nav = document.querySelector('#' + prefix + 'NavList .prescreen-nav-item[data-target="' + id + '"]');
+            if (nav) nav.classList.add('active');
+          }
+        });
+      }, { root: null, rootMargin: '-60px 0px -70% 0px', threshold: 0 });
+      sections.forEach(s => window._psObserver.observe(s));
+    }
+
+    // 初始化筛选表文档（prefix 区分新/旧版容器）
+    let _psPrefixCount = 0;
+    function initPrescreenDoc(prefix) {
+      if (typeof prefix !== 'string') prefix = 'prescreen';
+      window._psScope = window._psScope || [];
+      if (window._psScope.indexOf(prefix) === -1) window._psScope.push(prefix);
+      try { renderPrescreenNav(prefix); } catch (e) { console.error('renderPrescreenNav', e); }
+      try { renderPrescreenSections(prefix); } catch (e) { console.error('renderPrescreenSections', e); }
+      setTimeout(function () { initPrescreenObserver(prefix); }, 200);
     }
 
     // 模拟匹配详情数据
@@ -2037,6 +2338,61 @@
       `).join('');
     }
 
+    // ==================== 筛选表：行级操作（病历溯源/病例修正/修正记录/清空修正） ====================
+    // 通用内联演示弹窗
+    function showPrescreenModal(title, bodyHtml) {
+      let mask = document.getElementById('prescreenModalMask');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'prescreenModalMask';
+        mask.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;';
+        mask.innerHTML = `
+          <div style="background:#fff;border-radius:10px;width:420px;max-width:92vw;box-shadow:0 8px 30px rgba(0,0,0,.2);overflow:hidden;">
+            <div style="padding:14px 18px;border-bottom:1px solid #eee;font-weight:600;color:#333;display:flex;justify-content:space-between;align-items:center;">
+              <span id="prescreenModalTitle"></span>
+              <i class="fa-solid fa-xmark" style="cursor:pointer;color:#999;" onclick="closePrescreenModal()"></i>
+            </div>
+            <div id="prescreenModalBody" style="padding:18px;font-size:13px;color:#595959;line-height:1.8;"></div>
+            <div style="padding:12px 18px;border-top:1px solid #eee;text-align:right;">
+              <button class="btn-sm btn-primary" onclick="closePrescreenModal()">关闭</button>
+            </div>
+          </div>`;
+        document.body.appendChild(mask);
+        mask.addEventListener('click', function (e) { if (e.target === mask) closePrescreenModal(); });
+      }
+      document.getElementById('prescreenModalTitle').textContent = title;
+      document.getElementById('prescreenModalBody').innerHTML = bodyHtml;
+      mask.style.display = 'flex';
+    }
+    function closePrescreenModal() {
+      const mask = document.getElementById('prescreenModalMask');
+      if (mask) mask.style.display = 'none';
+    }
+
+    // 病例修正
+    function openCaseCorrection(itemKey) {
+      showPrescreenModal('病例修正', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）在此可手动修正 AI 提取结果，修正后将标记该记录为「已人工修正」并生成修正记录。</div>
+      `);
+    }
+
+    // 修正记录
+    function openCorrectionRecord(itemKey) {
+      showPrescreenModal('修正记录', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）该记录暂无历史修正记录。人工修正后会在此展示修改人、修改时间与前后对比。</div>
+      `);
+    }
+
+    // 清空修正
+    function clearCorrection(itemKey, btn) {
+      showPrescreenModal('清空修正', `
+        <div style="margin-bottom:8px;">当前记录：<b style="color:#333">${itemKey}</b></div>
+        <div style="color:#8c8c8c;">（演示）确认后将该记录恢复为 AI 原始提取结果，并清除人工修正标记。</div>
+      `);
+    }
+
     // 获取判断图标
     function getJudgeIcon(judge) {
       if (judge === 'matched') {
@@ -2061,6 +2417,9 @@
         el.style.display = 'none';
       });
       document.getElementById('tab-' + tab).style.display = 'block';
+
+      // 旧版本筛选表：切换为 Word式文档（与新版本一致）
+      if (tab === 'prescreen') { initPrescreenDoc('oldPrescreen'); }
     }
 
     // 返回上一页：来源为审核列表时回到审批列表，否则回到智能筛选患者列表
@@ -2831,6 +3190,7 @@
       document.querySelectorAll('#version-new .new-tab-content').forEach(el => el.style.display = 'none');
       var content = document.getElementById('tab-new-' + tab);
       if (content) content.style.display = 'block';
+      if (tab === 'prescreen') { initPrescreenDoc('prescreen'); }
     }
 
     // ==================== 锚点滚动 ====================
@@ -2872,7 +3232,7 @@
       try { renderVersionTags(); } catch (e) { console.error('renderVersionTags', e); }
       try { renderPrescreenVersionTags(); } catch (e) { console.error('renderPrescreenVersionTags', e); }
       try { renderMatchDetailTable(); } catch (e) { console.error('renderMatchDetailTable', e); }
-      try { renderPrescreenTable(); } catch (e) { console.error('renderPrescreenTable', e); }
+      try { initPrescreenDoc('oldPrescreen'); } catch (e) { console.error('initPrescreenDoc', e); }
 
       // 新版内容初始化
       try { switchMatchVersion('v1'); } catch (e) { console.error('switchMatchVersion', e); }
@@ -2882,6 +3242,9 @@
 
       // 旧版页面导航：初始化滚动高亮观察器
       try { initAnchorObserver(); } catch (e) { console.error('initAnchorObserver', e); }
+
+      // 筛选表（Word式文档）初始化（新版本）
+      try { initPrescreenDoc('prescreen'); } catch (e) { console.error('initPrescreenDoc', e); }
 
       // 设置当前时间
       const now = new Date();
