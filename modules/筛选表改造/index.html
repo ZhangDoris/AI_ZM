@@ -3306,6 +3306,9 @@
     .proj-criteria-table .thinking-chain-textarea:focus { border-color: #faad14; box-shadow: 0 0 0 2px rgba(250,173,20,0.12); }
     .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
     .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
+    .proj-criteria-table .move-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; border: 1px solid #d6e4ff; background: #f5f9ff; }
+    .proj-criteria-table .move-action:hover { background: #e6f0ff; }
+    .proj-criteria-table .move-action.disabled { color: #c9cdd4; cursor: not-allowed; border-color: #eee; background: #fafafa; }
     .proj-criteria-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
     .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
     .criteria-add-btn:hover { background: #0958d9; }
@@ -16424,7 +16427,11 @@ function renderExtractContent() {
         <td class="action-cell">
           <span class="config-action" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
           <span class="config-action" onclick="openRowThinkChain('extract','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('extract','${item.id}')}</span>
-          ${items.length > 1 ? `<span class="delete-action" onclick="deleteExtractRow(${idx})">删除</span>` : ''}
+          ${items.length > 1 ? `
+            <span class="move-action ${idx === 0 ? 'disabled' : ''}" title="上移" ${idx === 0 ? '' : `onclick="moveExtractRow(${idx}, 'up')"`}><i class="fa-solid fa-arrow-up"></i></span>
+            <span class="move-action ${idx === items.length - 1 ? 'disabled' : ''}" title="下移" ${idx === items.length - 1 ? '' : `onclick="moveExtractRow(${idx}, 'down')"`}><i class="fa-solid fa-arrow-down"></i></span>
+            <span class="delete-action" onclick="deleteExtractRow(${idx})">删除</span>
+          ` : ''}
         </td>
       </tr>
       ${remarkSubTable}
@@ -16522,6 +16529,17 @@ function deleteExtractRow(idx) {
   items.splice(idx, 1);
   refreshExtractSection();
   showWechatToast('已删除该条提取要点');
+}
+function moveExtractRow(idx, dir) {
+  const items = _projectExtractData.items;
+  if(!items || items.length <= 1) return;
+  const target = dir === 'up' ? idx - 1 : idx + 1;
+  if(target < 0 || target >= items.length) return;
+  const tmp = items[idx];
+  items[idx] = items[target];
+  items[target] = tmp;
+  refreshExtractSection();
+  showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
 /* 提取要点 · 按阶段备注 */
