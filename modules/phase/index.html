@@ -1607,6 +1607,16 @@
     .required-col-td { text-align: center; vertical-align: middle; }
     .required-col-label { display: inline-flex; align-items: center; cursor: pointer; }
     .required-col-check { width: 16px; height: 16px; cursor: pointer; accent-color: #ff4d4f; }
+    .type-col-th { min-width: 110px; text-align: center; vertical-align: middle; font-weight: 600; color: #333; }
+    .type-col-td { text-align: center; vertical-align: middle; padding-top: 18px !important; }
+    .screening-type-select {
+      width: 100%; max-width: 120px;
+      height: 32px; padding: 4px 8px;
+      border: 1px solid #d9d9d9; border-radius: 6px;
+      background: #fff; color: #333; font-size: 13px;
+      cursor: pointer; outline: none;
+    }
+    .screening-type-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
     .sub-remark-row td { background: #fafbff !important; padding: 0; }
     .sub-remark-inner { padding: 4px 14px 14px; }
     .sub-remark-title { font-size: 12px; color: #999; font-weight: 600; margin: 4px 0 8px 2px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
@@ -14632,14 +14642,15 @@ let _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData
 // 项目筛选表数据：单一版本（无版本概念），每条标准支持「各阶段共用」备注与按阶段启用，并可配置思考链
 const _defaultProjectScreeningData = {
   items: [
-    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S03', content:'ECOG体力状况评分0或1分', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S04', content:'已知对试验药物成分过敏', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S05', content:'妊娠期或哺乳期女性', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S06', content:'活动性自身免疫性疾病', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] }
+    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S03', content:'ECOG体力状况评分0或1分', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S04', content:'已知对试验药物成分过敏', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S05', content:'妊娠期或哺乳期女性', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S06', content:'活动性自身免疫性疾病', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] }
   ]
 };
+const SCREENING_TYPE_OPTIONS = ['单行文本','多行文本','日期','时间','日期+时间'];
 let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
 
 // 试验方案上传文件列表（项目管理新增/编辑页）
@@ -16161,7 +16172,7 @@ function renderScreeningContent() {
     const remarkCount = remarkStageList.length;
     const remarkSubTable = remarkCount ? `
       <tr class="sub-remark-row">
-        <td colspan="${4 + _projectSelectedStages.length}">
+        <td colspan="${5 + _projectSelectedStages.length}">
           <div class="sub-remark-inner">
             <div class="sub-remark-title" onclick="toggleScreeningSubRemark(${idx})">
               <i class="fa-regular fa-note-sticky"></i> 按阶段备注（${remarkCount}）
@@ -16194,6 +16205,11 @@ function renderScreeningContent() {
         <td class="content-cell">
           <textarea class="criteria-textarea" rows="3" placeholder="请输入筛选内容" onchange="updateScreeningContent(${idx}, this.value)">${item.content}</textarea>
         </td>
+        <td class="type-col-td">
+          <select class="screening-type-select" onchange="updateScreeningType(${idx}, this.value)">
+            ${SCREENING_TYPE_OPTIONS.map(opt => `<option value="${opt}" ${item.type === opt ? 'selected' : ''}>${opt}</option>`).join('')}
+          </select>
+        </td>
         <td class="required-col-td">
           <label class="required-col-label" title="该筛选内容是否为必填项">
             <input type="checkbox" class="required-col-check" ${item.required ? 'checked' : ''} onchange="updateScreeningRequired(${idx}, this.checked)"/>
@@ -16212,16 +16228,17 @@ function renderScreeningContent() {
   return `
     <div class="proj-criteria-group">
       <div class="proj-criteria-group-title screening">
-        <span class="group-title-left"><i class="fa-solid fa-magnifying-glass"></i> 筛选内容（${items.length}条）</span>
+        <span class="group-title-left"><i class="fa-solid fa-magnifying-glass"></i> 筛选表（${items.length}条）</span>
       </div>
       <div class="proj-criteria-toolbar">
-        <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i> 加筛选内容</button>
+        <button type="button" class="criteria-add-btn" onclick="addScreeningRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
       <table class="proj-criteria-table">
         <thead>
           <tr>
             <th class="num-cell">序号</th>
-            <th class="content-th">筛选内容</th>
+            <th class="content-th">提取项</th>
+            <th class="type-col-th">类型</th>
             <th class="required-col-th">
               <div class="required-col-name">必填</div>
               <label class="stage-select-all">
@@ -16257,6 +16274,10 @@ function updateScreeningContent(idx, value) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].content = value;
 }
+function updateScreeningType(idx, type) {
+  const items = _projectScreeningData.items;
+  if(items && items[idx]) items[idx].type = type;
+}
 function updateScreeningStageEnabled(idx, stageId, enabled) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].stageEnabled[stageId] = enabled;
@@ -16283,7 +16304,7 @@ function addScreeningRow(idx) {
   const newId = 'S' + String(items.length + 1).padStart(2, '0');
   const stageEnabled = {};
   _projectSelectedStages.forEach(s => { stageEnabled[s.id] = true; });
-  items.splice(idx + 1, 0, { id:newId, content:'', thinkingChain:[], stageEnabled:stageEnabled, required:false, stageRemarks:{} });
+  items.splice(idx + 1, 0, { id:newId, content:'', type:'多行文本', thinkingChain:[], stageEnabled:stageEnabled, required:false, stageRemarks:{} });
   refreshScreeningSection();
   showWechatToast('已新增一条筛选内容');
 }
