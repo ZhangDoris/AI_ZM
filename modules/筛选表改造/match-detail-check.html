@@ -956,15 +956,15 @@
       min-width: 380px;
       max-width: 640px;
       position: absolute;
-      top: 48px; right: 0; bottom: 0;
+      top: 0; right: 0; bottom: 0;
       background: #fff;
-      border-left: 1px solid #e0e0e0;
-      box-shadow: -4px 0 24px rgba(0,0,0,0.12);
-      z-index: 50;
+      border-left: 1px solid #e0e6ef;
+      box-shadow: -8px 0 36px rgba(22,119,255,0.12);
+      z-index: 1000;
       display: flex;
       flex-direction: column;
       transform: translateX(100%);
-      transition: transform .3s cubic-bezier(0.4,0,0.2,1);
+      transition: transform .32s cubic-bezier(0.4,0,0.2,1);
     }
     .trace-side.open { transform: translateX(0); }
     .trace-side-head {
@@ -973,8 +973,8 @@
       align-items: center;
       justify-content: space-between;
       padding: 14px 20px;
-      border-bottom: 2px solid #1677ff;
-      background: #f0f5ff;
+      border-bottom: 1px solid #eef2f7;
+      background: linear-gradient(90deg,#f7faff,#ffffff);
     }
     .trace-side-title {
       font-size: 15px;
@@ -1000,57 +1000,86 @@
       overflow-y: auto;
       padding: 20px;
     }
+    /* 工具栏 */
     .trace-toolbar {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #f0e4d3;
+      padding: 8px 10px;
+      background: #fafbfc;
+      border: 1px solid #eef0f3;
+      border-radius: 10px;
     }
     .trace-tb-count {
       font-size: 13px;
-      color: #666;
-      font-weight: 500;
-      background: #f0f0f0;
-      padding: 2px 10px;
-      border-radius: 12px;
-      margin-right: auto;
+      color: #5a6b82;
+      font-weight: 600;
+      background: #eef3fb;
+      padding: 4px 12px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
+    .trace-tb-sep { width: 1px; height: 18px; background: #e3e7ee; }
     .trace-tb-btn {
-      padding: 5px 12px;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
+      width: 34px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid #e0e4ea;
+      border-radius: 8px;
       background: #fff;
-      color: #333;
+      color: #4b5563;
       font-size: 13px;
       cursor: pointer;
       transition: all .15s;
     }
-    .trace-tb-btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; }
-    .trace-tb-btn:disabled { color: #bfbfbf; background: #f5f5f5; cursor: not-allowed; opacity: .6; }
+    .trace-tb-btn:hover:not(:disabled) { border-color: #1677ff; color: #1677ff; background: #f0f5ff; }
+    .trace-tb-btn:disabled { color: #c6ccd6; background: #f7f8fa; cursor: not-allowed; opacity: .7; }
     .trace-image-wrap {
-      background: #fafafa;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      max-width: 100%;
+      background: #fff;
+      padding: 0;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(22,119,255,0.08);
+      border: 1px solid #edf1f7;
+      overflow: hidden;
     }
     .trace-image-wrap img {
-      max-width: 100%;
-      max-height: 560px;
+      width: 100%;
+      max-height: 60vh;
+      object-fit: contain;
       display: block;
-      margin: 0 auto;
-      border: 1px solid #e8e8e8;
-      border-radius: 4px;
+      background: #f6f8fb;
       transform-origin: center center;
       transition: transform .25s ease;
     }
     .trace-image-name {
       text-align: center;
-      margin-top: 12px;
+      padding: 12px;
+      margin-top: 0;
       font-size: 13px;
-      color: #666;
+      color: #6b7686;
+      background: #fafbfc;
+      border-top: 1px solid #edf1f7;
+    }
+    /* 缩略图条 */
+    .trace-thumbs {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      margin-top: 16px; padding: 12px;
+      background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px;
+    }
+    .trace-thumb {
+      position: relative; width: 64px; height: 80px;
+      border: 2px solid #e3e7ee; border-radius: 8px; overflow: hidden;
+      cursor: pointer; transition: all .15s; background: #fff;
+    }
+    .trace-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .trace-thumb:hover { border-color: #8ab4ff; }
+    .trace-thumb.active { border-color: #1677ff; box-shadow: 0 0 0 3px rgba(22,119,255,.15); }
+    .tt-idx {
+      position: absolute; left: 4px; bottom: 4px;
+      background: rgba(0,0,0,.55); color: #fff;
+      font-size: 10px; padding: 1px 6px; border-radius: 8px;
     }
     /* 全屏图片预览 */
     .trace-preview-mask {
@@ -1330,6 +1359,8 @@
 
     /* ============ 筛选表：Word式文档视图 ============ */
     .prescreen-doc-layout { display: flex; gap: 24px; align-items: flex-start; }
+    /* 页面导航放右侧（与匹配详情风格一致） */
+    .prescreen-doc-layout.nav-right { flex-direction: row-reverse; }
     .prescreen-nav {
       width: 220px; flex-shrink: 0; position: sticky; top: 16px;
       background: #fff; border: 1px solid #f0f0f0; border-radius: 10px;
@@ -1358,14 +1389,22 @@
       display: flex; align-items: center; gap: 8px;
     }
     .doc-section-title .sec-idx { color: #1677ff; font-weight: 700; }
-    /* 大项目标题右侧：比较各阶段 按钮 */
+    /* 大项目标题右侧按钮组 */
+    .sec-title-actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
     .sec-compare-btn {
-      margin-left: auto; padding: 4px 14px; font-size: 12px; font-weight: 600;
+      padding: 4px 14px; font-size: 12px; font-weight: 600;
       border: 1px solid #1677ff; background: #fff; color: #1677ff; border-radius: 14px;
       cursor: pointer; transition: all .2s; white-space: nowrap;
     }
     .sec-compare-btn:hover { background: #1677ff; color: #fff; }
     .sec-compare-btn i { margin-right: 4px; }
+    .sec-trace-btn {
+      padding: 4px 14px; font-size: 12px; font-weight: 600;
+      border: 1px solid #2bb673; background: #fff; color: #2bb673; border-radius: 14px;
+      cursor: pointer; transition: all .2s; white-space: nowrap;
+    }
+    .sec-trace-btn:hover { background: #2bb673; color: #fff; }
+    .sec-trace-btn i { margin-right: 4px; }
     /* 通用弹窗面板 */
     .pm-panel { background: #fff; border-radius: 14px; width: 440px; max-width: 100%; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25); overflow: hidden; }
     .pm-head { padding: 16px 22px; font-size: 15px; font-weight: 700; color: #1f2d3d; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; background: linear-gradient(90deg,#f7faff,#ffffff); }
@@ -1389,6 +1428,11 @@
     .cmp-change { color: #f53f3f; font-weight: 600; }
     .cmp-pending { color: #fa8c16; font-weight: 600; }
     .cmp-stage-current { background: #e6f0ff !important; }
+    /* 阶段视图（原样展示各阶段表格） */
+    .stage-view-list { display: flex; flex-direction: column; gap: 22px; }
+    .stage-view-block { border: 1px solid #eef0f3; border-radius: 10px; padding: 14px 16px; background: #fff; }
+    .stage-view-title { font-size: 14px; font-weight: 700; color: #1677ff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .stage-view-title i { color: #1677ff; }
     .cmp-legend { margin-top: 16px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: #8c8c8c; }
     .cmp-legend-item { display: inline-flex; align-items: center; gap: 6px; }
     .cmp-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -1731,13 +1775,13 @@
             <button class="btn-sm btn-primary">下载</button>
           </div>
         </div>
-        <div class="prescreen-doc-layout">
-          <!-- 左侧页面导航 -->
+        <div class="prescreen-doc-layout nav-right">
+          <!-- 右侧页面导航（与匹配详情风格一致） -->
           <nav class="prescreen-nav" id="extractNav">
             <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
             <div id="extractNavList"><!-- JS 渲染 --></div>
           </nav>
-          <!-- 右侧文档 -->
+          <!-- 左侧文档 -->
           <div class="prescreen-doc" id="extractDoc">
             <h1 class="doc-h1">患者筛选信息采集表</h1>
             <div class="doc-subtitle" id="extractDocMeta">患者编号：PT_CN053_0001 ｜姓名缩写：WYNA ｜ 中心：CN053-安阳市肿瘤医院 ｜ 方案编号：WYNA-CN053 </div>
@@ -2363,7 +2407,10 @@
       box.innerHTML = screeningProjects.map((p, i) => `
         <div class="doc-section" id="sec-${prefix}-${p.id}">
           <h2 class="doc-section-title"><span class="sec-idx">${i + 1}.</span> ${p.title}
-            <button type="button" class="sec-compare-btn" onclick="openStageCompare('${p.id}')"><i class="fa-solid fa-code-compare"></i>比较各阶段</button>
+            <span class="sec-title-actions">
+              ${prefix === 'extract' ? `<button type="button" class="sec-trace-btn" onclick="openTraceDrawer(['image.png'])"><i class="fa-solid fa-file-medical"></i>病历溯源</button>` : ''}
+              <button type="button" class="sec-compare-btn" onclick="openStageCompare('${p.id}')"><i class="fa-solid fa-code-compare"></i>比较各阶段</button>
+            </span>
           </h2>
           ${p.desc ? `<div class="doc-section-desc">${p.desc}</div>` : ''}
           ${renderScreeningBody(p, prefix)}
@@ -2385,13 +2432,14 @@
     }
 
     function renderScreeningBody(p, prefix) {
+      const isExtract = prefix === 'extract';
       if (p.display === 'table') {
         return `<table class="doc-table">
-          <thead><tr>${p.columns.map(c => `<th>${c}</th>`).join('')}<th class="doc-act-col">操作</th></tr></thead>
+          <thead><tr>${p.columns.map(c => `<th>${c}</th>`).join('')}${isExtract ? '' : '<th class="doc-act-col">操作</th>'}</tr></thead>
           <tbody>${p.rows.map((r, ri) => `
             <tr>
               ${r.map(c => `<td>${c}</td>`).join('')}
-              <td class="doc-act-cell">${prescreenRowActions(p.id + '-row-' + ri, prefix)}</td>
+              ${isExtract ? '' : `<td class="doc-act-cell">${prescreenRowActions(p.id + '-row-' + ri, prefix)}</td>`}
             </tr>`).join('')}
           </tbody>
         </table>`;
@@ -2409,7 +2457,7 @@
               ${t.lines.map(l => `<div class="tl-line"><span class="k">${l[0]}：</span><span>${l[1]}</span></div>`).join('')}
               <div class="tl-line"><span class="k">结论：</span><span>${t.concl}</span></div>
             </div>
-            <div class="tl-actions">${prescreenRowActions(p.id + '-tl-' + ti, prefix)}</div>
+            ${isExtract ? '' : `<div class="tl-actions">${prescreenRowActions(p.id + '-tl-' + ti, prefix)}</div>`}
           </div>`).join('')}</div>`;
         const audit = p.audit ? `<div class="doc-audit-box">
           <div style="font-weight:600;color:#333;margin-bottom:8px;">审核要点</div>
@@ -2550,40 +2598,57 @@
     }
 
     // ==================== 跨阶段比较弹窗 ====================
+    // 阶段视图：按 筛选期 / 随机期 原样展示各阶段表格（不做比对）
+    const STAGE_VIEW_STAGES = [
+      { name: '筛选期', dataIdx: 1 },
+      { name: '随机期', dataIdx: 3 }
+    ];
     function openStageCompare(projectId) {
       const proj = screeningProjects.find(p => p.id === projectId);
-      const conf = stageCompareData[projectId];
       if (!proj) return;
-      let bodyHtml;
-      if (!conf || !conf.rows || conf.rows.length === 0) {
-        bodyHtml = `<div style="color:#8c8c8c;">该项目暂无跨阶段对比数据。</div>`;
-      } else {
-        const tagClass = { same: 'cmp-same', change: 'cmp-change', pending: 'cmp-pending' };
-        const tagText = { same: '一致', change: '有变化', pending: '待确认' };
-        const headCells = COMPARE_STAGES.map((s, idx) =>
-          `<th${idx === 0 ? ' class="cmp-stage-current"' : ''}>${s}${idx === 0 ? '（当前）' : ''}</th>`
-        ).join('');
-        const bodyRows = conf.rows.map(r => {
-          const cells = r.values.map((v, idx) =>
-            `<td class="${idx === 0 ? 'cmp-stage-current' : ''} ${r.tag ? tagClass[r.tag] : ''}">${v}</td>`
-          ).join('');
-          const tagBadge = r.tag ? `<div style="font-size:11px;margin-top:4px;">${tagText[r.tag]}</div>` : '';
-          return `<tr><td class="metric-col">${r.metric}${tagBadge}</td>${cells}</tr>`;
-        }).join('');
-        bodyHtml = `
-          <p class="stage-compare-sub">${conf.sub || ''}</p>
-          <table class="stage-compare-table">
-            <thead><tr><th class="metric-col">对比指标</th>${headCells}</tr></thead>
-            <tbody>${bodyRows}</tbody>
-          </table>
-          <div class="cmp-legend">
-            <span class="cmp-legend-item"><i class="cmp-dot cmp-same"></i>各阶段一致</span>
-            <span class="cmp-legend-item"><i class="cmp-dot cmp-change"></i>存在变化</span>
-            <span class="cmp-legend-item"><i class="cmp-dot cmp-pending"></i>待确认</span>
-            <span class="cmp-legend-item"><i class="cmp-dot cmp-current"></i>预筛阶段（当前）</span>
-          </div>`;
+      const conf = stageCompareData[projectId];
+      // 根据阶段数据替换原表中对应指标的值，其余保持原样
+      function buildStageRows(dataIdx) {
+        if (!proj.rows) return null;
+        return proj.rows.map(r => {
+          const cells = r.slice();
+          if (conf && conf.rows) {
+            conf.rows.forEach(cr => {
+              if (r[0] === cr.metric && cr.values[dataIdx] != null) cells[1] = cr.values[dataIdx];
+            });
+          }
+          return cells;
+        });
       }
-      showPrescreenModal('跨阶段比较 · ' + proj.title, bodyHtml, true);
+      const blocks = STAGE_VIEW_STAGES.map(st => {
+        let inner;
+        if (proj.display === 'timeline') {
+          inner = `<div class="doc-timeline">${proj.timeline.map(t => `
+            <div class="tl-item ${t.badge === 'warn' ? 'instable' : ''}">
+              <div class="tl-head">
+                <span class="tl-drug">${t.drug}</span>
+                <span class="tl-date">${t.dose}</span>
+                <span class="tl-badge ${t.badge === 'ok' ? 'ok' : 'warn'}">${t.badgeText}</span>
+                <span class="tl-date">${t.stableDays}</span>
+              </div>
+              <div class="tl-body">
+                ${t.lines.map(l => `<div class="tl-line"><span class="k">${l[0]}：</span><span>${l[1]}</span></div>`).join('')}
+                <div class="tl-line"><span class="k">结论：</span><span>${t.concl}</span></div>
+              </div>
+            </div>`).join('')}</div>`;
+        } else {
+          const rows = buildStageRows(st.dataIdx) || proj.rows;
+          inner = `<table class="doc-table">
+            <thead><tr>${proj.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(rc => `<tr>${rc.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+          </table>`;
+        }
+        return `<div class="stage-view-block">
+          <div class="stage-view-title"><i class="fa-solid fa-layer-group"></i> ${st.name}</div>
+          ${inner}
+        </div>`;
+      }).join('');
+      showPrescreenModal('阶段视图 · ' + proj.title, `<div class="stage-view-list">${blocks}</div>`, true);
     }
 
     // 病例修正
@@ -3575,17 +3640,25 @@ function renderTraceContent() {
 
   body.innerHTML = `
     <div class="trace-toolbar">
-      <span class="trace-tb-count">(${traceIndex + 1}/${traceImages.length})</span>
-      <button class="trace-tb-btn" ${traceIndex <= 0 ? 'disabled' : ''} onclick="prevTraceImage()"><i class="fa-solid fa-chevron-left"></i> 上一个</button>
-      <button class="trace-tb-btn" ${traceIndex >= traceImages.length - 1 ? 'disabled' : ''} onclick="nextTraceImage()">下一个 <i class="fa-solid fa-chevron-right"></i></button>
-      <button class="trace-tb-btn" onclick="openTracePreview()"><i class="fa-solid fa-magnifying-glass-plus"></i> 放大</button>
-      <button class="trace-tb-btn" onclick="rotateTraceImage()"><i class="fa-solid fa-rotate-right"></i> 旋转</button>
-
-      </div>
+      <span class="trace-tb-count"><i class="fa-regular fa-image"></i> ${traceIndex + 1} / ${traceImages.length}</span>
+      <span class="trace-tb-sep"></span>
+      <button class="trace-tb-btn" ${traceIndex <= 0 ? 'disabled' : ''} onclick="prevTraceImage()"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="trace-tb-btn" ${traceIndex >= traceImages.length - 1 ? 'disabled' : ''} onclick="nextTraceImage()"><i class="fa-solid fa-chevron-right"></i></button>
+      <span class="trace-tb-sep"></span>
+      <button class="trace-tb-btn" onclick="openTracePreview()" title="放大"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+      <button class="trace-tb-btn" onclick="rotateTraceImage()" title="旋转"><i class="fa-solid fa-rotate-right"></i></button>
+    </div>
     <div class="trace-image-wrap">
       <img id="traceImage" src="${src}" alt="病历溯源图片">
       <div class="trace-image-name">${name}</div>
     </div>
+    ${traceImages.length > 1 ? `
+    <div class="trace-thumbs">
+      ${traceImages.map((im, i) => {
+        const tsrc = typeof im === 'string' ? im : im.url;
+        return `<div class="trace-thumb ${i === traceIndex ? 'active' : ''}" onclick="jumpTraceImage(${i})"><img src="${tsrc}" alt="缩略图"><span class="tt-idx">${i + 1}</span></div>`;
+      }).join('')}
+    </div>` : ''}
   `;
 }
 
@@ -3594,6 +3667,9 @@ function prevTraceImage() {
 }
 function nextTraceImage() {
   if (traceIndex < traceImages.length - 1) { traceIndex++; renderTraceContent(); }
+}
+function jumpTraceImage(i) {
+  if (i >= 0 && i < traceImages.length) { traceIndex = i; renderTraceContent(); }
 }
 
 function closeTraceView() {

@@ -1,0 +1,535 @@
+<!-- 
+  患者编辑原型
+  功能：展示「编辑患者」弹窗的表单布局与交互。
+  技术栈：HTML + Tailwind CSS v3 (CDN) + Font Awesome (CDN) + 原生 JS
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>患者编辑 - 产品原型</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1890FF;
+      --primary-hover: #40A9FF;
+      --bg: #F0F2F5;
+      --text: #333333;
+      --label: #666666;
+      --border: #D9D9D9;
+      --border-hover: #40A9FF;
+      --disabled-bg: #F5F5F5;
+      --disabled-text: #999999;
+      --required: #FF4D4F;
+      --placeholder: #BFBFBF;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .proto-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+    .modal {
+      width: 100%;
+      max-width: 620px;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .modal-header {
+      position: relative;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #F0F0F0;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+    .modal-close {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #999;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { color: #666; background: #F5F5F5; }
+    .modal-body { padding: 24px 32px 8px; }
+    .form-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+    .form-label {
+      width: 100px;
+      padding-right: 12px;
+      padding-top: 7px;
+      text-align: right;
+      font-size: 14px;
+      color: var(--label);
+      line-height: 22px;
+      flex-shrink: 0;
+    }
+    .form-label.required::before {
+      content: "*";
+      color: var(--required);
+      margin-right: 4px;
+    }
+    .form-field {
+      flex: 1;
+      min-width: 0;
+    }
+    .form-input,
+    .form-select {
+      width: 100%;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:hover,
+    .form-select:hover { border-color: var(--border-hover); }
+    .form-input:focus,
+    .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(24,144,255,0.15);
+    }
+    .form-input:disabled,
+    .form-select:disabled {
+      background: var(--disabled-bg);
+      color: var(--disabled-text);
+      cursor: not-allowed;
+    }
+    .form-input::placeholder,
+    .form-select option:first-child { color: var(--placeholder); }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999999' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+    .form-input.invalid { border-color: var(--required); }
+    .form-input.invalid:focus { box-shadow: 0 0 0 2px rgba(255,77,79,0.12); }
+    .field-hint {
+      font-size: 12px;
+      line-height: 1.4;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    .field-hint.error { color: var(--required); }
+    .date-field { position: relative; }
+    .date-field i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #BFBFBF;
+      font-size: 14px;
+      pointer-events: none;
+    }
+    .date-field input { padding-left: 34px; }
+    .radio-group {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 36px;
+    }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .radio-option input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 32px 24px;
+    }
+    .btn {
+      height: 34px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      outline: none;
+    }
+    .btn-default {
+      background: #fff;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .btn-default:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    /* 轻提示 Toast */
+    .proto-toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-16px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 90vw;
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #fff;
+      background: #333;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 9999;
+    }
+    .proto-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .proto-toast.success { background: #52C41A; }
+    .proto-toast i { font-size: 15px; }
+
+    /* 自定义确认弹窗 */
+    .proto-confirm-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 9998;
+    }
+    .proto-confirm-mask.show { opacity: 1; pointer-events: auto; }
+    .proto-confirm {
+      width: 360px;
+      max-width: 90vw;
+      background: #fff;
+      border-radius: 4px;
+      padding: 22px 22px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: scale(0.96);
+      transition: transform 0.2s ease;
+    }
+    .proto-confirm-mask.show .proto-confirm { transform: scale(1); }
+    .proto-confirm-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      padding: 4px 2px 18px;
+    }
+    .proto-confirm-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .proto-confirm-cancel,
+    .proto-confirm-ok {
+      height: 34px;
+      padding: 0 18px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      outline: none;
+    }
+    .proto-confirm-cancel {
+      background: #fff;
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .proto-confirm-cancel:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .proto-confirm-ok {
+      background: var(--primary);
+      color: #fff;
+    }
+    .proto-confirm-ok:hover { background: var(--primary-hover); }
+
+    @media (max-width: 640px) {
+      .modal-body { padding: 20px 20px 4px; }
+      .modal-footer { padding: 14px 20px 20px; }
+      .form-row { flex-direction: column; align-items: flex-start; }
+      .form-label { text-align: left; padding-top: 0; margin-bottom: 6px; }
+      .radio-group { height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="proto-wrap">
+    <div class="modal" id="patientModal">
+      <div class="modal-header">
+        <div class="modal-title">编辑患者</div>
+        <div class="modal-close"><i class="fa-solid fa-xmark"></i></div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="form-label required">姓名缩写：</label>
+          <div class="form-field"><input type="text" class="form-input" value="MQHU" id="fieldName"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">年龄：</label>
+          <div class="form-field"><input type="text" class="form-input" id="fieldAge"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">性别：</label>
+          <div class="form-field">
+            <select class="form-select" id="fieldGender">
+              <option value="" disabled selected>请选择性别</option>
+              <option>男</option>
+              <option>女</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label required">疾病领域：</label>
+          <div class="form-field">
+            <select class="form-select" id="fieldDisease">
+              <option selected>非肿心内</option>
+              <option>乳腺癌</option>
+              <option>肺癌</option>
+              <option>胃癌</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">方案编号：</label>
+          <div class="form-field"><input type="text" class="form-input" value="SHR-1918-302" disabled id="fieldProtocol"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">参研中心：</label>
+          <div class="form-field">
+            <select class="form-select" disabled id="fieldCenter">
+              <option selected>CN039 - 赣州市人民医院 - 钟树妹</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">中心号：</label>
+          <div class="form-field"><input type="text" class="form-input" value="CN039" disabled id="fieldCenterNo"></div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">知情时间：</label>
+          <div class="form-field date-field">
+            <i class="fa-regular fa-calendar"></i>
+            <input type="text" class="form-input" placeholder="请选择知情时间" id="fieldDate">
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">筛选号：</label>
+          <div class="form-field">
+            <input type="text" class="form-input" id="fieldScreenNo" placeholder="如：CN0390001">
+            <div class="field-hint" id="screenNoHint"></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">是否筛败：</label>
+          <div class="form-field radio-group" id="fieldFail">
+            <label class="radio-option"><input type="radio" name="screenFail" value="yes"> 是</label>
+            <label class="radio-option"><input type="radio" name="screenFail" value="no" checked> 否</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default">取消</button>
+        <button class="btn btn-primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 当前项目的筛选号规则（原型演示：中心号 + 4位流水号）
+    const SCREENING_RULE = {
+      type: 'center4',            // center3 / center4 / center5 / manual / custom
+      prefix: 'CN039',            // 中心号
+      digits: 4                   // 流水号位数
+    };
+    const RULE_TEXT = {
+      center3: '中心号 + 3位流水号',
+      center4: '中心号 + 4位流水号',
+      center5: '中心号 + 5位流水号',
+      manual: '手动填写（不校验格式）',
+      custom: '自定义规则'
+    };
+
+    function buildExpectedPattern(rule) {
+      if (rule.type === 'manual') return null;
+      if (rule.type === 'center3' || rule.type === 'center4' || rule.type === 'center5') {
+        return new RegExp('^' + escapeReg(rule.prefix) + '\\d{' + rule.digits + '}$');
+      }
+      return null;
+    }
+
+    function escapeReg(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 已使用的筛选号列表（原型演示数据：筛选号 -> 姓名缩写 / 患者编号）
+    const USED_SCREENING_NOS = {
+      'CN0390001': { nameAbbr: 'ZSAN', patientNo: 'P-2023-001' },
+      'CN0390002': { nameAbbr: 'LIMI', patientNo: 'P-2023-002' },
+      'CN0390003': { nameAbbr: 'WANG', patientNo: 'P-2023-003' }
+    };
+
+    // 检测筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
+    function checkScreenNoConflict() {
+      const raw = document.getElementById('fieldScreenNo').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    // 轻提示 Toast
+    function showToast(msg, type) {
+      let box = document.getElementById('protoToast');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'protoToast';
+        box.className = 'proto-toast';
+        document.body.appendChild(box);
+      }
+      box.className = 'proto-toast show ' + (type || 'info');
+      box.innerHTML = '<i class="' + (type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-info') + '"></i><span>' + msg + '</span>';
+      clearTimeout(box._t);
+      box._t = setTimeout(() => { box.className = 'proto-toast ' + (type || 'info'); }, 2200);
+    }
+
+    // 自定义确认弹窗（不拦截保存，确认后执行回调）
+    function showConfirm(msg, onOk) {
+      let mask = document.getElementById('protoConfirm');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'protoConfirm';
+        mask.className = 'proto-confirm-mask';
+        mask.innerHTML =
+          '<div class="proto-confirm">' +
+            '<div class="proto-confirm-body"></div>' +
+            '<div class="proto-confirm-foot">' +
+              '<button class="proto-confirm-cancel">取消</button>' +
+              '<button class="proto-confirm-ok">仍要保存</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(mask);
+      }
+      mask.querySelector('.proto-confirm-body').textContent = msg;
+      mask.classList.add('show');
+      const okBtn = mask.querySelector('.proto-confirm-ok');
+      const cancelBtn = mask.querySelector('.proto-confirm-cancel');
+      const close = (ok) => {
+        mask.classList.remove('show');
+        okBtn.removeEventListener('click', onOkHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        if (ok && typeof onOk === 'function') onOk();
+      };
+      const onOkHandler = () => close(true);
+      const cancelHandler = () => close(false);
+      okBtn.addEventListener('click', onOkHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+    }
+
+    function validateScreenNo() {
+      const input = document.getElementById('fieldScreenNo');
+      const hint = document.getElementById('screenNoHint');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint';
+        hint.textContent = '';
+        return true;
+      }
+
+      if (SCREENING_RULE.type === 'manual') return true;
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (ok) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint';
+        hint.textContent = '';
+      } else {
+        input.classList.add('invalid');
+        hint.className = 'field-hint error';
+        hint.textContent = '筛选号不符合规范：应为「中心号」+ 4位数字';
+      }
+      return ok;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('fieldScreenNo');
+      input.addEventListener('input', validateScreenNo);
+      input.addEventListener('blur', validateScreenNo);
+
+      document.querySelector('.btn-primary').addEventListener('click', () => {
+        if (!validateScreenNo()) {
+          document.getElementById('fieldScreenNo').focus();
+          return;
+        }
+        // 检测筛选号是否已存在冲突（提示但不拦截保存）
+        const conflict = checkScreenNoConflict();
+        if (conflict) {
+          const tip = '该筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
+            '：患者编号：' + conflict.patientNo + '】使用，仍要保存吗？';
+          showConfirm(tip, () => {
+            showToast('保存成功', 'success');
+          });
+          return;
+        }
+        showToast('保存成功', 'success');
+      });
+    });
+  </script>
+</body>
+</html>
