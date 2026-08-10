@@ -252,40 +252,72 @@
     }
     .proto-confirm-mask.show { opacity: 1; pointer-events: auto; }
     .proto-confirm {
-      width: 360px;
+      width: 420px;
       max-width: 90vw;
       background: #fff;
       border-radius: 4px;
-      padding: 22px 22px 16px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.2);
       transform: scale(0.96);
       transition: transform 0.2s ease;
     }
     .proto-confirm-mask.show .proto-confirm { transform: scale(1); }
+    .proto-confirm-header {
+      position: relative;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #F0F0F0;
+    }
+    .proto-confirm-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #262626;
+    }
+    .proto-confirm-close {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #999;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .proto-confirm-close:hover { color: #666; background: #F5F5F5; }
     .proto-confirm-body {
       font-size: 14px;
       line-height: 1.6;
       color: var(--text);
-      padding: 4px 2px 18px;
+      padding: 20px 24px 18px;
     }
     .proto-confirm-foot {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 12px;
+      padding: 16px 24px 20px;
     }
     .proto-confirm-cancel,
     .proto-confirm-ok {
-      height: 34px;
-      padding: 0 18px;
+      height: 36px;
+      min-width: 72px;
+      padding: 0 20px;
       border-radius: 4px;
       font-size: 14px;
       cursor: pointer;
       border: 1px solid transparent;
       outline: none;
+      transition: all 0.2s;
     }
     .proto-confirm-cancel {
       background: #fff;
-      border-color: var(--border);
+      border-color: #D9D9D9;
       color: var(--text);
     }
     .proto-confirm-cancel:hover {
@@ -370,10 +402,17 @@
         <div class="form-row">
           <label class="form-label">筛选号：</label>
           <div class="form-field">
-            <input type="text" class="form-input" id="fieldScreenNo" placeholder="如：CN0390001">
+            <input type="text" class="form-input" id="fieldScreenNo">
             <div class="field-hint" id="screenNoHint"></div>
           </div>
         </div>
+         <div class="form-row">
+            <label class="form-label">更新筛选号：</label>
+            <div class="form-field">
+              <input type="text" class="form-input" id="fieldUpdateScreenNo">
+              <div class="field-hint" id="updateScreenNoHint"></div>
+            </div>
+          </div>
         <div class="form-row">
           <label class="form-label">是否筛败：</label>
           <div class="form-field radio-group" id="fieldFail">
@@ -454,6 +493,10 @@
         mask.className = 'proto-confirm-mask';
         mask.innerHTML =
           '<div class="proto-confirm">' +
+            '<div class="proto-confirm-header">' +
+              '<div class="proto-confirm-title">提示</div>' +
+              '<div class="proto-confirm-close"><i class="fa-solid fa-xmark"></i></div>' +
+            '</div>' +
             '<div class="proto-confirm-body"></div>' +
             '<div class="proto-confirm-foot">' +
               '<button class="proto-confirm-cancel">取消</button>' +
@@ -466,16 +509,19 @@
       mask.classList.add('show');
       const okBtn = mask.querySelector('.proto-confirm-ok');
       const cancelBtn = mask.querySelector('.proto-confirm-cancel');
+      const closeBtn = mask.querySelector('.proto-confirm-close');
       const close = (ok) => {
         mask.classList.remove('show');
         okBtn.removeEventListener('click', onOkHandler);
         cancelBtn.removeEventListener('click', cancelHandler);
+        closeBtn.removeEventListener('click', cancelHandler);
         if (ok && typeof onOk === 'function') onOk();
       };
       const onOkHandler = () => close(true);
       const cancelHandler = () => close(false);
       okBtn.addEventListener('click', onOkHandler);
       cancelBtn.addEventListener('click', cancelHandler);
+      closeBtn.addEventListener('click', cancelHandler);
     }
 
     function validateScreenNo() {
@@ -502,7 +548,7 @@
       } else {
         input.classList.add('invalid');
         hint.className = 'field-hint error';
-        hint.textContent = '筛选号不符合规范：应为「中心号」+ 4位数字';
+        hint.textContent = '筛选号不符合规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }

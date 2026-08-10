@@ -1,0 +1,456 @@
+<!--
+  患者编辑 - 移动端原型
+  功能：展示 H5 移动端「编辑患者」页面，含表单校验与筛选号格式校验。
+  技术栈：HTML + 原生 CSS + Font Awesome (CDN) + 原生 JS
+  参考：modules/phase/h5-app-demo.html 中的编辑患者页面摘录并独立成单文件，增加筛选号校验逻辑。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>患者编辑 - 移动端</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: #e9edf2;
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px;
+      min-height: 100vh;
+    }
+
+    .phone-frame {
+      position: relative;
+      width: 390px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 8px #1a1a1a, 0 0 0 10px #2c2c2c;
+      overflow: hidden;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 720px;
+      overflow-y: auto;
+      background: #f5f6f8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航 */
+    .phone-header {
+      background: #fff;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .phone-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #1677ff;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* 编辑患者表单 */
+    .pe-form { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .pe-field { margin-bottom: 14px; }
+    .pe-label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; font-weight: 500; }
+    .pe-label .req { color: #ff4d4f; margin-right: 4px; }
+    .pe-input, .pe-select {
+      width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fff; outline: none;
+      transition: border-color .2s, background-color .2s; box-sizing: border-box;
+    }
+    .pe-input[readonly] { background: #f5f7fa; color: #999; }
+    .pe-input:focus, .pe-select:focus { border-color: #1677ff; background: #fff; }
+    .pe-input.error, .pe-select.error { border-color: #ff4d4f; background: #fff2f0; }
+    .pe-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .pe-hint { font-size: 12px; margin-top: 4px; min-height: 16px; line-height: 1.4; }
+    .pe-hint.error { color: #ff4d4f; }
+
+    .pe-footer { flex-shrink: 0; padding: 12px 16px 16px; background: #fff; border-top: 1px solid #f0f0f0; box-sizing: border-box; }
+    .pe-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; background: #1677ff; color: #fff; cursor: pointer; }
+    .pe-btn:active { background: #0958d9; }
+
+    /* 轻提示 Toast */
+    .toast-mini {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-16px);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 9999;
+    }
+    .toast-mini.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 自定义确认弹窗 */
+    .proto-confirm-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 9998;
+    }
+    .proto-confirm-mask.show { opacity: 1; pointer-events: auto; }
+    .proto-confirm {
+      width: 320px;
+      max-width: 86vw;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      transform: scale(0.96);
+      transition: transform 0.2s ease;
+      overflow: hidden;
+    }
+    .proto-confirm-mask.show .proto-confirm { transform: scale(1); }
+    .proto-confirm-header {
+      position: relative;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .proto-confirm-title { font-size: 16px; font-weight: 500; color: #262626; }
+    .proto-confirm-close {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #999;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .proto-confirm-close:hover { color: #666; background: #f5f5f5; }
+    .proto-confirm-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #333;
+      padding: 20px 22px 18px;
+    }
+    .proto-confirm-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding: 14px 22px 18px;
+    }
+    .proto-confirm-cancel,
+    .proto-confirm-ok {
+      height: 34px;
+      min-width: 72px;
+      padding: 0 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .proto-confirm-cancel {
+      background: #fff;
+      border-color: #d9d9d9;
+      color: #333;
+    }
+    .proto-confirm-cancel:hover { border-color: #1677ff; color: #1677ff; }
+    .proto-confirm-ok { background: #1677ff; color: #fff; }
+    .proto-confirm-ok:hover { background: #0958d9; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="phone-screen" id="screen-patient-edit">
+      <!-- 顶部导航 -->
+      <div class="phone-header">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="toastMini('返回上一页')">
+          <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+        </div>
+        <div class="phone-title" style="font-size:15px">编辑患者</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="avatar">超</div>
+          <span style="font-size:13px;color:#333">超管</span>
+        </div>
+      </div>
+
+      <!-- 表单 -->
+      <div class="pe-form" id="patientEditForm">
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>姓名缩写</label>
+          <input class="pe-input" id="pe-name" type="text" value="MQHU" readonly>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">年龄</label>
+          <input class="pe-input" id="pe-age" type="text" placeholder="请输入年龄">
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">性别</label>
+          <select class="pe-select" id="pe-gender">
+            <option value="男">男</option>
+            <option value="女">女</option>
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>疾病领域</label>
+          <select class="pe-select" id="pe-disease">
+            <option value="">请选择</option>
+            <option value="非肿心内" selected>非肿心内</option>
+            <option value="肺癌">肺癌</option>
+            <option value="乳腺癌">乳腺癌</option>
+            <option value="消化道肿瘤">消化道肿瘤</option>
+            <option value="血液肿瘤">血液肿瘤</option>
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">方案编号</label>
+          <input class="pe-input" id="pe-plan" type="text" value="SHR-1918-302" readonly>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">参研中心</label>
+          <select class="pe-select" id="pe-center">
+            <option value="">请选择</option>
+            <option value="CN039 - 赣州市人民医院 - 钟树妹" selected>CN039 - 赣州市人民医院 - 钟树妹</option>
+            <option value="复旦大学附属华山医院">复旦大学附属华山医院</option>
+            <option value="北京协和医院">北京协和医院</option>
+            <option value="上海瑞金医院">上海瑞金医院</option>
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">中心号</label>
+          <input class="pe-input" id="pe-center-no" type="text" value="CN039" readonly>
+        </div>
+        <div class="pe-field" id="pe-screening-field">
+          <label class="pe-label">筛选号</label>
+          <input class="pe-input" id="pe-screening" type="text" placeholder="如：CN0390001">
+          <div class="pe-hint" id="peScreeningHint"></div>
+        </div>
+    
+        <div class="pe-field" id="pe-informed-field">
+          <label class="pe-label">知情时间</label>
+          <input class="pe-input" id="pe-informed" type="datetime-local">
+        </div>
+            <div class="pe-field">
+          <label class="pe-label">更新筛选号</label>
+          <input class="pe-input" id="pe-screening-update" type="text" placeholder="如：CN0390001">
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">是否筛败</label>
+          <select class="pe-select" id="pe-screen-fail">
+            <option value="否" selected>否</option>
+            <option value="是">是</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 底部保存 -->
+      <div class="pe-footer">
+        <button class="pe-btn primary" onclick="savePatientEdit()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-mini" id="toastMini"></div>
+
+  <script>
+    // ====== 筛选号规则（原型演示：中心号 + 4位流水号） ======
+    const SCREENING_RULE = {
+      type: 'center4',
+      prefix: 'CN039',
+      digits: 4
+    };
+
+    const RULE_TEXT = {
+      center3: '中心号 + 3位流水号',
+      center4: '中心号 + 4位流水号',
+      center5: '中心号 + 5位流水号',
+      manual: '手动填写（不校验格式）',
+      custom: '自定义规则'
+    };
+
+    function escapeReg(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function buildExpectedPattern(rule) {
+      if (rule.type === 'manual') return null;
+      if (rule.type === 'center3' || rule.type === 'center4' || rule.type === 'center5') {
+        return new RegExp('^' + escapeReg(rule.prefix) + '\\d{' + rule.digits + '}$');
+      }
+      return null;
+    }
+
+    // 已使用的筛选号列表（原型演示数据：筛选号 -> 患者信息）
+    const USED_SCREENING_NOS = {
+      'CN0390001': { nameAbbr: 'ZSAN', patientNo: 'P-2023-001' },
+      'CN0390002': { nameAbbr: 'LIMI', patientNo: 'P-2023-002' },
+      'CN0390003': { nameAbbr: 'WANG', patientNo: 'P-2023-003' }
+    };
+
+    // 校验筛选号：返回 { ok, msg }
+    function validateScreeningNo() {
+      const input = document.getElementById('pe-screening');
+      const hint = document.getElementById('peScreeningHint');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.classList.remove('error');
+        hint.className = 'pe-hint';
+        hint.textContent = '';
+        return { ok: true, empty: true };
+      }
+
+      if (SCREENING_RULE.type === 'manual') {
+        return { ok: true };
+      }
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (!ok) {
+        // 仅格式提示，不阻断填写
+        input.classList.add('error');
+        hint.className = 'pe-hint error';
+        hint.textContent = '筛选号不符合规范：应为「中心号+4位数字」';
+        return { ok: false };
+      }
+
+      input.classList.remove('error');
+      hint.className = 'pe-hint';
+      hint.textContent = '';
+      return { ok: true };
+    }
+
+    // 检测筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
+    function checkScreeningConflict() {
+      const raw = document.getElementById('pe-screening').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    // 轻提示
+    function toastMini(msg) {
+      const t = document.getElementById('toastMini');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    // 自定义确认弹窗（保存重复筛选号时提示，确认后仍可保存）
+    function showConfirm(msg, onOk) {
+      let mask = document.getElementById('protoConfirm');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'protoConfirm';
+        mask.className = 'proto-confirm-mask';
+        mask.innerHTML =
+          '<div class="proto-confirm">' +
+            '<div class="proto-confirm-header">' +
+              '<div class="proto-confirm-title">提示</div>' +
+              '<div class="proto-confirm-close"><i class="fa-solid fa-xmark"></i></div>' +
+            '</div>' +
+            '<div class="proto-confirm-body"></div>' +
+            '<div class="proto-confirm-foot">' +
+              '<button class="proto-confirm-cancel">取消</button>' +
+              '<button class="proto-confirm-ok">仍要保存</button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(mask);
+      }
+      mask.querySelector('.proto-confirm-body').textContent = msg;
+      mask.classList.add('show');
+      const okBtn = mask.querySelector('.proto-confirm-ok');
+      const cancelBtn = mask.querySelector('.proto-confirm-cancel');
+      const closeBtn = mask.querySelector('.proto-confirm-close');
+      const close = (ok) => {
+        mask.classList.remove('show');
+        okBtn.removeEventListener('click', onOkHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        closeBtn.removeEventListener('click', cancelHandler);
+        if (ok && typeof onOk === 'function') onOk();
+      };
+      const onOkHandler = () => close(true);
+      const cancelHandler = () => close(false);
+      okBtn.addEventListener('click', onOkHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+      closeBtn.addEventListener('click', cancelHandler);
+    }
+
+    function savePatientEdit() {
+      // 必填项校验
+      const requiredFields = [
+        { id: 'pe-name', name: '姓名缩写' },
+        { id: 'pe-disease', name: '疾病领域' }
+      ];
+      let firstErr = null;
+      requiredFields.forEach(f => {
+        const el = document.getElementById(f.id);
+        el.classList.remove('error');
+        if (!el.value.trim()) {
+          el.classList.add('error');
+          if (!firstErr) firstErr = f.name;
+        }
+      });
+      if (firstErr) {
+        toastMini('请填写必填项：' + firstErr);
+        return;
+      }
+
+      // 筛选号格式校验（仅提示，不阻断）
+      const screening = validateScreeningNo();
+      if (!screening.ok) {
+        document.getElementById('pe-screening').focus();
+        return;
+      }
+
+      // 筛选号重复校验：保存时检测，弹确认提示（不阻断保存）
+      const conflict = checkScreeningConflict();
+      if (conflict) {
+        const tip = '该筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
+          '，患者编号：' + conflict.patientNo + '】使用，仍要保存吗？';
+        showConfirm(tip, () => {
+          toastMini('保存成功');
+        });
+        return;
+      }
+
+      toastMini('保存成功');
+    }
+
+    // 输入时实时校验格式（仅提示，不阻断填写）
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('pe-screening');
+      input.addEventListener('input', validateScreeningNo);
+      input.addEventListener('blur', validateScreeningNo);
+    });
+  </script>
+</body>
+</html>

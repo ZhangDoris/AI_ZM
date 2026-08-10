@@ -197,6 +197,8 @@
     .pill-blue { background: #e6f4ff; color: #1677ff; }
     .pill-orange { background: #fff4e6; color: #fa8c16; }
     .pill-green { background: #e6f7ec; color: #07c160; }
+    .pill-audit-name { background: #f0f5ff; color: #2b5aed; font-weight: 500; }
+    .audit-card .audit-name-pill { font-size: 12px; padding: 1px 8px; }
     .pill-red { background: #fef0ef; color: #f5222d; }
     .pill-gray { background: #f5f5f5; color: #8c8c8c; }
     .audit-card .body { padding: 8px 14px; }
@@ -736,20 +738,104 @@
       border-radius: 2px;
     }
     .pt-filter-bar {
-      display: flex; align-items: center; gap: 8px;
+      display: flex; flex-direction: column; gap: 8px;
       padding: 10px 12px;
       background: #fff;
+    }
+    .pt-filter-center-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid #91caff;
+      color: #1677ff;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #f0f5ff;
+      cursor: pointer;
+    }
+    .pt-filter-center-btn .lbl { color:#666; }
+    .pt-filter-center-btn .val { flex:1; color:#1677ff; font-weight:500; }
+    .pt-filter-center-btn .caret { font-size:10px; }
+    .pt-filter-row2 {
+      display: flex; align-items: center; gap: 8px;
     }
     .pt-filter-pill {
       flex: 1;
       text-align: center;
       padding: 8px 0;
-      border: 1px solid #1677ff;
+      border: 1px solid #91caff;
       color: #1677ff;
       border-radius: 6px;
       font-size: 13px;
       background: #fff;
     }
+
+    /* 下拉面板 */
+    .pt-filter-wrap { position: relative; }
+    .pt-dropdown {
+      position: absolute; top: calc(100% + 6px); left: 14px; right: 14px;
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      z-index: 99; max-height: 260px; overflow-y: auto;
+      animation: dropIn .18s ease;
+    }
+    @keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+    .pt-dropdown-item {
+      padding: 11px 16px; font-size: 14px; color: #262626;
+      cursor: pointer; white-space: nowrap;
+      transition: background .15s;
+    }
+    .pt-dropdown-item:hover { background: #f5f7fa; }
+    .pt-dropdown-item.active { color: #1677ff; font-weight: 500; }
+
+    /* 底部弹窗选择器 - 中心 */
+    .pt-picker-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 999; display: none; align-items: flex-end; justify-content: center;
+      animation: pickerFadeIn .2s ease;
+    }
+    @keyframes pickerFadeIn { from { opacity:0; } to { opacity:1; } }
+    .pt-picker-panel {
+      width: 100%; max-height: 70vh; background: #fff;
+      border-radius: 16px 16px 0 0;
+      display: flex; flex-direction: column;
+      animation: pickerSlideUp .28s ease;
+    }
+    @keyframes pickerSlideUp { from { transform:translateY(100%); } to { transform:none; } }
+    .pt-picker-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .pt-picker-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .pt-picker-cancel { font-size: 15px; color: #666; background:none; border:none; cursor:pointer; padding:4px 8px; }
+    .pt-picker-confirm { font-size: 15px; color: #1677ff; background:none; border:none; cursor:pointer; padding:4px 8px; font-weight:500; }
+    .pt-picker-search {
+      padding: 10px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+    }
+    .pt-picker-search input {
+      width: 100%; height: 36px; border: 1px solid #e0e0e0; border-radius: 8px;
+      padding: 0 12px 0 32px; font-size: 14px; box-sizing:border-box;
+      outline: none; background: #f5f7fa;
+    }
+    .pt-picker-search input:focus { border-color:#1677ff; background:#fff; }
+    .pt-picker-search-wrap { position:relative; }
+    .pt-picker-search-wrap i {
+      position:absolute; left:10px; top:50%; transform:translateY(-50%);
+      color:#bbb; font-size:13px;
+    }
+    .pt-picker-list {
+      overflow-y: auto; flex:1; min-height: 0; padding: 8px 0;
+    }
+    .pt-picker-item {
+      padding: 13px 16px; font-size: 14px; color:#262626; cursor:pointer;
+      display:flex; align-items:center; gap:8px; transition:background .15s;
+    }
+    .pt-picker-item:hover { background: #f5f7fa; }
+    .pt-picker-item.active { color:#1677ff; }
+    .pt-picker-item .pk-code { color:#999; font-size:13px; flex-shrink:0; }
+    .pt-picker-item .pk-name { flex:1; }
+    .pt-picker-item .pk-contact { color:#999; font-size:13px; flex-shrink:0; }
+
     .pt-add-btn {
       color: #1677ff;
       font-size: 13px;
@@ -772,6 +858,9 @@
     .pt-card .pt-hd .info {
       font-size: 13px; color: #666;
     }
+    .pt-card .pt-screen-warn {
+      margin-bottom: 8px;
+    }
     .pt-card .pt-hd .icons {
       margin-left: auto;
       display: flex; align-items: center; gap: 10px;
@@ -787,6 +876,15 @@
       line-height: 20px;
     }
     .pt-card .pt-row .lbl { color: #999; }
+    /* 筛选号不规范提示 */
+    .sc-screen-no-warn {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #fef0ef; color: #f5222d;
+      border: 1px solid #ffccc7; border-radius: 4px;
+      padding: 1px 8px; font-size: 12px; margin-left: 6px;
+      white-space: nowrap; line-height: 20px; vertical-align: middle;
+    }
+    .sc-screen-no-warn i { font-size: 12px; }
     .pt-card .pt-actions {
       display: flex; gap: 8px;
       margin-top: 10px;
@@ -1061,9 +1159,25 @@
     }
     .approve-sheet .sh-close:active { background: #e8e8e8; }
     .approve-sheet .sh-body { padding: 16px; }
+    .approve-sheet .approve-audit-name {
+      display: flex; align-items: center; gap: 6px;
+      padding: 10px 12px; margin-bottom: 14px;
+      background: #f0f5ff; border-radius: 8px;
+      font-size: 14px;
+    }
+    .approve-sheet .approve-audit-name .lbl { color: #666; }
+    .approve-sheet .approve-audit-name .val { color: #1677ff; font-weight: 600; }
     .approve-sheet .fg { margin-bottom: 16px; }
     .approve-sheet .fg-label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
     .approve-sheet .status-orange { color: #fa8c16; font-weight: 600; }
+    .approve-sheet .approve-audit-type { color: #1677ff; font-weight: 500; }
+    .approve-sheet .approve-status-tag {
+      display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;
+    }
+    .approve-sheet .approve-status-tag.status-orange { background: #fff4e6; color: #fa8c16; }
+    .approve-sheet .approve-status-tag.status-red { background: #fef0ef; color: #f5222d; }
+    .approve-sheet .approve-status-tag.status-green { background: #e6f7ec; color: #07c160; }
+    .approve-sheet .approve-status-tag.status-blue { background: #e6f4ff; color: #1677ff; }
     .approve-sheet .fg-textarea {
       width: 100%; min-height: 70px; padding: 10px 12px;
       border: 1px solid #d9d9d9; border-radius: 6px;
@@ -1555,10 +1669,79 @@
             </div>
           </div>
 
-          <div class="pt-filter-bar">
-            <div class="pt-filter-pill" onclick="alert('选择中心')">请选择中心 <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
-            <div class="pt-filter-pill" onclick="alert('筛选条件')">全部 <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
-            <div class="pt-add-btn" onclick="alert('新增患者')">+ 新增患者</div>
+          <div class="pt-filter-wrap">
+            <div class="pt-filter-bar">
+              <div class="pt-filter-center-btn" id="filterCenter" onclick="toggleFilterDropdown('center')">
+                <span class="lbl">中心</span>
+                <span class="val" id="filterCenterLabel">全部</span>
+                <i class="fas fa-chevron-down caret"></i>
+              </div>
+              <div class="pt-filter-row2">
+                <div class="pt-filter-pill" id="filterAuditName" onclick="toggleFilterDropdown('auditName')"><span id="filterAuditNameLabel">审核名称</span> <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
+                <div class="pt-filter-pill" id="filterPatientStatus" onclick="toggleFilterDropdown('patientStatus')"><span id="filterPatientStatusLabel">患者状态</span> <i class="fas fa-chevron-down caret" style="font-size:10px"></i></div>
+                <div class="pt-add-btn" onclick="alert('新增患者')">+ 新增</div>
+              </div>
+            </div>
+            <!-- 中心下拉（改为底部弹窗） -->
+            <div class="pt-picker-overlay" id="picker-center">
+              <div class="pt-picker-panel">
+                <div class="pt-picker-hd">
+                  <button class="pt-picker-cancel" onclick="closeCenterPicker()">取消</button>
+                  <span class="pt-picker-title">选择中心</span>
+                  <button class="pt-picker-confirm" onclick="confirmCenterPicker()">确认</button>
+                </div>
+                <div class="pt-picker-search">
+                  <div class="pt-picker-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="pickerCenterSearch" placeholder="搜索中心编码 / 名称" oninput="filterCenterList(this.value)">
+                  </div>
+                </div>
+                <div class="pt-picker-list" id="pickerCenterList">
+                  <div class="pt-picker-item" data-val="" data-code="" data-contact="" onclick="togglePickerItem(this)">
+                    <span class="pk-name">全部</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="吉林大学第一医院" data-code="CN015" data-contact="康丽花" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN015</span><span class="pk-name">- 吉林大学第一医院</span><span class="pk-contact">- 康丽花</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="山西省肿瘤医院" data-code="CN040" data-contact="韩国晖" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN040</span><span class="pk-name">- 山西省肿瘤医院</span><span class="pk-contact">- 韩国晖</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="云南省肿瘤医院" data-code="CN007" data-contact="杨庄青" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN007</span><span class="pk-name">- 云南省肿瘤医院</span><span class="pk-contact">- 杨庄青</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="复旦大学附属华山医院" data-code="CN001" data-contact="张玉姗" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN001</span><span class="pk-name">- 复旦大学附属华山医院</span><span class="pk-contact">- 张玉姗</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="北京协和医院" data-code="CN002" data-contact="李明华" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN002</span><span class="pk-name">- 北京协和医院</span><span class="pk-contact">- 李明华</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="上海瑞金医院" data-code="CN003" data-contact="王芳" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN003</span><span class="pk-name">- 上海瑞金医院</span><span class="pk-contact">- 王芳</span>
+                  </div>
+                  <div class="pt-picker-item" data-val="中山大学附属肿瘤医院" data-code="CN004" data-contact="陈建国" onclick="togglePickerItem(this)">
+                    <span class="pk-code">CN004</span><span class="pk-name">- 中山大学附属肿瘤医院</span><span class="pk-contact">- 陈建国</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 审核名称下拉 -->
+            <div class="pt-dropdown" id="dropdown-auditName" style="display:none">
+              <div class="pt-dropdown-item" data-val="" onclick="selectFilter('auditName','审核名称',this.dataset.val)">全部</div>
+              <div class="pt-dropdown-item" data-val="V1审核" onclick="selectFilter('auditName','V1审核',this.dataset.val)">V1审核</div>
+              <div class="pt-dropdown-item" data-val="入组审核" onclick="selectFilter('auditName','入组审核',this.dataset.val)">入组审核</div>
+              <div class="pt-dropdown-item" data-val="肿三级审核" onclick="selectFilter('auditName','肿三级审核',this.dataset.val)">肿三级审核</div>
+            </div>
+            <!-- 患者状态下拉 -->
+            <div class="pt-dropdown" id="dropdown-patientStatus" style="display:none">
+              <div class="pt-dropdown-item" data-val="" onclick="selectFilter('patientStatus','患者状态',this.dataset.val)">全部</div>
+              <div class="pt-dropdown-item" data-val="未提交" onclick="selectFilter('patientStatus','未提交',this.dataset.val)">未提交</div>
+              <div class="pt-dropdown-item" data-val="储备" onclick="selectFilter('patientStatus','储备',this.dataset.val)">储备</div>
+              <div class="pt-dropdown-item" data-val="审核中" onclick="selectFilter('patientStatus','预筛审核中',this.dataset.val)">审核中</div>
+              <div class="pt-dropdown-item" data-val="审核沟通中" onclick="selectFilter('patientStatus','预筛审核沟通中',this.dataset.val)">审核沟通中...</div>
+              <div class="pt-dropdown-item" data-val="驳回" onclick="selectFilter('patientStatus','预筛驳回',this.dataset.val)">驳回</div>
+              <div class="pt-dropdown-item" data-val="通过" onclick="selectFilter('patientStatus','预筛通过',this.dataset.val)">通过</div>
+              <div class="pt-dropdown-item" data-val="入组筛败" onclick="selectFilter('patientStatus','入组通过',this.dataset.val)">入组筛败</div>
+            </div>
           </div>
 
           <div id="patientList">
@@ -1817,6 +2000,7 @@
           <div class="sh-close" onclick="closeApprove()"><i class="fas fa-times"></i></div>
         </div>
         <div class="sh-body">
+        
           <!-- 非正常流程提示 -->
           <div class="abnormal-flow">
             <div class="abnormal-hd">
@@ -1832,7 +2016,7 @@
             </div>
           </div>
           <div class="fg">
-            <label class="fg-label">当前状态：<span class="status-orange">审核中</span></label>
+            <label class="fg-label">当前状态：<span class="approve-audit-type" id="approveAuditType">--</span> <span class="approve-status-tag" id="approveStatusTag">审核中</span></label>
           </div>
           <div class="fg">
             <label class="fg-label">审批批注：</label>
@@ -1841,7 +2025,7 @@
           </div>
         </div>
         <div class="approve-footer">
-          <button class="approve-btn outline demo-circle" onclick="onApprovePreCom()">预筛沟通</button>
+          <button class="approve-btn outline demo-circle" onclick="onApprovePreCom()">沟通</button>
           <button class="approve-btn blue" onclick="onApproveReject()">驳回</button>
           <button class="approve-btn blue" onclick="onApprovePass()">通过</button>
         </div>
@@ -2130,8 +2314,8 @@
       },
       {
         id: 2, code: 8, name: '预提交8', age: 47, gender: '男',
-        pct: '0.0%', status: '驳回',
-        auditType: '预筛审核',
+        pct: '0.0%', status: '审核中',
+        auditType: 'V1审核',
         planNo: '测试项目5',
         center: '中国人民解放军73021部队医院',
         submitter: '刘雪红',
@@ -2153,7 +2337,7 @@
       {
         id: 4, code: 6, name: '预提交6', age: 52, gender: '男',
         pct: '85.0%', status: '通过',
-        auditType: '预筛审核',
+        auditType: '入组审核',
         planNo: 'HRS-8080-303',
         center: '安阳市肿瘤医院',
         submitter: '张丽',
@@ -2308,11 +2492,13 @@ HDL-C：1.09 mmol/L
     const PATIENT_DATA = [
       {
         id: 1, code: 9, name: 'ZWMS', age: 43, gender: '女',
-        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '预筛审核中', cls: 'pill-orange' }],
         center: '复旦大学附属华山医院',
+        screeningNo: 'WYNA-CN001',
         operator: 'CRA专员188',
         submitStatus: 'unsubmit',
         matchLabel: '匹配完成',
+        auditName: 'V1审核',
+        auditStatus: '审核中',
         pct: '78.5%',
         thinkStatus: 'success',
         thinkEnabled: true,
@@ -2322,11 +2508,13 @@ HDL-C：1.09 mmol/L
       },
       {
         id: 2, code: 8, name: 'HGKD', age: 36, gender: '男',
-        tags: [{ txt: '未匹配', cls: 'pill-red' }, { txt: '未提交', cls: 'pill-gray' }],
         center: '北京协和医院',
+        screeningNo: 'WYNA-CN002',
         operator: 'CRA专员1881',
         submitStatus: 'unsubmit',
         matchLabel: '未匹配',
+        auditName: 'V1审核',
+        auditStatus: '未提交',
         pct: '32.0%',
         thinkStatus: 'failed',
         thinkEnabled: true,
@@ -2335,22 +2523,26 @@ HDL-C：1.09 mmol/L
       },
       {
         id: 3, code: 7, name: 'RFNE', age: 58, gender: '男',
-        tags: [{ txt: '匹配完成', cls: 'pill-green' }, { txt: '已通过', cls: 'pill-green' }],
         center: '上海瑞金医院',
+        screeningNo: '12',
         operator: 'CRA专员200',
         submitStatus: 'enrolled',   // 入组通过 → 操作按钮显示「补充审核」
         matchLabel: '匹配完成',
+        auditName: '入组审核',
+        auditStatus: '通过',
         pct: '91.2%',
         thinkStatus: null,
         thinkEnabled: false
       },
       {
         id: 4, code: 6, name: 'WSQ', age: 50, gender: '男',
-        tags: [{ txt: '匹配中', cls: 'pill-blue' }, { txt: '预筛审核中', cls: 'pill-orange' }],
         center: '中山大学附属肿瘤医院',
+        screeningNo: 'WYNA-CN004',
         operator: 'CRA专员205',
         submitStatus: 'unsubmit',
         matchLabel: '匹配中',
+        auditName: 'V1审核',
+        auditStatus: '审核中',
         pct: '66.0%',
         thinkStatus: 'running',
         thinkEnabled: true
@@ -2378,10 +2570,159 @@ HDL-C：1.09 mmol/L
       renderPatientList();
     }
 
+    // ===== 筛选下拉（审核名称 / 患者状态） + 中心底部弹窗 =====
+    let _openDropdown = null;
+    let _centerPickerSelected = null; // 当前选中的中心项
+    function toggleFilterDropdown(type) {
+      // 中心使用底部弹窗
+      if (type === 'center') {
+        openCenterPicker();
+        return;
+      }
+      const el = document.getElementById('dropdown-' + type);
+      if (_openDropdown && _openDropdown !== el) { _openDropdown.style.display = 'none'; }
+      if (el.style.display === 'block') { el.style.display = 'none'; _openDropdown = null; }
+      else { el.style.display = 'block'; _openDropdown = el; }
+      // 点击外部关闭
+      if (!_boundDropClose) {
+        document.addEventListener('click', function(e) {
+          if (!e.target.closest('.pt-filter-pill') && !e.target.closest('.pt-dropdown')) {
+            if (_openDropdown) { _openDropdown.style.display = 'none'; _openDropdown = null; }
+          }
+        });
+        _boundDropClose = true;
+      }
+    }
+
+    // --- 中心底部弹窗 ---
+    function openCenterPicker() {
+      const picker = document.getElementById('picker-center');
+      picker.style.display = 'flex';
+      // 高亮当前已选项
+      const currentVal = getSelectedFilterValue('center');
+      _centerPickerSelected = null;
+      document.querySelectorAll('#pickerCenterList .pt-picker-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.val === currentVal);
+        if (item.dataset.val === currentVal) _centerPickerSelected = item;
+      });
+    }
+    function closeCenterPicker() {
+      document.getElementById('picker-center').style.display = 'none';
+    }
+    // 点击遮罩关闭
+    document.getElementById('picker-center').addEventListener('click', function(e) {
+      if (e.target === this) closeCenterPicker();
+    });
+    function togglePickerItem(el) {
+      // 单选：切换选中态
+      document.querySelectorAll('#pickerCenterList .pt-picker-item').forEach(i => i.classList.remove('active'));
+      el.classList.add('active');
+      _centerPickerSelected = el;
+    }
+    function confirmCenterPicker() {
+      if (_centerPickerSelected) {
+        const val = _centerPickerSelected.dataset.val;
+        const labelEl = document.getElementById('filterCenterLabel');
+        if (labelEl) labelEl.textContent = val || '全部';
+        // 同步 dropdown-center 的 active 状态（用于 getSelectedFilterValue）
+        const drop = document.getElementById('dropdown-center');
+        if (drop) {
+          drop.querySelectorAll('.pt-dropdown-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.val === val);
+          });
+        }
+        filterPatientList();
+      }
+      closeCenterPicker();
+    }
+    function filterCenterList(keyword) {
+      const kw = keyword.toLowerCase().trim();
+      document.querySelectorAll('#pickerCenterList .pt-picker-item').forEach(item => {
+        if (!kw || item.dataset.val.toLowerCase().includes(kw) || item.dataset.code.toLowerCase().includes(kw)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function selectFilter(type, label, val) {
+      const labelEl = document.getElementById('filter' + type.charAt(0).toUpperCase() + type.slice(1) + 'Label');
+      if (labelEl) labelEl.textContent = val || label;
+      const dropdown = document.getElementById('dropdown-' + type);
+      dropdown.style.display = 'none'; _openDropdown = null;
+
+      // 高亮选中项
+      dropdown.querySelectorAll('.pt-dropdown-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.val === val);
+      });
+
+      // 原型演示：筛选患者列表
+      filterPatientList();
+    }
+
+    function filterPatientList() {
+      const auditNameVal = getSelectedFilterValue('auditName');
+      const statusVal = getSelectedFilterValue('patientStatus');
+      const centerVal = getSelectedFilterValue('center');
+
+      const cards = document.querySelectorAll('#patientList .pt-card');
+      cards.forEach(card => {
+        const id = parseInt(card.id.replace('ptcard-', ''));
+        const d = PATIENT_DATA.find(p => p.id === id);
+        if (!d) return;
+        let show = true;
+        if (auditNameVal && d.auditName !== auditNameVal) show = false;
+        if (statusVal && d.auditStatus !== statusVal) show = false;
+        if (centerVal && d.center !== centerVal) show = false;
+        card.style.display = show ? '' : 'none';
+      });
+
+      // 无结果提示
+      const visible = Array.from(cards).some(c => c.style.display !== 'none');
+      let empty = document.getElementById('patientEmpty');
+      if (!empty) {
+        empty = document.createElement('div'); empty.id = 'patientEmpty';
+        empty.style.cssText = 'text-align:center;padding:40px 0;color:#bbb;font-size:14px;';
+        empty.textContent = '暂无匹配的患者';
+        document.getElementById('patientList').appendChild(empty);
+      }
+      empty.style.display = visible ? 'none' : '';
+    }
+
+    function getSelectedFilterValue(type) {
+      if (type === 'center') {
+        // 中心从底部弹窗的 active 项或 dropdown-center 读取
+        const pickActive = document.querySelector('#pickerCenterList .pt-picker-item.active');
+        if (pickActive) return pickActive.dataset.val;
+        const dropActive = document.querySelector('#dropdown-center .pt-dropdown-item.active');
+        return dropActive ? dropActive.dataset.val : '';
+      }
+      const active = document.querySelector('#dropdown-' + type + ' .pt-dropdown-item.active');
+      return active ? active.dataset.val : '';
+    }
+
+    let _boundDropClose = false;
+
+    // 筛选号规范校验：仅允许「大写字母/数字/连字符」组成，且至少含 4 位字符
+    function isScreenNoValid(no) {
+      if (!no || typeof no !== 'string') return false;
+      return /^[A-Za-z0-9-]{4,}$/.test(no.trim());
+    }
+
     function renderPatientList() {
       const wrap = document.getElementById('patientList');
       wrap.innerHTML = PATIENT_DATA.map(d => {
-        const tags = d.tags.map(t => `<span class="pill ${t.cls}">${t.txt}</span>`).join('');
+        // 匹配状态标签
+        const matchCls = d.matchLabel === '匹配完成' ? 'pill-green'
+          : d.matchLabel === '未匹配' ? 'pill-red' : 'pill-blue';
+        // 审核状态标签
+        const statusCls = d.auditStatus === '已通过' || d.auditStatus === '预筛通过' ? 'pill-green'
+          : d.auditStatus === '未提交' ? 'pill-gray' : 'pill-orange';
+        const tags =
+          `<span class="pill ${matchCls}">${d.matchLabel}</span>` +
+          `<span class="pill pill-audit-name">${d.auditName}</span>` +
+          `<span class="pill ${statusCls}">${d.auditStatus}</span>`;
         const matchTag = d.aiMatch
           ? `<span class="pt-match-tag  demo-circle" onclick="event.stopPropagation();openProjectMatch(${d.id})">项目匹配</span>`
           : '';
@@ -2389,12 +2730,13 @@ HDL-C：1.09 mmol/L
           <div class="pt-card" id="ptcard-${d.id}">
             <div class="pt-hd">
               <span class="nm">${d.name}</span>
-              <span class="info">${d.gender} | ${d.age}岁</span>
+              <span class="info">${d.gender} | ${d.age}岁 | ${d.screeningNo || '--'}</span>
               <div class="icons">
                 <i class="far fa-edit pt-edit" onclick="event.stopPropagation();openPatientEdit(${d.id})"></i>
                 <i class="fas fa-times-circle"></i>
               </div>
             </div>
+            ${!isScreenNoValid(d.screeningNo) ? '<div class="pt-screen-warn"><span class="sc-screen-no-warn"><i class="fas fa-circle-exclamation"></i> 筛选号填写不符合要求</span></div>' : ''}
             <div class="pt-tags">${tags}</div>
             <div class="pt-row"><span class="lbl">中心名称：</span>${d.center}</div>
             <div class="pt-row" style="display:flex;justify-content:space-between;align-items:center">
@@ -2794,7 +3136,25 @@ HDL-C：1.09 mmol/L
     }
 
     // ========= 审核列表 - 审核操作 底部弹窗 =========
-    function openApprove() {
+    function openApprove(id) {
+      const d = AUDIT_DATA.find(x => x.id === id);
+      if (d) {
+        const nameEl = document.getElementById('approveAuditName');
+        if (nameEl) nameEl.querySelector('.val').textContent = d.auditType || '--';
+        const typeEl = document.getElementById('approveAuditType');
+        if (typeEl) typeEl.textContent = d.auditType || '--';
+        const statusEl = document.getElementById('approveStatusTag');
+        if (statusEl) {
+          statusEl.textContent = d.status || '审核中';
+          const map = {
+            '驳回': 'status-red',
+            '通过': 'status-green',
+            '待审核': 'status-orange',
+            '审核中': 'status-blue'
+          };
+          statusEl.className = 'approve-status-tag ' + (map[d.status] || 'status-orange');
+        }
+      }
       document.getElementById('approveSheet').classList.add('show');
       document.getElementById('approveOverlay').classList.add('show');
       updateApproveCounter();
@@ -2832,6 +3192,7 @@ HDL-C：1.09 mmol/L
         let statePill = '';
         if (d.status === '驳回') statePill = '<span class="pill pill-red">驳回</span>';
         else if (d.status === '通过') statePill = '<span class="pill pill-green">通过</span>';
+        else if (d.status === '审核中') statePill = '<span class="pill pill-blue">审核中</span>';
         else statePill = '<span class="pill pill-orange">待审核</span>';
 
         return `
@@ -2842,6 +3203,7 @@ HDL-C：1.09 mmol/L
             </div>
             <div class="pct-row">
               <span class="pct-pill">${d.pct}</span>
+              <span class="pill pill-blue audit-name-pill">${d.auditType || ''}</span>
               ${statePill}
             </div>
             <div class="body">
@@ -2856,7 +3218,7 @@ HDL-C：1.09 mmol/L
               <div class="action-bar">
               <div class="act-btn">抄送</div>
               <div class="act-btn demo-circle" onclick="openDetail(${d.id})">匹配详情</div>
-              <div class="act-btn primary demo-circle" onclick="event.stopPropagation();openApprove()">审核</div>
+              <div class="act-btn primary demo-circle" onclick="event.stopPropagation();openApprove(${d.id})">审核</div>
             </div>
             <div class="files">
               <i class="far fa-folder"></i> 病史与资料
@@ -3391,15 +3753,7 @@ HDL-C：1.09 mmol/L
       if (chains.length === 0) {
         return `
           <div class="tc-area">
-            <div class="dev-tip">
-              <i class="fas fa-exclamation-triangle icon"></i>
-              <div>
-                <div class="title">开发提示：</div>
-                <div>① 每一条都是在项目中配置的思考链对应的返回结果</div>
-                <div>② 可以查看和修改思考链，查看每个人都可以看，但编辑按钮只有管理员和医学经理、项目经理有权限</div>
-                <div>③ 如果还没思考完成，页面显示"思考中，请稍后再来"</div>
-              </div>
-            </div>
+            
             <div class="tc-type-selector">
               <button class="tc-type-btn tc-type-active" id="tc-type-inclusion" onclick="switchTcType('inclusion')">入排条件</button>
               <button class="tc-type-btn" id="tc-type-screening" onclick="switchTcType('screening')">筛选表</button>
@@ -3428,15 +3782,7 @@ HDL-C：1.09 mmol/L
 
       return `
         <div class="tc-area">
-          <div class="dev-tip" style="margin-bottom:8px">
-            <i class="fas fa-exclamation-triangle icon"></i>
-            <div>
-              <div class="title">开发提示：</div>
-              <div>① 每一条都是在项目中配置的思考链对应的返回结果</div>
-              <div>② 可以查看和修改思考链，查看每个人都可以看，但编辑按钮只有管理员和医学经理、项目经理有权限</div>
-              <div>③ 如果还没思考完成，页面显示"思考中，请稍后再来"</div>
-            </div>
-          </div>
+         
           <div class="tc-type-selector">
             <button class="tc-type-btn ${currentTcType === 'inclusion' ? 'tc-type-active' : ''}" id="tc-type-inclusion" onclick="switchTcType('inclusion')">入排条件</button>
             <button class="tc-type-btn ${currentTcType === 'screening' ? 'tc-type-active' : ''}" id="tc-type-screening" onclick="switchTcType('screening')">筛选表</button>

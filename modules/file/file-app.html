@@ -1,0 +1,577 @@
+<!--
+  病史与资料 - H5移动端页面
+  功能：展示患者文件夹列表、文件管理（下载/重新匹配/批量恢复/删除等）
+  最近删除下含测试数据，恢复时需选择目标文件夹（原文件夹已不存在）
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ZWTI-病史与资料</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  background: #f5f7fa; color: #333;
+  min-height: 100vh;
+}
+
+/* 手机外壳 */
+.phone-shell {
+  width: 375px; max-width: 100%; margin: 20px auto;
+  border-radius: 36px; overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+  background: #fff; position: relative;
+}
+.screen { min-height: 680px; position: relative; }
+
+/* 顶部导航 */
+.nav-bar {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 16px; background: #fff;
+  border-bottom: 1px solid #f0f0f0; position: relative;
+}
+.nav-back {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 18px; color: #333; cursor: pointer; padding: 6px;
+}
+.nav-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+
+/* 操作栏 */
+.action-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; background: #fff; border-bottom: 1px solid #f0f0f0;
+}
+.select-all { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 14px; color: #666; }
+.select-all input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1677ff; }
+.btn-action {
+  flex: 1; height: 32px; border-radius: 6px; font-size: 13px;
+  border: none; cursor: pointer; text-align: center; line-height: 32px;
+  transition: opacity .2s;
+}
+.btn-action:hover { opacity: 0.85; }
+.btn-download { background: #1677ff; color: #fff; }
+.btn-rematch { background: #1677ff; color: #fff; }
+.btn-detail { background: #52c41a; color: #fff; }
+
+/* 文件夹列表 */
+.folder-list { padding: 12px 16px; }
+.folder-item {
+  display: flex; align-items: center; padding: 13px 12px;
+  background: #fff; border-radius: 10px; margin-bottom: 10px;
+  cursor: pointer; transition: background .15s; border: none;
+}
+.folder-item:hover { background: #fafafa; }
+.folder-icon { font-size: 22px; color: #1677ff; width: 28px; text-align: center; flex-shrink: 0; }
+.folder-icon.green { color: #52c41a; }
+.folder-name { flex: 1; font-size: 15px; color: #262626; margin-left: 10px; }
+.folder-count { font-size: 14px; color: #999; flex-shrink: 0; }
+.folder-arrow { font-size: 12px; color: #ccc; margin-left: 8px; flex-shrink: 0; transition: transform .25s; }
+.folder-item.expanded .folder-arrow { transform: rotate(90deg); }
+.info-icon { color: #1677ff; font-size: 15px; margin-left: 6px; cursor: help; }
+.info-icon.green { color: #52c41a; }
+
+/* 子文件夹 */
+.sub-folder-list { padding-left: 24px; display: none; }
+.sub-folder-list.show { display: block; }
+.sub-folder-item {
+  display: flex; align-items: center; padding: 11px 12px;
+  background: #fafafa; border-radius: 8px; margin-bottom: 8px;
+  cursor: pointer; transition: background .15s;
+}
+.sub-folder-item:hover { background: #f0f0f0; }
+.sub-folder-icon { font-size: 18px; color: #52c41a; width: 24px; text-align: center; flex-shrink: 0; }
+.sub-folder-name { flex: 1; font-size: 14px; color: #444; margin-left: 8px; }
+.sub-folder-count { font-size: 13px; color: #999; flex-shrink: 0; }
+
+/* 已删除文件列表（最近删除下） */
+.deleted-file-list { padding-left: 20px; display: block; }
+.deleted-file {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: #fff7f7; border: 1px solid #ffe0e0;
+  border-radius: 8px; margin-bottom: 8px;
+}
+.deleted-file-icon { font-size: 16px; color: #f5222d; flex-shrink: 0; }
+.deleted-file-info { flex: 1; min-width: 0; }
+.deleted-file-name { font-size: 13px; color: #333; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deleted-file-meta { font-size: 11px; color: #999; margin-top: 2px; }
+.deleted-file-origin { color: #f5222d; }
+.deleted-file-restore {
+  font-size: 12px; color: #1677ff; border: 1px solid #1677ff;
+  background: #fff; border-radius: 4px; padding: 4px 10px; cursor: pointer;
+  flex-shrink: 0; white-space: nowrap; transition: background .15s;
+}
+.deleted-file-restore:hover { background: #e6f0ff; }
+.deleted-file-check { width: 16px; height: 16px; accent-color: #1677ff; flex-shrink: 0; }
+
+/* 统计行 */
+.stats-row {
+  padding: 12px 16px; font-size: 13px; color: #999;
+}
+
+/* 底部操作 */
+.bottom-actions {
+  display: flex; justify-content: center; gap: 40px;
+  padding: 16px 0 24px;
+}
+.bottom-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 14px; cursor: pointer; border: none; background: none;
+  padding: 6px 12px; border-radius: 6px; transition: background .15s;
+}
+.bottom-btn:hover { background: #f5f5f5; }
+.bottom-btn.restore { color: #999; }
+.bottom-btn.delete { color: #f5222d; }
+
+/* 重要提示 */
+.footer-tip {
+  padding: 12px 16px 30px; font-size: 13px; color: #f5222d;
+  line-height: 1.6;
+}
+
+/* ========== 恢复文件弹窗 ========== */
+.restore-overlay {
+  position: fixed; top: 0; bottom: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 375px; max-width: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 999; display: flex; align-items: flex-end; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.restore-panel {
+  width: 100%; max-height: 78vh; background: #fff;
+  border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+  animation: slideUp .28s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: none; } }
+
+/* 标题 */
+.restore-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+}
+.restore-title-icon { color: #1677ff; font-size: 18px; }
+.restore-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+
+/* body */
+.restore-body { padding: 16px; overflow-y: auto; flex: 1; min-height: 0; }
+
+/* 警告提示框 */
+.restore-warn-box {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #fffbe6; border: 1px solid #ffe58f;
+  border-radius: 8px; padding: 10px 12px; font-size: 13px;
+  color: #d48806; line-height: 1.5; margin-bottom: 14px;
+}
+.restore-warn-icon { color: #faad14; font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+
+/* 待恢复文件名 */
+.restore-file-name {
+  font-size: 14px; color: #666; margin-bottom: 14px;
+}
+
+/* 选择标签 */
+.restore-select-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+
+/* 下拉选择器 */
+.restore-select-wrap {
+  position: relative;
+}
+.restore-select {
+  width: 100%; height: 42px; border: 1px solid #d9d9d9; border-radius: 8px;
+  padding: 0 32px 0 12px; font-size: 14px; color: #333;
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background: #fff; outline: none; cursor: pointer;
+  box-sizing: border-box;
+}
+.restore-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
+.restore-select-arrow {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: #999; font-size: 12px; pointer-events: none;
+}
+
+/* 底部按钮 */
+.restore-ft {
+  padding: 12px 16px 20px; flex-shrink: 0;
+  display: flex; gap: 12px;
+}
+.restore-ft button {
+  flex: 1; height: 40px; border-radius: 8px; font-size: 14px;
+  border: none; cursor: pointer; transition: opacity .15s;
+}
+.restore-ft button:hover { opacity: 0.85; }
+.restore-ft .btn-delete { background: #fff; color: #f5222d; border: 1px solid #ffa39e; }
+.restore-ft .btn-delete:hover { background: #fff1f0; }
+.restore-ft .btn-ok { background: #1677ff; color: #fff; }
+.restore-ft .btn-ok:disabled { background: #b8d4ff; cursor: not-allowed; }
+
+/* ========== 批量恢复提示弹窗 ========== */
+.batch-warn-overlay {
+  position: fixed; top: 0; bottom: 0;
+  left: 50%; transform: translateX(-50%);
+  width: 375px; max-width: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .2s ease;
+}
+.batch-warn-panel {
+  width: calc(100% - 40px); max-width: 340px; background: #fff;
+  border-radius: 14px; overflow: hidden;
+}
+.batch-warn-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 16px 16px 12px;
+}
+.batch-warn-icon { color: #f5222d; font-size: 18px; }
+.batch-warn-title { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+.batch-warn-body { padding: 0 16px 14px; }
+.batch-warn-desc { font-size: 13px; color: #666; margin-bottom: 10px; line-height: 1.6; }
+.batch-warn-list {
+  background: #fff1f0; border: 1px solid #ffccc7; border-radius: 8px;
+  padding: 10px 12px; font-size: 13px; color: #f5222d; font-weight: 500;
+  margin-bottom: 12px; line-height: 1.5;
+}
+.batch-warn-tip { font-size: 13px; color: #999; }
+.batch-warn-ft {
+  padding: 12px 16px 18px; text-align: right;
+}
+.btn-close {
+  height: 36px; padding: 0 24px; border-radius: 8px; font-size: 14px;
+  border: none; background: #f5f5f5; color: #666; cursor: pointer;
+}
+.btn-close:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+
+<div class="phone-shell">
+<div class="screen">
+
+<!-- 顶部导航 -->
+<div class="nav-bar">
+  <i class="fas fa-chevron-left nav-back"></i>
+  <span class="nav-title">ZWTI-病史与资料</span>
+</div>
+
+<!-- 操作栏 -->
+<div class="action-bar">
+  <label class="select-all">
+    <input type="checkbox" id="selectAll"> 全选
+  </label>
+  <button class="btn-action btn-download"><i class="fas fa-download"></i> 下载</button>
+  <button class="btn-action btn-rematch"><i class="fas fa-sync-alt"></i> 重新匹配</button>
+  <button class="btn-action btn-detail"><i class="fas fa-file-alt"></i> 匹配详情</button>
+</div>
+
+<!-- 文件夹列表 -->
+<div class="folder-list" id="folderList">
+  <!-- 预筛阶段 -->
+  <div class="folder-item" onclick="toggleFolder(this)">
+    <i class="far fa-folder folder-icon"></i>
+    <span class="folder-name">预筛阶段</span>
+    <span class="folder-count">(1)</span>
+    <i class="fas fa-chevron-right folder-arrow"></i>
+  </div>
+
+  <!-- 入组阶段 -->
+  <div class="folder-item" onclick="toggleFolder(this)">
+    <i class="far fa-folder folder-icon"></i>
+    <span class="folder-name">入组阶段</span>
+    <span class="folder-count">(0)</span>
+    <i class="fas fa-chevron-right folder-arrow"></i>
+  </div>
+
+  <!-- 不参与AI匹配资料 -->
+  <div class="folder-item" onclick="toggleFolder(this)">
+    <i class="far fa-folder-open folder-icon"></i>
+    <span class="folder-name">不参与AI匹配资料</span>
+    <i class="fas fa-circle-info info-icon" title="不参与AI匹配的资料说明"></i>
+    <span class="folder-count">(0)</span>
+    <i class="fas fa-chevron-right folder-arrow"></i>
+  </div>
+
+  <!-- 存档资料 -->
+  <div class="folder-item" onclick="toggleFolder(this)">
+    <i class="far fa-folder folder-icon"></i>
+    <span class="folder-name">存档资料</span>
+    <span class="folder-count">(2)</span>
+    <i class="fas fa-chevron-right folder-arrow"></i>
+  </div>
+
+  <!-- 系统（默认展开） -->
+  <div class="folder-item expanded" onclick="toggleFolder(this)">
+    <i class="far fa-folder-open folder-icon"></i>
+    <span class="folder-name">系统</span>
+    <span class="folder-count">(0)</span>
+    <i class="fas fa-chevron-down folder-arrow"></i>
+  </div>
+  <!-- 子文件夹：最近删除（含测试数据） -->
+  <div class="sub-folder-list show" id="sub-system">
+    <div class="sub-folder-item" onclick="toggleDeletedList(this)">
+      <i class="far fa-folder sub-folder-icon green"></i>
+      <span class="sub-folder-name">最近删除</span>
+      <i class="fas fa-circle-info info-icon green" title="最近删除的文件说明"></i>
+      <span class="sub-folder-count">(2)</span>
+      <i class="fas fa-chevron-down" style="font-size:10px;color:#ccc;margin-left:6px"></i>
+    </div>
+    <!-- 已删除文件列表 -->
+    <div class="deleted-file-list show" id="deletedList">
+      <div class="deleted-file" data-id="f1" data-name="病理报告.pdf">
+        <input type="checkbox" class="deleted-file-check" onchange="syncSelectAll()">
+        <i class="far fa-file-pdf deleted-file-icon"></i>
+        <div class="deleted-file-info">
+          <div class="deleted-file-name">病理报告.pdf</div>
+          <div class="deleted-file-meta">原文件夹：<span class="deleted-file-origin">预筛阶段/原始资料</span> · 删除于 2026-07-28</div>
+        </div>
+        <button class="deleted-file-restore" onclick="openRestore('f1')">恢复</button>
+      </div>
+      <div class="deleted-file" data-id="f2" data-name="影像资料.zip">
+        <input type="checkbox" class="deleted-file-check" onchange="syncSelectAll()">
+        <i class="far fa-file-archive deleted-file-icon"></i>
+        <div class="deleted-file-info">
+          <div class="deleted-file-name">影像资料.zip</div>
+          <div class="deleted-file-meta">原文件夹：<span class="deleted-file-origin">入组阶段/原始资料</span> · 删除于 2026-07-30</div>
+        </div>
+        <button class="deleted-file-restore" onclick="openRestore('f2')">恢复</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 统计行 -->
+<div class="stats-row">
+  共 2 个文件（其中 2 个可操作，0 个已过期）
+</div>
+
+<!-- 底部操作 -->
+<div class="bottom-actions">
+  <button class="bottom-btn restore" onclick="openBatchRestore()"><i class="fas fa-redo"></i> 批量恢复</button>
+  <button class="bottom-btn delete"><i class="fas fa-trash-alt"></i> 批量彻底删除</button>
+</div>
+
+<!-- 重要提示 -->
+<div class="footer-tip">
+  【重要提示】请严格遵守患者隐私保护规范，确保病历信息脱敏处理
+</div>
+
+</div><!-- /screen -->
+</div><!-- /phone-shell -->
+
+<!-- ========== 恢复文件弹窗 ========== -->
+<div class="restore-overlay" id="restoreOverlay" style="display:none">
+  <div class="restore-panel">
+    <div class="restore-hd">
+      <i class="fas fa-folder-plus restore-title-icon"></i>
+      <span class="restore-title">恢复文件</span>
+    </div>
+    <div class="restore-body">
+      <!-- 警告提示框 -->
+      <div class="restore-warn-box">
+        <i class="fas fa-triangle-exclamation restore-warn-icon"></i>
+        <span>没有这个文件夹，请选择恢复的文件夹目录。</span>
+      </div>
+      <!-- 待恢复文件名 -->
+      <div class="restore-file-name" id="restoreFileName">待恢复文件：「—」</div>
+      <!-- 目标目录选择 -->
+      <div class="restore-select-label">恢复到以下目录</div>
+      <div class="restore-select-wrap">
+        <select class="restore-select" id="restoreSelect" onchange="onRestoreSelectChange(this)">
+          <option value="">请选择文件夹</option>
+          <optgroup label="预筛阶段">
+            <option value="t1-1">原始资料</option>
+            <option value="t1-2">审批上传附件存档</option>
+          </optgroup>
+          <optgroup label="入组阶段">
+            <option value="t2-1">原始资料</option>
+            <option value="t2-2">审批上传附件存档</option>
+          </optgroup>
+          <option value="t3">不参与AI匹配资料</option>
+          <option value="t4">存档资料</option>
+        </select>
+        <i class="fas fa-chevron-down restore-select-arrow"></i>
+      </div>
+    </div>
+    <div class="restore-ft">
+      <button class="btn-delete" onclick="directDelete()">直接删除</button>
+      <button class="btn-ok" id="restoreOkBtn" disabled onclick="confirmRestore()">恢复</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 批量恢复提示弹窗 ========== -->
+<div class="batch-warn-overlay" id="batchWarnOverlay" style="display:none">
+  <div class="batch-warn-panel">
+    <div class="batch-warn-hd">
+      <i class="fas fa-circle-exclamation batch-warn-icon"></i>
+      <span class="batch-warn-title">部分文件夹已不存在</span>
+    </div>
+    <div class="batch-warn-body">
+      <p class="batch-warn-desc">以下文件夹已不存在，不支持批量恢复：</p>
+      <div class="batch-warn-list" id="batchWarnList"></div>
+      <p class="batch-warn-tip">如需恢复，请单独执行行恢复操作。</p>
+    </div>
+    <div class="batch-warn-ft">
+      <button class="btn-close" onclick="closeBatchWarn()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 数据
+const DELETED_FILES = {
+  f1: { name: '病理报告.pdf', origin: '预筛阶段/原始资料' },
+  f2: { name: '影像资料.zip', origin: '入组阶段/原始资料' }
+};
+
+let restoreCurrentIds = [];   // 当前要恢复的文件 id 列表
+let restoreSelectedTarget = ''; // 选中的目标文件夹值
+
+// 切换文件夹展开/折叠
+function toggleFolder(el) {
+  el.classList.toggle('expanded');
+  const arrow = el.querySelector('.folder-arrow');
+  if (arrow) {
+    arrow.className = el.classList.contains('expanded')
+      ? 'fas fa-chevron-down folder-arrow'
+      : 'fas fa-chevron-right folder-arrow';
+  }
+  const subList = document.getElementById('sub-system');
+  const name = el.querySelector('.folder-name')?.textContent;
+  if (name === '系统') {
+    if (el.classList.contains('expanded')) subList.classList.add('show');
+    else subList.classList.remove('show');
+  }
+}
+
+// 展开/收起已删除文件列表
+function toggleDeletedList(el) {
+  event.stopPropagation();
+  const list = document.getElementById('deletedList');
+  list.classList.toggle('show');
+}
+
+// 全选联动
+document.getElementById('selectAll').addEventListener('change', function() {
+  document.querySelectorAll('.deleted-file-check').forEach(c => c.checked = this.checked);
+});
+function syncSelectAll() {
+  const checks = document.querySelectorAll('.deleted-file-check');
+  const allChecked = [...checks].every(c => c.checked);
+  document.getElementById('selectAll').checked = allChecked && checks.length > 0;
+}
+
+// ===== 恢复文件弹窗 =====
+function openRestore(fileId) {
+  restoreCurrentIds = [fileId];
+  showRestoreModal();
+}
+function openBatchRestore() {
+  const checks = [...document.querySelectorAll('.deleted-file-check')].filter(c => c.checked);
+  if (checks.length === 0) {
+    alert('请先勾选要恢复的文件');
+    return;
+  }
+  restoreCurrentIds = checks.map(c => c.closest('.deleted-file').dataset.id);
+
+  // 检查是否有文件的原文件夹已不存在（模拟：所有测试数据都"已不存在"）
+  // 收集不存在的文件夹列表
+  const missingFolders = new Set();
+  restoreCurrentIds.forEach(id => {
+    const d = DELETED_FILES[id];
+    if (d && d.origin) missingFolders.add(d.origin);
+  });
+
+  if (missingFolders.size > 0) {
+    showBatchWarn(missingFolders);
+  } else {
+    showRestoreModal();
+  }
+}
+
+// 显示批量恢复提示弹窗
+function showBatchWarn(folders) {
+  const listEl = document.getElementById('batchWarnList');
+  listEl.innerHTML = '【' + Array.from(folders).join(' / ') + '】';
+  document.getElementById('batchWarnOverlay').style.display = 'flex';
+}
+function closeBatchWarn() {
+  document.getElementById('batchWarnOverlay').style.display = 'none';
+}
+document.getElementById('batchWarnOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeBatchWarn();
+});
+function showRestoreModal() {
+  restoreSelectedTarget = '';
+  // 显示待恢复文件名
+  const names = restoreCurrentIds.map(id => DELETED_FILES[id]?.name || '—').filter(Boolean);
+  document.getElementById('restoreFileName').textContent =
+    '待恢复文件：「' + names.join('、') + '」';
+  // 重置下拉
+  const sel = document.getElementById('restoreSelect');
+  sel.value = '';
+  document.getElementById('restoreOkBtn').disabled = true;
+  document.getElementById('restoreOverlay').style.display = 'flex';
+}
+function closeRestore() {
+  document.getElementById('restoreOverlay').style.display = 'none';
+}
+document.getElementById('restoreOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRestore();
+});
+
+function onRestoreSelectChange(el) {
+  restoreSelectedTarget = el.value;
+  document.getElementById('restoreOkBtn').disabled = !el.value;
+}
+
+// 直接删除（不恢复）
+function directDelete() {
+  const names = restoreCurrentIds.map(id => DELETED_FILES[id]?.name).filter(Boolean).join('、');
+  if (!confirm(`确定要彻底删除「${names}」吗？此操作不可撤销。`)) return;
+  restoreCurrentIds.forEach(id => {
+    const node = document.querySelector(`.deleted-file[data-id="${id}"]`);
+    if (node) node.remove();
+  });
+  updateDeletedCount();
+  closeRestore();
+  alert('已彻底删除：' + names);
+}
+
+function confirmRestore() {
+  if (!restoreSelectedTarget) {
+    alert('请先选择要恢复到的文件夹');
+    return;
+  }
+  const sel = document.getElementById('restoreSelect');
+  const targetName = sel.options[sel.selectedIndex].text;
+  const names = restoreCurrentIds.map(id => DELETED_FILES[id]?.name).filter(Boolean).join('、');
+  // 从列表移除已恢复的文件
+  restoreCurrentIds.forEach(id => {
+    const node = document.querySelector(`.deleted-file[data-id="${id}"]`);
+    if (node) node.remove();
+  });
+  // 更新计数
+  const remaining = document.querySelectorAll('.deleted-file').length;
+  const countEl = document.querySelector('#sub-system .sub-folder-count');
+  if (countEl) countEl.textContent = '(' + remaining + ')';
+  document.querySelector('.stats-row').textContent =
+    `共 ${remaining} 个文件（其中 ${remaining} 个可操作，0 个已过期）`;
+  closeRestore();
+  alert(`已恢复：${names}\n恢复到：${targetName}`);
+}
+
+function updateDeletedCount() {
+  const remaining = document.querySelectorAll('.deleted-file').length;
+  const countEl = document.querySelector('#sub-system .sub-folder-count');
+  if (countEl) countEl.textContent = '(' + remaining + ')';
+  const statsEl = document.querySelector('.stats-row');
+  if (statsEl) statsEl.textContent =
+    `共 ${remaining} 个文件（其中 ${remaining} 个可操作，0 个已过期）`;
+}
+</script>
+
+</body>
+</html>

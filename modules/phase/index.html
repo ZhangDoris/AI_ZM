@@ -2854,10 +2854,12 @@
     .table-card {
       background: white;
       border-radius: 12px;
-      overflow: visible;
+      overflow-x: auto;
+      overflow-y: visible;
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
-    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 1360px; }
+    .data-table th, .data-table td { white-space: nowrap; }
     .data-table thead tr { background: #fafbfc; }
     .data-table th {
       padding: 13px 16px;
@@ -2982,6 +2984,17 @@
     }
     .match-rate.zero { color: #ff4d4f; }
     .match-rate.full { color: #16a34a; }
+
+    /* 审核状态标签（审核列表） */
+    .audit-status-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .audit-status-tag.pending { background: #fff7e6; color: #fa8c16; }
+    .audit-status-tag.approved { background: #f6ffed; color: #52c41a; }
 
     /* Badges */
     .badge { padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
@@ -3526,7 +3539,16 @@
       border-radius: 10px; margin-bottom: 16px;
     }
     .sc-patient-filter-row {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      align-items: center; column-gap: 24px; row-gap: 12px;
+    }
+    .sc-patient-filter-actions {
+      display: flex; align-items: center; gap: 10px; padding-top: 4px;
+      flex-wrap: nowrap; overflow-x: auto;
+    }
+    .sc-patient-filter-actions .btn {
+      height: 34px; padding: 0 18px; font-size: 14px; border-radius: 4px;
+      white-space: nowrap; flex-shrink: 0;
     }
 
     /* 患者列表 - 表格容器（横向滚动） */
@@ -3610,6 +3632,22 @@
     }
     .sc-match-tag.matched { background: #e6fffb; color: #13c2c2; }
     .sc-match-tag.pending { background: #fff7e6; color: #fa8c16; }
+    /* 筛选号不规范提示 */
+    .sc-screen-no-warn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #fef0ef;
+      color: #f5222d;
+      border: 1px solid #ffccc7;
+      border-radius: 4px;
+      padding: 1px 8px;
+      font-size: 12px;
+      margin-left: 6px;
+      white-space: nowrap;
+      line-height: 20px;
+    }
+    .sc-screen-no-warn i { font-size: 12px; }
     /* 患者状态标签 */
     .sc-status-tag {
       display: inline-block; padding: 2px 10px; border-radius: 4px;
@@ -4327,6 +4365,10 @@
     }
     .audit-status-value {
       color:#fa8c16;
+      font-weight:600;
+    }
+    .audit-status-value.audit-name-value {
+      color:#1677ff;
       font-weight:600;
     }
     .audit-record-title {
@@ -6542,20 +6584,20 @@ function toggleModalTree(arrow) {
 // ==================== DATA ====================
 const auditData = [
   // 恒瑞医药
-  { id:1,  screenNo:'ZVFE', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'女', age:69, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN003', center:'哈尔滨医科大学附属第一医院', matchRate:'0.0%', submitter:'徐培凤', status:'pending', reviewStage:'预筛审批中' },
-  { id:2,  screenNo:'LSBA', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'男', age:72, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃或胃食管结合部腺癌的II期临床研究', centerNo:'CN009', center:'河南科技大学第一附属医院', matchRate:'100.0%', submitter:'王佳', status:'pending', reviewStage:'预筛审批中' },
-  { id:3,  screenNo:'BSTO', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0003', gender:'男', age:34, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的疗效和安全性的多中心、随机、双盲、安慰剂对照的III期临床研究', centerNo:'CN009', center:'内蒙古自治区人民医院', matchRate:'0.0%', submitter:'张文静', status:'pending', reviewStage:'待分配' },
-  { id:4,  screenNo:'GYXJ', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0004', gender:'女', age:55, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN005', center:'复旦大学附属肿瘤医院', matchRate:'75.0%', submitter:'刘丽萍', status:'pending', reviewStage:'预筛审批中' },
-  { id:5,  screenNo:'MWPA', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0005', gender:'男', age:63, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃或胃食管结合部腺癌的II期临床研究', centerNo:'CN012', center:'北京大学第三医院', matchRate:'50.0%', submitter:'张强', status:'pending', reviewStage:'待分配' },
-  { id:6,  screenNo:'QHNT', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0006', gender:'女', age:41, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的疗效和安全性的多中心、随机、双盲、安慰剂对照的III期临床研究', centerNo:'CN003', center:'华中科技大学同济医学院附属协和医院', matchRate:'88.0%', submitter:'陈芳', status:'pending', reviewStage:'预筛审批中' },
-  { id:7,  screenNo:'UXYZ', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0007', gender:'男', age:48, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN007', center:'浙江大学医学院附属第一医院', matchRate:'33.3%', submitter:'孙磊', status:'done', reviewStage:'已完成（入组）' },
+  { id:1,  screenNo:'ZVFE', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'女', age:69, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN003', center:'哈尔滨医科大学附属第一医院', matchRate:'0.0%', submitter:'徐培凤', status:'pending', reviewStage:'预筛审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'赵主任' },
+  { id:2,  screenNo:'LSBA', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'男', age:72, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃或胃食管结合部腺癌的II期临床研究', centerNo:'CN009', center:'河南科技大学第一附属医院', matchRate:'100.0%', submitter:'王佳', status:'pending', reviewStage:'预筛审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'赵主任' },
+  { id:3,  screenNo:'BSTO', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0003', gender:'男', age:34, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的疗效和安全性的多中心、随机、双盲、安慰剂对照的III期临床研究', centerNo:'CN009', center:'内蒙古自治区人民医院', matchRate:'0.0%', submitter:'张文静', status:'pending', reviewStage:'待分配', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'待分配' },
+  { id:4,  screenNo:'GYXJ', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0004', gender:'女', age:55, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN005', center:'复旦大学附属肿瘤医院', matchRate:'75.0%', submitter:'刘丽萍', status:'pending', reviewStage:'预筛审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'赵主任' },
+  { id:5,  screenNo:'MWPA', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0005', gender:'男', age:63, planNo:'SHR-A1904-301', projectName:'SHR-A19D联合用药治疗CLDN18.2阳性晚期胃或胃食管结合部腺癌的II期临床研究', centerNo:'CN012', center:'北京大学第三医院', matchRate:'50.0%', submitter:'张强', status:'pending', reviewStage:'待分配', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'待分配' },
+  { id:6,  screenNo:'QHNT', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0006', gender:'女', age:41, planNo:'SHR-1918-302', projectName:'评价SHR-1918用于合成型高血尿症患者的疗效和安全性的多中心、随机、双盲、安慰剂对照的III期临床研究', centerNo:'CN003', center:'华中科技大学同济医学院附属协和医院', matchRate:'88.0%', submitter:'陈芳', status:'pending', reviewStage:'预筛审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'赵主任' },
+  { id:7,  screenNo:'UXYZ', org:'hengrui', auditType:'预筛审批', patientNo:'PT_CN001_0007', gender:'男', age:48, planNo:'HRS-8080-301', projectName:'HRS-8080与氟维司群相比治疗HR阳性、HER2阴性的晚期乳腺癌的随机、开放、平行对照的III期临床试验', centerNo:'CN007', center:'浙江大学医学院附属第一医院', matchRate:'33.3%', submitter:'孙磊', status:'done', reviewStage:'已完成（入组）', auditName:'预筛审核', auditStatus:'已审核', pendingReviewer:'赵主任' },
   // 江苏科信
-  { id:8,  screenNo:'ABNM', org:'kexin', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'女', age:62, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN001', center:'江苏省人民医院', matchRate:'92.0%', submitter:'王敏', status:'pending', reviewStage:'入组审批中' },
-  { id:9,  screenNo:'CDOP', org:'kexin', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'男', age:58, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN002', center:'南京鼓楼医院', matchRate:'68.0%', submitter:'李华', status:'pending', reviewStage:'预筛审批中' },
-  { id:10, screenNo:'EFQR', org:'kexin', auditType:'入组审批', patientNo:'PT_CN001_0003', gender:'女', age:45, planNo:'JK-2023-005', projectName:'JK-2023用于治疗类风湿关节炎的III期临床研究', centerNo:'CN004', center:'苏州大学附属第一医院', matchRate:'100.0%', submitter:'张伟', status:'done', reviewStage:'已完成（排除）' },
+  { id:8,  screenNo:'ABNM', org:'kexin', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'女', age:62, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN001', center:'江苏省人民医院', matchRate:'92.0%', submitter:'王敏', status:'pending', reviewStage:'入组审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'张主任' },
+  { id:9,  screenNo:'CDOP', org:'kexin', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'男', age:58, planNo:'JK-2024-001', projectName:'JK-2024治疗晚期非小细胞肺癌的II期临床研究', centerNo:'CN002', center:'南京鼓楼医院', matchRate:'68.0%', submitter:'李华', status:'pending', reviewStage:'预筛审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'张主任' },
+  { id:10, screenNo:'EFQR', org:'kexin', auditType:'入组审批', patientNo:'PT_CN001_0003', gender:'女', age:45, planNo:'JK-2023-005', projectName:'JK-2023用于治疗类风湿关节炎的III期临床研究', centerNo:'CN004', center:'苏州大学附属第一医院', matchRate:'100.0%', submitter:'张伟', status:'done', reviewStage:'已完成（排除）', auditName:'非肿三级审核（入组）', auditStatus:'已审核', pendingReviewer:'陈主任' },
   // 运营二部
-  { id:11, screenNo:'GHIJ', org:'yunying', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'男', age:51, planNo:'YYEB-2024-101', projectName:'YYEB-101在晚期胃癌中的安全性及疗效研究', centerNo:'CN006', center:'复旦大学附属中山医院', matchRate:'80.0%', submitter:'赵丽', status:'pending', reviewStage:'入组审批中' },
-  { id:12, screenNo:'KLMN', org:'yunying', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'女', age:39, planNo:'YYEB-2024-102', projectName:'YYEB-102治疗复发难治多发性骨髓瘤的研究', centerNo:'CN008', center:'上海交通大学医学院附属仁济医院', matchRate:'55.0%', submitter:'钱东', status:'done', reviewStage:'已完成（入组）' },
+  { id:11, screenNo:'GHIJ', org:'yunying', auditType:'预筛审批', patientNo:'PT_CN001_0001', gender:'男', age:51, planNo:'YYEB-2024-101', projectName:'YYEB-101在晚期胃癌中的安全性及疗效研究', centerNo:'CN006', center:'复旦大学附属中山医院', matchRate:'80.0%', submitter:'赵丽', status:'pending', reviewStage:'入组审批中', auditName:'预筛审核', auditStatus:'待审核', pendingReviewer:'王主任' },
+  { id:12, screenNo:'KLMN', org:'yunying', auditType:'预筛审批', patientNo:'PT_CN001_0002', gender:'女', age:39, planNo:'YYEB-2024-102', projectName:'YYEB-102治疗复发难治多发性骨髓瘤的研究', centerNo:'CN008', center:'上海交通大学医学院附属仁济医院', matchRate:'55.0%', submitter:'钱东', status:'done', reviewStage:'已完成（入组）', auditName:'预筛审核', auditStatus:'已审核', pendingReviewer:'周主任' },
 ];
 
 // 审批时间线数据 - 模拟不同环节的审批记录
@@ -6688,10 +6730,11 @@ const scProjectData = [
 // 智能筛选 - 患者列表数据（按方案编号分组）
 const scPatientData = {
   'SHR-2019-nCoV-001': [
-    { id:1, patientNo:'PT_CN001_0001', nameAbbr:'王*明', age:58, gender:'男', domain:'血液类疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN001', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-12 10:24', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'未提交', isExtrapolated:'否', thinkStatus:'failed' },
-    { id:2, patientNo:'PT_CN001_0002', nameAbbr:'李*华', age:45, gender:'女', domain:'风湿免疫性疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN002', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-15 14:08', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'预筛通过', isExtrapolated:'是', thinkStatus:'success' },
-    { id:3, patientNo:'PT_CN001_0003', nameAbbr:'赵*强', age:62, gender:'男', domain:'血液类疾病', center:'上海瑞金医院', centerNo:'CN002', screenNo:'WYNA-CN003', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-04-02 09:15', creator:'陈伟', creatorRole:'CRC', matchStatus:'匹配中', patientStatus:'预筛驳回', isExtrapolated:'否', thinkStatus:'running' },
-    { id:4, patientNo:'PT_CN002_0001', nameAbbr:'孙*芳', age:51, gender:'女', domain:'肺癌', center:'中山大学肿瘤医院', centerNo:'CN003', screenNo:'WYNA-CN004', planNo:'SHR-A2102-I-102', projectName:'HER2阳性乳腺癌患者中评价SHR-A2102联合吡咯替尼的安全性、耐受性、药代动力学及初步疗效的b/Ⅱ期临床研究', createTime:'2025-02-20 11:30', creator:'刘洋', creatorRole:'CRC', matchStatus:'已匹配', patientStatus:'入组通过', isExtrapolated:'是', isEnrolled: true },
+    { id:1, patientNo:'PT_CN001_0001', nameAbbr:'王*明', age:58, gender:'男', domain:'血液类疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN001', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-12 10:24', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', auditName:'预筛审批', patientStatus:'未提交', isExtrapolated:'否', thinkStatus:'failed' },
+    { id:2, patientNo:'PT_CN001_0002', nameAbbr:'李*华', age:45, gender:'女', domain:'风湿免疫性疾病', center:'北京协和医院', centerNo:'CN001', screenNo:'WYNA-CN002', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-03-15 14:08', creator:'张丽', creatorRole:'CRC', matchStatus:'已匹配', auditName:'预筛审批', patientStatus:'通过', isExtrapolated:'是', thinkStatus:'success' },
+    { id:3, patientNo:'PT_CN001_0003', nameAbbr:'赵*强', age:62, gender:'男', domain:'血液类疾病', center:'上海瑞金医院', centerNo:'CN002', screenNo:'WYNA-CN003', planNo:'SHR-2019-nCoV-001', projectName:'关于COVID-19(新型冠状病毒肺炎)传播途径、流行趋势及防控策略的多中心流行病学研究', createTime:'2025-04-02 09:15', creator:'陈伟', creatorRole:'CRC', matchStatus:'匹配中', auditName:'入组审批', patientStatus:'筛败', isExtrapolated:'否', thinkStatus:'running' },
+    { id:4, patientNo:'PT_CN002_0001', nameAbbr:'孙*芳', age:51, gender:'女', domain:'肺癌', center:'中山大学肿瘤医院', centerNo:'CN003', screenNo:'WYNA-CN004', planNo:'SHR-A2102-I-102', projectName:'HER2阳性乳腺癌患者中评价SHR-A2102联合吡咯替尼的安全性、耐受性、药代动力学及初步疗效的b/Ⅱ期临床研究', createTime:'2025-02-20 11:30', creator:'刘洋', creatorRole:'CRC', matchStatus:'已匹配', auditName:'入组审批', patientStatus:'通过', isExtrapolated:'是', isEnrolled: true },
+    { id:5, patientNo:'PT_CN002_0002', nameAbbr:'周*国', age:49, gender:'男', domain:'肺癌', center:'中山大学肿瘤医院', centerNo:'CN003', screenNo:'12', planNo:'SHR-A2102-I-102', projectName:'HER2阳性乳腺癌患者中评价SHR-A2102联合吡咯替尼的安全性、耐受性、药代动力学及初步疗效的b/Ⅱ期临床研究', createTime:'2025-05-11 15:42', creator:'刘洋', creatorRole:'CRC', matchStatus:'匹配中', auditName:'入组审批', patientStatus:'未提交', isExtrapolated:'否', thinkStatus:'running' },
 
   ],
   
@@ -6714,6 +6757,7 @@ window._scSearchName = '';
 window._scSearchDomain = '全部';
 window._scSearchStage = '全部';
 window._scCurrentProject = null; // 当前查看患者列表的项目编号，null=项目列表视图
+window._scPatientFilter = null;    // 患者列表查询条件（审核名称/患者状态等）
 
 function setScOrg(org) {
   window._scActiveOrg = org;
@@ -8289,6 +8333,10 @@ function buildAuditContent() {
           <select class="filter-form-select"><option>请选择</option><option>预筛审批</option><option>入组审批</option></select>
         </div>
         <div class="filter-form-item">
+          <span class="filter-form-label">审核名称</span>
+          <input class="filter-form-input" placeholder="请输入" />
+        </div>
+        <div class="filter-form-item">
           <span class="filter-form-label">中心名称</span>
           <input class="filter-form-input" placeholder="请输入" />
         </div>
@@ -8350,13 +8398,16 @@ function buildAuditContent() {
             <th>中心</th>
             <th>匹配率</th>
             <th>提交人</th>
+            <th>审核名称</th>
+            <th>审核状态</th>
+            <th>待审核人</th>
 
             <th style="width:200px">操作</th>
           </tr>
         </thead>
         <tbody>
           ${displayData.length===0 ? `
-          <tr><td colspan="13" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>
+          <tr><td colspan="17" style="text-align:center;padding:40px;color:#aaa">暂无数据</td></tr>
           ` : displayData.map(r => `
           <tr>
             <td>${r.displayId}</td>
@@ -8371,6 +8422,9 @@ function buildAuditContent() {
             <td><span class="text-ellipsis-cell" style="max-width:180px" title="${r.center}">${r.center}</span></td>
             <td><span class="match-rate ${parseFloat(r.matchRate)===0?'zero':parseFloat(r.matchRate)===100?'full':''}">${r.matchRate}</span></td>
             <td>${r.submitter}</td>
+            <td>${r.auditName || '—'}</td>
+            <td><span class="audit-status-tag ${r.auditStatus==='已审核'?'approved':'pending'}">${r.auditStatus || '—'}</span></td>
+            <td>${r.pendingReviewer || '—'}</td>
             <td>
               <span class="action-link demo-circle" onclick="openDetailById(${r.id})">查看</span>
               <span class="action-sep">|</span>
@@ -8537,7 +8591,21 @@ function buildScPatientListContent() {
   const schemeNo = window._scCurrentProject || '';
   const project = scProjectData.find(p => p.schemeNo === schemeNo);
   const projectName = project ? project.name : schemeNo;
-  const patients = scPatientData[schemeNo] || [];
+  let patients = scPatientData[schemeNo] || [];
+
+  const f = window._scPatientFilter;
+  if (f) {
+    patients = patients.filter(p => {
+      if (f.nameAbbr && !(p.nameAbbr || '').includes(f.nameAbbr)) return false;
+      if (f.auditName && f.auditName !== '全部' && (p.auditName || '') !== f.auditName) return false;
+      if (f.reviewStatus && f.reviewStatus !== '全部' && (p.patientStatus || '') !== f.reviewStatus) return false;
+      if (f.patientStatus && f.patientStatus !== '全部' && (p.patientStatus || '') !== f.patientStatus) return false;
+      if (f.creator && !(p.creator || '').includes(f.creator)) return false;
+      if (f.center && !(p.center || '').includes(f.center)) return false;
+      if (f.screenNo && !(p.screenNo || '').includes(f.screenNo)) return false;
+      return true;
+    });
+  }
   const activeTab = window._scPatientTab || 'patient-list';
 
   const setTabFn = (tab) => {
@@ -8567,50 +8635,53 @@ function buildScPatientListContent() {
           <label>姓名缩写：</label>
           <input type="text" id="scPatientNameAbbr" placeholder="请输入"/>
         </div>
+         <div class="sc-filter-item">
+          <label>患者编号：</label>
+          <input type="text" id="scPatientNo" placeholder="请输入"/>
+        </div>
+         <div class="sc-filter-item">
+          <label>中心名称：</label>
+          <input type="text" id="scPatientCenter" placeholder="请输入"/>
+        </div>
+        <div class="sc-filter-item">
+          <label>审核名称：</label>
+          <select id="scPatientAuditName">
+            <option>全部</option><option>预筛审批</option><option>主知情审批</option><option>入组审批</option>
+          </select>
+        </div>
         <div class="sc-filter-item">
           <label>患者状态：</label>
           <select id="scPatientStatus">
-            <option>全部</option><option>已入组</option><option>筛选失败</option><option>筛选中</option>
-          </select>
-        </div>
-        <div class="sc-filter-item">
-          <label>审批状态：</label>
-          <select id="scReviewStatus">
             <option>全部</option>
             <option>未提交</option>
             <option>储备</option>
-            <option>预筛审批中</option>
-            <option>预筛审批沟通中</option>
-            <option>预筛驳回</option>
-            <option>预筛通过</option>
+            <option>审批中</option>
+            <option>审批沟通中</option>
+            <option>驳回</option>
+            <option>通过</option>
+             <option>筛败</option>
           </select>
-        </div>
-        <div class="sc-filter-item">
-          <label>创建人：</label>
-          <input type="text" id="scPatientCreator" placeholder="请输入"/>
-        </div>
-        <div class="sc-filter-item">
-          <label>中心名称：</label>
-          <input type="text" id="scPatientCenter" placeholder="请输入"/>
         </div>
         <div class="sc-filter-item">
           <label>筛选号：</label>
           <input type="text" id="scPatientScreenNo" placeholder="请输入"/>
         </div>
+        <div class="sc-filter-item">
+          <label>创建人：</label>
+          <input type="text" id="scPatientCreator" placeholder="请输入"/>
+        </div>
+       
+        
       </div>
-      <div class="sc-patient-filter-row" style="justify-content:space-between">
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-primary btn-sm" onclick="scPatientSearch()">查询</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientReset()">重置</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-default btn-sm" onclick="scPatientNew()">+ 新增患者</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientExport()">导出</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientPreScreenExport()">预筛表导出</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientAuditExport()">审批记录导出</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientColSettings()">列设置</button>
-          <button class="btn btn-default btn-sm" onclick="scPatientAdvancedSearch()">高级搜索</button>
-        </div>
+     <div class="sc-patient-filter-actions">
+        <button class="btn btn-primary" onclick="scPatientSearch()">查询</button>
+        <button class="btn btn-default" onclick="scPatientReset()">重置</button>
+        <button class="btn btn-primary" onclick="scPatientNew()">+ 新增患者</button>
+        <button class="btn btn-primary" onclick="scPatientExport()">导出</button>
+        <button class="btn btn-primary" onclick="scPatientPreScreenExport()">预筛表导出</button>
+        <button class="btn btn-primary" onclick="scPatientAuditExport()">审批记录导出</button>
+        <button class="btn btn-primary" onclick="scPatientColSettings()">列设置</button>
+        <button class="btn btn-primary" onclick="scPatientAdvancedSearch()">高级搜索</button>
       </div>
     </div>
     <!-- 项目信息摘要 -->
@@ -8633,6 +8704,7 @@ function buildScPatientListContent() {
             <th>中心号</th>
             <th>中心</th>
             <th>匹配状态</th>
+            <th>审核名称</th>
             <th>患者状态</th>
             <th>创建人</th>
             <th class="col-sticky-right-1">项目匹配</th>
@@ -8647,10 +8719,11 @@ function buildScPatientListContent() {
             <td class="col-sticky-left-3" style="color:#1677ff;font-weight:500">${p.nameAbbr}</td>
             <td>${p.age}</td>
             <td>${p.gender}</td>
-            <td>${p.screenNo}</td>
+            <td><span class="sc-screen-no">${p.screenNo}</span>${!isScreenNoValid(p.screenNo) ? '<span class="sc-screen-no-warn"><i class="fas fa-circle-exclamation"></i> 填写不符合要求</span>' : ''}</td>
             <td>${p.centerNo}</td>
             <td>${p.center}</td>
             <td><span class="sc-match-tag ${p.matchStatus==='已匹配'?'matched':'pending'}">${p.matchStatus}</span></td>
+            <td>${p.auditName || '-'}</td>
             <td><span class="sc-status-tag ${p.patientStatus==='已入组'?'enrolled':p.patientStatus==='筛选失败'?'failed':'screening'}">${p.patientStatus}</span></td>
             <td>${p.creator}</td>
             <td class="col-sticky-right-1">
@@ -8670,7 +8743,7 @@ function buildScPatientListContent() {
               </div>
             </td>
           </tr>`).join('')}
-          ${patients.length === 0 ? `<tr><td colspan="13" style="text-align:center;color:#999;padding:28px">暂无患者数据</td></tr>` : ''}
+          ${patients.length === 0 ? `<tr><td colspan="14" style="text-align:center;color:#999;padding:28px">暂无患者数据</td></tr>` : ''}
         </tbody>
       </table>
       </div>
@@ -8691,8 +8764,31 @@ function setScPatientTab(tab) {
   switchModule('ai');
 }
 
-function scPatientSearch() { alert('执行患者查询…（原型演示）'); }
-function scPatientReset() { alert('重置患者搜索条件…（原型演示）'); }
+// 筛选号规范校验：仅允许「大写字母/数字/连字符」组成，且至少含 4 位字符
+function isScreenNoValid(no) {
+  if (!no || typeof no !== 'string') return false;
+  return /^[A-Za-z0-9-]{4,}$/.test(no.trim());
+}
+
+function scPatientSearch() {
+  const nameAbbr = (document.getElementById('scPatientNameAbbr')?.value || '').trim();
+  const auditName = document.getElementById('scPatientAuditName')?.value || '全部';
+  const reviewStatus = document.getElementById('scReviewStatus')?.value || '全部';
+  const creator = (document.getElementById('scPatientCreator')?.value || '').trim();
+  const center = (document.getElementById('scPatientCenter')?.value || '').trim();
+  const screenNo = (document.getElementById('scPatientScreenNo')?.value || '').trim();
+  const patientStatus = document.getElementById('scPatientStatus')?.value || '全部';
+
+  window._scPatientFilter = {
+    nameAbbr, auditName, reviewStatus, creator, center, screenNo, patientStatus
+  };
+  switchModule('ai');
+}
+
+function scPatientReset() {
+  window._scPatientFilter = null;
+  switchModule('ai');
+}
 function scPatientNew() { alert('新增患者…（原型演示）'); }
 function scPatientExport() { alert('导出患者列表…（原型演示）'); }
 function scPatientPreScreenExport() { alert('导出一份预筛表…（原型演示）'); }
@@ -9692,7 +9788,17 @@ function openAuditModal(id, screenNo, patientNo) {
   _currentAuditId = id;
   _currentAuditScreenNo = screenNo;
   _currentAuditPatientNo = patientNo;
-  
+
+  // 填充审核名称
+  const row = auditData.find(r => String(r.id) === String(id));
+  const nameEl = document.getElementById('auditModalAuditName');
+  if (nameEl) nameEl.textContent = row && row.auditName ? row.auditName+'-审批中' : '—';
+  const statusEl = document.getElementById('auditCurrentStatus');
+  if (statusEl) {
+    const map = { 'pending': '审批中', 'done': '已审批', 'rejected': '驳回' };
+    statusEl.textContent = (row && map[row.status]) || (row && row.auditStatus) || '审批中';
+  }
+
   const modal = document.getElementById('auditModal');
   if (modal) {
     modal.classList.add('open');
@@ -20140,7 +20246,8 @@ window.addEventListener('DOMContentLoaded', function() {
       <!-- 当前状态 -->
       <div class="audit-status-bar">
         <span class="audit-status-label">当前状态：</span>
-        <span class="audit-status-value" id="auditCurrentStatus">审批中</span>
+        <span class="audit-status-value audit-name-value" id="auditModalAuditName">—</span>
+       
       </div>
        <!-- 非正常流程提示 -->
         <div class="audit-abnormal-notice">
@@ -20178,7 +20285,7 @@ window.addEventListener('DOMContentLoaded', function() {
       </table>
     </div>
     <div class="modal-footer audit-modal-footer">
-      <button class="btn btn-primary  demo-circle" onclick="openCommModal('prescreen')">预筛沟通</button>
+      <button class="btn btn-primary  demo-circle" onclick="openCommModal('prescreen')">沟通</button>
       <button class="btn btn-danger" onclick="rejectAudit()">驳回</button>
       <button class="btn btn-success" onclick="approveAudit()">通过</button>
     </div>
