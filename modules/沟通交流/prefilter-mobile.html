@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>预筛沟通 - 移动端</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f6fa;
+    color: #1f2329;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+  }
+  /* 模拟手机容器（PC 居中显示，手机占满） */
+  .phone {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    background: #fff;
+    position: relative;
+    box-shadow: 0 0 24px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 600px) {
+    body { padding: 0; }
+    .phone { border-radius: 14px; min-height: 96vh; margin: 2vh 0; }
+  }
+
+  /* 顶部状态栏 */
+  .status-bar { height: 28px; display:flex; align-items:center; justify-content:space-between; padding: 0 16px; font-size: 12px; font-weight: 600; color:#1f2329; }
+  .status-bar .right { display:flex; align-items:center; gap: 6px; }
+
+  /* 顶部导航 */
+  .nav-bar { display:flex; align-items:center; justify-content:center; position: relative; height: 44px; border-bottom: 1px solid #f1f3f5; }
+  .nav-bar .back { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #1f2329; padding: 8px; cursor: pointer; }
+  .nav-bar .title { font-size: 16px; font-weight: 600; }
+  .nav-bar .right-action { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #1872a7; cursor: pointer; padding: 8px; }
+
+  /* 提示卡片（参考图风格） */
+  .rule-alert { display: flex; gap: 10px; align-items: center; padding: 14px 14px; margin: 12px 12px 0; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; color: #595959; font-size: 13px; line-height: 1.7; }
+  .rule-alert .ico { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#fa8c16; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .rule-alert .text { flex: 1; }
+  .rule-alert .text p { margin: 0; }
+  .rule-alert .text p + p { margin-top: 2px; }
+  .rule-alert .text p.muted { color: #bfbfbf; }
+
+  /* 列表项 */
+  .list-item { display:flex; align-items:center; justify-content:space-between; padding: 16px 16px; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
+  .list-item:active { background: #f5f6fa; }
+  .list-item .label { font-size: 15px; color: #1f2329; }
+  .list-item .arrow { color: #c9cdd4; font-size: 14px; }
+  .list-item.selected .label { color: #1872a7; }
+
+  /* 选人容器（点击展开） */
+  .picker-box { background: #fff; border-radius: 12px; margin: 0 12px 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); overflow: hidden; }
+  .picker-search { display:flex; align-items:center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #f1f3f5; }
+  .picker-search input { flex: 1; border: none; outline: none; font-size: 14px; padding: 6px 8px; background: #f5f6fa; border-radius: 6px; }
+  .picker-result { max-height: 240px; overflow-y: auto; }
+  .picker-result .item { display:flex; align-items:center; justify-content:space-between; padding: 12px 16px; border-bottom: 1px solid #f5f6fa; }
+  .picker-result .item:last-child { border-bottom: none; }
+  .picker-result .name { font-size: 14px; color: #1f2329; }
+  .picker-result .role { font-size: 12px; color: #8c8c8c; margin-left: 6px; }
+  .picker-result .check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #d9d9d9; display:flex; align-items:center; justify-content:center; color: transparent; font-size: 11px; }
+  .picker-result .item.checked .check { background: #1872a7; border-color: #1872a7; color: #fff; }
+
+  /* 已选人员 chips */
+  .chips { display:flex; flex-wrap: wrap; gap: 8px; padding: 12px; }
+  .chip { display:inline-flex; align-items:center; gap: 6px; padding: 4px 10px; background: #e8f3f6; color: #1872a7; border-radius: 14px; font-size: 13px; }
+  .chip i { font-size: 11px; cursor: pointer; }
+
+  /* 文本域 */
+  .comment-box { background: #fff; margin: 12px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+  .comment-box textarea { width: 100%; min-height: 160px; padding: 14px 16px; border: none; outline: none; resize: none; font-size: 15px; line-height: 1.6; background: transparent; }
+  .comment-box textarea::placeholder { color: #c9cdd4; }
+
+  /* 附件按钮 */
+  .attach-bar { background: #fff; padding: 12px; margin: 0 12px 12px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 10px; }
+  .attach-pill { display:inline-flex; align-items:center; gap: 6px; padding: 6px 14px; border: 1px solid #1872a7; color: #1872a7; border-radius: 6px; font-size: 13px; cursor: pointer; background: #fff; }
+  .attach-pill i { font-size: 12px; }
+  .attach-pill:active { background: #e8f3f6; }
+  .attach-files { display:flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 12px; }
+  .attach-file { display:inline-flex; align-items:center; gap: 6px; padding: 4px 10px; background: #e8f3f6; color: #1872a7; border-radius: 6px; font-size: 12px; }
+  .attach-file i { cursor: pointer; color: #8c8c8c; }
+
+  /* 内容滚动区 */
+  .scroll { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+
+  /* 底部按钮栏 */
+  .footer { display:flex; align-items:center; justify-content:space-around; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #f1f3f5; background: #fff; }
+  .footer .btn { flex: 1; height: 44px; border-radius: 22px; font-size: 16px; cursor: pointer; display:flex; align-items:center; justify-content:center; transition: opacity .15s; }
+  .footer .btn.cancel { background: #fff; color: #1f2329; }
+  .footer .btn.send { background: #1872a7; color: #fff; margin-left: 12px; }
+  .footer .btn:active { opacity: .7; }
+
+  /* Toast */
+  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #fff; border: 1px solid #e5e7eb; padding: 10px 18px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 14px; color: #374151; opacity: 0; transition: all .25s; z-index: 200; display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- 状态栏 -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span class="right">
+      <i class="fas fa-signal"></i>
+      <i class="fas fa-wifi"></i>
+      <i class="fas fa-battery-three-quarters"></i>
+    </span>
+  </div>
+
+  <!-- 顶部导航 -->
+  <div class="nav-bar">
+    <span class="back" onclick="showToast('返回上一页', 'cancel')"><i class="fas fa-chevron-left"></i></span>
+    <span class="title">预筛沟通</span>
+    <span class="right-action" onclick="showToast('暂无可用操作')"></span>
+  </div>
+
+  <!-- 滚动内容区 -->
+  <div class="scroll">
+
+    <!-- 提示卡片（与 PC 端一致） -->
+    <div class="rule-alert">
+      <div class="ico"><i class="fas fa-info"></i></div>
+      <div class="text">
+        <p>本项目已设置 医学经理 和 CRC 不允许直接沟通。</p>
+        <p>首次发送默认选中 CRC/协调员；后续发送默认选中上次人员。</p>
+        <p class="muted">提示：若需更改，可直接删除已选人员后重新添加。</p>
+      </div>
+    </div>
+
+    <!-- 选人入口（点击进入「选择人员」子页） -->
+    <div class="picker-box" id="pickerToggle" onclick="goPicker()">
+      <div class="list-item">
+        <span class="label" id="pickerLabel">请选择提醒人员</span>
+        <i class="fas fa-chevron-right arrow"></i>
+      </div>
+      <!-- 已选人员 chips（在主页显示，便于查看） -->
+      <div class="chips" id="chipsBox">
+        <span style="font-size:12px; color:#bfbfbf;"><i class="fas fa-inbox mr-1"></i>暂无选中人员</span>
+      </div>
+    </div>
+
+    <!-- 批注 -->
+    <div class="comment-box">
+      <textarea placeholder="添加批注"></textarea>
+    </div>
+
+    <!-- 附件 -->
+    <div class="attach-bar">
+      <span style="font-size:14px;color:#1f2329;">附件</span>
+      <span class="attach-pill" onclick="fakeUpload()">
+        <i class="fas fa-paperclip"></i>点击上传
+      </span>
+    </div>
+    <div class="attach-files" id="attachFiles"></div>
+
+  </div>
+
+  <!-- 底部按钮 -->
+  <div class="footer">
+    <div class="btn cancel" onclick="showToast('已取消', 'cancel')">取消</div>
+    <div class="btn send" onclick="onSend()">发送</div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i id="toastIcon" class="fas fa-check-circle" style="color:#1872a7;"></i>
+  <span id="toastText">操作成功</span>
+</div>
+
+<script>
+  // 跳转到独立"选择人员"子页（含规则提示，默认锁定 CRC）
+  function goPicker() {
+    window.location.href = './prefilter-mobile-picker.html';
+  }
+
+  // 回填子页带回来的已选人员
+  (function fillChipsFromStorage() {
+    let picked = [];
+    try { picked = JSON.parse(localStorage.getItem('prefilter_picked') || '[]'); } catch (e) {}
+    if (picked.length) {
+      document.getElementById('pickerLabel').textContent = `已选 ${picked.length} 人`;
+      const box = document.getElementById('chipsBox');
+      box.innerHTML = picked.map(n => `<span class="chip">${n}<i class="fas fa-times" onclick="removePick('${n}')"></i></span>`).join('');
+    }
+  })();
+  function removePick(name) {
+    let picked = [];
+    try { picked = JSON.parse(localStorage.getItem('prefilter_picked') || '[]'); } catch (e) {}
+    picked = picked.filter(n => n !== name);
+    try { localStorage.setItem('prefilter_picked', JSON.stringify(picked)); } catch (e) {}
+    if (picked.length) {
+      document.getElementById('pickerLabel').textContent = `已选 ${picked.length} 人`;
+      const box = document.getElementById('chipsBox');
+      box.innerHTML = picked.map(n => `<span class="chip">${n}<i class="fas fa-times" onclick="removePick('${n}')"></i></span>`).join('');
+    } else {
+      document.getElementById('pickerLabel').textContent = '请选择提醒人员';
+      document.getElementById('chipsBox').innerHTML = '<span style="font-size:12px; color:#bfbfbf;"><i class="fas fa-inbox mr-1"></i>暂无选中人员</span>';
+    }
+  }
+
+  // 附件（演示）
+  let attachSeq = 0;
+  function fakeUpload() {
+    attachSeq += 1;
+    const name = `附件${attachSeq}.pdf`;
+    const box = document.getElementById('attachFiles');
+    const span = document.createElement('span');
+    span.className = 'attach-file';
+    span.innerHTML = `<i class="fas fa-file-pdf"></i>${name}<i class="fas fa-times" onclick="this.parentElement.remove()"></i>`;
+    box.appendChild(span);
+    showToast(`已上传：${name}`);
+  }
+
+  function onSend() {
+    showToast('请先在"选择提醒人员"中选择人员', 'cancel');
+  }
+
+  function showToast(text, type='success') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    document.getElementById('toastIcon').style.color = type === 'cancel' ? '#F53F3F' : '#1872a7';
+    t.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>

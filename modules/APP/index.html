@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>加入项目 - APP 原型</title>
+  <!-- Tailwind CSS v3 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#F5F7FA',
+            dark: '#333333',
+            success: '#00B42A',
+            error: '#F53F3F',
+            warning: '#F7A203',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    .prototype-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+    }
+    .left-panel {
+      width: 82%;
+      height: 100%;
+      overflow-y: auto;
+      position: relative;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .right-panel {
+      width: 18%;
+      min-width: 240px;
+      height: 100%;
+      overflow-y: auto;
+      background: #fffbeb;
+      border-left: 2px solid #f59e0b;
+      padding: 32px 20px;
+      position: relative;
+      z-index: 10;
+    }
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: #ffffff;
+      border-radius: 44px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15), 0 0 0 12px #1a1a1a;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      position: relative;
+    }
+    .status-bar {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+    .app-header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      background: #ffffff;
+      position: relative;
+    }
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #1a1a1a;
+      cursor: pointer;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    .back-btn:hover {
+      background: #f5f7fa;
+    }
+    .header-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .function-grid {
+      display: flex;
+      gap: 24px;
+      padding: 24px 32px;
+      background: #ffffff;
+    }
+    .function-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .function-item:hover {
+      transform: translateY(-2px);
+    }
+    .function-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #ffffff;
+    }
+    .function-icon.orange {
+      background: linear-gradient(135deg, #ff9f43 0%, #f7a203 100%);
+    }
+    .function-icon.blue {
+      background: linear-gradient(135deg, #54a0ff 0%, #165DFF 100%);
+    }
+    .function-label {
+      font-size: 14px;
+      color: #333333;
+      font-weight: 500;
+    }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 12px 24px rgba(22, 93, 255, 0.15));
+    }
+    .empty-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+    }
+    .empty-desc {
+      font-size: 14px;
+      color: #666666;
+      line-height: 1.7;
+      max-width: 280px;
+    }
+    .bottom-action {
+      padding: 16px 24px 40px;
+      background: #ffffff;
+    }
+    .primary-btn {
+      width: 100%;
+      height: 52px;
+      background: #165DFF;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 8px 20px rgba(22, 93, 255, 0.25);
+    }
+    .primary-btn:hover {
+      background: #114fd9;
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(22, 93, 255, 0.3);
+    }
+    .home-indicator {
+      width: 134px;
+      height: 5px;
+      background: #1a1a1a;
+      border-radius: 3px;
+      margin: 0 auto 8px;
+    }
+
+    /* 右侧说明面板 */
+    .right-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 8px;
+    }
+    .right-subtitle {
+      font-size: 13px;
+      color: #b45309;
+      margin-bottom: 28px;
+    }
+    .desc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .desc-item {
+      background: #ffffff;
+      border: 1px solid #fcd34d;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .desc-item:hover, .desc-item.active {
+      border-color: #f59e0b;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+      transform: translateX(4px);
+    }
+    .desc-number {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      background: #f59e0b;
+      color: #ffffff;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .desc-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #78350f;
+      margin-bottom: 6px;
+    }
+    .desc-text {
+      font-size: 13px;
+      color: #92400e;
+      line-height: 1.6;
+    }
+
+    /* 连线 SVG */
+    .connection-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .connection-line {
+      fill: none;
+      stroke: #165DFF;
+      stroke-width: 2;
+      opacity: 0.45;
+      transition: all 0.3s ease;
+    }
+    .connection-line.active {
+      stroke-width: 4;
+      opacity: 1;
+      filter: drop-shadow(0 0 4px rgba(22, 93, 255, 0.4));
+    }
+    .connection-label {
+      fill: #165DFF;
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0.7;
+      transition: all 0.3s ease;
+    }
+    .connection-label-bg {
+      fill: #ffffff;
+      stroke: #165DFF;
+      stroke-width: 1;
+      opacity: 0.9;
+    }
+    .connection-label.active {
+      opacity: 1;
+      font-size: 15px;
+    }
+
+    /* 高亮元素 */
+    .highlight-target {
+      transition: all 0.3s ease;
+      border-radius: 12px;
+    }
+    .highlight-target.active {
+      box-shadow: 0 0 0 3px #165DFF, 0 8px 24px rgba(22, 93, 255, 0.2);
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 1024px) {
+      .prototype-container {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .left-panel {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .right-panel {
+        width: 100%;
+        min-width: auto;
+        height: auto;
+        border-left: none;
+        border-top: 2px solid #f59e0b;
+        padding: 24px;
+      }
+      .connection-svg {
+        display: none;
+      }
+      .view-toggle {
+        display: flex !important;
+      }
+      .phone-frame {
+        transform: scale(0.9);
+        transform-origin: top center;
+      }
+    }
+
+    .view-toggle {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      background: #165DFF;
+      color: #ffffff;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(22, 93, 255, 0.35);
+      transition: all 0.3s;
+    }
+    .view-toggle:hover {
+      background: #114fd9;
+    }
+
+    /* 隐藏模式 */
+    .docs-hidden .right-panel {
+      display: none;
+    }
+    .docs-hidden .left-panel {
+      width: 100%;
+    }
+
+    @media (max-width: 1024px) {
+      .docs-hidden .left-panel {
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="prototype-container" id="prototypeContainer">
+    <!-- 左侧：产品主体界面 -->
+    <div class="left-panel" id="leftPanel">
+      <div class="phone-frame" id="phoneFrame">
+        <div class="phone-screen">
+          <!-- 状态栏 -->
+          <div class="status-bar" id="statusBar">
+            <span>17:36</span>
+            <div class="flex items-center gap-1">
+              <i class="fas fa-signal text-xs"></i>
+              <span class="text-xs">4G</span>
+              <i class="fas fa-battery-full text-sm ml-1"></i>
+              <span class="text-xs">93</span>
+            </div>
+          </div>
+
+          <!-- 顶部导航 -->
+          <div class="app-header highlight-target" id="headerArea" data-target="1">
+            <div class="back-btn">
+              <i class="fas fa-chevron-left"></i>
+            </div>
+            <div class="header-title">加入项目</div>
+          </div>
+
+         
+
+          <!-- 空状态 -->
+          <div class="empty-state flex-1" id="emptyStateArea">
+            <div class="empty-icon highlight-target" id="emptyIconArea" data-target="3">
+              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="triangleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#74b9ff;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#165DFF;stop-opacity:1" />
+                  </linearGradient>
+                  <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+                    <feOffset dx="0" dy="8" result="offsetblur"/>
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.2"/>
+                    </feComponentTransfer>
+                    <feMerge>
+                      <feMergeNode/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <ellipse cx="100" cy="165" rx="70" ry="18" fill="#165DFF" opacity="0.12"/>
+                <path d="M100 35 L165 155 L35 155 Z" fill="url(#triangleGrad)" filter="url(#softShadow)"/>
+                <path d="M100 35 L165 155 L35 155 Z" fill="url(#triangleGrad)" opacity="0.9"/>
+                <rect x="92" y="80" width="16" height="55" rx="8" fill="#ffffff"/>
+                <circle cx="100" cy="152" r="9" fill="#ffffff"/>
+              </svg>
+            </div>
+            <div class="empty-title">您尚未加入任何项目</div>
+            <div class="empty-desc">
+              请咨询身边的CRC（临床研究协调员）或CRA，获取专属邀请二维码，即可轻松加入项目，开启您的使用之旅。
+            </div>
+          </div>
+
+          <!-- 底部按钮 -->
+          <div class="bottom-action">
+            <button class="primary-btn highlight-target" id="scanBtn" data-target="4">
+              立即扫码
+            </button>
+            <div class="home-indicator mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：功能说明 -->
+    <div class="right-panel" id="rightPanel">
+      <div class="right-title">功能说明</div>
+      <div class="right-subtitle">加入项目页面交互解析</div>
+      <div class="desc-list">
+        <div class="desc-item" id="desc-1" data-target="1">
+          <div class="desc-number">1</div>
+          <div class="desc-title">顶部导航栏</div>
+          <div class="desc-text">左侧返回按钮可回到上一级页面，中间展示当前页面标题“加入项目”。</div>
+        </div>
+        <div class="desc-item" id="desc-2" data-target="2">
+          <div class="desc-number">2</div>
+          <div class="desc-title">功能入口区</div>
+          <div class="desc-text">提供“病历生成”与“项目匹配”两个快捷入口，方便用户快速跳转至核心功能。</div>
+        </div>
+        <div class="desc-item" id="desc-3" data-target="3">
+          <div class="desc-number">3</div>
+          <div class="desc-title">空状态提示</div>
+          <div class="desc-text">当用户尚未加入任何项目时，展示引导插画与说明文案，提示联系 CRC 获取邀请二维码。</div>
+        </div>
+        <div class="desc-item" id="desc-4" data-target="4">
+          <div class="desc-number">4</div>
+          <div class="desc-title">立即扫码</div>
+          <div class="desc-text">页面底部固定展示主操作按钮，点击后调起扫码功能，扫描项目邀请二维码完成加入。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SVG 连线层 -->
+    <svg class="connection-svg" id="connectionSvg">
+      <!-- 连线由 JS 动态生成 -->
+    </svg>
+
+    <!-- 移动端视图切换 -->
+    <button class="view-toggle" id="viewToggle">
+      <i class="fas fa-exchange-alt mr-2"></i>切换视图
+    </button>
+  </div>
+
+  <script>
+    // 连线配置：左侧元素 ID -> 右侧说明卡片 ID
+    const connections = [
+      { from: 'headerArea', to: 'desc-1', label: '1' },
+      { from: 'functionArea', to: 'desc-2', label: '2' },
+      { from: 'emptyIconArea', to: 'desc-3', label: '3' },
+      { from: 'scanBtn', to: 'desc-4', label: '4' }
+    ];
+
+    const svg = document.getElementById('connectionSvg');
+    const container = document.getElementById('prototypeContainer');
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+
+    function getCenterRight(el) {
+      const rect = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      return {
+        x: rect.right - containerRect.left,
+        y: rect.top + rect.height / 2 - containerRect.top
+      };
+    }
+
+    function getCenterLeft(el) {
+      const rect = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      return {
+        x: rect.left - containerRect.left,
+        y: rect.top + rect.height / 2 - containerRect.top
+      };
+    }
+
+    function drawConnections() {
+      // 移动端不绘制连线
+      if (window.innerWidth <= 1024) {
+        svg.innerHTML = '';
+        return;
+      }
+
+      svg.innerHTML = '';
+
+      connections.forEach((conn, index) => {
+        const fromEl = document.getElementById(conn.from);
+        const toEl = document.getElementById(conn.to);
+        if (!fromEl || !toEl) return;
+
+        const start = getCenterRight(fromEl);
+        const end = getCenterLeft(toEl);
+
+        // 计算控制点，生成平滑贝塞尔曲线
+        const deltaX = end.x - start.x;
+        const cp1 = { x: start.x + deltaX * 0.5, y: start.y };
+        const cp2 = { x: end.x - deltaX * 0.5, y: end.y };
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${start.x} ${start.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${end.x} ${end.y}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('id', `line-${conn.label}`);
+        path.setAttribute('data-target', conn.label);
+
+        // 标签背景
+        const labelX = start.x + deltaX * 0.5;
+        const labelY = start.y + (end.y - start.y) * 0.4;
+
+        const labelBg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        labelBg.setAttribute('cx', labelX);
+        labelBg.setAttribute('cy', labelY);
+        labelBg.setAttribute('r', 12);
+        labelBg.setAttribute('class', 'connection-label-bg');
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', labelX);
+        label.setAttribute('y', labelY + 4);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('class', 'connection-label');
+        label.setAttribute('id', `label-${conn.label}`);
+        label.setAttribute('data-target', conn.label);
+        label.textContent = conn.label;
+
+        svg.appendChild(path);
+        svg.appendChild(labelBg);
+        svg.appendChild(label);
+      });
+    }
+
+    // 交互高亮
+    function setActive(targetId, active) {
+      const line = document.getElementById(`line-${targetId}`);
+      const label = document.getElementById(`label-${targetId}`);
+      const leftEl = document.querySelector(`[data-target="${targetId}"]`);
+      const descEl = document.getElementById(`desc-${targetId}`);
+
+      if (line) line.classList.toggle('active', active);
+      if (label) label.classList.toggle('active', active);
+      if (leftEl) leftEl.classList.toggle('active', active);
+      if (descEl) descEl.classList.toggle('active', active);
+    }
+
+    function bindHover() {
+      // 左侧元素悬停
+      document.querySelectorAll('[data-target]').forEach(el => {
+        el.addEventListener('mouseenter', () => setActive(el.dataset.target, true));
+        el.addEventListener('mouseleave', () => setActive(el.dataset.target, false));
+      });
+
+      // 右侧说明卡片悬停
+      document.querySelectorAll('.desc-item').forEach(el => {
+        el.addEventListener('mouseenter', () => setActive(el.dataset.target, true));
+        el.addEventListener('mouseleave', () => setActive(el.dataset.target, false));
+      });
+    }
+
+    // 移动端视图切换
+    const viewToggle = document.getElementById('viewToggle');
+    viewToggle.addEventListener('click', () => {
+      container.classList.toggle('docs-hidden');
+      setTimeout(drawConnections, 350);
+    });
+
+    // 初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      drawConnections();
+      bindHover();
+    });
+
+    // 窗口变化时重绘
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(drawConnections, 100);
+    });
+
+    // 滚动时重绘（左右面板独立滚动）
+    leftPanel.addEventListener('scroll', () => {
+      requestAnimationFrame(drawConnections);
+    });
+    rightPanel.addEventListener('scroll', () => {
+      requestAnimationFrame(drawConnections);
+    });
+  </script>
+</body>
+</html>

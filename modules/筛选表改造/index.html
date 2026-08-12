@@ -1313,6 +1313,52 @@
     .edit-section-arrow.collapsed {
       transform: rotate(-90deg);
     }
+    .edit-section-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    /* 底部统一保存栏 */
+    .proj-edit-savebar {
+      position: sticky;
+      bottom: 0;
+      margin-top: 28px;
+      padding: 16px 24px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 10px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .proj-edit-savebar-info {
+      font-size: 13px;
+      color: #8c8c8c;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .proj-edit-savebar-info i { color: #1677ff; }
+    .proj-edit-save-btn {
+      background: #1677ff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(22,119,255,0.3);
+      transition: all .2s;
+    }
+    .proj-edit-save-btn:hover { background: #4096ff; box-shadow: 0 6px 16px rgba(22,119,255,0.4); }
+    .proj-edit-save-btn:active { transform: translateY(1px); }
     .edit-section-body {
       padding: 20px;
       transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
@@ -14694,7 +14740,9 @@ function buildAdminProjectEdit(isNew) {
           <div class="edit-section-title">
             <span class="section-icon">📋</span> 项目基本信息
           </div>
-          <span class="edit-section-arrow" id="basicInfoArrow">▼</span>
+          <div class="edit-section-actions" onclick="event.stopPropagation()">
+            <span class="edit-section-arrow" id="basicInfoArrow">▼</span>
+          </div>
         </div>
         <div class="edit-section-body" id="basicInfoBody">
           <div class="edit-form-grid">
@@ -14784,7 +14832,9 @@ function buildAdminProjectEdit(isNew) {
           <div class="edit-section-title">
             <span class="section-icon">🧩</span> 阶段设置
           </div>
-          <span class="edit-section-arrow" id="stageSettingArrow">▼</span>
+          <div class="edit-section-actions" onclick="event.stopPropagation()">
+            <span class="edit-section-arrow" id="stageSettingArrow">▼</span>
+          </div>
         </div>
         <div class="edit-section-body" id="stageSettingBody">
           ${renderProjectStageSettings()}
@@ -14868,6 +14918,8 @@ function buildAdminProjectEdit(isNew) {
           </table>
         </div>
       </div>
+
+   
 
       <!-- 审批模板编辑弹窗（项目管理内） -->
       <div class="modal-overlay" id="projectApprovalEditModal" style="display:none">
@@ -15574,6 +15626,7 @@ function toggleProjectStage(stageId) {
   refreshScreeningSection();
   refreshExtractSection();
   applyStageGateCollapse();
+
   showWechatToast(idx >= 0 ? '已取消选择该阶段' : '阶段已添加，可在入排标准 / 筛选表中配置');
 }
 
@@ -15599,6 +15652,7 @@ function moveProjectStage(dir, stageId) {
   refreshCriteriaSection();
   refreshScreeningSection();
   refreshExtractSection();
+
   showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
@@ -15665,6 +15719,7 @@ function confirmAddProjectStage() {
   refreshScreeningSection();
   refreshExtractSection();
   applyStageGateCollapse();
+
   showWechatToast('已新增「' + name + '」，可在上方勾选启用');
 }
 
@@ -15675,6 +15730,7 @@ function toggleProjectStageAuditType(stageId, auditType) {
   if(tIdx >= 0) stage.auditTypes.splice(tIdx, 1);
   else stage.auditTypes.push(auditType);
   refreshProjectStageSettings();
+
 }
 
 // 切换某阶段是否开启「知情同意完整性校验」（开启后该阶段患者编辑须填写知情时间与筛选号）
@@ -15682,11 +15738,13 @@ function toggleProjectStageInformed(stageId, required) {
   const stage = _projectSelectedStages.find(s => s.id === stageId);
   if(!stage) return;
   stage.informedRequired = !!required;
+
 }
 
 function updateProjectCriteriaContent(ver, type, idx, value) {
   const items = _projectCriteriaData[ver][type];
   if(items && items[idx]) items[idx].content = value;
+
 }
 
 function updateProjectCriteriaThinkingChain(ver, type, idx, value) {
@@ -15838,6 +15896,7 @@ function saveCriteriaThinkChainModal() {
 function updateProjectCriteriaGroupWeight(ver, type, value) {
   const version = _projectCriteriaData[ver];
   if(version) version[type + 'Weight'] = parseFloat(value) || 0;
+
 }
 
 function updateProjectCriteriaStageRemark(ver, type, idx, stageId, value) {
@@ -15845,6 +15904,7 @@ function updateProjectCriteriaStageRemark(ver, type, idx, stageId, value) {
   if(items && items[idx] && items[idx].stageConfig[stageId]) {
     items[idx].stageConfig[stageId].remark = value;
   }
+
 }
 
 function updateProjectCriteriaStageEnabled(ver, type, idx, stageId, enabled) {
@@ -15852,6 +15912,7 @@ function updateProjectCriteriaStageEnabled(ver, type, idx, stageId, enabled) {
   if(items && items[idx] && items[idx].stageConfig[stageId]) {
     items[idx].stageConfig[stageId].enabled = enabled;
   }
+
 }
 
 function toggleProjectCriteriaStageAll(ver, type, stageId, checked) {
@@ -15862,6 +15923,7 @@ function toggleProjectCriteriaStageAll(ver, type, stageId, checked) {
     });
   }
   refreshCriteriaSection();
+
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
 }
 
@@ -15881,6 +15943,7 @@ function addProjectCriteriaRow(ver, type, idx) {
     stageConfig: stageConfig
   });
   refreshCriteriaSection();
+
   showWechatToast('已新增一条' + (type === 'inclusion' ? '入选' : '排除') + '标准');
 }
 
@@ -15889,6 +15952,7 @@ function deleteProjectCriteriaRow(ver, type, idx) {
   if(!items || items.length <= 1) return;
   items.splice(idx, 1);
   refreshCriteriaSection();
+
   showWechatToast('已删除该条' + (type === 'inclusion' ? '入选' : '排除') + '标准');
 }
 
@@ -15960,6 +16024,7 @@ function confirmCriteriaVersionName() {
     if(v) v.name = name;
     closeCriteriaVersionNameModal();
     refreshCriteriaSection();
+  
     showWechatToast('版本名称已修改为「' + name + '」');
     return;
   }
@@ -15976,6 +16041,7 @@ function confirmCriteriaVersionName() {
   activeCriteriaVersion = newVer;
   closeCriteriaVersionNameModal();
   refreshCriteriaSection();
+
   showWechatToast('已新增版本「' + name + '」');
 }
 
@@ -15991,6 +16057,7 @@ function copyCriteriaVersion(srcVer) {
   criteriaVersions.unshift({ version:newVer, name:newName, date:today, status:'草稿(复制' + srcVer + ')', editor:'当前用户', enabled:true });
   activeCriteriaVersion = newVer;
   refreshCriteriaSection();
+
   showWechatToast('已复制为「' + newName + '」');
 }
 
@@ -15999,6 +16066,7 @@ function toggleCriteriaVersionEnabled(ver) {
   if(v) {
     v.enabled = !v.enabled;
     refreshCriteriaSection();
+  
     showWechatToast(v.enabled ? '版本 ' + ver + ' 已启用' : '版本 ' + ver + ' 已停用');
   }
 }
@@ -16013,6 +16081,7 @@ function deleteCriteriaVersion(ver) {
   delete _projectCriteriaData[ver];
   if(activeCriteriaVersion === ver) activeCriteriaVersion = (criteriaVersions[0] || {}).version || '';
   refreshCriteriaSection();
+
   showWechatToast('已删除版本 ' + ver);
 }
 
@@ -16023,6 +16092,7 @@ function deleteProjectCriteriaStageRemark(ver, type, idx, stageId) {
     items[idx].stageConfig[stageId].remark = '';
   }
   refreshCriteriaSection();
+
   showWechatToast('已删除该阶段备注');
 }
 
@@ -16266,29 +16336,35 @@ function refreshScreeningSection() {
 function updateScreeningContent(idx, value) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].content = value;
+
 }
 function updateScreeningType(idx, type) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].type = type;
+
 }
 function updateScreeningStageEnabled(idx, stageId, enabled) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].stageEnabled[stageId] = enabled;
+
 }
 function updateScreeningRequired(idx, required) {
   const items = _projectScreeningData.items;
   if(items && items[idx]) items[idx].required = required;
+
 }
 function toggleScreeningRequiredAll(checked) {
   const items = _projectScreeningData.items;
   if(items) items.forEach(item => { item.required = checked; });
   refreshScreeningSection();
+
   showWechatToast(checked ? '已全选必填' : '已取消全选必填');
 }
 function toggleScreeningStageAll(stageId, checked) {
   const items = _projectScreeningData.items;
   if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
   refreshScreeningSection();
+
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
 }
 function importScreeningData() {
@@ -16305,6 +16381,7 @@ function addScreeningRow(idx) {
   _projectSelectedStages.forEach(s => { stageEnabled[s.id] = true; });
   items.splice(idx + 1, 0, { id:newId, content:'', type:'多行文本', thinkingChain:[], stageEnabled:stageEnabled, required:false, stageRemarks:{} });
   refreshScreeningSection();
+
   showWechatToast('已新增一条筛选内容');
 }
 function deleteScreeningRow(idx) {
@@ -16312,7 +16389,13 @@ function deleteScreeningRow(idx) {
   if(!items || items.length <= 1) return;
   items.splice(idx, 1);
   refreshScreeningSection();
+
   showWechatToast('已删除该条筛选内容');
+}
+
+// 底部「完成编辑」按钮：各模块内容已即时自动保存，无需统一保存，仅给出完成确认
+function saveAllSections() {
+  showWechatToast('✅ 项目编辑完成');
 }
 
 /* ========================================================================
@@ -16426,7 +16509,6 @@ function renderExtractContent() {
         ${stageTds}
         <td class="action-cell">
           <span class="config-action" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
-          <span class="config-action" onclick="openRowThinkChain('extract','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('extract','${item.id}')}</span>
           ${items.length > 1 ? `
             <span class="move-action ${idx === 0 ? 'disabled' : ''}" title="上移" ${idx === 0 ? '' : `onclick="moveExtractRow(${idx}, 'up')"`}><i class="fa-solid fa-arrow-up"></i></span>
             <span class="move-action ${idx === items.length - 1 ? 'disabled' : ''}" title="下移" ${idx === items.length - 1 ? '' : `onclick="moveExtractRow(${idx}, 'down')"`}><i class="fa-solid fa-arrow-down"></i></span>
@@ -16443,8 +16525,7 @@ function renderExtractContent() {
         <span class="group-title-left"><i class="fa-solid fa-key"></i> 提取要点（${items.length}条）</span>
       </div>
       <div class="proj-criteria-toolbar">
-        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="importExtractData()"><i class="fa-solid fa-upload"></i>导入</button>
-        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="downloadExtractTemplate()"><i class="fa-solid fa-download"></i>下载模板</button>
+        <button type="button" class="criteria-btn criteria-btn-ghost" onclick="referenceExtractConfig()"><i class="fa-solid fa-link"></i>引用</button>
         <button type="button" class="criteria-btn criteria-btn-primary" onclick="addExtractRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
       <div class="table-scroll-wrapper">
@@ -16482,36 +16563,202 @@ function refreshExtractSection() {
 function updateExtractItem(idx, value) {
   const items = _projectExtractData.items;
   if(items && items[idx]) items[idx].item = value;
+
 }
 function updateExtractType(idx, type) {
   const items = _projectExtractData.items;
   if(items && items[idx]) items[idx].type = type;
+
 }
 function updateExtractStageEnabled(idx, stageId, enabled) {
   const items = _projectExtractData.items;
   if(items && items[idx]) items[idx].stageEnabled[stageId] = enabled;
+
 }
 function updateExtractRequired(idx, required) {
   const items = _projectExtractData.items;
   if(items && items[idx]) items[idx].required = required;
+
 }
 function toggleExtractRequiredAll(checked) {
   const items = _projectExtractData.items;
   if(items) items.forEach(item => { item.required = checked; });
   refreshExtractSection();
+
   showWechatToast(checked ? '已全选必填' : '已取消全选必填');
 }
 function toggleExtractStageAll(stageId, checked) {
   const items = _projectExtractData.items;
   if(items) items.forEach(item => { item.stageEnabled[stageId] = checked; });
   refreshExtractSection();
+
   showWechatToast(checked ? '已全选该阶段' : '已取消该阶段全选');
 }
 function importExtractData() {
   showWechatToast('请选择 Excel / CSV 文件导入提取要点（原型演示）');
 }
-function downloadExtractTemplate() {
-  showWechatToast('正在下载提取要点导入模板（原型演示）');
+// 引用其它项目的提取要点配置
+const _otherProjectExtractConfigs = [
+  { id:'P-A002', name:'ZWTI-胃癌靶向治疗研究', type:'肿瘤研究', owner:'李研究', count:6,
+    items:[
+      { id:'EA1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EA2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取年龄与主要瘤种' },
+      { id:'EA3', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往化疗/靶向方案' },
+      { id:'EA4', item:'靶向药物疗效指标', type:'数值', stageEnabled:{'ST03':true}, required:true, remark:'客观缓解率 ORR 数值' },
+      { id:'EA5', item:'不良反应事件记录', type:'文本', stageEnabled:{'ST03':true}, required:false, remark:'按 CTCAE 分级记录' },
+      { id:'EA6', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注禁用地中海贫血相关药物' }
+    ]
+  },
+  { id:'P-B017', name:'LUNG-非小细胞肺癌免疫研究', type:'免疫研究', owner:'王医学', count:5,
+    items:[
+      { id:'EB1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EB2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取吸烟史与分期' },
+      { id:'EB3', item:'PD-L1 表达水平', type:'数值', stageEnabled:{'ST03':true}, required:true, remark:'TPS 百分比数值' },
+      { id:'EB4', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往免疫治疗方案' },
+      { id:'EB5', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注免疫相关禁忌' }
+    ]
+  },
+  { id:'P-C031', name:'BREAST-乳腺癌内分泌治疗研究', type:'内分泌研究', owner:'赵临床', count:4,
+    items:[
+      { id:'EC1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EC2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取绝经状态' },
+      { id:'EC3', item:'激素受体状态', type:'文本', stageEnabled:{'ST03':true}, required:true, remark:'ER/PR 阳性状态' },
+      { id:'EC4', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往内分泌治疗' }
+    ]
+  }
+];
+let _refExtractSelected = [];
+
+function referenceExtractConfig() {
+  _refExtractSelected = [];
+  const body = document.getElementById('refExtractTableBody');
+  if(body) body.innerHTML = _otherProjectExtractConfigs.map(t => `
+    <tr id="refExtRow_${t.id}" onclick="toggleRefExtract('${t.id}')" style="cursor:pointer;transition:background .15s">
+      <td style="text-align:center;width:44px"><input type="checkbox" id="refExtChk_${t.id}" onclick="event.stopPropagation();toggleRefExtract('${t.id}')"></td>
+      <td>${t.id}</td>
+      <td>${t.name}</td>
+      <td>${t.type || '-'}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <span class="action-link process" onclick="event.stopPropagation();viewRefExtractDetail('${t.id}')">查看</span>
+        <span style="color:#e0e0e0;margin:0 4px">|</span>
+        <span class="action-link" onclick="event.stopPropagation();addSingleRefExtract('${t.id}')">新增</span>
+      </td>
+    </tr>
+  `).join('');
+  const c = document.getElementById('refExtractSelectedCount');
+  if(c) c.textContent = '0';
+  const modal = document.getElementById('refExtractModal');
+  if(modal) modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function toggleRefExtract(id) {
+  const idx = _refExtractSelected.indexOf(id);
+  const chk = document.getElementById('refExtChk_'+id);
+  const tr = document.getElementById('refExtRow_'+id);
+  if(idx >= 0) {
+    _refExtractSelected.splice(idx, 1);
+    if(chk) chk.checked = false;
+    if(tr) tr.classList.remove('selected');
+  } else {
+    _refExtractSelected.push(id);
+    if(chk) chk.checked = true;
+    if(tr) tr.classList.add('selected');
+  }
+  const c = document.getElementById('refExtractSelectedCount');
+  if(c) c.textContent = _refExtractSelected.length;
+}
+
+function selectAllRefExtract() {
+  const all = _otherProjectExtractConfigs.length;
+  const selectAll = _refExtractSelected.length < all;
+  _refExtractSelected = selectAll ? _otherProjectExtractConfigs.map(t=>t.id) : [];
+  _otherProjectExtractConfigs.forEach(t=>{
+    const chk = document.getElementById('refExtChk_'+t.id);
+    const tr = document.getElementById('refExtRow_'+t.id);
+    if(chk) chk.checked = selectAll;
+    if(tr) tr.classList.toggle('selected', selectAll);
+  });
+  const c = document.getElementById('refExtractSelectedCount');
+  if(c) c.textContent = _refExtractSelected.length;
+}
+
+// 将某项目的提取要点引用到当前项目（项目、文本类型、备注一并带过来）
+function doReferenceProject(pid) {
+  const cfg = _otherProjectExtractConfigs.find(t=>t.id===pid);
+  if(!cfg) return 0;
+  let added = 0;
+  cfg.items.forEach(src => {
+    const newId = 'E' + String(_projectExtractData.items.length + 1).padStart(2,'0');
+    const stageEnabled = JSON.parse(JSON.stringify(src.stageEnabled||{'ST01':true,'ST03':true}));
+    // 将源备注带入首个已启用阶段的按阶段备注中
+    const stageRemarks = {};
+    if(src.remark) {
+      const firstStage = Object.keys(stageEnabled).find(k => stageEnabled[k]);
+      if(firstStage) stageRemarks[firstStage] = src.remark;
+    }
+    _projectExtractData.items.push({
+      id:newId, item:src.item, type:src.type,
+      stageEnabled: stageEnabled,
+      required: !!src.required,
+      remark: src.remark || '',
+      stageRemarks: stageRemarks, thinkingChain:[]
+    });
+    added++;
+  });
+  ensureProjectExtractStageConfigForAllStages();
+  // 重新渲染提取要点配置区
+  const body = document.getElementById('extractBody');
+  if(body) body.innerHTML = renderProjectExtractBody();
+  return added;
+}
+
+function confirmRefExtract() {
+  if(_refExtractSelected.length === 0) { showWechatToast('请先选择要引用的项目配置'); return; }
+  let added = 0;
+  _refExtractSelected.forEach(pid => { added += doReferenceProject(pid); });
+  closeRefExtractModal();
+  showWechatToast('已引用 '+_refExtractSelected.length+' 个项目、新增 '+added+' 条提取要点（含项目/文本类型/备注）');
+}
+
+// 单行引用：操作列「新增」
+function addSingleRefExtract(pid) {
+  const cfg = _otherProjectExtractConfigs.find(t=>t.id===pid);
+  if(!cfg) return;
+  const added = doReferenceProject(pid);
+  closeRefExtractModal();
+  showWechatToast('已新增引用【'+cfg.name+'】，共 '+added+' 条提取要点（含项目/文本类型/备注）');
+}
+
+function closeRefExtractModal() {
+  const modal = document.getElementById('refExtractModal');
+  if(modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// 查看某项目的提取要点配置明细（项目 / 文本类型 / 备注）
+function viewRefExtractDetail(pid) {
+  const cfg = _otherProjectExtractConfigs.find(t=>t.id===pid);
+  if(!cfg) return;
+  const rows = cfg.items.map((it, i) => `
+    <tr>
+      <td style="text-align:center;color:#999">${i+1}</td>
+      <td>${it.item}</td>
+      <td><span class="edit-tag ${it.type==='数值'?'edit-tag-teal':'edit-tag-blue'}">${it.type}</span></td>
+      <td style="color:#666">${it.remark || '-'}</td>
+    </tr>
+  `).join('');
+  const panel = document.getElementById('refExtractDetailPanel');
+  if(panel) {
+    panel.querySelector('.ref-detail-name').textContent = cfg.name + '（'+cfg.id+'）';
+    panel.querySelector('tbody').innerHTML = rows;
+    document.getElementById('refExtractDetailModal').style.display = 'flex';
+  }
+}
+
+function closeRefExtractDetail() {
+  const m = document.getElementById('refExtractDetailModal');
+  if(m) m.style.display = 'none';
 }
 function addExtractRow(idx) {
   const items = _projectExtractData.items;
@@ -16521,6 +16768,7 @@ function addExtractRow(idx) {
   _projectSelectedStages.forEach(s => { stageEnabled[s.id] = true; });
   items.splice(idx + 1, 0, { id:newId, item:'', type:'文本', thinkingChain:[], stageEnabled:stageEnabled, required:false, stageRemarks:{} });
   refreshExtractSection();
+
   showWechatToast('已新增一条提取要点');
 }
 function deleteExtractRow(idx) {
@@ -16528,6 +16776,7 @@ function deleteExtractRow(idx) {
   if(!items || items.length <= 1) return;
   items.splice(idx, 1);
   refreshExtractSection();
+
   showWechatToast('已删除该条提取要点');
 }
 function moveExtractRow(idx, dir) {
@@ -16539,6 +16788,7 @@ function moveExtractRow(idx, dir) {
   items[idx] = items[target];
   items[target] = tmp;
   refreshExtractSection();
+
   showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
@@ -16583,6 +16833,7 @@ function saveExtractRemark() {
   }
   closeExtractRemarkModal();
   refreshExtractSection();
+
   showWechatToast('备注已保存');
 }
 function deleteExtractRemark() {
@@ -16592,6 +16843,7 @@ function deleteExtractRemark() {
   if(item) item.stageRemarks = {};
   closeExtractRemarkModal();
   refreshExtractSection();
+
   showWechatToast('已清空全部备注');
 }
 function deleteExtractStageRemark(idx, stageId) {
@@ -16600,6 +16852,7 @@ function deleteExtractStageRemark(idx, stageId) {
   if(item && item.stageRemarks) {
     delete item.stageRemarks[stageId];
     refreshExtractSection();
+  
     showWechatToast('已删除该阶段备注');
   }
 }
@@ -16641,6 +16894,7 @@ function saveScreeningRemark() {
   });
   closeScreeningRemarkModal();
   refreshScreeningSection();
+
   showWechatToast('按阶段备注已保存');
 }
 function deleteScreeningRemark() {
@@ -16650,12 +16904,14 @@ function deleteScreeningRemark() {
   if(items && items[idx]) items[idx].stageRemarks = {};
   closeScreeningRemarkModal();
   refreshScreeningSection();
+
   showWechatToast('已清空全部阶段备注');
 }
 function deleteScreeningStageRemark(idx, stageId) {
   const items = _projectScreeningData.items;
   if(items && items[idx] && items[idx].stageRemarks) items[idx].stageRemarks[stageId] = '';
   refreshScreeningSection();
+
   showWechatToast('已删除该阶段备注');
 }
 function closeScreeningRemarkModal() {
@@ -17330,6 +17586,7 @@ function saveProjThinkChain() {
   }
   closeProjThinkChainEdit();
   refreshProjThinkChainTable();
+
   showWechatToast('思考链已保存');
 }
 initProjThinkChains();
@@ -18227,6 +18484,7 @@ function saveProjectApprovalEdit() {
   
   document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
   closeProjectApprovalEdit();
+
 }
 
 // 引用并生效：动态生成生效设置弹窗（挂到body，z-index高于refTemplateModal）
@@ -18269,6 +18527,7 @@ function saveEditFlowName() {
   template.flows[flowIdx].workflowName = newName;
   document.getElementById('projectApprovalTableBody').innerHTML = renderProjectApprovalRows();
   closeEditFlowNameModal();
+
 }
 
 // 关闭修改流程名称弹窗
@@ -19813,6 +20072,77 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="ep-footer">
       <button class="btn btn-default" onclick="closeEditPatientModal()" style="padding:6px 20px;">取消</button>
       <button class="btn btn-primary" onclick="saveEditPatient()" style="padding:6px 24px;"><i class="fas fa-check"></i> 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 引用其它项目提取要点配置弹窗 -->
+<div class="ref-modal" id="refExtractModal" style="display:none">
+  <div class="ref-modal-panel">
+    <div class="ref-modal-header">
+      <div class="ref-modal-header-left">
+        <i class="fa-solid fa-link" style="color:#1677ff;font-size:18px"></i>
+        <span class="ref-modal-title">引用其它项目的提取要点配置</span>
+      </div>
+      <button class="modal-close" onclick="closeRefExtractModal()" style="border:none;background:none;font-size:18px;cursor:pointer;color:#999">✕</button>
+    </div>
+    <div class="ref-modal-body">
+      <div style="padding:12px 24px;background:#fafbfc;border-bottom:1px solid #f0f0f0;font-size:12px;color:#8c8c8c">
+        <i class="fa-solid fa-circle-info" style="color:#1677ff;margin-right:6px"></i>可从其它已配置项目中引用提取要点，引用后将追加到当前项目的提取要点列表中。
+      </div>
+      <div class="ref-table-wrap">
+        <table class="ref-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;width:44px"><input type="checkbox" id="refExtSelectAll" onclick="selectAllRefExtract()"></th>
+              <th>方案编号</th>
+              <th>项目名称</th>
+              <th>项目类型</th>
+              <th style="width:80px;text-align:center">操作</th>
+            </tr>
+          </thead>
+          <tbody id="refExtractTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-modal-footer">
+      <span class="selected-count">已选择 <strong id="refExtractSelectedCount">0</strong> 个项目</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-cancel" onclick="closeRefExtractModal()">取消</button>
+        <button class="btn btn-primary" onclick="confirmRefExtract()"><i class="fa-solid fa-check"></i> 确认引用</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 查看引用项目提取要点明细弹窗 -->
+<div class="ref-modal" id="refExtractDetailModal" style="display:none">
+  <div class="ref-modal-panel" style="width:760px">
+    <div class="ref-modal-header">
+      <div class="ref-modal-header-left">
+        <i class="fa-solid fa-list-check" style="color:#1677ff;font-size:18px"></i>
+        <span class="ref-modal-title">提取要点配置明细 · <span class="ref-detail-name" style="color:#1677ff"></span></span>
+      </div>
+      <button class="modal-close" onclick="closeRefExtractDetail()" style="border:none;background:none;font-size:18px;cursor:pointer;color:#999">✕</button>
+    </div>
+    <div class="ref-modal-body">
+      <div class="ref-table-wrap">
+        <table class="ref-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;width:48px">序号</th>
+              <th>项目</th>
+              <th style="width:90px">文本类型</th>
+              <th>备注</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-modal-footer">
+      <span style="font-size:13px;color:#999">可直接关闭查看其它项目</span>
+      <button class="btn btn-primary" onclick="closeRefExtractDetail()">关闭</button>
     </div>
   </div>
 </div>

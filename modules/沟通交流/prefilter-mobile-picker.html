@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>选择人员 - 移动端</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f6fa;
+    color: #1f2329;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+  }
+  /* 模拟手机容器 */
+  .phone {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100vh;
+    background: #fff;
+    position: relative;
+    box-shadow: 0 0 24px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+  }
+  @media (min-width: 600px) {
+    .phone { border-radius: 14px; min-height: 96vh; margin: 2vh 0; }
+  }
+
+  /* 状态栏 */
+  .status-bar { height: 28px; display:flex; align-items:center; justify-content:space-between; padding: 0 16px; font-size: 12px; font-weight: 600; color:#1f2329; }
+  .status-bar .right { display:flex; align-items:center; gap: 6px; }
+
+  /* 顶部导航 */
+  .nav-bar { display:flex; align-items:center; justify-content:center; position: relative; height: 44px; border-bottom: 1px solid #f1f3f5; }
+  .nav-bar .back { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #1f2329; padding: 8px; cursor: pointer; }
+  .nav-bar .title { font-size: 16px; font-weight: 600; }
+
+  /* 顶部计数行（图片：左"已选 N 项"  右"添加"） */
+  .count-bar { display:flex; align-items:center; justify-content:space-between; padding: 14px 16px; border-bottom: 1px solid #f1f3f5; font-size: 14px; }
+  .count-bar .left { color: #1f2329; }
+  .count-bar .add { color: #1872a7; cursor: pointer; padding: 4px 6px; }
+
+  /* 搜索框（主页人员列表上方） */
+  .search-box { padding: 10px 12px; background: #fff; border-bottom: 1px solid #f1f3f5; }
+  .search-input { width: 100%; height: 36px; padding: 0 12px; background: #f5f6fa; border: 1px solid transparent; border-radius: 6px; font-size: 14px; outline: none; color: #1f2329; transition: border-color .15s, background .15s; }
+  .search-input::placeholder { color: #c9cdd4; }
+  .search-input:focus { border-color: #1872a7; background: #fff; }
+
+  /* 人员列表（主页 + 抽屉） */
+  .members { flex: 1; overflow-y: auto; background: #f5f6fa; }
+  .member { display:flex; align-items:center; padding: 14px 16px; background: #fff; border-bottom: 1px solid #f1f3f5; cursor: pointer; }
+  .member:active { background: #f5f6fa; }
+  .member .meta { flex: 1; min-width: 0; }
+  .member .name { font-size: 15px; color: #1f2329; }
+  .member .sub { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
+  .member .check { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #d9d9d9; display:flex; align-items:center; justify-content:center; color: transparent; font-size: 12px; flex-shrink: 0; margin-left: 12px; }
+  .member.checked .check { background: #1872a7; border-color: #1872a7; color: #fff; }
+  .member.disabled { opacity: .55; cursor: not-allowed; }
+  .empty-tip { text-align:center; padding: 28px 16px; color: #bfbfbf; font-size: 13px; }
+
+  /* 主页只读：不显示复选框，移除整行点击切换 */
+  .members.readonly .member { cursor: default; }
+  .members.readonly .member:active { background: #fff; }
+  .members.readonly .member .check { display: none; }
+
+  /* 提示卡片（与 PC / prefilter-mobile 完全一致） */
+  .rule-alert { display: flex; gap: 10px; align-items: center; padding: 14px 14px; margin: 12px 12px 0; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; color: #595959; font-size: 13px; line-height: 1.7; }
+  .rule-alert .ico { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#fa8c16; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; }
+  .rule-alert .text { flex: 1; }
+  .rule-alert .text p { margin: 0; }
+  .rule-alert .text p + p { margin-top: 2px; }
+  .rule-alert .text p.muted { color: #bfbfbf; }
+
+  /* 主页面底部 */
+  .footer { display:flex; align-items:center; padding: 0; border-top: 1px solid #f1f3f5; background: #fff; }
+  .footer .btn { flex: 1; height: 50px; font-size: 16px; cursor: pointer; display:flex; align-items:center; justify-content:center; transition: opacity .15s; }
+  .footer .btn.clear { background: #fff; color: #1f2329; border-right: 1px solid #f1f3f5; }
+  .footer .btn.confirm { background: #fff; color: #1872a7; font-weight: 600; }
+  .footer .btn:active { opacity: .6; }
+
+  /* ============ 抽屉（点击"添加"唤出） ============ */
+  .mask {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.45);
+    opacity: 0; pointer-events: none; transition: opacity .25s;
+    z-index: 90;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .mask.show { opacity: 1; pointer-events: auto; }
+  .sheet {
+    width: 100%; max-width: 420px; height: 70vh;
+    background: #fff; border-top-left-radius: 14px; border-top-right-radius: 14px;
+    display: flex; flex-direction: column; overflow: hidden;
+    transform: translateY(100%); transition: transform .28s ease;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.18);
+  }
+  .mask.show .sheet { transform: translateY(0); }
+
+  .sheet-head {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 10px 14px; border-bottom: 1px solid #f1f3f5;
+  }
+  .sheet-head .close { color: #8c8c8c; font-size: 22px; padding: 6px 10px; cursor: pointer; }
+  .sheet-head .close:active { color: #374151; }
+
+  .sheet-search { padding: 10px 14px; }
+  .sheet-search-box {
+    display: flex; align-items: center; gap: 8px;
+    height: 38px; padding: 0 12px; background: #f5f6fa; border-radius: 6px;
+  }
+  .sheet-search-box i { color: #8c8c8c; font-size: 13px; }
+  .sheet-search-box input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: #1f2329; }
+  .sheet-search-box input::placeholder { color: #bfbfbf; }
+
+  .sheet-title { padding: 4px 16px 8px; font-size: 15px; font-weight: 600; color: #1f2329; }
+  .sheet-list { flex: 1; overflow-y: auto; padding: 0 0 8px; }
+  /* 抽屉中的复选框：方角蓝底白勾（参考图） */
+  .sheet-list .member .check {
+    width: 20px; height: 20px; border-radius: 4px; border: 1.5px solid #d9d9d9;
+    color: transparent; font-size: 11px;
+  }
+  .sheet-list .member.checked .check { background: #1872a7; border-color: #1872a7; color: #fff; }
+
+  .sheet-foot {
+    display: flex; align-items: center; padding: 8px 16px;
+    border-top: 1px solid #f1f3f5; background: #fff;
+  }
+  .sheet-foot .sel-info { flex: 1; font-size: 14px; color: #1f2329; }
+  .sheet-foot .sel-info b { color: #1872a7; font-weight: 700; }
+  .sheet-foot .cancel-btn { padding: 8px 18px; font-size: 15px; color: #1f2329; cursor: pointer; margin-right: 6px; }
+  .sheet-foot .ok-btn { padding: 8px 22px; font-size: 15px; font-weight: 600; color: #1872a7; cursor: pointer; }
+  .sheet-foot button { background: transparent; border: none; }
+  .sheet-foot .ok-btn:active, .sheet-foot .cancel-btn:active { opacity: .6; }
+
+  /* Toast */
+  .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #fff; border: 1px solid #e5e7eb; padding: 10px 18px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 14px; color: #374151; opacity: 0; transition: all .25s; z-index: 200; display: flex; align-items: center; gap: 8px; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- 状态栏 -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span class="right">
+      <i class="fas fa-signal"></i>
+      <i class="fas fa-wifi"></i>
+      <i class="fas fa-battery-three-quarters"></i>
+    </span>
+  </div>
+
+  <!-- 顶部导航 -->
+  <div class="nav-bar">
+    <span class="back" onclick="goBack()"><i class="fas fa-chevron-left"></i></span>
+    <span class="title">选择人员</span>
+  </div>
+
+  <!-- 顶部计数行 -->
+  <div class="count-bar">
+    <span class="left">已选 <span id="selCount">0</span> 项</span>
+    <span class="add" onclick="openSheet()">添加</span>
+  </div>
+
+  <!-- 主页搜索框 -->
+  <div class="search-box">
+    <input id="memberSearch" class="search-input" type="text" placeholder="搜索姓名/角色/电话" oninput="renderMembers()">
+  </div>
+
+  <!-- 提示卡片：本项目规则提示 -->
+  <div class="rule-alert">
+    <div class="ico"><i class="fas fa-info"></i></div>
+    <div class="text">
+      <p>本项目已设置 医学经理 和 CRC 不允许直接沟通。</p>
+    </div>
+  </div>
+
+  <!-- 人员列表（主页只读，不显示复选框，统一通过右上"添加"进入抽屉选人） -->
+  <div class="members readonly" id="membersBox"></div>
+
+  <!-- 底部按钮（清空 / 确定） -->
+  <div class="footer">
+    <div class="btn clear" onclick="onClear()">清空</div>
+    <div class="btn confirm" onclick="onConfirm()">确定</div>
+  </div>
+
+</div>
+
+<!-- ============ 抽屉：点击"添加"唤出的可列表 ============ -->
+<div class="mask" id="sheetMask" onclick="maskClick(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <!-- 顶部 × 关闭 -->
+    <div class="sheet-head">
+      <span class="close" onclick="closeSheet()">&times;</span>
+    </div>
+
+    <!-- 搜索 -->
+    <div class="sheet-search">
+      <div class="sheet-search-box">
+        <i class="fas fa-search"></i>
+        <input id="sheetSearch" type="text" placeholder="请输入关键字" oninput="renderSheetList()">
+      </div>
+    </div>
+
+    <!-- 列表标题 -->
+    <div class="sheet-title">可列表</div>
+
+    <!-- 人员列表（带方角蓝复选） -->
+    <div class="sheet-list" id="sheetList"></div>
+
+    <!-- 底部：已选 N  取消  确认 -->
+    <div class="sheet-foot">
+      <div class="sel-info">已选 <b id="sheetSelCount">0</b></div>
+      <button class="cancel-btn" onclick="closeSheet()">取消</button>
+      <button class="ok-btn" onclick="sheetConfirm()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <i id="toastIcon" class="fas fa-check-circle" style="color:#1872a7;"></i>
+  <span id="toastText">操作成功</span>
+</div>
+
+<script>
+  // 人员数据
+  const USERS = [
+    { name: '王真',   role: '临床协调员', phone: '137****7391', locked: true },
+    { name: '辛文杰', role: '医学经理',   phone: '137****8095', locked: false },
+    { name: '陈静',   role: '医学经理',   phone: '138****2056', locked: false },
+    { name: '李伟',   role: '临床协调员', phone: '139****8810', locked: false },
+    { name: '赵敏',   role: '项目经理',   phone: '136****4421', locked: false },
+    { name: '刘洋',   role: '数据管理员', phone: '135****7790', locked: false },
+    { name: '孙磊',   role: '临床协调员', phone: '188****1133', locked: false },
+    { name: '周丽',   role: '医学经理',   phone: '189****6622', locked: false },
+    { name: '吴军',   role: '质控员',     phone: '186****9918', locked: false },
+    { name: '孙浩飞', role: 'CRA专员',    phone: '180****9502', locked: false },
+    { name: '季晓梦', role: '数据管理员', phone: '177****6611', locked: false },
+  ];
+  // 当前已选（含锁定）
+  const selected = new Set(['王真']);
+
+  // ============ 主页渲染 ============
+  function renderMembers() {
+    const box = document.getElementById('membersBox');
+    const kw = (document.getElementById('memberSearch').value || '').trim().toLowerCase();
+    const list = kw
+      ? USERS.filter(u => u.name.toLowerCase().includes(kw) || u.role.toLowerCase().includes(kw) || u.phone.toLowerCase().includes(kw))
+      : USERS;
+
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-tip">未找到匹配的人员</div>';
+    } else {
+      box.innerHTML = list.map(u => {
+        const checked = selected.has(u.name);
+        const disabled = u.locked ? 'disabled' : '';
+        return `<div class="member ${checked ? 'checked' : ''} ${disabled}">
+          <div class="meta">
+            <div class="name">${u.name}</div>
+            <div class="sub">${u.role}/${u.phone}</div>
+          </div>
+          <span class="check"><i class="fas fa-check"></i></span>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('selCount').textContent = selected.size;
+  }
+
+  function toggleUser(name) {
+    const u = USERS.find(x => x.name === name);
+    if (!u || u.locked) return;
+    if (selected.has(name)) selected.delete(name);
+    else selected.add(name);
+    renderMembers();
+  }
+
+  function onClear() {
+    USERS.forEach(u => { if (!u.locked && selected.has(u.name)) selected.delete(u.name); });
+    renderMembers();
+    showToast('已清空可选项', 'cancel');
+  }
+  function onConfirm() {
+    if (!selected.size) { showToast('请至少选择一位人员', 'cancel'); return; }
+    const names = Array.from(selected);
+    try { localStorage.setItem('prefilter_picked', JSON.stringify(names)); } catch (e) {}
+    showToast(`已确认 ${names.length} 人：${names.join('、')}`);
+    setTimeout(goBack, 800);
+  }
+
+  // ============ 抽屉渲染与操作 ============
+  function openSheet() {
+    document.getElementById('sheetSearch').value = '';
+    renderSheetList();
+    document.getElementById('sheetMask').classList.add('show');
+  }
+  function closeSheet() {
+    document.getElementById('sheetMask').classList.remove('show');
+  }
+  function maskClick(e) {
+    if (e.target === document.getElementById('sheetMask')) closeSheet();
+  }
+
+  function renderSheetList() {
+    const box = document.getElementById('sheetList');
+    const kw = (document.getElementById('sheetSearch').value || '').trim().toLowerCase();
+    const list = kw
+      ? USERS.filter(u => u.name.toLowerCase().includes(kw) || u.role.toLowerCase().includes(kw) || u.phone.toLowerCase().includes(kw))
+      : USERS;
+    if (!list.length) {
+      box.innerHTML = '<div class="empty-tip">未找到匹配的人员</div>';
+    } else {
+      box.innerHTML = list.map(u => {
+        const checked = selected.has(u.name);
+        const disabled = u.locked ? 'disabled' : '';
+        return `<div class="member ${checked ? 'checked' : ''} ${disabled}" onclick="sheetToggle('${u.name}')">
+          <div class="meta">
+            <div class="name">${u.name}</div>
+            <div class="sub">${u.role}/${u.phone}</div>
+          </div>
+          <span class="check"><i class="fas fa-check"></i></span>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('sheetSelCount').textContent = selected.size;
+  }
+
+  function sheetToggle(name) {
+    const u = USERS.find(x => x.name === name);
+    if (!u || u.locked) return;
+    if (selected.has(name)) selected.delete(name);
+    else selected.add(name);
+    renderSheetList();
+    renderMembers();
+  }
+  function sheetConfirm() {
+    closeSheet();
+    renderMembers();
+    showToast(`已添加，当前共 ${selected.size} 人`);
+  }
+
+  // ============ 公用 ============
+  function goBack() {
+    if (window.history.length > 1) window.history.back();
+    else window.close();
+  }
+  function showToast(text, type='success') {
+    const t = document.getElementById('toast');
+    document.getElementById('toastText').textContent = text;
+    document.getElementById('toastIcon').style.color = type === 'cancel' ? '#F53F3F' : '#1872a7';
+    t.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  renderMembers();
+</script>
+</body>
+</html>

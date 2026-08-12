@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品原型 - 智能预筛系统 · 沟通交流 / 沟通设置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* ===== 紫色侧边栏（参考图） ===== */
+    .app-sidebar {
+      background: linear-gradient(180deg, #6C5CE7 0%, #5849C6 100%);
+      color: #fff;
+    }
+    .sidebar-logo {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .sidebar-logo .logo-icon {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .sidebar-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+      user-select: none;
+    }
+    .sidebar-menu-item i { width: 18px; text-align: center; font-size: 14px; opacity: 0.85; }
+    .sidebar-menu-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .sidebar-menu-item.active {
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      border-left-color: #fff;
+      font-weight: 500;
+    }
+
+    /* ===== 主区域风格 ===== */
+    .main-bg { background: #f0f2f5; }
+
+    /* 表单卡片 */
+    .form-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    /* 顶部 Bar */
+    .topbar {
+      height: 56px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    /* 切换 Tab */
+    .seg-tabs {
+      display: inline-flex;
+      background: #f0f2f5;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .seg-tabs .tab {
+      padding: 6px 14px;
+      font-size: 13px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #555;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .seg-tabs .tab.active {
+      background: #fff;
+      color: #165DFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      font-weight: 500;
+    }
+    .seg-tabs .tab:not(.active):hover { color: #333; }
+
+    /* 表单 */
+    .required-star { color: #ff4d4f; margin-right: 4px; }
+    .form-input {
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 14px;
+      transition: all 0.2s;
+      outline: none;
+      background: #fff;
+      color: #333;
+      width: 100%;
+    }
+    .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 2px rgba(22,93,255,0.1); }
+    .form-input:hover:not(:focus):not(:disabled) { border-color: #40a9ff; }
+    .form-input:disabled { background: #f5f5f5; color: #999; cursor: not-allowed; }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .form-helper {
+      font-size: 12px;
+      color: #999;
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    .radio-row { display: flex; align-items: center; gap: 18px; }
+    .radio-row .radio-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      user-select: none;
+    }
+    .radio-row .radio-item input { accent-color: #165DFF; cursor: pointer; }
+
+    .btn {
+      padding: 7px 22px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .btn-primary {
+      background: #165DFF;
+      color: #fff;
+      border-color: #165DFF;
+    }
+    .btn-primary:hover { background: #0E47D1; border-color: #0E47D1; }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-default {
+      background: #fff;
+      color: #333;
+      border-color: #d9d9d9;
+    }
+    .btn-default:hover { color: #165DFF; border-color: #165DFF; }
+    .btn-default:active { transform: scale(0.97); }
+
+    /* 开关 Switch */
+    .ant-switch {
+      position: relative;
+      display: inline-block;
+      min-width: 44px;
+      width: 44px;
+      height: 22px;
+      line-height: 22px;
+      vertical-align: middle;
+      background: rgba(0,0,0,0.25);
+      border-radius: 22px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ant-switch::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      transition: left 0.2s;
+    }
+    .ant-switch.checked { background: #165DFF; }
+    .ant-switch.checked::after { left: 24px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 20px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      font-size: 14px;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success i { color: #00B42A; }
+    .toast.cancel i { color: #999; }
+
+    /* ===== 连线元素样式 ===== */
+    .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; cursor: pointer; }
+    .proto-element:hover { background-color: rgba(22,93,255,0.04); }
+    .proto-element.active-highlight { background-color: rgba(22,93,255,0.08); }
+
+    .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+    .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+    .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+    #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+    .connection-line { fill: none; stroke: #165DFF; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+    .connection-line.active { stroke-width: 3; opacity: 1; }
+    .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+    .connection-label-bg { fill: #165DFF; }
+
+    /* ===== 抽屉与响应式 ===== */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; }
+      #left-panel { width: 100% !important; height: 60vh !important; }
+      #right-panel { width: 100% !important; height: 40vh; border-left: none !important; border-top: 1px solid #e5e7eb; }
+      #divider { display: none; }
+      #connections { display: none; }
+      .mobile-toggle-btn { display: flex !important; }
+      .app-sidebar { width: 56px !important; }
+      .sidebar-logo .label, .sidebar-menu-item span { display: none; }
+      .sidebar-menu-item { justify-content: center; padding: 12px 0; }
+      .sidebar-menu-item i { width: auto; font-size: 16px; }
+    }
+    .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; width: 48px; height: 48px; border-radius: 50%; background: #165DFF; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(22,93,255,0.3); cursor: pointer; border: none; }
+
+    #right-panel {
+      transition: width 0.3s ease, min-width 0.3s ease;
+      position: relative;
+      flex-shrink: 0;
+      overflow: visible;
+      background: #fffbeb;
+      border-left: 2px dashed #fcd34d;
+    }
+    #right-panel.collapsed { width: 0 !important; min-width: 0 !important; border-left: none; }
+
+    .drawer-handle {
+      position: absolute;
+      top: 50%;
+      left: -32px;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 180px;
+      background: linear-gradient(180deg, #165DFF 0%, #0E47D1 100%);
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: -2px 0 8px rgba(22,93,255,0.25);
+      transition: background 0.2s, box-shadow 0.2s;
+      user-select: none;
+      border: none;
+      outline: none;
+      z-index: 60;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: 4px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .drawer-handle:hover {
+      background: linear-gradient(180deg, #1e80ff 0%, #0a6af0 100%);
+      box-shadow: -4px 0 12px rgba(22,93,255,0.35);
+    }
+    .drawer-handle i { writing-mode: horizontal-tb; font-size: 16px; }
+
+    #left-panel {
+      transition: width 0.3s ease, flex-basis 0.3s ease;
+      flex: 1;
+      min-width: 0;
+      background: #f0f2f5;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastText">已保存</span></div>
+
+  <!-- 移动端切换按钮 -->
+  <button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()">
+    <i class="fas fa-info"></i>
+  </button>
+
+  <!-- 主容器 -->
+  <div id="app" class="flex h-screen relative">
+
+    <!-- 左侧：产品界面 -->
+    <div id="left-panel" class="relative">
+
+      <!-- 顶部 Bar -->
+      <div class="topbar">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-[#165DFF] rounded-lg flex items-center justify-center text-white font-bold text-sm">
+            <i class="fas fa-microscope"></i>
+          </div>
+          <h1 class="text-base font-semibold text-gray-800">AI 智能预筛系统</h1>
+          <span class="text-xs text-gray-400 ml-2">/ 项目管理后台</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-bell"></i></button>
+          <div class="flex items-center gap-2 cursor-pointer">
+            <img src="https://i.pravatar.cc/32?img=12" class="w-7 h-7 rounded-full" alt="">
+            <span class="text-sm text-gray-700">项目管理员</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex" style="height: calc(100vh - 56px);">
+        <!-- 紫色侧边栏 -->
+        <aside class="app-sidebar w-60 flex-shrink-0 overflow-y-auto">
+          <div class="sidebar-logo">
+            <div class="logo-icon"><i class="fas fa-hospital"></i></div>
+            <div class="label leading-tight">
+              <div class="text-sm font-semibold">参研中心</div>
+              <div class="text-[11px] opacity-70">试验项目配置</div>
+            </div>
+          </div>
+
+          <nav class="py-3">
+            <div class="px-5 mb-2 text-[11px] uppercase tracking-wider opacity-60 label">功能导航</div>
+
+            <!-- 1. 参研中心 -->
+            <div class="sidebar-menu-item" onclick="switchTab('center')">
+              <i class="fas fa-clinic-medical"></i><span>参研中心</span>
+            </div>
+
+            <!-- 2. 项目成员 -->
+            <div class="sidebar-menu-item" onclick="switchTab('members')">
+              <i class="fas fa-users"></i><span>项目成员</span>
+            </div>
+
+            <div class="px-5 my-2 text-[11px] uppercase tracking-wider opacity-60 label">项目配置</div>
+
+            <!-- 3. 文件夹配置管理 -->
+            <div class="sidebar-menu-item" onclick="switchTab('folder')">
+              <i class="fas fa-folder-open"></i><span>文件夹配置管理</span>
+            </div>
+
+            <!-- 4. 页面版本配置 -->
+            <div class="sidebar-menu-item" onclick="switchTab('pagever')">
+              <i class="fas fa-file-code"></i><span>页面版本配置</span>
+            </div>
+
+            <!-- 5. 参数校验配置 -->
+            <div class="sidebar-menu-item" onclick="switchTab('rule')">
+              <i class="fas fa-ruler-combined"></i><span>参数校验配置</span>
+            </div>
+
+            <!-- 6. 患者标签配置 -->
+            <div class="sidebar-menu-item" onclick="switchTab('tag')">
+              <i class="fas fa-tags"></i><span>患者标签配置</span>
+            </div>
+
+            <!-- ★ 连线1：沟通设置（选中态） -->
+            <div class="proto-element sidebar-menu-item active" data-proto-id="1" onclick="switchTab('comm')">
+              <i class="fas fa-comments"></i><span>沟通设置</span>
+            </div>
+          </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 overflow-y-auto main-bg">
+
+          <!-- 面包屑 -->
+          <div class="bg-white px-6 py-3 border-b border-gray-200 flex items-center text-sm text-gray-500">
+            <i class="fas fa-home mr-2 text-gray-400"></i>
+            <span>首页</span>
+            <i class="fas fa-chevron-right mx-2 text-gray-300 text-xs"></i>
+            <span>参研中心</span>
+            <i class="fas fa-chevron-right mx-2 text-gray-300 text-xs"></i>
+            <span class="text-gray-800 font-medium">沟通设置</span>
+          </div>
+
+          <!-- 沟通设置表单卡片（默认显示） -->
+          <div id="panel-comm" class="content-panel mx-6 my-5">
+            <div class="form-card p-7">
+
+              <!-- ★ 连线2：表单标题 -->
+              <h3 class="text-[22px] font-bold text-gray-900 mb-5">
+                <span class="proto-element" data-proto-id="2">沟通设置</span>
+              </h3>
+
+              <form id="commForm" onsubmit="return false;">
+                <!-- ★ 连线3：不允许跨级沟通（默认不勾选） -->
+                <div class="mb-4 proto-element" data-proto-id="3">
+                  <div class="flex items-center justify-between gap-4">
+                    <div>
+                      <label class="form-label mb-1" style="margin-bottom:0;">
+                        <span class="required-star">*</span>不允许跨级沟通
+                      </label>
+                      <p class="text-xs text-gray-400 mt-1">默认不勾选 = 所有成员均允许跨级沟通（CRC 可直接与医学经理沟通）</p>
+                    </div>
+                    <label class="radio-item" style="flex-shrink:0;gap:8px;">
+                      <input type="checkbox" id="noCrossCheck" onchange="onNoCrossChange()" style="width:16px;height:16px;accent-color:#F53F3F;">
+                      <span class="text-sm text-gray-700">禁止</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- ★ 连线5：限制范围（勾选后展开） -->
+                <div id="noCrossScope" class="mb-6 proto-element" data-proto-id="5" style="display:none;">
+                  <label class="form-label">限制范围</label>
+                  <div class="radio-row mt-2">
+                    <label class="radio-item">
+                      <input type="radio" name="noCrossScopeType" value="project" checked onchange="onNoCrossScopeTypeChange()">
+                      <span>项目级别启用</span>
+                    </label>
+                    <label class="radio-item">
+                      <input type="radio" name="noCrossScopeType" value="centers" onchange="onNoCrossScopeTypeChange()">
+                      <span>部分中心</span>
+                    </label>
+                  </div>
+                  <p class="form-helper">
+                    <i class="fas fa-info-circle text-[#165DFF]"></i>
+                    「项目级别启用」：整个项目内均不允许跨级沟通；「部分中心」：仅所选中心内不允许，需勾选下方中心名称。
+                  </p>
+
+                  <!-- 部分中心：中心检索选择（中心号 - 中心名称 - PI） -->
+                  <div id="noCrossCenterBox" style="display:none;margin-top:14px;">
+                    <!-- 检索框 -->
+                    <div class="relative">
+                      <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                      <input type="text" id="noCrossCenterSearch" class="form-input" style="padding-left:32px;font-size:13px;" placeholder="输入中心号 / 中心名称 检索" oninput="renderCenterResults()">
+                    </div>
+                    <!-- 检索结果面板 -->
+                    <div id="noCrossCenterResults" style="display:none;margin-top:8px;border:1px solid #e5e7eb;border-radius:8px;max-height:220px;overflow-y:auto;background:#fff;">
+                      <!-- JS 动态渲染 -->
+                    </div>
+                    <!-- 已选中心列表（可删除） -->
+                    <div style="margin-top:12px;">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-gray-600">
+                          <i class="fas fa-check-circle text-[#00B42A] mr-1"></i>已选中心
+                          <span id="noCrossCenterCount" class="text-gray-400">（0/111）</span>
+                        </span>
+                        <button type="button" class="text-xs text-gray-400 hover:text-[#F53F3F] transition" onclick="onClearAllNoCrossCenters()">
+                          <i class="fas fa-trash-alt mr-1"></i>清空
+                        </button>
+                      </div>
+                      <div id="noCrossCenterTags" class="flex flex-wrap gap-2 min-h-[32px]">
+                        <span class="text-xs text-gray-300"><i class="fas fa-inbox mr-1"></i>检索并点击下方结果进行添加</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ★ 连线4：保存按钮 -->
+                <div class="flex items-center justify-center gap-3 pt-4 border-t border-gray-100 proto-element" data-proto-id="4">
+                  <button type="button" class="btn btn-primary" onclick="onSave()">保存</button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+
+          <!-- 占位内容（其他菜单，预留） -->
+          <div id="panel-center" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-clinic-medical text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">参研中心</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+          <div id="panel-members" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-users text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">项目成员</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+          <div id="panel-folder" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-folder-open text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">文件夹配置管理</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+          <div id="panel-pagever" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-file-code text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">页面版本配置</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+          <div id="panel-rule" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-ruler-combined text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">参数校验配置</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+          <div id="panel-tag" class="content-panel mx-6 my-5" style="display:none">
+            <div class="form-card p-12 text-center">
+              <i class="fas fa-tags text-5xl text-gray-300 mb-4"></i>
+              <div class="text-base text-gray-600 font-medium">患者标签配置</div>
+              <div class="text-xs text-gray-400 mt-2">该模块内容开发中</div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+    <!-- 分隔线 -->
+    <div id="divider" class="w-px bg-gray-300"></div>
+
+    <!-- 右侧：功能说明 -->
+    <div id="right-panel" class="w-[26%] lg:w-[22%]">
+      <button class="drawer-handle" id="drawerHandle" onclick="toggleRightPanel()" title="收起/展开说明面板">
+        <i class="fas fa-chevron-right" id="drawerIcon"></i>
+        <span>PRD</span>
+      </button>
+      <div class="p-4 overflow-y-auto" style="max-height: 100vh;">
+        <div class="mb-4 p-3 bg-amber-100 border border-amber-300 rounded-lg">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded uppercase tracking-wide">Prototype</span>
+            <span class="text-xs font-semibold text-amber-800">原型说明</span>
+          </div>
+          <p class="text-[11px] text-amber-700 leading-relaxed">
+            以下内容为界面元素的功能说明，悬停左侧对应区域可高亮连线。
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-amber-200">
+          <i class="fas fa-map-signs text-amber-600"></i>
+          <h2 class="text-sm font-bold text-amber-900">功能说明</h2>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 说明1：沟通设置菜单 -->
+          <div class="proto-desc p-3" data-proto-id="1">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">1</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">沟通设置菜单</h3>
+                <p class="text-xs text-gray-500 mt-1">项目级沟通规则的配置入口。在该菜单中可统一管理成员之间的沟通行为权限，包括跨级沟通、上下级留言与工单转交等。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明2：表单标题 -->
+          <div class="proto-desc p-3" data-proto-id="2">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">2</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">设置分组标题</h3>
+                <p class="text-xs text-gray-500 mt-1">将多个沟通规则按场景聚合在同一卡片中展示，便于项目管理员一次性维护同一类的沟通策略。</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明3：不允许跨级沟通 -->
+          <div class="proto-desc p-3" data-proto-id="3">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">3</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">不允许跨级沟通</h3>
+                <p class="text-xs text-gray-500 mt-1">以"黑名单"方式配置跨级沟通限制，多选框默认全部不勾选：</p>
+                <ul class="text-xs text-gray-500 mt-1 ml-4 list-disc space-y-0.5">
+                  <li><strong>默认不勾选</strong>：所有成员均允许跨级沟通（CRC 可直接与医学经理沟通）。</li>
+                  <li><strong>勾选后</strong>：必须指定限制范围（项目级别 / 部分中心）。</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明4：保存/取消 -->
+          <div class="proto-desc p-3" data-proto-id="4">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">4</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">保存 / 取消按钮</h3>
+                <p class="text-xs text-gray-500 mt-1">
+                  <strong>保存</strong>：提交变更并立即生效，同时写入操作日志。<br>
+                  <strong>取消</strong>：放弃未保存的修改，返回初始状态。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 说明5：限制范围 -->
+          <div class="proto-desc p-3" data-proto-id="5">
+            <div class="flex items-start gap-2">
+              <span class="flex-shrink-0 w-6 h-6 bg-amber-500 text-white rounded-full text-xs font-bold flex items-center justify-center">5</span>
+              <div>
+                <h3 class="text-sm font-semibold text-gray-800">限制范围（勾选后必选）</h3>
+                <p class="text-xs text-gray-500 mt-1">勾选「不允许跨级沟通」后必须选择限制方式：</p>
+                <ul class="text-xs text-gray-500 mt-1 ml-4 list-disc space-y-0.5">
+                  <li><strong>项目级别启用</strong>：整个项目内均不允许跨级沟通。</li>
+                  <li><strong>部分中心</strong>：检索选择不允许跨级沟通的中心。数据组合为<strong>中心号 - 中心名称 - PI</strong>，输入关键字（中心号 / 中心名称 / PI）实时检索，点击结果加入下方已选列表，支持<strong>逐个删除</strong>或<strong>一键清空</strong>，适配几十~上百个中心。</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" class="absolute top-0 left-0 w-full h-full pointer-events-none"></svg>
+
+  <script>
+    // ====== 菜单切换 ======
+    const TAB_MAP = {
+      center:   { panel: 'panel-center',   icon: 'fa-clinic-medical', label: '参研中心' },
+      members:  { panel: 'panel-members',  icon: 'fa-users',          label: '项目成员' },
+      folder:   { panel: 'panel-folder',   icon: 'fa-folder-open',    label: '文件夹配置管理' },
+      pagever:  { panel: 'panel-pagever',  icon: 'fa-file-code',      label: '页面版本配置' },
+      rule:     { panel: 'panel-rule',     icon: 'fa-ruler-combined', label: '参数校验配置' },
+      tag:      { panel: 'panel-tag',      icon: 'fa-tags',           label: '患者标签配置' },
+      comm:     { panel: 'panel-comm',     icon: 'fa-comments',       label: '沟通设置' },
+    };
+
+    function switchTab(key) {
+      const conf = TAB_MAP[key];
+      if (!conf) return;
+
+      // 切换菜单 active
+      document.querySelectorAll('.sidebar-menu-item').forEach(el => el.classList.remove('active'));
+      // 把点击到的菜单设为 active（兼容直接调用）
+      if (event && event.currentTarget) event.currentTarget.classList.add('active');
+      else document.querySelector('.sidebar-menu-item.active')?.classList.remove('active');
+
+      // 切换右侧面板
+      document.querySelectorAll('.content-panel').forEach(p => p.style.display = 'none');
+      const panel = document.getElementById(conf.panel);
+      if (panel) panel.style.display = 'block';
+
+      // 面包屑
+      const crumb = document.querySelector('.text-gray-800.font-medium');
+      if (crumb) crumb.textContent = conf.label;
+
+      // 顶部标题
+      const title = document.querySelector('main h2');
+      if (title) title.textContent = conf.label;
+
+      // 重新计算连线
+      requestAnimationFrame(drawConnections);
+    }
+
+    // ====== 中心数据（模拟接口数据，实际开发由后端返回） ======
+    // 数据组合：中心号 - 中心名称 - PI
+    const CENTER_CITIES = ['北京','上海','广州','深圳','成都','重庆','杭州','南京','武汉','西安','天津','苏州','郑州','长沙','沈阳','青岛','大连','宁波','厦门','福州','济南','合肥','昆明','哈尔滨','长春','石家庄','太原','南昌','贵阳','南宁','兰州','海口','银川','乌鲁木齐','呼和浩特','无锡','佛山'];
+    const PI_SURNAMES = ['张','王','李','赵','刘','陈','杨','黄','周','吴','徐','孙','马','朱','胡','郭','何','高','林','罗'];
+    const PI_GIVEN = ['伟','芳','娜','敏','静','磊','军','洋','勇','艳','杰','涛','明','超','霞','平','刚','建华','志强','丽'];
+    const CENTER_DATA = [];
+    let centerIdx = 0;
+    CENTER_CITIES.forEach((city) => {
+      for (let i = 1; i <= 3; i++) {
+        centerIdx += 1;
+        CENTER_DATA.push({
+          code: 'C' + String(centerIdx).padStart(3, '0'),                       // 中心号
+          name: `${city}中心${String(i).padStart(2, '0')}`,                      // 中心名称
+          pi: PI_SURNAMES[centerIdx % PI_SURNAMES.length] + PI_GIVEN[centerIdx % PI_GIVEN.length], // PI
+        });
+      }
+    });
+    const noCrossSelected = new Set(); // 已选「不允许跨级沟通」的中心号 code
+
+    // 检索中心：中心号 / 中心名称 / PI 任意匹配
+    function searchCenters(keyword) {
+      const kw = keyword.trim().toLowerCase();
+      return CENTER_DATA.filter(c =>
+        c.code.toLowerCase().includes(kw) ||
+        c.name.toLowerCase().includes(kw) ||
+        c.pi.toLowerCase().includes(kw)
+      );
+    }
+
+    // 渲染检索结果面板
+    function renderCenterResults() {
+      const keyword = document.getElementById('noCrossCenterSearch')?.value || '';
+      const box = document.getElementById('noCrossCenterResults');
+      if (!box) return;
+      if (!keyword.trim()) { box.style.display = 'none'; box.innerHTML = ''; return; }
+
+      const matches = searchCenters(keyword);
+      const shown = matches.slice(0, 30);
+      box.style.display = 'block';
+
+      if (!matches.length) {
+        box.innerHTML = '<div class="text-center text-xs text-gray-400 py-4"><i class="fas fa-inbox mr-1"></i>未找到匹配的中心</div>';
+      } else {
+        box.innerHTML = shown.map(c => {
+          const added = noCrossSelected.has(c.code);
+          return `<div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-50 ${added ? '' : 'cursor-pointer hover:bg-blue-50'}" ${added ? '' : `onclick="addCenter('${c.code}')"`}>
+            <span class="text-sm text-gray-700 truncate">${c.code}-${c.name}-${c.pi}</span>
+            ${added
+              ? '<span class="text-[11px] text-[#00B42A] flex-shrink-0"><i class="fas fa-check mr-0.5"></i>已添加</span>'
+              : '<i class="fas fa-plus text-gray-300 flex-shrink-0"></i>'}
+          </div>`;
+        }).join('');
+        if (matches.length > 30) {
+          box.innerHTML += '<div class="text-center text-[11px] text-gray-400 py-2 bg-gray-50">共 ' + matches.length + ' 条结果，请继续输入以精确检索</div>';
+        }
+      }
+      requestAnimationFrame(drawConnections);
+    }
+
+    // 添加 / 删除 / 清空已选中心
+    function addCenter(code) {
+      noCrossSelected.add(code);
+      renderCenterResults();
+      renderSelectedTags();
+    }
+    function removeCenter(code) {
+      noCrossSelected.delete(code);
+      renderCenterResults();
+      renderSelectedTags();
+    }
+    function onClearAllNoCrossCenters() {
+      noCrossSelected.clear();
+      renderCenterResults();
+      renderSelectedTags();
+    }
+
+    // 渲染下方已选中心列表（可删除）
+    function renderSelectedTags() {
+      const tagsEl = document.getElementById('noCrossCenterTags');
+      if (!tagsEl) return;
+      const selected = CENTER_DATA.filter(c => noCrossSelected.has(c.code));
+      if (!selected.length) {
+        tagsEl.innerHTML = '<span class="text-xs text-gray-300"><i class="fas fa-inbox mr-1"></i>检索并点击下方结果进行添加</span>';
+      } else {
+        tagsEl.innerHTML = selected.map(c => `
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs" style="background:#fff1f0;border:1px solid #F53F3F;">
+            <span class="text-gray-700">${c.code}-${c.name}-${c.pi}</span>
+            <button type="button" onclick="removeCenter('${c.code}')" class="w-4 h-4 flex items-center justify-center rounded-full bg-[#F53F3F] text-white hover:bg-[#e03131]" title="移除">
+              <i class="fas fa-times" style="font-size:9px;"></i>
+            </button>
+          </span>`).join('');
+      }
+      const countEl = document.getElementById('noCrossCenterCount');
+      if (countEl) countEl.textContent = `（${noCrossSelected.size}/${CENTER_DATA.length}）`;
+    }
+
+    // ====== 不允许跨级沟通联动 ======
+    function onNoCrossChange() {
+      const checked = document.getElementById('noCrossCheck').checked;
+      const box = document.getElementById('noCrossScope');
+      if (box) box.style.display = checked ? 'block' : 'none';
+      if (!checked) {
+        // 取消勾选时清空选择，恢复默认
+        noCrossSelected.clear();
+        renderCenterResults();
+        renderSelectedTags();
+      }
+      // 重新计算连线（展开后位置变化）
+      requestAnimationFrame(drawConnections);
+    }
+    function onNoCrossScopeTypeChange() {
+      const type = document.querySelector('input[name="noCrossScopeType"]:checked')?.value || 'project';
+      const centerBox = document.getElementById('noCrossCenterBox');
+      if (centerBox) centerBox.style.display = type === 'centers' ? 'block' : 'none';
+      requestAnimationFrame(drawConnections);
+    }
+
+    function getNoCrossText() {
+      const checked = document.getElementById('noCrossCheck').checked;
+      if (!checked) return '允许跨级沟通（未限制）';
+      const type = document.querySelector('input[name="noCrossScopeType"]:checked')?.value || 'project';
+      if (type === 'project') return '不允许跨级沟通（项目级别启用）';
+      const selected = CENTER_DATA.filter(c => noCrossSelected.has(c.code));
+      if (!selected.length) return '不允许跨级沟通（部分中心：未选择）';
+      const brief = selected.slice(0, 3).map(c => `${c.code} ${c.name}`).join('、');
+      return selected.length <= 3
+        ? `不允许跨级沟通（部分中心：${brief}）`
+        : `不允许跨级沟通（部分中心：${brief} 等 ${selected.length} 个中心）`;
+    }
+
+    // ====== 保存 / 取消 ======
+    function onSave() {
+      showToast(`已保存：${getNoCrossText()}`);
+    }
+    function onCancel() {
+      // 恢复默认：不勾选 + 项目级别 + 清空中心
+      const check = document.getElementById('noCrossCheck');
+      if (check) check.checked = false;
+      const projectRadio = document.querySelector('input[name="noCrossScopeType"][value="project"]');
+      if (projectRadio) projectRadio.checked = true;
+      noCrossSelected.clear();
+      renderCenterResults();
+      renderSelectedTags();
+      onNoCrossChange();
+      showToast('已取消修改', 'cancel');
+    }
+
+    function showToast(text, type='success') {
+      const t = document.getElementById('toast');
+      const icon = t.querySelector('i');
+      const span = document.getElementById('toastText');
+      span.textContent = text;
+      icon.className = type === 'success' ? 'fas fa-check-circle' : 'fas fa-info-circle';
+      t.classList.remove('cancel'); if (type === 'cancel') t.classList.add('cancel');
+      t.classList.add('show');
+      clearTimeout(window.__toastT);
+      window.__toastT = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // ====== 连线绘制 ======
+    const svg = document.getElementById('connections');
+    const connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+      if (rightPanelCollapsed) return;
+
+      const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(leftEl => {
+        const protoId = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${protoId}"]`);
+        if (!rightEl) return;
+
+        const leftRect = leftEl.getBoundingClientRect();
+        const rightRect = rightEl.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        const x1 = leftRect.right - svgRect.left;
+        const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        const x2 = rightRect.left - svgRect.left;
+        const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        const cp1x = x1 + (x2 - x1) * 0.5;
+        const cp1y = y1;
+        const cp2x = x1 + (x2 - x1) * 0.5;
+        const cp2y = y2;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        svg.appendChild(path);
+
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX);
+        bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('class', 'connection-label-bg');
+        svg.appendChild(bg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('class', 'connection-label');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId, path, leftEl, rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      const conn = connections.find(c => c.protoId === protoId);
+      if (!conn) return;
+      if (active) {
+        conn.path.classList.add('active');
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.classList.remove('active');
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // ====== 移动端切换 ======
+    let mobileShowDesc = false;
+    function toggleMobileView() {
+      mobileShowDesc = !mobileShowDesc;
+      const leftPanel = document.getElementById('left-panel');
+      const rightPanel = document.getElementById('right-panel');
+      const btn = document.getElementById('mobileToggle');
+      if (mobileShowDesc) {
+        leftPanel.style.display = 'none'; rightPanel.style.height = '100vh'; btn.innerHTML = '<i class="fas fa-desktop"></i>';
+      } else {
+        leftPanel.style.display = ''; rightPanel.style.height = ''; btn.innerHTML = '<i class="fas fa-info"></i>';
+      }
+    }
+
+    // ====== 右侧面板抽屉 ======
+    let rightPanelCollapsed = false;
+    function toggleRightPanel() {
+      rightPanelCollapsed = !rightPanelCollapsed;
+      const panel = document.getElementById('right-panel');
+      const btn = document.getElementById('drawerHandle');
+      const icon = document.getElementById('drawerIcon');
+      const divider = document.getElementById('divider');
+      if (rightPanelCollapsed) {
+        panel.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        divider.style.display = 'none';
+      } else {
+        panel.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        divider.style.display = '';
+      }
+      setTimeout(drawConnections, 320);
+    }
+
+    // ====== 初始化 ======
+    function init() { noCrossSelected.clear(); renderSelectedTags(); drawConnections(); bindHoverEvents(); }
+    document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { init(); }, 150); });
+    document.getElementById('left-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+    document.getElementById('right-panel').addEventListener('scroll', () => { requestAnimationFrame(drawConnections); });
+  </script>
+</body>
+</html>

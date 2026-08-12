@@ -16138,7 +16138,7 @@ function renderProjectStageSettings() {
         </div>
       </div>
       ${availableStages.length ? '' : '<div class="proj-stage-empty">暂无可选阶段，可点击下方「新增审批阶段」直接添加。</div>'}
-      <div class="proj-stage-hint">支持从「系统管理 → 审批阶段配置」已有的启用阶段中多选；如本项目叫法不同，可直接「新增审批阶段」，新增后自动选中并进入下方审批类型配置。</div>
+      <div class="proj-stage-hint">支持从「系统管理 → 审批阶段配置」已有的启用阶段中多选。</div>
     </div>
     ${auditPanels}
     ${_projectSelectedStages.length === 0 ? '<div class="proj-stage-empty">请至少选择一个阶段。</div>' : ''}
@@ -17331,7 +17331,7 @@ function addApprovalStep() {
 
 // ==================== 项目思考链配置（参考 chain_of_thought，支持按阶段配置不同步骤，也可多阶段共用同一套步骤） ====================
 let _defaultProjThinkChains = [
-  { id:'ptc_001', name:'ASCVD心血管风险评估', type:'screening', version:'v1.0', link:'S01', enabled:true, updateTime:'2026-06-20 14:30',
+  { id:'ptc_001', name:'ASCVD心血管风险评估', type:'screening', version:'', link:'S01', enabled:true, updateTime:'2026-06-20 14:30',
     stages:['ST01','ST03'],
     stageSteps:{
       ST01:[
@@ -17346,7 +17346,7 @@ let _defaultProjThinkChains = [
       ]
     }
   },
-  { id:'ptc_002', name:'肝肾功能异常判定', type:'screening', version:'v1.0', link:'S06', enabled:true, updateTime:'2026-05-18 09:12',
+  { id:'ptc_002', name:'肝肾功能异常判定', type:'screening', version:'', link:'S06', enabled:true, updateTime:'2026-05-18 09:12',
     stages:['ST01','ST02','ST03'],
     stageSteps:{
       ST01:[
@@ -17440,7 +17440,8 @@ function renderProjThinkChainTable() {
       +   '</td>'
       +   '<td><span class="tc-name">' + escapeTc(c.name) + '</span></td>'
       +   '<td>' + getProjTcTypeTag(c.type) + '</td>'
-   
+      +   '<td style="color:#666">' + (c.version ? escapeTc(c.version) : '—') + '</td>'
+
       +   '<td style="color:#999">' + (c.updateTime || '—') + '</td>'
       +   '<td>'
       +     '<span class="action-link" onclick="editProjThinkChain(\'' + c.id + '\')">编辑</span>'
@@ -17448,12 +17449,12 @@ function renderProjThinkChainTable() {
       +   '</td>'
       + '</tr>'
       + '<tr class="tc-sub-row" id="proj-tc-sub-' + c.id + '" style="display:none">'
-      +   '<td colspan="6"><div class="tc-steps-wrap">' + (stepSub || '<div style="color:#999;font-size:12px">暂无步骤</div>') + '</div></td>'
+      +   '<td colspan="7"><div class="tc-steps-wrap">' + (stepSub || '<div style="color:#999;font-size:12px">暂无步骤</div>') + '</div></td>'
       + '</tr>';
   }).join('');
   return ''
     + '<table class="tc-table">'
-    +   '<thead><tr><th style="width:64px">序号</th><th>问题描述</th><th>类型</th><th>更新时间</th><th>操作</th></tr></thead>'
+    +   '<thead><tr><th style="width:64px">序号</th><th>问题描述</th><th>类型</th><th style="width:120px">版本名称</th><th>更新时间</th><th>操作</th></tr></thead>'
     +   '<tbody>' + rows + '</tbody>'
     + '</table>';
 }
@@ -17689,7 +17690,7 @@ function setProjTcType(type) {
   const linkField = document.getElementById('projTcLinkField');
   const verLabel = document.getElementById('projTcVersionLabel');
   const linkLabel = document.getElementById('projTcLinkLabel');
-  if (verField) verField.style.display = (type === 'inclusion') ? 'block' : 'none';
+  if (verField) verField.style.display = 'block';
   if (linkField) linkField.style.display = 'block';
   if (type === 'inclusion') {
     if (verLabel) verLabel.textContent = '关联入排标准版本';
@@ -17825,7 +17826,7 @@ function saveProjThinkChain() {
     return;
   }
   const type = _projTcType;
-  const ver = (type === 'inclusion' && verEl) ? verEl.value : '';
+  const ver = verEl ? verEl.value : '';
   const link = linkEl ? linkEl.value : '';
   const finalStageSteps = {};
   _projTcEditStages.forEach(function(sid){ finalStageSteps[sid] = _projTcStageSteps[sid] || []; });
