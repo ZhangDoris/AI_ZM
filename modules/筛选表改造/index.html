@@ -2049,6 +2049,20 @@
     .ref-table tbody tr.selected { background: #e6f4ff; }
     .ref-table tbody tr:last-child td { border-bottom: none; }
     .ref-checkbox-cell { text-align: center; }
+    /* 引用弹窗查询栏 */
+    .ref-search-bar { display: flex; align-items: flex-end; gap: 16px; padding: 16px 24px; background: #fff; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
+    .ref-search-fields { display: flex; gap: 16px; flex-wrap: wrap; }
+    .ref-search-field { display: flex; align-items: center; gap: 6px; }
+    .ref-search-field label { font-size: 13px; color: #555; white-space: nowrap; }
+    .ref-search-input, .ref-search-select { height: 32px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; outline: none; background: #fff; color: #333; }
+    .ref-search-input { width: 180px; }
+    .ref-search-select { min-width: 140px; }
+    .ref-search-input:focus, .ref-search-select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.1); }
+    .ref-search-btn { height: 32px; padding: 0 18px; }
+    /* 多阶段备注：每阶段一条 chip + 内容 */
+    .ref-stage-remarks { display: flex; flex-direction: column; gap: 4px; }
+    .ref-stage-remark { display: flex; align-items: flex-start; gap: 6px; line-height: 1.6; color: #444; font-size: 12px; }
+    .ref-stage-chip { display: inline-block; flex-shrink: 0; padding: 1px 8px; border-radius: 10px; background: #e6f4ff; color: #1677ff; font-size: 11px; line-height: 18px; border: 1px solid #91caff; }
     .ref-checkbox-cell input[type="checkbox"] {
       width: 16px; height: 16px; cursor: pointer; accent-color: #1677ff;
     }
@@ -3352,9 +3366,22 @@
     .proj-criteria-table .thinking-chain-textarea:focus { border-color: #faad14; box-shadow: 0 0 0 2px rgba(250,173,20,0.12); }
     .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 13px; }
     .proj-criteria-table .delete-action:hover { color: #d9363e; text-decoration: underline; }
-    .proj-criteria-table .move-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; border: 1px solid #d6e4ff; background: #f5f9ff; }
+    .proj-criteria-table .move-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; border: 1px solid #d6e4ff; background: #f5f9ff; transition: background 0.15s; user-select: none; }
     .proj-criteria-table .move-action:hover { background: #e6f0ff; }
-    .proj-criteria-table .move-action.disabled { color: #c9cdd4; cursor: not-allowed; border-color: #eee; background: #fafafa; }
+    .proj-criteria-table .move-action:active { transform: translateY(1px); }
+    .proj-criteria-table .move-action.disabled { color: #c9cdd4; cursor: not-allowed; border-color: #eee; background: #fafafa; pointer-events: none; }
+    .proj-criteria-table tr.move-flash > td { animation: moveFlash 0.8s ease; }
+    @keyframes moveFlash { 0% { background: #fff7e6; } 100% { background: transparent; } }
+    /* 操作列：分两行紧凑按钮，避免文字"折行" */
+    .proj-criteria-table td.action-cell { padding: 6px 8px; white-space: nowrap; min-width: 150px; }
+    .proj-criteria-table .action-row { display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
+    .proj-criteria-table .action-row:first-child { margin-top: 0; }
+    .proj-criteria-table .config-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+    .proj-criteria-table .config-action .think-badge { background: #fa8c16; color: #fff; font-size: 10px; font-style: normal; padding: 0 5px; border-radius: 8px; margin-left: 4px; line-height: 14px; }
+    .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; }
+    .proj-criteria-table .delete-action:hover { background: #ffccc7; }
+    .proj-criteria-table .add-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 6px; height: 24px; border-radius: 4px; border: 1px dashed #91caff; background: #f0f7ff; }
+    .proj-criteria-table .add-action:hover { background: #e6f4ff; border-style: solid; }
     .proj-criteria-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
     .criteria-add-btn { display: inline-flex; align-items: center; gap: 5px; background: #1677ff; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; transition: background 0.2s; }
     .criteria-add-btn:hover { background: #0958d9; }
@@ -14635,7 +14662,7 @@ const SCREENING_TYPE_OPTIONS = ['单行文本','多行文本','日期','时间',
 let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningData));
 
 // 提取要点数据：独立于筛选表，列表首列为「项目」、次列为「类型」，类型仅支持 文本/表格/时间轴
-const EXTRACT_TYPE_OPTIONS = ['文本','表格','时间轴'];
+const EXTRACT_TYPE_OPTIONS = ['表格','时间轴','文本'];
 const _defaultProjectExtractData = {
   items: [
     { id:'E01', item:'患者基本身份信息', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:true, stageRemarks:{}, thinkingChain:[] },
@@ -16508,12 +16535,21 @@ function renderExtractContent() {
         </td>
         ${stageTds}
         <td class="action-cell">
-          <span class="config-action" onclick="openExtractRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
+          <div class="action-row">
+            <span class="config-action" onclick="openExtractRemarkModal(${idx})" title="配置备注"><i class="fa-regular fa-note-sticky"></i> 备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
+          </div>
           ${items.length > 1 ? `
+          <div class="action-row">
+            <span class="add-action" onclick="addExtractRow(${idx})" title="新增一行"><i class="fa-solid fa-plus"></i> 新增</span>
             <span class="move-action ${idx === 0 ? 'disabled' : ''}" title="上移" ${idx === 0 ? '' : `onclick="moveExtractRow(${idx}, 'up')"`}><i class="fa-solid fa-arrow-up"></i></span>
             <span class="move-action ${idx === items.length - 1 ? 'disabled' : ''}" title="下移" ${idx === items.length - 1 ? '' : `onclick="moveExtractRow(${idx}, 'down')"`}><i class="fa-solid fa-arrow-down"></i></span>
-            <span class="delete-action" onclick="deleteExtractRow(${idx})">删除</span>
-          ` : ''}
+            <span class="delete-action" onclick="deleteExtractRow(${idx})" title="删除"><i class="fa-solid fa-trash-can"></i></span>
+          </div>
+          ` : `
+          <div class="action-row">
+            <span class="add-action" onclick="addExtractRow(${idx})" title="新增一行"><i class="fa-solid fa-plus"></i> 新增</span>
+          </div>
+          `}
         </td>
       </tr>
       ${remarkSubTable}
@@ -16526,7 +16562,6 @@ function renderExtractContent() {
       </div>
       <div class="proj-criteria-toolbar">
         <button type="button" class="criteria-btn criteria-btn-ghost" onclick="referenceExtractConfig()"><i class="fa-solid fa-link"></i>引用</button>
-        <button type="button" class="criteria-btn criteria-btn-primary" onclick="addExtractRow(${items.length - 1})"><i class="fa-solid fa-plus"></i>新增</button>
       </div>
       <div class="table-scroll-wrapper">
         <table class="proj-criteria-table">
@@ -16599,40 +16634,40 @@ function importExtractData() {
 }
 // 引用其它项目的提取要点配置
 const _otherProjectExtractConfigs = [
-  { id:'P-A002', name:'ZWTI-胃癌靶向治疗研究', type:'肿瘤研究', owner:'李研究', count:6,
+  { id:'P-A002', name:'ZWTI-胃癌靶向治疗研究', type:'肿瘤研究', domain:'肿瘤', owner:'李研究', count:6,
     items:[
-      { id:'EA1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EA2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取年龄与主要瘤种' },
-      { id:'EA3', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往化疗/靶向方案' },
-      { id:'EA4', item:'靶向药物疗效指标', type:'数值', stageEnabled:{'ST03':true}, required:true, remark:'客观缓解率 ORR 数值' },
-      { id:'EA5', item:'不良反应事件记录', type:'文本', stageEnabled:{'ST03':true}, required:false, remark:'按 CTCAE 分级记录' },
-      { id:'EA6', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注禁用地中海贫血相关药物' }
+      { id:'EA1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EA2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取年龄与主要瘤种' },
+      { id:'EA3', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往化疗/靶向方案' },
+      { id:'EA4', item:'靶向药物疗效指标', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'客观缓解率 ORR 数值' },
+      { id:'EA5', item:'合并症', type:'表格', stageEnabled:{'ST03':true}, required:false, remark:'按 CTCAE 分级记录' },
+      { id:'EA6', item:'合并用药', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注禁用地中海贫血相关药物' }
     ]
   },
-  { id:'P-B017', name:'LUNG-非小细胞肺癌免疫研究', type:'免疫研究', owner:'王医学', count:5,
+  { id:'P-B017', name:'LUNG-非小细胞肺癌免疫研究', type:'免疫研究', domain:'肿瘤', owner:'王医学', count:5,
     items:[
-      { id:'EB1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EB2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取吸烟史与分期' },
-      { id:'EB3', item:'PD-L1 表达水平', type:'数值', stageEnabled:{'ST03':true}, required:true, remark:'TPS 百分比数值' },
-      { id:'EB4', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往免疫治疗方案' },
-      { id:'EB5', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注免疫相关禁忌' }
+      { id:'EB1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EB2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取吸烟史与分期' },
+      { id:'EB3', item:'PD-L1 表达水平', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'TPS 百分比数值' },
+      { id:'EB4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往免疫治疗方案' },
+      { id:'EB5', item:'合并用药/禁忌要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注免疫相关禁忌' }
     ]
   },
-  { id:'P-C031', name:'BREAST-乳腺癌内分泌治疗研究', type:'内分泌研究', owner:'赵临床', count:4,
+  { id:'P-C031', name:'BREAST-乳腺癌内分泌治疗研究', type:'内分泌研究', domain:'非肿瘤', owner:'赵临床', count:4,
     items:[
-      { id:'EC1', item:'患者基本身份信息', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EC2', item:'关键入排指标提取', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取绝经状态' },
-      { id:'EC3', item:'激素受体状态', type:'文本', stageEnabled:{'ST03':true}, required:true, remark:'ER/PR 阳性状态' },
-      { id:'EC4', item:'既往治疗史要点', type:'文本', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往内分泌治疗' }
+      { id:'EC1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EC2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取绝经状态' },
+      { id:'EC3', item:'激素受体状态', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'ER/PR 阳性状态' },
+      { id:'EC4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往内分泌治疗' }
     ]
   }
 ];
 let _refExtractSelected = [];
 
-function referenceExtractConfig() {
-  _refExtractSelected = [];
-  const body = document.getElementById('refExtractTableBody');
-  if(body) body.innerHTML = _otherProjectExtractConfigs.map(t => `
+// 引用弹窗里的"项目行"渲染（供默认空态与搜索结果复用）
+function buildRefExtractRows(list) {
+  if(!list.length) return '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:40px 0">未查询到符合条件的项目，请调整查询条件后重试</td></tr>';
+  return list.map(t => `
     <tr id="refExtRow_${t.id}" onclick="toggleRefExtract('${t.id}')" style="cursor:pointer;transition:background .15s">
       <td style="text-align:center;width:44px"><input type="checkbox" id="refExtChk_${t.id}" onclick="event.stopPropagation();toggleRefExtract('${t.id}')"></td>
       <td>${t.id}</td>
@@ -16640,16 +16675,42 @@ function referenceExtractConfig() {
       <td>${t.type || '-'}</td>
       <td style="text-align:center;white-space:nowrap">
         <span class="action-link process" onclick="event.stopPropagation();viewRefExtractDetail('${t.id}')">查看</span>
-        <span style="color:#e0e0e0;margin:0 4px">|</span>
-        <span class="action-link" onclick="event.stopPropagation();addSingleRefExtract('${t.id}')">新增</span>
       </td>
     </tr>
   `).join('');
+}
+
+function referenceExtractConfig() {
+  // 打开弹窗时默认清空查询条件，且不展示任何项目数据
+  _refExtractSelected = [];
+  const codeInput = document.getElementById('refSearchPlanCode');
+  const domainInput = document.getElementById('refSearchDomain');
+  if(codeInput) codeInput.value = '';
+  if(domainInput) domainInput.value = '';
+  const body = document.getElementById('refExtractTableBody');
+  if(body) body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:40px 0">请输入查询条件后点击「搜索」查询符合条件的项目</td></tr>';
   const c = document.getElementById('refExtractSelectedCount');
   if(c) c.textContent = '0';
   const modal = document.getElementById('refExtractModal');
   if(modal) modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
+}
+
+// 按「方案编号」+「领域」查询其它项目
+function searchRefExtract() {
+  const code = (document.getElementById('refSearchPlanCode').value || '').trim().toLowerCase();
+  const domain = (document.getElementById('refSearchDomain').value || '').trim();
+  const result = _otherProjectExtractConfigs.filter(t => {
+    const matchCode = !code || (t.id || '').toLowerCase().includes(code);
+    const matchDomain = !domain || (t.domain || '') === domain;
+    return matchCode && matchDomain;
+  });
+  const body = document.getElementById('refExtractTableBody');
+  if(body) body.innerHTML = buildRefExtractRows(result);
+  // 重置已选（搜索结果变了，之前的选择清空）
+  _refExtractSelected = [];
+  const c = document.getElementById('refExtractSelectedCount');
+  if(c) c.textContent = '0';
 }
 
 function toggleRefExtract(id) {
@@ -16736,23 +16797,75 @@ function closeRefExtractModal() {
   document.body.style.overflow = '';
 }
 
+// 折叠/展开"查看"弹窗中每条要点下的按阶段备注
+function toggleRefExtractSubRemark(idx){
+  const body = document.getElementById('refExtractSubRemarkBody-' + idx);
+  const toggle = document.getElementById('refExtractSubRemarkToggle-' + idx);
+  if(!body) return;
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if(toggle) toggle.classList.toggle('expanded', open);
+}
+
 // 查看某项目的提取要点配置明细（项目 / 文本类型 / 备注）
 function viewRefExtractDetail(pid) {
   const cfg = _otherProjectExtractConfigs.find(t=>t.id===pid);
   if(!cfg) return;
-  const rows = cfg.items.map((it, i) => `
+  const stageName = (sid) => { const s = _projectSelectedStages.find(x=>x.id===sid); return s ? s.name : sid; };
+  const rows = cfg.items.map((it, i) => {
+    // 仅展示"已启用"的阶段；若没有任何启用阶段，子区域显示占位
+    const enabledStageIds = it.stageEnabled ? Object.keys(it.stageEnabled).filter(k => it.stageEnabled[k]) : [];
+    const remarks = it.stageRemarks || {};
+    const remarkCount = enabledStageIds.filter(sid => {
+      const t = remarks[sid];
+      return t !== undefined && t !== null && String(t).trim() !== '';
+    }).length;
+    const stageChipHtml = enabledStageIds.length === 0
+      ? '<span style="color:#bbb">未启用</span>'
+      : enabledStageIds.map(sid => `<span class="ref-stage-chip">${stageName(sid)}</span>`).join('');
+    const inner = enabledStageIds.length === 0
+      ? '<div style="color:#bbb;padding:8px 4px;font-size:12px;">该要点未启用任何阶段</div>'
+      : `<div class="sub-remark-body-wrap" id="refExtractSubRemarkBody-${i}" style="display:none">
+          <table class="sub-remark-table">
+            <thead>
+              <tr>
+                <th style="width:150px">阶段</th>
+                <th>备注内容</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${enabledStageIds.map(sid => `
+                <tr>
+                  <td class="sub-remark-stage"><i class="fa-solid fa-layer-group"></i> ${stageName(sid)}</td>
+                  <td><div class="sub-remark-content">${(remarks[sid] && String(remarks[sid]).trim()) || '<span style="color:#bbb">未填备注</span>'}</div></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    return `
     <tr>
       <td style="text-align:center;color:#999">${i+1}</td>
       <td>${it.item}</td>
       <td><span class="edit-tag ${it.type==='数值'?'edit-tag-teal':'edit-tag-blue'}">${it.type}</span></td>
-      <td style="color:#666">${it.remark || '-'}</td>
+      <td style="text-align:center"><div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${stageChipHtml}</div></td>
     </tr>
-  `).join('');
-  const panel = document.getElementById('refExtractDetailPanel');
-  if(panel) {
-    panel.querySelector('.ref-detail-name').textContent = cfg.name + '（'+cfg.id+'）';
-    panel.querySelector('tbody').innerHTML = rows;
-    document.getElementById('refExtractDetailModal').style.display = 'flex';
+    <tr class="sub-remark-row">
+      <td colspan="4">
+        <div class="sub-remark-inner">
+          <div class="sub-remark-title" onclick="toggleRefExtractSubRemark(${i})">
+            <i class="fa-regular fa-note-sticky"></i> 按阶段备注（${remarkCount}）
+            <i class="fa-solid fa-chevron-right sub-remark-toggle" id="refExtractSubRemarkToggle-${i}"></i>
+          </div>
+          ${inner}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  const modal = document.getElementById('refExtractDetailModal');
+  if(modal) {
+    modal.querySelector('.ref-detail-name').textContent = cfg.id;
+    modal.querySelector('tbody').innerHTML = rows;
+    modal.style.display = 'flex';
   }
 }
 
@@ -16788,7 +16901,17 @@ function moveExtractRow(idx, dir) {
   items[idx] = items[target];
   items[target] = tmp;
   refreshExtractSection();
-
+  // 高亮移动后的目标行，让用户看到排序变化
+  const body = document.getElementById('extractContentArea');
+  if(body) {
+    const rows = body.querySelectorAll('table.proj-criteria-table tbody > tr');
+    const flashRow = rows[target];
+    if(flashRow) {
+      flashRow.classList.add('move-flash');
+      flashRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => flashRow.classList.remove('move-flash'), 800);
+    }
+  }
   showWechatToast(dir === 'up' ? '已上移' : '已下移');
 }
 
@@ -20087,6 +20210,23 @@ window.addEventListener('DOMContentLoaded', function() {
       <button class="modal-close" onclick="closeRefExtractModal()" style="border:none;background:none;font-size:18px;cursor:pointer;color:#999">✕</button>
     </div>
     <div class="ref-modal-body">
+      <div class="ref-search-bar">
+        <div class="ref-search-fields">
+          <div class="ref-search-field">
+            <label>方案编号：</label>
+            <input type="text" id="refSearchPlanCode" class="ref-search-input" placeholder="请输入方案编号" />
+          </div>
+          <div class="ref-search-field">
+            <label>领域：</label>
+            <select id="refSearchDomain" class="ref-search-select">
+              <option value="">全部</option>
+              <option value="肿瘤">肿瘤</option>
+              <option value="非肿瘤">非肿瘤</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary ref-search-btn" onclick="searchRefExtract()"><i class="fas fa-search"></i> 搜索</button>
+      </div>
       <div style="padding:12px 24px;background:#fafbfc;border-bottom:1px solid #f0f0f0;font-size:12px;color:#8c8c8c">
         <i class="fa-solid fa-circle-info" style="color:#1677ff;margin-right:6px"></i>可从其它已配置项目中引用提取要点，引用后将追加到当前项目的提取要点列表中。
       </div>
@@ -20133,7 +20273,7 @@ window.addEventListener('DOMContentLoaded', function() {
               <th style="text-align:center;width:48px">序号</th>
               <th>项目</th>
               <th style="width:90px">文本类型</th>
-              <th>备注</th>
+              <th style="text-align:center;width:160px">启用阶段</th>
             </tr>
           </thead>
           <tbody></tbody>

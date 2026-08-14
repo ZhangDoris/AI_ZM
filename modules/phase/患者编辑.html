@@ -145,6 +145,7 @@
       min-height: 16px;
     }
     .field-hint.error { color: var(--required); }
+    .field-hint.rule { color: #d48806; }
     .date-field { position: relative; }
     .date-field i {
       position: absolute;
@@ -403,14 +404,14 @@
           <label class="form-label">筛选号：</label>
           <div class="form-field">
             <input type="text" class="form-input" id="fieldScreenNo">
-            <div class="field-hint" id="screenNoHint"></div>
+            <div class="field-hint rule" id="screenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
           </div>
         </div>
-         <div class="form-row">
+         <div class="form-row" id="rowUpdateScreenNo" style="display:none;">
             <label class="form-label">更新筛选号：</label>
             <div class="form-field">
               <input type="text" class="form-input" id="fieldUpdateScreenNo">
-              <div class="field-hint" id="updateScreenNoHint"></div>
+              <div class="field-hint rule" id="updateScreenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
             </div>
           </div>
         <div class="form-row">
@@ -465,6 +466,13 @@
     // 检测筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
     function checkScreenNoConflict() {
       const raw = document.getElementById('fieldScreenNo').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    // 检测更新筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
+    function checkUpdateScreenNoConflict() {
+      const raw = document.getElementById('fieldUpdateScreenNo').value.trim();
       if (!raw) return null;
       return USED_SCREENING_NOS[raw] || null;
     }
@@ -529,10 +537,17 @@
       const hint = document.getElementById('screenNoHint');
       const raw = input.value.trim();
 
-      if (!raw) {
+      if (input.disabled) {
         input.classList.remove('invalid');
         hint.className = 'field-hint';
         hint.textContent = '';
+        return true;
+      }
+
+      if (!raw) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
         return true;
       }
 
@@ -543,24 +558,90 @@
 
       if (ok) {
         input.classList.remove('invalid');
-        hint.className = 'field-hint';
-        hint.textContent = '';
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
       } else {
         input.classList.add('invalid');
         hint.className = 'field-hint error';
-        hint.textContent = '筛选号不符合规范：应为「中心号+ 4位数字」';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }
 
+    function validateUpdateScreenNo() {
+      const input = document.getElementById('fieldUpdateScreenNo');
+      const hint = document.getElementById('updateScreenNoHint');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+        return true;
+      }
+
+      if (SCREENING_RULE.type === 'manual') return true;
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (ok) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+      } else {
+        input.classList.add('invalid');
+        hint.className = 'field-hint error';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
+      }
+      return ok;
+    }
+
+    // 根据是否筛败切换两种效果：
+    // 筛败前：无更新筛选号；筛选号可编辑 + 校验提示
+    // 筛败后：显示更新筛选号；筛选号不可编辑 + 不校验不提示
+    function applyFailMode() {
+      const fail = document.querySelector('input[name="screenFail"]:checked').value === 'yes';
+      const screenInput = document.getElementById('fieldScreenNo');
+      const screenHint = document.getElementById('screenNoHint');
+      const updateRow = document.getElementById('rowUpdateScreenNo');
+
+      if (fail) {
+        updateRow.style.display = '';
+        screenInput.disabled = true;
+        screenInput.classList.remove('invalid');
+        screenHint.className = 'field-hint';
+        screenHint.textContent = '';
+      } else {
+        updateRow.style.display = 'none';
+        screenInput.disabled = false;
+        validateScreenNo();
+      }
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('fieldScreenNo');
+      const updateInput = document.getElementById('fieldUpdateScreenNo');
       input.addEventListener('input', validateScreenNo);
       input.addEventListener('blur', validateScreenNo);
+      updateInput.addEventListener('input', validateUpdateScreenNo);
+      updateInput.addEventListener('blur', validateUpdateScreenNo);
+
+      document.querySelectorAll('input[name="screenFail"]').forEach(r => {
+        r.addEventListener('change', applyFailMode);
+      });
+      applyFailMode();
 
       document.querySelector('.btn-primary').addEventListener('click', () => {
-        if (!validateScreenNo()) {
+        const fail = document.querySelector('input[name="screenFail"]:checked').value === 'yes';
+        const okScreen = validateScreenNo();
+        const okUpdate = fail ? validateUpdateScreenNo() : true;
+        if (!okScreen) {
           document.getElementById('fieldScreenNo').focus();
+          return;
+        }
+        if (!okUpdate) {
+          document.getElementById('fieldUpdateScreenNo').focus();
           return;
         }
         // 检测筛选号是否已存在冲突（提示但不拦截保存）
@@ -572,6 +653,18 @@
             showToast('保存成功', 'success');
           });
           return;
+        }
+        // 筛败后：检测更新筛选号是否已存在冲突（提示但不拦截保存）
+        if (fail) {
+          const updateConflict = checkUpdateScreenNoConflict();
+          if (updateConflict) {
+            const tip = '该更新筛选号已在受试者【姓名缩写：' + updateConflict.nameAbbr +
+              '：患者编号：' + updateConflict.patientNo + '】使用，仍要保存吗？';
+            showConfirm(tip, () => {
+              showToast('保存成功', 'success');
+            });
+            return;
+          }
         }
         showToast('保存成功', 'success');
       });

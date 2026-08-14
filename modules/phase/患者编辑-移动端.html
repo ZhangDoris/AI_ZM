@@ -73,11 +73,13 @@
       transition: border-color .2s, background-color .2s; box-sizing: border-box;
     }
     .pe-input[readonly] { background: #f5f7fa; color: #999; }
+    .pe-input:disabled { background: #f5f7fa; color: #999; cursor: not-allowed; }
     .pe-input:focus, .pe-select:focus { border-color: #1677ff; background: #fff; }
     .pe-input.error, .pe-select.error { border-color: #ff4d4f; background: #fff2f0; }
     .pe-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
     .pe-hint { font-size: 12px; margin-top: 4px; min-height: 16px; line-height: 1.4; }
     .pe-hint.error { color: #ff4d4f; }
+    .pe-hint.rule { color: #d48806; }
 
     .pe-footer { flex-shrink: 0; padding: 12px 16px 16px; background: #fff; border-top: 1px solid #f0f0f0; box-sizing: border-box; }
     .pe-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; background: #1677ff; color: #fff; cursor: pointer; }
@@ -249,17 +251,18 @@
         </div>
         <div class="pe-field" id="pe-screening-field">
           <label class="pe-label">筛选号</label>
-          <input class="pe-input" id="pe-screening" type="text" placeholder="如：CN0390001">
-          <div class="pe-hint" id="peScreeningHint"></div>
+          <input class="pe-input" id="pe-screening" type="text" >
+          <div class="pe-hint rule" id="peScreeningHint">筛选号填写规则为「中心号+ 4位数字」</div>
         </div>
-    
+
         <div class="pe-field" id="pe-informed-field">
           <label class="pe-label">知情时间</label>
           <input class="pe-input" id="pe-informed" type="datetime-local">
         </div>
-            <div class="pe-field">
+        <div class="pe-field" id="pe-screening-update-field" style="display:none;">
           <label class="pe-label">更新筛选号</label>
-          <input class="pe-input" id="pe-screening-update" type="text" placeholder="如：CN0390001">
+          <input class="pe-input" id="pe-screening-update" type="text" >
+          <div class="pe-hint rule" id="peScreeningUpdateHint">筛选号填写规则为「中心号+ 4位数字」</div>
         </div>
         <div class="pe-field">
           <label class="pe-label">是否筛败</label>
@@ -320,10 +323,17 @@
       const hint = document.getElementById('peScreeningHint');
       const raw = input.value.trim();
 
-      if (!raw) {
+      if (input.disabled) {
         input.classList.remove('error');
         hint.className = 'pe-hint';
         hint.textContent = '';
+        return { ok: true, empty: true };
+      }
+
+      if (!raw) {
+        input.classList.remove('error');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
         return { ok: true, empty: true };
       }
 
@@ -338,19 +348,57 @@
         // 仅格式提示，不阻断填写
         input.classList.add('error');
         hint.className = 'pe-hint error';
-        hint.textContent = '筛选号不符合规范：应为「中心号+4位数字」';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
         return { ok: false };
       }
 
       input.classList.remove('error');
-      hint.className = 'pe-hint';
-      hint.textContent = '';
+      hint.className = 'pe-hint rule';
+      hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+      return { ok: true };
+    }
+
+    // 校验更新筛选号：返回 { ok }
+    function validateUpdateScreeningNo() {
+      const input = document.getElementById('pe-screening-update');
+      const hint = document.getElementById('peScreeningUpdateHint');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.classList.remove('error');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+        return { ok: true };
+      }
+
+      if (SCREENING_RULE.type === 'manual') return { ok: true };
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (!ok) {
+        input.classList.add('error');
+        hint.className = 'pe-hint error';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
+        return { ok: false };
+      }
+
+      input.classList.remove('error');
+      hint.className = 'pe-hint rule';
+      hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
       return { ok: true };
     }
 
     // 检测筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
     function checkScreeningConflict() {
       const raw = document.getElementById('pe-screening').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    // 检测更新筛选号是否已被其他受试者使用，返回被占用的受试者信息或 null
+    function checkUpdateScreeningConflict() {
+      const raw = document.getElementById('pe-screening-update').value.trim();
       if (!raw) return null;
       return USED_SCREENING_NOS[raw] || null;
     }
@@ -431,6 +479,17 @@
         return;
       }
 
+      const fail = document.getElementById('pe-screen-fail').value === '是';
+
+      // 筛败后：更新筛选号格式校验
+      if (fail) {
+        const updateScreening = validateUpdateScreeningNo();
+        if (!updateScreening.ok) {
+          document.getElementById('pe-screening-update').focus();
+          return;
+        }
+      }
+
       // 筛选号重复校验：保存时检测，弹确认提示（不阻断保存）
       const conflict = checkScreeningConflict();
       if (conflict) {
@@ -442,14 +501,59 @@
         return;
       }
 
+      // 筛败后：更新筛选号重复校验（不阻断保存）
+      if (fail) {
+        const updateConflict = checkUpdateScreeningConflict();
+        if (updateConflict) {
+          const tip = '该筛选号已在受试者【姓名缩写：' + updateConflict.nameAbbr +
+            '，患者编号：' + updateConflict.patientNo + '】使用，仍要保存吗？';
+          showConfirm(tip, () => {
+            toastMini('保存成功');
+          });
+          return;
+        }
+      }
+
       toastMini('保存成功');
+    }
+
+    // 根据是否筛败切换两种效果：
+    // 筛败前：无更新筛选号；筛选号可编辑 + 校验提示
+    // 筛败后：显示更新筛选号；筛选号不可编辑 + 不校验不提示
+    function applyFailMode() {
+      const fail = document.getElementById('pe-screen-fail').value === '是';
+      const screenInput = document.getElementById('pe-screening');
+      const screenHint = document.getElementById('peScreeningHint');
+      const updateField = document.getElementById('pe-screening-update-field');
+
+      if (fail) {
+        updateField.style.display = '';
+        screenInput.disabled = true;
+        screenInput.classList.remove('error');
+        screenHint.className = 'pe-hint';
+        screenHint.textContent = '';
+      } else {
+        updateField.style.display = 'none';
+        screenInput.disabled = false;
+        const upInput = document.getElementById('pe-screening-update');
+        upInput.classList.remove('error');
+        upInput.value = '';
+        validateScreeningNo();
+      }
     }
 
     // 输入时实时校验格式（仅提示，不阻断填写）
     window.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('pe-screening');
+      const updateInput = document.getElementById('pe-screening-update');
       input.addEventListener('input', validateScreeningNo);
       input.addEventListener('blur', validateScreeningNo);
+      updateInput.addEventListener('input', validateUpdateScreeningNo);
+      updateInput.addEventListener('blur', validateUpdateScreeningNo);
+
+      const failSel = document.getElementById('pe-screen-fail');
+      failSel.addEventListener('change', applyFailMode);
+      applyFailMode();
     });
   </script>
 </body>

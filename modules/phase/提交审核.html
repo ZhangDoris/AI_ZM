@@ -159,6 +159,7 @@
       min-height: 16px;
       color: var(--required);
     }
+    .field-hint.rule { color: #d48806; }
     .date-field { position: relative; }
     .date-field i {
       position: absolute;
@@ -439,15 +440,15 @@
           <div class="form-row">
             <label class="form-label">筛选号：</label>
             <div class="form-field">
-              <input type="text" class="form-input" id="fieldScreenNo" placeholder="如：0010001">
-              <div class="field-hint" id="screenNoHint"></div>
+              <input type="text" class="form-input" id="fieldScreenNo" >
+              <div class="field-hint rule" id="screenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
             </div>
           </div>
           <div class="form-row" id="rowUpdateScreenNo" style="display:none;">
             <label class="form-label">更新筛选号：</label>
             <div class="form-field">
-              <input type="text" class="form-input" id="fieldUpdateScreenNo" placeholder="如：0010004">
-              <div class="field-hint" id="updateScreenNoHint"></div>
+              <input type="text" class="form-input" id="fieldUpdateScreenNo">
+              <div class="field-hint rule" id="updateScreenNoHint">更新筛选号填写规则为「中心号+ 4位数字」</div>
             </div>
           </div>
           <div class="form-row">
@@ -542,7 +543,8 @@
 
       if (!raw) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'field-hint rule';
+        hint.textContent = '更新筛选号填写规则为「中心号+ 4位数字」';
         return true;
       }
 
@@ -553,10 +555,12 @@
 
       if (ok) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'field-hint rule';
+        hint.textContent = '更新筛选号填写规则为「中心号+ 4位数字」';
       } else {
         input.classList.add('invalid');
-        hint.textContent = '更新筛选号不符合规范：应为「中心号+ 4位数字」';
+        hint.className = 'field-hint';
+        hint.textContent = '更新筛选号填写不规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }
@@ -566,9 +570,17 @@
       const hint = document.getElementById('screenNoHint');
       const raw = input.value.trim();
 
+      if (input.disabled) {
+        input.classList.remove('invalid');
+        hint.className = 'field-hint';
+        hint.textContent = '';
+        return true;
+      }
+
       if (!raw) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
         return true;
       }
 
@@ -579,10 +591,12 @@
 
       if (ok) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'field-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
       } else {
         input.classList.add('invalid');
-        hint.textContent = '筛选号不符合规范：应为「中心号+ 4位数字」';
+        hint.className = 'field-hint';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }
@@ -654,7 +668,7 @@
     function matchHtml() {
       return '<div class="modal-alert-item">' +
         '<div class="modal-alert-icon warning"><i class="fa-solid fa-circle-exclamation"></i></div>' +
-        '<div class="modal-alert-text">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交。</div>' +
+        '<div class="modal-alert-text">检测到您已跨阶段，匹配成功后系统将自动为您提交。</div>' +
       '</div>';
     }
 
@@ -766,15 +780,24 @@
         el.classList.toggle('active', el.getAttribute('data-action') === action);
       });
 
-      // 仅「筛败后提交审核」显示更新筛选号字段
+      // 仅「筛败后提交审核」显示更新筛选号字段，且筛选号变为不可编辑、不校验提示
       const rowUpdate = document.getElementById('rowUpdateScreenNo');
       const showUpdate = (action === 'failedSubmit');
       rowUpdate.style.display = showUpdate ? 'flex' : 'none';
-      if (!showUpdate) {
+
+      const screenInput = document.getElementById('fieldScreenNo');
+      const screenHint = document.getElementById('screenNoHint');
+      if (showUpdate) {
+        screenInput.disabled = true;
+        screenInput.classList.remove('invalid');
+        screenHint.className = 'field-hint';
+        screenHint.textContent = '';
+      } else {
+        screenInput.disabled = false;
         const upInput = document.getElementById('fieldUpdateScreenNo');
         upInput.classList.remove('invalid');
         upInput.value = '';
-        document.getElementById('updateScreenNoHint').textContent = '';
+        validateScreenNo();
       }
 
       const btnSubmit = document.getElementById('btnSubmit');

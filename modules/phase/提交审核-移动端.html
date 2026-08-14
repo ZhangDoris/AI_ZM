@@ -124,11 +124,13 @@
       transition: border-color .2s, background-color .2s; box-sizing: border-box;
     }
     .pe-input[readonly] { background: #f5f7fa; color: #999; }
+    .pe-input:disabled { background: #f5f7fa; color: #999; cursor: not-allowed; }
     .pe-input:focus, .pe-select:focus, .pe-textarea:focus { border-color: #1677ff; background: #fff; }
     .pe-input.invalid, .pe-select.invalid, .pe-textarea.invalid { border-color: #ff4d4f; background: #fff2f0; }
     .pe-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
     .pe-textarea { min-height: 80px; resize: vertical; }
     .pe-hint { font-size: 12px; margin-top: 4px; min-height: 16px; line-height: 1.4; color: #ff4d4f; }
+    .pe-hint.rule { color: #d48806; }
 
     /* 推荐审核流程提示卡 */
     .audit-tip-card {
@@ -298,13 +300,13 @@
         </div>
         <div class="pe-field">
           <label class="pe-label">筛选号</label>
-          <input type="text" class="pe-input" id="fieldScreenNo" placeholder="如：0010001">
-          <div class="pe-hint" id="screenNoHint"></div>
+          <input type="text" class="pe-input" id="fieldScreenNo">
+          <div class="pe-hint rule" id="screenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
         </div>
         <div class="pe-field" id="rowUpdateScreenNo" style="display:none;">
           <label class="pe-label">更新筛选号</label>
-          <input type="text" class="pe-input" id="fieldUpdateScreenNo" placeholder="如：0010004">
-          <div class="pe-hint" id="updateScreenNoHint"></div>
+          <input type="text" class="pe-input" id="fieldUpdateScreenNo" >
+          <div class="pe-hint rule" id="updateScreenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
         </div>
         <div class="pe-field">
           <label class="pe-label">基因筛选号</label>
@@ -397,7 +399,8 @@
 
       if (!raw) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
         return true;
       }
 
@@ -408,10 +411,12 @@
 
       if (ok) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
       } else {
         input.classList.add('invalid');
-        hint.textContent = '更新筛选号不符合规范：应为「中心号+ 4位数字」';
+        hint.className = 'pe-hint';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }
@@ -421,9 +426,17 @@
       const hint = document.getElementById('screenNoHint');
       const raw = input.value.trim();
 
+      if (input.disabled) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint';
+        hint.textContent = '';
+        return true;
+      }
+
       if (!raw) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
         return true;
       }
 
@@ -434,10 +447,12 @@
 
       if (ok) {
         input.classList.remove('invalid');
-        hint.textContent = '';
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
       } else {
         input.classList.add('invalid');
-        hint.textContent = '筛选号不符合规范：应为「中心号+ 4位数字」';
+        hint.className = 'pe-hint';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
       }
       return ok;
     }
@@ -508,7 +523,7 @@
     function matchHtml() {
       return '<div class="modal-alert-item">' +
         '<div class="modal-alert-icon warning"><i class="fa-solid fa-circle-exclamation"></i></div>' +
-        '<div class="modal-alert-text">检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交。</div>' +
+        '<div class="modal-alert-text">检测到您已跨阶段，匹配成功后系统将自动为您提交。</div>' +
       '</div>';
     }
 
@@ -568,18 +583,18 @@
       }
       const conflict = checkUpdateScreenNoConflict();
       if (!conflict) {
-        showToast('更新筛选号提交成功', 'success');
+        showToast('筛选号提交成功', 'success');
         return;
       }
       openCustomModal({
         title: '提示',
         content: '<div class="modal-alert-item">' +
           '<div class="modal-alert-icon error"><i class="fa-solid fa-circle-exclamation"></i></div>' +
-          '<div class="modal-alert-text">该更新筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
+          '<div class="modal-alert-text">该筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
           '，患者编号：' + conflict.patientNo + '】使用。</div>' +
         '</div>',
         okText: '提交',
-        onOk: () => showToast('更新筛选号提交成功', 'success')
+        onOk: () => showToast('筛选号提交成功', 'success')
       });
     }
 
@@ -618,15 +633,24 @@
         el.classList.toggle('active', el.getAttribute('data-action') === action);
       });
 
-      // 仅「筛败后提交审核」显示更新筛选号字段
+      // 仅「筛败后提交审核」显示更新筛选号字段，且筛选号变为不可编辑、不校验提示
       const rowUpdate = document.getElementById('rowUpdateScreenNo');
       const showUpdate = (action === 'failedSubmit');
       rowUpdate.style.display = showUpdate ? 'block' : 'none';
-      if (!showUpdate) {
+
+      const screenInput = document.getElementById('fieldScreenNo');
+      const screenHint = document.getElementById('screenNoHint');
+      if (showUpdate) {
+        screenInput.disabled = true;
+        screenInput.classList.remove('invalid');
+        screenHint.className = 'pe-hint';
+        screenHint.textContent = '';
+      } else {
+        screenInput.disabled = false;
         const upInput = document.getElementById('fieldUpdateScreenNo');
         upInput.classList.remove('invalid');
         upInput.value = '';
-        document.getElementById('updateScreenNoHint').textContent = '';
+        validateScreenNo();
       }
 
       const btnSubmit = document.getElementById('btnSubmit');
