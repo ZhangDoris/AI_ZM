@@ -223,7 +223,231 @@
 
     .hidden { display: none !important; }
 
-    /* ====== 审核列表屏（保留）====== */
+    /* ====== 审核列表屏（按截图重做）====== */
+    /* 第一行：返回 / 关闭 / 标题 / 更多 */
+    .h5-topbar1 {
+      background: #fff; padding: 10px 14px;
+      display: flex; align-items: center; gap: 14px;
+      border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 30;
+    }
+    .h5-topbar1 .tb-icon { font-size: 18px; color: #1a1a1a; cursor: pointer; padding: 4px; }
+    .h5-topbar1 .tb-title { font-size: 17px; font-weight: 600; color: #1a1a1a; flex: 1; text-align: center; }
+    .h5-topbar1 .tb-more { font-size: 20px; color: #1a1a1a; cursor: pointer; padding: 4px; }
+
+    /* 第二行：返回 / 刷新 / 审核（恒瑞医药） / 用户头像 */
+    .h5-topbar2 {
+      background: #fff; padding: 8px 14px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid #f0f0f0; position: sticky; top: 53px; z-index: 29;
+    }
+    .h5-topbar2 .tb2-icon { font-size: 16px; color: #1677ff; cursor: pointer; padding: 4px; }
+    .h5-topbar2 .tb2-center { flex: 1; font-size: 15px; font-weight: 600; color: #1a1a1a; display: flex; align-items: center; gap: 4px; }
+    .h5-topbar2 .tb2-center .caret { font-size: 12px; color: #999; }
+    .h5-topbar2 .tb2-user { display: flex; align-items: center; gap: 6px; font-size: 14px; color: #1a1a1a; }
+    .h5-topbar2 .tb2-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #1677ff; color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600;
+    }
+
+    /* 模式切换：待操作 / 审核列表（红框区域） */
+    .h5-mode-bar {
+      background: #fff; padding: 12px 14px 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .h5-mode-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .h5-mode-link {
+      font-size: 14px; color: #1677ff; cursor: pointer;
+      border-bottom: 2px solid #1677ff; padding-bottom: 2px; font-weight: 500;
+    }
+
+    /* 搜索框 */
+    .h5-search-wrap {
+      background: #fff; padding: 8px 14px 12px;
+    }
+    .h5-search {
+      display: flex; align-items: center; gap: 8px;
+      background: #f5f6f8; border-radius: 18px;
+      padding: 8px 14px;
+    }
+    .h5-search i { color: #bfbfbf; font-size: 13px; }
+    .h5-search input {
+      flex: 1; border: none; background: transparent; outline: none;
+      font-size: 13px; color: #333; min-width: 0;
+    }
+    .h5-search input::placeholder { color: #bfbfbf; }
+
+    /* 提交时间 / 全部 筛选行 */
+    .h5-filter-row {
+      background: #fff; padding: 0 14px 12px;
+      display: flex; align-items: center; gap: 0;
+    }
+
+    /* 请选择中心 行（圆角边框 + 蓝色居中） */
+    .h5-center-row {
+      background: #fff;
+      padding: 8px 14px 12px;
+      cursor: pointer;
+    }
+    .h5-center-box {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #f0f7ff;
+      border: 1px solid #91caff;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #1677ff;
+      position: relative;
+    }
+    .h5-center-box .h5-center-value {
+      flex: 1; text-align: center;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .h5-center-box .h5-center-caret {
+      font-size: 12px; color: #1677ff; flex-shrink: 0;
+    }
+
+    /* ActionSheet 选择中心 */
+    .center-sheet-mask {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 1000; opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .center-sheet-mask.show { opacity: 1; pointer-events: auto; }
+    .center-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: #f5f6f8;
+      border-radius: 16px 16px 0 0;
+      z-index: 1001; max-height: 70vh;
+      transform: translateY(100%);
+      transition: transform .25s ease;
+      display: flex; flex-direction: column;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+    }
+    .center-sheet.show { transform: translateY(0); }
+    .center-sheet-handle {
+      width: 36px; height: 4px; background: #e5e5e5;
+      border-radius: 2px; margin: 8px auto 0;
+    }
+    .center-sheet-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px 6px; font-size: 16px; color: #1a1a1a;
+    }
+    .center-sheet-header .cs-cancel { font-size: 14px; color: #999; cursor: pointer; padding: 4px; }
+    .center-sheet-header .cs-title { font-weight: 600; }
+    .center-sheet-search {
+      margin: 6px 14px 10px;
+      display: flex; align-items: center; gap: 6px;
+      background: #fff; border-radius: 18px;
+      padding: 8px 14px;
+    }
+    .center-sheet-search i { color: #bfbfbf; font-size: 13px; }
+    .center-sheet-search input {
+      flex: 1; border: none; background: transparent; outline: none;
+      font-size: 13px; color: #333; min-width: 0;
+    }
+    .center-sheet-search input::placeholder { color: #bfbfbf; }
+    .center-sheet-list {
+      background: #fff; flex: 1; overflow-y: auto;
+      padding: 6px 16px 16px;
+    }
+    .cs-item-all {
+      padding: 12px 0; font-size: 14px; color: #1677ff;
+      border-bottom: 1px solid #f5f5f5; cursor: pointer;
+    }
+    .cs-item {
+      padding: 12px 0; font-size: 14px; color: #1a1a1a;
+      border-bottom: 1px solid #f5f5f5; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .cs-item:last-child { border-bottom: none; }
+    .cs-item .cs-item-no { color: #999; font-size: 13px; flex-shrink: 0; }
+    .cs-item.checked .cs-item-no, .cs-item.checked .cs-item-name { color: #1677ff; }
+    .cs-empty { text-align: center; color: #999; padding: 30px; font-size: 13px; }
+    .h5-filter-row::after {
+      content: ""; position: absolute; left: 50%; top: 4px; bottom: 4px;
+      width: 1px; background: #f0f0f0; transform: translateX(-50%);
+    }
+    .h5-filter-row { position: relative; }
+    .h5-filter-cell {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 6px; font-size: 14px; color: #1a1a1a; cursor: pointer;
+    }
+    .h5-filter-cell .caret { font-size: 11px; color: #1a1a1a; }
+    .h5-filter-cell .sort-icon { font-size: 12px; color: #1a1a1a; }
+
+    /* 审核卡片（截图样式） */
+    .audit-card-new {
+      background: #fff; margin: 10px 12px; border-radius: 8px; padding: 14px 14px 0;
+      position: relative;
+    }
+    .acn-head {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      font-size: 14px; color: #1a1a1a; margin-bottom: 10px;
+    }
+    .acn-name { font-weight: 600; font-size: 15px; color: #1a1a1a; }
+    .acn-sep { color: #d9d9d9; }
+    .acn-gender { color: #1a1a1a; }
+    .acn-age { color: #1a1a1a; }
+    .acn-no { color: #1a1a1a; margin-left: auto; }
+
+    .acn-tags { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .acn-pct {
+      display: inline-block; padding: 3px 10px; border-radius: 4px;
+      background: #fa8c16; color: #fff; font-size: 12px; font-weight: 600;
+    }
+    .acn-tag-blue {
+      background: #e6f4ff; color: #1677ff; border: 1px solid #91caff;
+      font-size: 12px; padding: 2px 8px; border-radius: 4px;
+    }
+    .acn-tag-orange {
+      background: #fff4e6; color: #fa8c16; border: 1px solid #ffd591;
+      font-size: 12px; padding: 2px 8px; border-radius: 4px;
+    }
+    .acn-divider { border-top: 1px solid #f0f0f0; margin: 0 -14px 10px; }
+
+    .acn-row { display: flex; font-size: 13px; line-height: 24px; color: #333; }
+    .acn-row .lbl { color: #999; min-width: 84px; flex-shrink: 0; }
+    .acn-row .val { flex: 1; word-break: break-all; }
+
+    .acn-files {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 0; border-top: 1px solid #f5f5f5;
+      font-size: 13px; color: #666;
+    }
+    .acn-files .file-icon {
+      width: 28px; height: 28px; border-radius: 4px;
+      background: #e6f4ff; color: #1677ff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .acn-files .file-text { display: flex; flex-direction: column; gap: 2px; }
+    .acn-files .file-text .name { color: #1a1a1a; font-size: 13px; }
+    .acn-files .file-text .count { color: #1677ff; font-size: 12px; }
+
+    /* 底部固定操作栏：抄送 / 匹配详情 */
+    .h5-bottom-actions {
+      position: sticky; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #e5e6eb;
+      padding: 8px 16px; display: flex; gap: 10px;
+      z-index: 20; box-shadow: 0 -2px 10px rgba(0,0,0,0.04);
+    }
+    .h5-bottom-actions .ba-btn {
+      flex: 1; padding: 8px 0; border-radius: 6px; font-size: 14px;
+      font-weight: 500; cursor: pointer; transition: all .15s;
+      border: 1px solid #d9d9d9; background: #fff; color: #1677ff;
+      text-align: center;
+    }
+    .h5-bottom-actions .ba-btn:hover { border-color: #1677ff; }
+    .h5-bottom-actions .ba-btn.primary {
+      background: #1677ff; color: #fff; border-color: #1677ff;
+    }
+    .h5-bottom-actions .ba-btn.primary:hover { background: #4096ff; border-color: #4096ff; }
+
+    /* 旧样式（保留兼容） */
     .phone-header-old {
       background: #fff; padding: 14px 16px;
       display: flex; align-items: center; gap: 10px;
@@ -255,6 +479,204 @@
     .audit-card .act-btn.primary { background: #1677ff; color: #fff; }
     .audit-card .files { padding: 8px 14px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; border-top: 1px solid #f5f5f5; }
     .audit-card .files i { color: #1677ff; font-size: 14px; }
+
+    /* ====== 底部悬浮操作栏（审核详情页，固定手机壳视口底部）====== */
+    .float-action-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #e5e6eb;
+      padding: 10px 16px; display: flex; gap: 10px;
+      z-index: 30; box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    }
+    .float-btn {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px; padding: 9px 0; border-radius: 6px;
+      font-size: 13.5px; font-weight: 500; cursor: pointer;
+      transition: all .15s; border: none; outline: none;
+    }
+    .float-btn:active { transform: scale(0.96); }
+    .float-btn-blue { background: #1677ff; color: #fff; }
+    .float-btn-blue:hover { background: #4096ff; }
+    .float-btn-red { background: #f53f3f; color: #fff; }
+    .float-btn-red:hover { background: #fb7c7c; }
+
+    /* ====== 审核弹窗（APP端，底部滑出）====== */
+    .audit-record-mask {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: flex-end; justify-content: center;
+      z-index: 2000; border-radius: 28px;
+    }
+    .audit-record-mask.open { display: flex; animation: arFadeIn .2s ease; }
+    @keyframes arFadeIn { from{opacity:0} to{opacity:1} }
+
+    .ar-modal {
+      background: #fff; border-radius: 16px 16px 0 0; width: 100%;
+      max-height: 85vh; box-shadow: 0 -8px 32px rgba(0,0,0,.18);
+      overflow: hidden; display: flex; flex-direction: column;
+      animation: arSlideFromBottom .3s ease;
+    }
+    @keyframes arSlideFromBottom { from{transform:translateY(100%);} to{transform:translateY(0);} }
+
+    .ar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .ar-title { font-size: 15.5px; font-weight: 700; color: #1a1a1a; }
+    .ar-close {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #999; font-size: 13px; cursor: pointer;
+    }
+    .ar-close:hover { background: #f0f0f0; color: #333; }
+
+    .ar-body { padding: 16px 18px; overflow-y: auto; flex: 1; }
+    .ar-status-row { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; font-size: 13.5px; }
+    .ar-status-lbl { color: #666; }
+    .ar-status-val { color: #fa8c16; font-weight: 600; }
+
+    .ar-remark-textarea-wrap { position: relative; }
+    .ar-remark-textarea {
+      width: 100%; min-height: 100px; resize: vertical;
+      padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 8px;
+      font-size: 13.5px; line-height: 1.6; color: #1d2129; font-family: inherit;
+      box-sizing: border-box; outline: none; transition: border-color .15s;
+    }
+    .ar-remark-textarea:focus { border-color: #1677ff; }
+    .ar-remark-textarea::placeholder { color: #c9cdd4; }
+    .ar-char-count { text-align: right; font-size: 11.5px; color: #c9cdd4; margin-top: 6px; }
+
+    .ar-footer {
+      display: flex; gap: 10px; padding: 14px 18px;
+      border-top: 1px solid #f0f0f0; background: #fafafa;
+      flex-shrink: 0;
+    }
+
+    /* 我的批注入口行 */
+    .ar-myremark-entry {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px; border-top: 1px solid #e5e6eb;
+      font-size: 14.5px; color: #1677ff; cursor: pointer;
+      transition: background .15s; font-weight: 500;
+      background: linear-gradient(135deg, #f0f7ff, #fff);
+    }
+    .ar-myremark-entry:hover { background: #e6f0ff; }
+    .ar-myremark-entry > i:first-child { color: #1677ff; }
+    .ar-myremark-entry > i:last-child { margin-left: auto; color: #86909c; font-size: 12px; }
+
+    /* 红色数字徽章 */
+    .ar-myremark-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px; padding: 0 5px;
+      background: #f53f3f; color: #fff; border-radius: 9px;
+      font-size: 11px; font-weight: 700; line-height: 1;
+    }
+    .ar-btn {
+      flex: 1; padding: 10px 0; border-radius: 6px; font-size: 14px;
+      font-weight: 500; cursor: pointer; transition: all .15s;
+      border: none; text-align: center;
+    }
+    .ar-btn-default { background: #fff; color: #333; border: 1px solid #d9d9d9; }
+    .ar-btn-default:hover { border-color: #1677ff; color: #1677ff; }
+    .ar-btn-danger { background: #f53f3f; color: #fff; }
+    .ar-btn-danger:hover { background: #ff7875; }
+    .ar-btn-primary { background: #1677ff; color: #fff; }
+    .ar-btn-primary:hover { background: #4096ff; }
+
+    /* ====== 我的批注弹窗（APP端）====== */
+    .my-remark-mask-app {
+      position: absolute; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 20px; border-radius: 28px;
+    }
+    .my-remark-mask-app.open { display: flex; animation: arFadeIn .2s ease; }
+    .mr-modal-app {
+      background: #fff; border-radius: 12px; width: 320px; max-width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25); overflow: hidden;
+      animation: arSlideUp .25s ease;
+    }
+    .mr-header-app {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+    }
+    .mr-title-app { font-size: 15.5px; font-weight: 700; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
+    .mr-title-app i { color: #1677ff; }
+    .mr-close-app {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #999; font-size: 13px; cursor: pointer;
+    }
+    .mr-close-app:hover { background: #f0f0f0; color: #333; }
+    .mr-body-app { padding: 18px; }
+    .mr-textarea-app {
+      width: 100%; min-height: 80px; resize: vertical;
+      padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 13px; line-height: 1.6; color: #333; outline: none;
+      box-sizing: border-box; font-family: inherit;
+    }
+    .mr-textarea-app:focus { border-color: #1677ff; }
+    .mr-textarea-app::placeholder { color: #c9cdd4; }
+    .mr-footer-app {
+      padding: 12px 18px; display: flex; justify-content: flex-end;
+      border-top: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .mr-save-btn-app {
+      padding: 7px 22px; border-radius: 6px; font-size: 13.5px; cursor: pointer;
+      background: #1677ff; color: #fff; border: none; font-weight: 500;
+      transition: all .15s;
+    }
+    .mr-save-btn-app:hover { background: #4096ff; }
+    .mr-save-btn-app:active { transform: scale(0.97); }
+
+    /* ===== 我的批注弹窗 - 完整版（含历史列表）====== */
+    .mr-modal-full {
+      width: 340px; max-height: 560px;
+      display: flex; flex-direction: column;
+    }
+    .mr-body-full {
+      padding: 16px 18px; overflow-y: auto; flex: 1;
+      -webkit-overflow-scrolling: touch;
+    }
+    .mr-history-title {
+      font-size: 13.5px; font-weight: 600; color: #333;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+    }
+    .mr-history-title i { color: #86909c; font-size: 14px; }
+    .mr-history-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .mr-hist-item {
+      background: #f7f8fa; border: 1px solid #e5e6eb; border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .mr-hist-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .mr-hist-user-row { display: flex; align-items: center; gap: 6px; }
+    .mr-hist-avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #e6f4ff; color: #1677ff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; flex-shrink: 0;
+    }
+    .mr-hist-name { font-size: 12.5px; color: #666; }
+    .mr-hist-stage-tag {
+      font-size: 11px; color: #1677ff; background: #e6f4ff;
+      padding: 2px 7px; border-radius: 10px; font-weight: 500;
+    }
+    .mr-hist-time { font-size: 12px; color: #999; white-space: nowrap; }
+    .mr-hist-content {
+      font-size: 13px; color: #333; line-height: 1.65; word-break: break-word;
+    }
+    .mr-hist-actions {
+      display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end;
+    }
+    .mr-hist-action {
+      font-size: 12px; cursor: pointer; transition: color .15s;
+    }
+    .mr-hist-action.edit { color: #1677ff; }
+    .mr-hist-action.edit:hover { color: #4096ff; text-decoration: underline; }
+    .mr-hist-action.del { color: #f53f3f; }
+    .mr-hist-action.del:hover { color: #fb7c7c; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -263,20 +685,71 @@
       <div class="vconsole-badge">vConsole</div>
       <div class="phone-screen">
 
-        <!-- ===== 审核列表屏 ===== -->
-        <div id="screen-audit">
-          <div class="phone-header-old">
-            <div class="phone-title">审核列表</div>
+        <!-- ===== 审核列表屏（按截图重做） ===== -->
+        <div id="screen-audit" style="padding-bottom: 60px;">
+          <!-- 第一行：返回 / 关闭 / 标题 / 更多 -->
+          <div class="h5-topbar1">
+            <i class="fa-solid fa-arrow-left tb-icon" onclick="alert('返回')"></i>
+            <i class="fa-solid fa-xmark tb-icon" onclick="alert('关闭')"></i>
+            <div class="tb-title">审核</div>
+            <i class="fa-solid fa-ellipsis tb-more" onclick="alert('更多')"></i>
           </div>
-          <div class="tab-bar">
-            <div class="tab active" onclick="switchAuditTab('pending')">待我审批</div>
-            <div class="tab" onclick="switchAuditTab('done')">已办</div>
+          <!-- 第二行：返回 / 刷新 / 审核（恒瑞医药） / 用户头像 -->
+          <div class="h5-topbar2">
+            <i class="fa-solid fa-arrow-left tb2-icon" onclick="alert('返回')"></i>
+            <i class="fa-solid fa-rotate-right tb2-icon" onclick="renderAuditList()"></i>
+            <div class="tb2-center">审核（恒瑞医药）<i class="fa-solid fa-chevron-down caret"></i></div>
+            <div class="tb2-user">
+              <span class="tb2-avatar">张</span>
+              <span>张琳</span>
+            </div>
           </div>
+
+          <!-- 模式切换：待操作 / 审核列表 -->
+          <div class="h5-mode-bar">
+            <div class="h5-mode-title" id="h5ModeTitle">待操作</div>
+            <div class="h5-mode-link" id="h5ModeLink" onclick="toggleH5Mode()">审核列表</div>
+          </div>
+          <!-- 搜索框 -->
+          <div class="h5-search-wrap">
+            <div class="h5-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="请输入搜索关键词" oninput="onH5Search(this.value)">
+            </div>
+          </div>
+          <!-- 请选择中心 查询条件 -->
+          <div class="h5-center-row" onclick="openCenterSheet()">
+            <div class="h5-center-box">
+              <span class="h5-center-value" id="h5CenterValue">请选择中心</span>
+              <i class="fa-solid fa-caret-down h5-center-caret"></i>
+            </div>
+          </div>
+
+          <!-- 提交时间 / 全部 筛选 -->
+          <div class="h5-filter-row">
+            <div class="h5-filter-cell" onclick="alert('提交时间筛选（原型）')">
+              <span>提交时间</span>
+              <i class="fa-solid fa-caret-down caret"></i>
+              <i class="fa-solid fa-sort sort-icon"></i>
+            </div>
+            <div class="h5-filter-cell" onclick="alert('状态筛选（原型）')">
+              <span>全部</span>
+              <i class="fa-solid fa-caret-down caret"></i>
+            </div>
+          </div>
+
+          <!-- 审核列表卡片 -->
           <div id="auditList"></div>
+
+          <!-- 底部固定操作栏：抄送 / 匹配详情 -->
+          <div class="h5-bottom-actions">
+            <button class="ba-btn" onclick="alert('抄送（原型）')">抄送</button>
+            <button class="ba-btn primary" onclick="openH5Detail()">匹配详情</button>
+          </div>
         </div>
 
         <!-- ===== 匹配详情屏（按截图重做） ===== -->
-        <div id="screen-detail" class="hidden">
+        <div id="screen-detail" class="hidden" style="padding-bottom: 60px;">
 
           <!-- 顶部导航：返回 + 标题 + 超管标签 -->
           <div class="nav-header">
@@ -284,7 +757,12 @@
             <div class="nav-title" id="detailTitle">9 · 预提交9 | 匹配详情（测试项目5）</div>
             <div class="nav-tag-super">超管</div>
           </div>
-
+        <!-- 三Tab：匹配详情 / 筛选表 / 思考链 -->
+          <div class="md-tabs">
+            <div class="md-tab active" id="md-match" onclick="switchMdTab('match')">随机阶段</div>
+            <div class="md-tab" id="md-screen" onclick="switchMdTab('screen')">筛选阶段</div>
+            <div class="md-tab" id="md-think" onclick="switchMdTab('think')">预筛阶段</div>
+          </div>
           <!-- 版本切换：新版 / 旧版 -->
           <div class="version-bar">
             <span class="version-label">版本</span>
@@ -305,6 +783,78 @@
         </div>
 
       </div>
+
+      <!-- 底部悬浮操作栏：审核 / 我的批注 / 审核记录（固定在手机壳视口底部，不随滚动变化） -->
+      <div class="float-action-bar" id="floatActionBar" style="display:none;">
+        <button class="float-btn float-btn-blue" onclick="openAuditRecordModal()"> 审核</button>
+        <button class="float-btn float-btn-blue" onclick="openAuditRecordModal()">审核记录</button>
+        <button class="float-btn float-btn-blue" onclick="openMyRemarkApp()"> 我的批注</button>
+      </div>
+
+    </div>
+
+  <!-- ===== 审核弹窗（APP端，底部滑出）===== -->
+  <div class="audit-record-mask" id="auditRecordModal" onclick="if(event.target===this)closeAuditRecordModal()">
+    <div class="ar-modal">
+      <div class="ar-header">
+        <span class="ar-title">审核</span>
+        <span class="ar-close" onclick="closeAuditRecordModal()"><i class="fas fa-times"></i></span>
+      </div>
+      <div class="ar-body">
+        <div class="ar-status-row">
+          <span class="ar-status-lbl">当前状态：</span>
+          <span class="ar-status-val">预筛审核 - 审核中</span>
+        </div>
+
+        <div style="font-size:13px;color:#333;margin-bottom:8px;">审批批注：</div>
+        <div class="ar-remark-textarea-wrap">
+          <textarea id="arRemarkTextarea" class="ar-remark-textarea" placeholder="请输入审批批注" maxlength="1000" oninput="updateArCharCount()"></textarea>
+          <div class="ar-char-count"><span id="arCharCount">0</span>/1000</div>
+        </div>
+      </div>
+
+      <div class="ar-myremark-entry" onclick="openMyRemarkApp()">
+        <i class="fa-solid fa-clipboard-pen"></i>
+        <span>我的批注</span>
+        <span class="ar-myremark-badge" id="arMyRemarkBadge">2</span>
+        <i class="fa-solid fa-chevron-right" style="margin-left:auto;color:#c9cdd4;font-size:12px;"></i>
+      </div>
+
+      <div class="ar-footer">
+        <button class="ar-btn ar-btn-default" onclick="showToast('已打开入组沟通流程','info')">沟通</button>
+        <button class="ar-btn ar-btn-danger" onclick="rejectAuditApp()">驳回</button>
+        <button class="ar-btn ar-btn-primary" onclick="approveAuditApp()">通过</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== 我的批注弹窗（APP端，完整版：输入框+历史列表+编辑删除）===== -->
+  <div class="my-remark-mask-app" id="myRemarkAppModal" onclick="if(event.target===this)closeMyRemarkApp()">
+    <div class="mr-modal-app mr-modal-full">
+      <div class="mr-header-app">
+        <span class="mr-title-app"><i class="fa-regular fa-clipboard-pen"></i> 我的审核批注</span>
+        <span class="mr-close-app" onclick="closeMyRemarkApp()"><i class="fas fa-times"></i></span>
+      </div>
+      <div class="mr-body-app mr-body-full">
+        <!-- 输入区 -->
+        <textarea class="mr-textarea-app" id="mrTextareaApp" placeholder="随时记录您对该病例的审核批注，保存后仅自己可见"></textarea>
+        <!-- 保存按钮 -->
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+          <button class="mr-save-btn-app" onclick="saveMyRemarkApp()">保存批注</button>
+        </div>
+
+        <!-- 分隔线 -->
+        <div style="border-top:1px solid #f0f0f0;margin:16px 0;"></div>
+
+        <!-- 历史批注标题 -->
+        <div class="mr-history-title">
+          <i class="fas fa-clock-rotate-left"></i> 历史批注（仅自己可见）
+        </div>
+
+        <!-- 历史批注列表 -->
+        <div class="mr-history-list" id="mrHistoryListApp"></div>
+      </div>
     </div>
   </div>
 
@@ -312,23 +862,63 @@
     // ========= 数据 =========
     const AUDIT_DATA = {
       pending: [
+        // 截图数据：与图片保持一致
+        { patientNo: 'CN017056', abbr: 'ZSXI', age: 63, gender: '男',
+          schemeNo: 'SHR-1918-302', centerNo: 'CN017', centerName: '南阳医学高等专科学校第一附属医院',
+          matchPct: '88.48%', auditName: '入组审核', auditStatus: '审核中',
+          auditType: '入组审批',
+          submitter: '张冬',
+          submitTime: '2026-08-18 17:40:55',
+          auditor: '邹彦芳,郝萌昕,吕诗琦,李蓝天',
+          operator: '邹彦芳,郝萌昕,吕诗琦,李蓝天',
+          pendingAuditor: '邹彦芳,郝萌昕,吕诗琦,李蓝天',
+          files: 15,
+          disease: '乳腺癌' },
         { patientNo: '预提交9', abbr: '预提交9', age: 45, gender: '未提交',
           schemeNo: '测试项目5', centerNo: 'CN029', centerName: '复旦大学附属中山医院青浦分院',
-          matchPct: '86.4%', latestOp: '待审核', latestTime: '2026-08-17 10:00', auditName: 'V1审核', auditStatus: '审核中',
+          matchPct: '86.4%', auditName: 'V1审核', auditStatus: '审核中',
+          auditType: '预筛审批',
+          submitter: '沈夏萍',
+          submitTime: '2026-08-17 10:00:00',
+          auditor: '魏燕玲',
+          operator: '魏燕玲',
+          pendingAuditor: '魏燕玲',
+          files: 7,
           disease: '乳腺癌' },
         { patientNo: 'WYNA-CN002', abbr: 'HGKD', age: 36, gender: '男',
           schemeNo: 'WYNA-301', centerNo: 'CN006', centerName: '柳州市人民医院',
-          matchPct: '32.0%', latestOp: '待审核', latestTime: '2026-08-14 16:40', auditName: 'V1审核', auditStatus: '已提交',
+          matchPct: '32.0%', auditName: 'V1审核', auditStatus: '已提交',
+          auditType: '筛选审批',
+          submitter: '李四',
+          submitTime: '2026-08-14 16:40:00',
+          auditor: '王五',
+          operator: '王五',
+          pendingAuditor: '王五',
+          files: 4,
           disease: '高脂血症' },
         { patientNo: 'WYNA-CN004', abbr: 'WSQ', age: 50, gender: '男',
           schemeNo: 'WYNA-301', centerNo: 'CN112', centerName: '中国医学科学院阜外医院深圳医院',
-          matchPct: '66.0%', latestOp: '待审核', latestTime: '2026-08-14 11:05', auditName: 'V1审核', auditStatus: '审核中',
+          matchPct: '66.0%', auditName: 'V1审核', auditStatus: '审核中',
+          auditType: '主知情审批',
+          submitter: '赵六',
+          submitTime: '2026-08-14 11:05:00',
+          auditor: '钱七',
+          operator: '钱七',
+          pendingAuditor: '钱七',
+          files: 9,
           disease: '高脂血症' }
       ],
       done: [
         { patientNo: 'WYNA-CN003', abbr: 'RFNE', age: 58, gender: '男',
           schemeNo: 'WYNA-301', centerNo: 'CN092', centerName: '中山大学肿瘤防治中心',
-          matchPct: '91.2%', latestOp: '已通过', latestTime: '2026-08-12 14:22', auditName: '入组审核', auditStatus: '通过',
+          matchPct: '91.2%', auditName: '入组审核', auditStatus: '通过',
+          auditType: '入组审批',
+          submitter: '孙八',
+          submitTime: '2026-08-12 14:22:00',
+          auditor: '周九',
+          operator: '周九',
+          pendingAuditor: '周九',
+          files: 12,
           disease: '高脂血症' }
       ]
     };
@@ -464,42 +1054,182 @@
     let currentMdTab = 'match';
     let currentTcType = 'inclusion';
 
-    // ========= 审核列表渲染 =========
+    // ========= 审核列表渲染（按截图重做）=========
+    // 模式：'pending' = 待操作（显示全部 pending + done 的待办）
+    //       'list'   = 审核列表（显示全部）
+    // 当前选中模式
+    let h5Mode = 'pending';
+    // 当前搜索关键字
+    let h5Keyword = '';
+    // 当前选中的卡片（用于底部"匹配详情"按钮）
+    let h5SelectedNo = null;
+
     function switchAuditTab(tab) {
       auditSubTab = tab;
-      document.querySelectorAll('#screen-audit .tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
+      renderAuditList();
+    }
+
+    function toggleH5Mode() {
+      h5Mode = (h5Mode === 'pending') ? 'list' : 'pending';
+      const title = document.getElementById('h5ModeTitle');
+      const link = document.getElementById('h5ModeLink');
+      if (h5Mode === 'pending') {
+        title.textContent = '待操作';
+        link.textContent = '审核列表';
+      } else {
+        title.textContent = '审核列表';
+        link.textContent = '待操作';
+      }
+      renderAuditList();
+    }
+
+    function onH5Search(kw) {
+      h5Keyword = (kw || '').trim().toLowerCase();
+      renderAuditList();
+    }
+
+    function selectH5Card(patientNo, el) {
+      h5SelectedNo = patientNo;
+      document.querySelectorAll('.audit-card-new').forEach(c => c.style.outline = '');
+      if (el) el.style.outline = '2px solid #1677ff';
+    }
+
+    function openH5Detail() {
+      const no = h5SelectedNo || (AUDIT_DATA.pending[0] && AUDIT_DATA.pending[0].patientNo);
+      if (!no) { alert('请先选择一条记录'); return; }
+      openDetail(no);
+    }
+
+    // ========= 选择中心 ActionSheet =========
+    // 中心数据（与 audit-list.html 的 CENTER_OPTIONS 保持一致，便于跨页面复用）
+    const CENTER_OPTIONS = [
+      { no: 'CN015', name: '吉林大学第一医院' },
+      { no: 'CN040', name: '山西省肿瘤医院' },
+      { no: 'CN007', name: '云南省肿瘤医院' },
+      { no: 'CN001', name: '复旦大学附属华山医院' },
+      { no: 'CN002', name: '北京协和医院' },
+      { no: 'CN003', name: '上海瑞金医院' },
+      { no: 'CN004', name: '中山大学附属肿瘤医院' },
+      { no: 'CN006', name: '柳州市人民医院' },
+      { no: 'CN017', name: '南阳医学高等专科学校第一附属医院' },
+      { no: 'CN029', name: '复旦大学附属中山医院青浦分院' },
+      { no: 'CN092', name: '中山大学肿瘤防治中心' },
+      { no: 'CN112', name: '中国医学科学院阜外医院深圳医院' }
+    ];
+    // 当前选中的中心编号；空字符串 = 全部
+    let h5SelectedCenter = '';
+
+    function openCenterSheet() {
+      document.getElementById('centerSheetMask').classList.add('show');
+      document.getElementById('centerSheet').classList.add('show');
+      // 重置搜索框
+      const kw = document.getElementById('centerSheetKw');
+      if (kw) kw.value = '';
+      renderCenterSheetList();
+    }
+    function closeCenterSheet() {
+      document.getElementById('centerSheetMask').classList.remove('show');
+      document.getElementById('centerSheet').classList.remove('show');
+    }
+    function renderCenterSheetList() {
+      const kw = ((document.getElementById('centerSheetKw') || {}).value || '').trim().toLowerCase();
+      const list = document.getElementById('centerSheetList');
+      const items = [];
+      // "全部" 行
+      items.push(`<div class="cs-item-all ${h5SelectedCenter === '' ? 'checked' : ''}" onclick="pickH5Center('')">全部</div>`);
+      // 过滤中心
+      const matched = CENTER_OPTIONS.filter(c =>
+        !kw || c.no.toLowerCase().includes(kw) || c.name.toLowerCase().includes(kw)
+      );
+      if (!matched.length) {
+        items.push('<div class="cs-empty">未找到匹配的中心</div>');
+      } else {
+        matched.forEach(c => {
+          const checked = h5SelectedCenter === c.no ? 'checked' : '';
+          items.push(`<div class="cs-item ${checked}" onclick="pickH5Center('${c.no}')">
+            <span class="cs-item-no">${c.no}</span>
+            <span class="cs-item-name">· ${c.name}</span>
+          </div>`);
+        });
+      }
+      list.innerHTML = items.join('');
+    }
+    function pickH5Center(no) {
+      h5SelectedCenter = no || '';
+      // 更新主界面显示
+      const valEl = document.getElementById('h5CenterValue');
+      if (h5SelectedCenter === '') {
+        valEl.textContent = '请选择中心';
+        valEl.classList.remove('has-val');
+      } else {
+        const o = CENTER_OPTIONS.find(c => c.no === h5SelectedCenter);
+        valEl.textContent = o ? (o.no + ' ' + o.name) : h5SelectedCenter;
+        valEl.classList.add('has-val');
+      }
+      // 关闭弹层
+      closeCenterSheet();
+      // 触发列表过滤
       renderAuditList();
     }
 
     function renderAuditList() {
-      const list = AUDIT_DATA[auditSubTab] || [];
+      const all = (AUDIT_DATA.pending || []).concat(AUDIT_DATA.done || []);
+      // 待操作模式：仅显示待审批/审核中；审核列表模式：显示全部
+      let list = h5Mode === 'pending'
+        ? all.filter(a => a.auditStatus === '审核中' || a.auditStatus === '已提交')
+        : all;
+      // 中心过滤（按中心编号匹配）
+      if (h5SelectedCenter) {
+        list = list.filter(a => a.centerNo === h5SelectedCenter);
+      }
+      // 关键字过滤
+      if (h5Keyword) {
+        list = list.filter(a =>
+          (a.abbr || '').toLowerCase().includes(h5Keyword) ||
+          (a.patientNo || '').toLowerCase().includes(h5Keyword) ||
+          (a.schemeNo || '').toLowerCase().includes(h5Keyword) ||
+          (a.centerName || '').toLowerCase().includes(h5Keyword) ||
+          (a.submitter || '').toLowerCase().includes(h5Keyword)
+        );
+      }
       const box = document.getElementById('auditList');
       if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">暂无数据</div>'; return; }
       box.innerHTML = list.map(a => {
-        const statusPill = a.auditStatus === '通过'
-          ? '<span class="pill pill-green">通过</span>'
-          : (a.auditStatus === '已提交' ? '<span class="pill pill-blue">已提交</span>'
-          : '<span class="pill pill-orange">' + a.auditStatus + '</span>');
+        // 状态标签：审核中橙色、已提交蓝色、已通过绿色
+        const statusCls = a.auditStatus === '通过' ? 'acn-tag-blue'
+          : a.auditStatus === '已提交' ? 'acn-tag-blue'
+          : 'acn-tag-orange';
         return `
-        <div class="audit-card">
-          <div class="hd">
-            <span class="name">${a.abbr}</span>
-            <span class="meta">${a.gender} · ${a.age}岁</span>
-            <span class="pill pill-audit-name">${a.auditName}</span>
-            ${statusPill}
+        <div class="audit-card-new" onclick="selectH5Card('${a.patientNo}', this)">
+          <div class="acn-head">
+            <span class="acn-name">${a.abbr}</span>
+            <span class="acn-sep">|</span>
+            <span class="acn-gender">${a.gender}</span>
+            <span class="acn-sep">|</span>
+            <span class="acn-age">${a.age}</span>
+            <span class="acn-no">${a.patientNo}</span>
           </div>
-          <div class="body">
-            <div class="row"><span class="lbl">筛选号</span><span class="val">${a.patientNo}</span></div>
-            <div class="row"><span class="lbl">方案编号</span><span class="val">${a.schemeNo}</span></div>
-            <div class="row"><span class="lbl">中心</span><span class="val">${a.centerNo} · ${a.centerName}</span></div>
-            <div class="row"><span class="lbl">最新操作</span><span class="val">${a.latestOp} · ${a.latestTime}</span></div>
+          <div class="acn-tags">
+            <span class="acn-pct">${a.matchPct}</span>
+            <span class="acn-tag-blue">${a.auditName}</span>
+            <span class="${statusCls}">${a.auditStatus}</span>
           </div>
-          <div class="pct-row"><span class="pct-pill">匹配率 ${a.matchPct}</span></div>
-          <div class="action-bar">
-            <button class="act-btn primary" onclick="openDetail('${a.patientNo}')"><i class="fa-solid fa-magnifying-glass"></i> 匹配详情</button>
+          <div class="acn-divider"></div>
+          <div class="acn-row"><span class="lbl">审核类型：</span><span class="val">${a.auditType || '-'}</span></div>
+          <div class="acn-row"><span class="lbl">方案编号：</span><span class="val">${a.schemeNo}</span></div>
+          <div class="acn-row"><span class="lbl">中心：</span><span class="val">${a.centerName}</span></div>
+          <div class="acn-row"><span class="lbl">提交人：</span><span class="val">${a.submitter || '-'}</span></div>
+          <div class="acn-row"><span class="lbl">提交时间：</span><span class="val">${a.submitTime || '-'}</span></div>
+          <div class="acn-row"><span class="lbl">审核人：</span><span class="val">${a.auditor || '-'}</span></div>
+          <div class="acn-row"><span class="lbl">待操作人：</span><span class="val">${a.operator || '-'}</span></div>
+          <div class="acn-row"><span class="lbl">待审核人：</span><span class="val">${a.pendingAuditor || '-'}</span></div>
+          <div class="acn-files">
+            <span class="file-icon"><i class="fa-solid fa-folder"></i></span>
+            <span class="file-text">
+              <span class="name">病史与资料</span>
+              <span class="count">${a.files || 0}</span>
+            </span>
           </div>
-          <div class="files"><i class="fa-solid fa-paperclip"></i> 附件：知情同意书.pdf · 病历首页.pdf</div>
         </div>`;
       }).join('');
     }
@@ -514,12 +1244,14 @@
         '9 · ' + (src ? src.abbr : patientNo) + ' | 匹配详情（' + (src ? src.schemeNo : '测试项目5') + '）';
       document.getElementById('screen-audit').classList.add('hidden');
       document.getElementById('screen-detail').classList.remove('hidden');
+      document.getElementById('floatActionBar').style.display = 'flex';
       switchVersion('new');
     }
 
     function goBack() {
       document.getElementById('screen-detail').classList.add('hidden');
       document.getElementById('screen-audit').classList.remove('hidden');
+      document.getElementById('floatActionBar').style.display = 'none';
     }
 
     // ========= 版本切换 =========
@@ -767,8 +1499,144 @@
 
     function switchTcType(t) { currentTcType = t; renderMdBody(); }
 
+    // ===== 审核弹窗（APP端，底部滑出）=====
+    function openAuditRecordModal() {
+      document.getElementById('auditRecordModal').classList.add('open');
+      const ta = document.getElementById('arRemarkTextarea');
+      if (ta) ta.value = '';
+      updateArCharCount();
+      // 更新我的批注数量徽章
+      const badge = document.getElementById('arMyRemarkBadge');
+      if (badge) {
+        const count = personalRemarksApp.filter(r => r.mine).length;
+        badge.textContent = count;
+      }
+    }
+    function closeAuditRecordModal() {
+      document.getElementById('auditRecordModal').classList.remove('open');
+    }
+
+    function updateArCharCount() {
+      const ta = document.getElementById('arRemarkTextarea');
+      const cnt = document.getElementById('arCharCount');
+      if (ta && cnt) cnt.textContent = ta.value.length;
+    }
+
+    function rejectAuditApp() {
+      alert('已驳回（原型演示）');
+      closeAuditRecordModal();
+    }
+
+    function approveAuditApp() {
+      alert('已通过（原型演示）');
+      closeAuditRecordModal();
+    }
+
+    // ===== 我的批注弹窗（APP端，完整版）=====
+    // 批注数据
+    const personalRemarksApp = [
+      { mine: true, auditName: '当前审核人', stage: '预筛审核', time: '2026-08-07 20:50:12', content: '患者既往病史需进一步核实，已备注待跟进。', id: 'app_r1' },
+      { mine: true, auditName: '当前审核人', stage: '预筛审核', time: '2026-08-07 20:48:36', content: '影像资料完整，建议进入下一轮评估。', id: 'app_r2' },
+      { mine: false, auditName: '刘雪红', stage: '预筛审核', time: '2026-08-06 14:22:10', content: '入排条件基本满足，无排除项。', id: 'app_r3' }
+    ];
+
+    function openMyRemarkApp() {
+      document.getElementById('myRemarkAppModal').classList.add('open');
+      const ta = document.getElementById('mrTextareaApp');
+      if (ta) ta.value = '';
+      renderMrHistoryApp();
+    }
+
+    function closeMyRemarkApp() {
+      document.getElementById('myRemarkAppModal').classList.remove('open');
+    }
+
+    function saveMyRemarkApp() {
+      const ta = document.getElementById('mrTextareaApp');
+      if (!ta) return;
+      const val = ta.value.trim();
+      if (!val) { alert('请输入批注内容'); return; }
+      // 添加到数据头部
+      personalRemarksApp.unshift({
+        mine: true, auditName: '当前审核人',
+        stage: currentAuditName || '预筛审核',
+        time: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-'),
+        content: val,
+        id: 'app_r' + Date.now()
+      });
+      ta.value = '';
+      renderMrHistoryApp();
+      alert('批注已保存');
+    }
+
+    // 渲染历史批注列表（APP端）
+    function renderMrHistoryApp() {
+      const listEl = document.getElementById('mrHistoryListApp');
+      if (!listEl) return;
+      const mineList = personalRemarksApp.filter(r => r.mine);
+      if (!mineList.length) {
+        listEl.innerHTML = '<div style="text-align:center;color:#999;font-size:13px;padding:20px 0;">暂无批注记录</div>';
+        return;
+      }
+      listEl.innerHTML = mineList.map(item => `
+        <div class="mr-hist-item" data-id="${item.id}">
+          <div class="mr-hist-head">
+            <div class="mr-hist-user-row">
+              <span class="mr-hist-avatar"><i class="fas fa-user"></i></span>
+              <span class="mr-hist-name">${item.auditName}</span>
+              <span class="mr-hist-stage-tag">${item.stage}</span>
+            </div>
+            <span class="mr-hist-time">${item.time}</span>
+          </div>
+          <div class="mr-hist-content" id="mrContent_${item.id}">${item.content}</div>
+          <div class="mr-hist-actions">
+            <span class="mr-hist-action edit" onclick="editMrRemarkApp('${item.id}')">编辑</span>
+            <span class="mr-hist-action del" onclick="deleteMrRemarkApp('${item.id}')">删除</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 编辑批注（APP端）- 学习 match-detail-check.html 方式：回填到顶部输入框
+    function editMrRemarkApp(id) {
+      const item = personalRemarksApp.find(r => r.id === id);
+      if (!item) return;
+      const ta = document.getElementById('mrTextareaApp');
+      if (!ta) return;
+      // 回填到顶部输入框
+      ta.value = item.content;
+      ta.focus();
+      // 删除原条目，保存时重新创建
+      personalRemarksApp = personalRemarksApp.filter(r => r.id !== id);
+      renderMrHistoryApp();
+    }
+
+    // 删除批注（APP端）
+    function deleteMrRemarkApp(id) {
+      if (!confirm('确认删除该条批注？')) return;
+      const idx = personalRemarksApp.findIndex(r => r.id === id);
+      if (idx > -1) personalRemarksApp.splice(idx, 1);
+      renderMrHistoryApp();
+    }
+
     // ========= 初始化 =========
     renderAuditList();
   </script>
+<!-- 选择中心 ActionSheet -->
+  <div class="center-sheet-mask" id="centerSheetMask" onclick="closeCenterSheet()"></div>
+  <div class="center-sheet" id="centerSheet">
+    <div class="center-sheet-handle"></div>
+    <div class="center-sheet-header">
+      <span class="cs-cancel" onclick="closeCenterSheet()">取消</span>
+      <span class="cs-title">选择中心</span>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="center-sheet-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input id="centerSheetKw" type="text" placeholder="搜索中心编号 / 名称" oninput="renderCenterSheetList()">
+    </div>
+    <div class="center-sheet-list" id="centerSheetList"></div>
+  </div>
+
 </body>
 </html>

@@ -1810,7 +1810,8 @@
     /* 审批批注区 */
     .review-remark-block { margin-top: 18px; padding-top: 16px; border-top: 1px dashed #e5e6eb; }
     .review-remark-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .review-remark-title { font-size: 14px; font-weight: 600; color: #1d2129; }
+    .review-remark-title { font-size: 14px; font-weight: 600; color: #1d2129; cursor: pointer; transition: color .15s; }
+    .review-remark-title:hover { color: #1872a7; }
     .review-remark-title i { color: #1872a7; margin-right: 6px; }
     .review-remark-tip { font-size: 12px; color: #86909c; }
     .review-remark-textarea {
@@ -1822,7 +1823,7 @@
     .review-remark-textarea:focus { border-color: #1872a7; }
     .review-remark-textarea::placeholder { color: #c9cdd4; }
 
-    /* 上次批注卡片 */
+    /* 上次批注卡片（审批弹窗内内嵌展示） */
     .review-last-remark { margin-bottom: 12px; }
     .last-remark-card {
       background: #f7f8fa; border: 1px solid #e5e6eb; border-radius: 6px;
@@ -1835,6 +1836,29 @@
     .last-remark-content {
       font-size: 13px; color: #333; line-height: 1.6;
     }
+
+    /* 审批弹窗内 - 批注列表展开/收起 */
+    .review-remark-list-wrap { display: none; flex-direction: column; gap: 10px; margin-top: 12px; }
+    .review-remark-list-wrap.open { display: flex; }
+    .review-remark-list-item {
+      background: #f7f8fa; border: 1px solid #e5e6eb; border-radius: 6px;
+      padding: 10px 12px;
+    }
+    .review-remark-list-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: #86909c; margin-bottom: 4px;
+    }
+    .review-remark-list-content {
+      font-size: 13px; color: #333; line-height: 1.6;
+    }
+    /* 更多按钮 */
+    .btn-more-remarks {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 18px; border-radius: 4px;
+      border: 1px solid #f53f3f; background: #fff; color: #f53f3f;
+      font-size: 13px; cursor: pointer; transition: all .15s;
+    }
+    .btn-more-remarks:hover { background: #fff0f0; }
 
     /* 历史备注弹窗 */
     .remark-history-mask {
@@ -4455,13 +4479,21 @@ function openReviewModal() {
 
           <div class="review-remark-block">
             <div class="review-remark-head">
-              <span class="review-remark-title"><i class="fa-solid fa-clipboard-pen"></i> 我的批注</span>
+              <span class="review-remark-title" onclick="openMyRemarkDrawer()"><i class="fa-solid fa-clipboard-pen"></i> 我的批注</span>
             </div>
+            <!-- 最新一条批注（默认显示） -->
             <div id="reviewLastRemark" class="review-last-remark"></div>
+            <!-- 更多按钮 -->
+            <div id="reviewRemarkMoreBtnWrap" style="display:none;margin-top:8px;">
+              <button class="btn-more-remarks" onclick="toggleReviewRemarkList()"><i class="fa-solid fa-angle-down"></i> 更多</button>
+            </div>
+            <!-- 展开的批注列表 -->
+            <div id="reviewRemarkListWrap" class="review-remark-list-wrap"></div>
           </div>
 
         </div>
         <div id="reviewModalFooter" class="review-modal-footer">
+          <button class="btn btn-default" onclick="openMyRemarkDrawer()"><i class="fa-solid fa-clipboard-pen"></i> 我的批注</button>
           <button class="btn btn-default" onclick="showToast('已打开入组沟通流程', 'info')">入组沟通</button>
           <button class="btn btn-danger" onclick="rejectAudit()">驳回</button>
           <button class="btn btn-primary" onclick="showApproveForm()">通过</button>
@@ -4483,15 +4515,21 @@ function closeReviewModal() {
   if (mask) mask.classList.remove('open');
 }
 
-// 渲染审批弹窗内"我的批注"上方的本人上次批注
+// 渲染审批弹窗内"我的批注"上方的本人上次批注（最新一条 + 更多按钮）
 function renderLastRemark() {
   const el = document.getElementById('reviewLastRemark');
+  const moreWrap = document.getElementById('reviewRemarkMoreBtnWrap');
   if (!el) return;
-  const last = personalRemarks.find(r => r.mine);
+  const mineRemarks = personalRemarks.filter(r => r.mine);
+  // 按时间倒序
+  mineRemarks.sort((a, b) => new Date(b.time) - new Date(a.time));
+  const last = mineRemarks[0];
   if (!last) {
     el.innerHTML = '';
+    if (moreWrap) moreWrap.style.display = 'none';
     return;
   }
+  // 显示最新一条
   el.innerHTML = `
     <div class="last-remark-card">
       <div class="last-remark-meta">
@@ -4501,6 +4539,49 @@ function renderLastRemark() {
       <div class="last-remark-content">${last.content}</div>
     </div>
   `;
+  // 如果有多条，显示"更多"按钮
+  if (moreWrap && mineRemarks.length > 1) {
+    moreWrap.style.display = '';
+  } else if (moreWrap) {
+    moreWrap.style.display = 'none';
+  }
+}
+
+// 展开/收起审批弹窗内的批注列表
+function toggleReviewRemarkList() {
+  const wrap = document.getElementById('reviewRemarkListWrap');
+  const btnWrap = document.getElementById('reviewRemarkMoreBtnWrap');
+  const btn = btnWrap ? btnWrap.querySelector('.btn-more-remarks') : null;
+  if (!wrap) return;
+  if (wrap.classList.contains('open')) {
+    wrap.classList.remove('open');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-angle-down"></i> 更多';
+  } else {
+    renderReviewRemarkList();
+    wrap.classList.add('open');
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-angle-up"></i> 收起';
+  }
+}
+
+// 渲染审批弹窗内展开的批注列表（所有本人批注）
+function renderReviewRemarkList() {
+  const wrap = document.getElementById('reviewRemarkListWrap');
+  if (!wrap) return;
+  const mineRemarks = personalRemarks.filter(r => r.mine);
+  mineRemarks.sort((a, b) => new Date(b.time) - new Date(a.time));
+  if (!mineRemarks.length) { wrap.innerHTML = ''; return; }
+  // 跳过第一条（已在上方显示），显示剩余
+  const rest = mineRemarks.slice(1);
+  if (!rest.length) { wrap.innerHTML = '<div style="font-size:12px;color:#999;text-align:center;padding:8px;">暂无更多批注</div>'; return; }
+  wrap.innerHTML = rest.map(item => `
+    <div class="review-remark-list-item">
+      <div class="review-remark-list-meta">
+        <span class="remark-audit-name">${item.auditName || currentAuditName}</span>
+        <span>${item.time}</span>
+      </div>
+      <div class="review-remark-list-content">${item.content}</div>
+    </div>
+  `).join('');
 }
 
 function focusReviewRemark() {
@@ -4703,7 +4784,7 @@ function openMyRemarkDrawer() {
             </div>
           </div>
           <div class="my-remark-history-head-row">
-            <div class="my-remark-history-title"><i class="fa-solid fa-clock-rotate-left"></i> 历史批注（仅自己）</div>
+            <div class="my-remark-history-title"><i class="fa-solid fa-clock-rotate-left"></i> 历史批注（仅自己可见）</div>
           </div>
           <div class="my-remark-history" id="myRemarkHistory"></div>
         </div>

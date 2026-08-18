@@ -105,6 +105,31 @@
   .center-no { color: #1872a7; font-weight: 600; font-size: 12px; flex-shrink: 0; min-width: 40px; }
   .center-name { color: #333; font-size: 12px; }
 
+  /* 普通模糊搜索下拉框（中心名称） */
+  .fuzzy-select { position: relative; flex: 1; min-width: 0; }
+  .fuzzy-select input {
+    width: 100%; height: 34px; padding: 0 28px 0 10px; border: 1px solid #d9d9d9; border-radius: 4px;
+    font-size: 12px; color: #333; background: #fff; outline: none;
+    transition: border-color .15s;
+  }
+  .fuzzy-select input:focus { border-color: #1872a7; }
+  .fuzzy-select::after {
+    content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: #999; font-size: 11px; pointer-events: none;
+  }
+  .fuzzy-select-panel {
+    position: absolute; top: 38px; left: 0; width: 100%; z-index: 50;
+    background: #fff; border: 1px solid #e8e8e8; border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none; max-height: 240px; overflow-y: auto;
+  }
+  .fuzzy-select-panel.open { display: block; }
+  .fuzzy-select-option {
+    padding: 8px 10px; font-size: 12px; color: #333; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .fuzzy-select-option:hover, .fuzzy-select-option.active { background: #f0f6fc; }
+  .fuzzy-select-empty { padding: 10px; text-align: center; color: #bbb; font-size: 12px; }
+
   /* 日期范围 */
   .date-range { display: flex; align-items: center; gap: 6px; }
   .date-range input[type="date"] { height: 34px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; outline: none; }
@@ -316,7 +341,7 @@
       <div class="filter-item"><label>患者编号</label><input id="fPatientNo" placeholder="请输入"></div>
       <div class="filter-item"><label>患者缩写</label><input id="fPatientAbbr" placeholder="请输入"></div>
       <div class="filter-item"><label>方案编号</label><input id="fSchemeNo" placeholder="请输入"></div>
-      <div class="filter-item filter-hide-on-log">
+      <div class="filter-item">
         <label>审核类型</label>
         <select id="fAuditType">
           <option value="">请选择</option>
@@ -329,15 +354,11 @@
       </div>
       <div class="filter-item">
         <label>中心名称</label>
-        <div class="multi-select" id="fCenterWrap">
-          <div class="multi-select-trigger placeholder" id="fCenterTrigger" onclick="toggleCenter()">请选择中心（可搜索多选）</div>
-          <div class="multi-select-panel" id="fCenterPanel">
-            <div class="multi-select-search">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input id="fCenterSearch" placeholder="搜索中心号 / 中心名称" oninput="filterCenterOptions()">
-            </div>
-            <div class="multi-select-options" id="fCenterOptions"></div>
-            <div class="multi-select-empty" id="fCenterEmpty" style="display:none;">无匹配中心</div>
+        <div class="fuzzy-select" id="fCenterWrap">
+          <input id="fCenterInput" placeholder="请选择中心" onfocus="openCenterPanel()" oninput="filterCenterOptions()" autocomplete="off">
+          <div class="fuzzy-select-panel" id="fCenterPanel">
+            <div class="fuzzy-select-options" id="fCenterOptions"></div>
+            <div class="fuzzy-select-empty" id="fCenterEmpty" style="display:none;">无匹配中心</div>
           </div>
         </div>
       </div>
@@ -388,10 +409,8 @@
     <div class="filter-actions">
       <button class="btn-action primary" onclick="applyFilter()">&#128269; 查询</button>
       <button class="btn-action reset" onclick="resetFilter()">&#8635; 重置</button>
-      <button class="btn-action" onclick="alert('导出（原型演示）')">&#128194; 导出</button>
       <button class="btn-action" onclick="alert('患者字段展示（原型演示）')">&#128203; 患者字段展示</button>
       <button class="btn-action" onclick="alert('列设置（原型演示）')">&#9881; 列设置</button>
-      <button class="btn-action" onclick="alert('高级搜索（原型演示）')">&#128270; 高级搜索</button>
     </div>
   </div>
 
@@ -790,84 +809,88 @@ document.addEventListener('click', e=>{
   }
   if (!e.target.closest('#fCenterWrap')) {
     document.getElementById('fCenterPanel')?.classList.remove('open');
+    // 若输入框内容非当前选中项，恢复为选中项文本或清空
+    const input = document.getElementById('fCenterInput');
+    const sel = CENTER_OPTIONS.find(c => c.no === _centerSelectedNo);
+    const expected = sel ? formatCenter(sel) : '';
+    if (input && input.value !== expected) {
+      input.value = expected;
+      renderCenterOptions();
+    }
   }
 });
 
-// ==================== 中心名称 联想多选 ====================
+// ==================== 中心名称 模糊搜索下拉框 ====================
 const CENTER_OPTIONS = [
-  { no: 'CN029', name: '复旦大学附属中山医院青浦分院' },
-  { no: 'CN006', name: '柳州市人民医院' },
-  { no: 'CN012', name: '丽水市中心医院' },
-  { no: 'CN112', name: '中国医学科学院阜外医院深圳医院' },
-  { no: 'CN092', name: '中山大学肿瘤防治中心' },
-  { no: 'CN022', name: '南通市人民医院' },
-  { no: 'KX01', name: '科信医学研究中心' },
-  { no: 'KX02', name: '科信第二研究中心' },
-  { no: 'YY09', name: '运营合作中心 A' },
+  { no: 'CN001', name: '模拟医院' },
+  { no: 'CN002', name: '模拟医院二院' },
+  { no: 'CN003', name: '测试中心医院' },
+  { no: 'CN004', name: '示例肿瘤医院' },
+  { no: 'CN005', name: '临床研究中心' },
+  { no: 'CN006', name: '人民医院' },
+  { no: 'CN007', name: '中心医院' },
+  { no: 'CN008', name: '第一附属医院' },
 ];
+
+let _centerSelectedNo = null;
+
+function formatCenter(o) {
+  return o ? (o.no + '-' + o.name) : '';
+}
 
 function renderCenterOptions() {
   const box = document.getElementById('fCenterOptions');
   if (!box) return;
-  const kw = (document.getElementById('fCenterSearch')?.value || '').trim().toLowerCase();
-  const sel = getCenterSelected();
+  const kw = (document.getElementById('fCenterInput')?.value || '').trim().toLowerCase();
   const list = CENTER_OPTIONS.filter(o =>
     !kw || o.no.toLowerCase().includes(kw) || o.name.toLowerCase().includes(kw)
   );
   box.innerHTML = list.map(o => {
-    const checked = sel.includes(o.no) ? 'checked' : '';
-    return `<label class="multi-select-option">
-      <input type="checkbox" value="${o.no}" ${checked} onchange="onCenterChange()">
-      <span class="center-no">${o.no}</span>
-      <span class="center-name">${o.name}</span>
-    </label>`;
+    const active = o.no === _centerSelectedNo ? 'active' : '';
+    return `<div class="fuzzy-select-option ${active}" data-no="${o.no}" onclick="selectCenter('${o.no}')">${formatCenter(o)}</div>`;
   }).join('');
   document.getElementById('fCenterEmpty').style.display = list.length ? 'none' : 'block';
 }
 
-function toggleCenter() {
+function openCenterPanel() {
   const panel = document.getElementById('fCenterPanel');
-  const open = panel.classList.contains('open');
-  document.querySelectorAll('.multi-select-panel.open').forEach(p=>p.classList.remove('open'));
-  if (!open) {
-    panel.classList.add('open');
-    renderCenterOptions();
-    const s = document.getElementById('fCenterSearch');
-    if (s) { s.value=''; s.focus(); }
-  }
+  document.querySelectorAll('.multi-select-panel.open, .fuzzy-select-panel.open').forEach(p=>p.classList.remove('open'));
+  panel.classList.add('open');
+  renderCenterOptions();
+}
+
+function closeCenterPanel() {
+  document.getElementById('fCenterPanel')?.classList.remove('open');
 }
 
 function filterCenterOptions() {
   renderCenterOptions();
+  openCenterPanel();
 }
 
-function onCenterChange() {
-  const sel = getCenterSelected();
-  const trigger = document.getElementById('fCenterTrigger');
-  if (!sel.length) {
-    trigger.textContent = '请选择中心（可搜索多选）';
-    trigger.classList.add('placeholder');
-  } else {
-    trigger.textContent = '已选 ' + sel.length + ' 个中心';
-    trigger.classList.remove('placeholder');
-  }
+function selectCenter(no) {
+  _centerSelectedNo = no;
+  const o = CENTER_OPTIONS.find(c => c.no === no);
+  const input = document.getElementById('fCenterInput');
+  if (input) input.value = o ? formatCenter(o) : '';
+  closeCenterPanel();
+  onSearch();
 }
 
 function getCenterSelected() {
-  return Array.from(document.querySelectorAll('#fCenterOptions input[type=checkbox]'))
-    .filter(cb=>cb.checked).map(cb=>cb.value);
+  return _centerSelectedNo ? [_centerSelectedNo] : [];
 }
 
 function getCenterNames() {
-  const sel = getCenterSelected();
-  return CENTER_OPTIONS.filter(o => sel.includes(o.no)).map(o => o.name);
+  const o = CENTER_OPTIONS.find(c => c.no === _centerSelectedNo);
+  return o ? [formatCenter(o)] : [];
 }
 
 function resetCenter() {
-  document.querySelectorAll('#fCenterOptions input[type=checkbox]').forEach(cb=>cb.checked=false);
-  const s = document.getElementById('fCenterSearch');
-  if (s) s.value = '';
-  onCenterChange();
+  _centerSelectedNo = null;
+  const input = document.getElementById('fCenterInput');
+  if (input) input.value = '';
+  renderCenterOptions();
 }
 
 // ==================== 查看 ====================
