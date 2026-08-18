@@ -1,0 +1,937 @@
+<!--
+  审核列表（独立模块原型）— 一模一样还原设计稿
+  从 modules/phase/index.html 的「审核列表」模块拆解而来，按设计稿截图精确还原。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>审核列表</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa; color: #333; font-size: 12px;
+  }
+  .audit-page { max-width: 1600px; margin: 0 auto; padding: 20px 28px 50px; }
+
+  /* ====== 机构 Tab（恒瑞医药 / 江苏科信 / 运营二部）====== */
+  .org-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: none; }
+  .org-tab {
+    padding: 8px 20px; font-size: 12px; font-weight: 500; color: #555;
+    cursor: pointer; border: 1px solid #d9d9d9; border-radius: 6px 6px 0 0;
+    background: #fff; transition: all .15s;
+  }
+  .org-tab:hover { color: #1872a7; border-color: #1872a7; }
+  .org-tab.active { color: #fff; background: #1872a7; border-color: #1872a7; font-weight: 600; }
+
+  /* ====== 子 Tab（待操作 / 审核列表）====== */
+  .sub-tabs { display: flex; gap: 32px; margin-bottom: 16px; padding-left: 4px; }
+  .sub-tab {
+    font-size: 12px; color: #666; cursor: pointer; padding-bottom: 10px;
+    position: relative; transition: color .15s; background: transparent; border: none;
+  }
+  .sub-tab:hover { color: #1872a7; }
+  .sub-tab.active { color: #1872a7; font-weight: 600; }
+  .sub-tab.active::after {
+    content: ''; position: absolute; left: 0; bottom: -1px; width: 100%; height: 3px;
+    background: #1872a7; border-radius: 2px 2px 0 0;
+  }
+
+  /* ====== 筛选区 ====== */
+  .filter-form {
+    background: #fff; border-radius: 8px; padding: 18px 22px; margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .filter-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 24px; align-items: end;
+  }
+  .filter-item {
+    display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .filter-item.wide { grid-column: span 2; }
+  .filter-item label {
+    font-size: 12px; color: #666; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+  }
+  .filter-item input, .filter-item select {
+    flex: 1; min-width: 0; height: 34px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px;
+    font-size: 12px; color: #333; background: #fff; outline: none;
+    transition: border-color .15s;
+  }
+  .filter-item.wide .date-range { flex: 1; gap: 8px; }
+  .filter-item.wide .date-range input[type="date"] { flex: 1; }
+  .filter-hide-on-log { display: none; }
+  body:not(.tab-log) .filter-hide-on-log { display: flex; }
+  .filter-item input:focus, .filter-item select:focus { border-color: #1872a7; }
+  .filter-item input::placeholder { color: #bbb; }
+
+  /* ====== 多选下拉（患者标签·知情状态）====== */
+  .multi-select { position: relative; flex: 1; min-width: 0; }
+  .multi-select-trigger {
+    height: 34px; padding: 0 28px 0 10px; border: 1px solid #d9d9d9; border-radius: 4px;
+    font-size: 12px; color: #333; background: #fff; cursor: pointer; display: flex; align-items: center;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: border-color .15s;
+  }
+  .multi-select-trigger:focus, .multi-select-trigger:hover { border-color: #1872a7; }
+  .multi-select-trigger.placeholder { color: #bbb; }
+  .multi-select-trigger::after {
+    content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: #999; font-size: 11px; pointer-events: none;
+  }
+  .multi-select-panel {
+    position: absolute; top: 38px; left: 0; min-width: 100%; z-index: 50;
+    background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12); display: none;
+  }
+  .multi-select-panel.open { display: block; }
+  .multi-select-option {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
+    text-align: left; justify-content: flex-start;
+  }
+  .multi-select-option:hover { background: #f0f6fc; }
+  .multi-select-option input { width: 14px; height: 14px; accent-color: #1872a7; cursor: pointer; flex-shrink: 0; margin: 0; }
+  .multi-select-option .letter-badge {
+    width: 18px; height: 18px; border-radius: 50%; background: #e6f0fb; color: #1872a7;
+    font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .multi-select-search {
+    display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin-bottom: 6px;
+    border: 1px solid #e8e8e8; border-radius: 4px; color: #999;
+  }
+  .multi-select-search input { border: none; outline: none; flex: 1; font-size: 12px; color: #333; min-width: 0; }
+  .multi-select-options { max-height: 220px; overflow-y: auto; }
+  .multi-select-empty { padding: 10px; text-align: center; color: #bbb; font-size: 12px; }
+  .center-no { color: #1872a7; font-weight: 600; font-size: 12px; flex-shrink: 0; min-width: 40px; }
+  .center-name { color: #333; font-size: 12px; }
+
+  /* 日期范围 */
+  .date-range { display: flex; align-items: center; gap: 6px; }
+  .date-range input[type="date"] { height: 34px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; outline: none; }
+  .date-range span { color: #999; font-size: 11px; }
+
+  /* 按钮行 */
+  .filter-actions {
+    display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 14px;
+    padding-top: 14px; border-top: 1px solid #f0f0f0;
+  }
+  .btn-action {
+    height: 32px; padding: 0 18px; border-radius: 4px; font-size: 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px; font-weight: 500;
+    border: 1px solid #1872a7; background: #1872a7; color: #fff; transition: all .15s;
+  }
+  .btn-action:hover { background: #125c91; border-color: #125c91; }
+  .btn-action.primary { background: #1872a7; color: #fff; border-color: #1872a7; }
+  .btn-action.primary:hover { background: #125c91; }
+  .btn-action.reset { background: #fff; color: #555; border-color: #d9d9d9; }
+  .btn-action.reset:hover { border-color: #1872a7; color: #1872a7; background: #fff; }
+
+  /* ====== 表格 — 蓝色表头 #1872a7 ====== */
+  .table-card {
+    background: #fff; border-radius: 8px; overflow-x: auto; overflow-y: visible;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .data-table { width: 100%; border-collapse: collapse; min-width: 1400px; }
+  .data-table th, .data-table td { white-space: nowrap; vertical-align: middle; }
+  .data-table thead tr { background: #1872a7; }
+  .data-table th {
+    padding: 11px 14px; text-align: left; font-size: 12px; font-weight: 600;
+    color: #fff; border-right: 1px solid rgba(255,255,255,.12);
+  }
+  .data-table th:last-child { border-right: none; }
+  .data-table td {
+    padding: 11px 14px; font-size: 12px; color: #333; border-bottom: 1px solid #f0f0f0;
+  }
+  /* 操作列固定在右侧 */
+  .col-action { position: sticky; right: 0; z-index: 2; background: #1872a7; }
+  .data-table td.col-action {
+    background: #fff; box-shadow: -8px 0 10px -6px rgba(0,0,0,.08);
+  }
+  .data-table tbody tr:nth-child(even) td.col-action { background: #fafbfc; }
+  .data-table tbody tr:hover td.col-action { background: #eef4fa; }
+  .data-table tbody tr:nth-child(even) { background: #fafbfc; }
+  .data-table tbody tr:hover { background: #eef4fa; }
+  .col-seq { width: 52px; color: #999; text-align: center !important; }
+
+  /* 匹配率 */
+  .match-rate { font-weight: 600; font-size: 11px; }
+  .match-rate.zero { color: #f53f3f; }
+  .match-rate.high { color: #00b42a; }
+  /* 审核日志 - 审核结果 */
+  .log-result { font-weight: 600; font-size: 12px; }
+  .log-result.pass { color: #00b42a; }
+  .log-result.reject { color: #f53f3f; }
+
+  /* 操作列链接 */
+  .action-cell { white-space: nowrap; }
+  .action-link {
+    color: #1872a7; cursor: pointer; font-size: 11px; margin-right: 16px;
+    transition: color .15s; text-decoration: none;
+  }
+  .action-link:hover { text-decoration: underline; color: #125c91; }
+
+  /* ====== 分页 ====== */
+  .pagination {
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 14px 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .pagination-info { font-size: 11px; color: #888; }
+  .pagination-info strong { color: #1872a7; }
+  .pagination-controls { display: flex; gap: 5px; align-items: center; }
+  .page-btn {
+    min-width: 30px; height: 30px; border: 1px solid #d9d9d9; background: #fff; border-radius: 4px;
+    cursor: pointer; color: #555; font-size: 12px; transition: all .15s;
+  }
+  .page-btn:hover:not(:disabled) { border-color: #1872a7; color: #1872a7; }
+  .page-btn.active { background: #1872a7; color: #fff; border-color: #1872a7; }
+  .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+  .page-jump { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #888; }
+  .page-jump input {
+    width: 44px; height: 30px; border: 1px solid #d9d9d9; border-radius: 4px; text-align: center; outline: none;
+  }
+  .page-size { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+  .page-size select { height: 30px; border: 1px solid #d9d9d9; border-radius: 4px; outline: none; }
+
+  /* ====== 弹窗 / 抽屉 ====== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none;
+    align-items: center; justify-content: center; z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-panel {
+    background: #fff; border-radius: 10px; width: 700px; max-width: 94vw; max-height: 88vh;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
+  }
+  .modal-header h3 { font-size: 15px; color: #1a1a1a; }
+  .modal-close {
+    width: 26px; height: 26px; border-radius: 50%; border: none; background: #f0f0f0;
+    color: #999; cursor: pointer; font-size: 12px;
+  }
+  .modal-close:hover { background: #f5f5f5; color: #555; }
+  .modal-body { padding: 20px; overflow-y: auto; }
+
+  .drawer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.35); transform: translateX(100%);
+    transition: transform .25s ease; z-index: 200; pointer-events: none;
+  }
+  .drawer-overlay.open { transform: translateX(0); pointer-events: auto; }
+  .drawer-panel {
+    position: absolute; right: 0; top: 0; height: 100%; width: 540px; max-width: 96vw;
+    background: #fff; display: flex; flex-direction: column; box-shadow: -6px 0 24px rgba(0,0,0,.12);
+  }
+  .drawer-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 20px; border-bottom: 1px solid #f0f0f0;
+  }
+  .drawer-body { padding: 18px 20px; overflow-y: auto; flex: 1; }
+
+  /* 审批弹窗内容 */
+  .audit-modal-info {
+    display: flex; gap: 24px; flex-wrap: wrap; padding: 0 0 14px;
+    border-bottom: 1px solid #f0f0f0; margin-bottom: 14px;
+  }
+  .audit-modal-info .info-item { font-size: 12px; color: #666; }
+  .audit-modal-info .info-item b { color: #333; font-weight: 600; margin-left: 5px; }
+  .section-title { font-size: 12px; font-weight: 600; color: #1a1a1a; margin-bottom: 10px; }
+  .audit-record-table { width: 100%; border-collapse: collapse; }
+  .audit-record-table th, .audit-record-table td {
+    padding: 9px 10px; font-size: 12px; border-bottom: 1px solid #f0f0f0; text-align: left;
+  }
+  .audit-record-table th { color: #888; font-weight: 600; background: #fafbfc; }
+  .fold-icon { cursor: pointer; color: #999; font-size: 12px; display: inline-block; width: 16px; }
+  .audit-status-tag.submitted { background: #e6f4ff; color: #1872a7; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #f0f0f0; }
+  .btn {
+    padding: 7px 18px; border-radius: 4px; font-size: 12px; cursor: pointer; border: 1px solid #d9d9d9;
+    background: #fff; color: #555; font-weight: 500; transition: all .15s;
+  }
+  .btn:hover { border-color: #1872a7; color: #1872a7; }
+  .btn.primary { background: #1872a7; color: #fff; border-color: #1872a7; }
+  .btn.primary:hover { background: #125c91; }
+  .btn.danger { background: #fff; color: #f53f3f; border-color: #ffccc7; }
+  .btn.danger:hover { background: #fff1f0; }
+
+  /* 审批记录弹窗：阶段 section */
+  .audit-section { margin-bottom: 16px; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+  .audit-section-header {
+    display: flex; justify-content: space-between; align-items: center; padding: 11px 14px;
+    background: #fafbfc; cursor: pointer; font-size: 13.5px; font-weight: 600;
+  }
+  .audit-section-toggle { color: #1872a7; font-size: 12px; font-weight: 500; }
+  .audit-abnormal-notice {
+    margin: 10px 14px; padding: 10px 12px; background: #fff7e6; border: 1px solid #ffe7ba;
+    border-radius: 6px; font-size: 12px; color: #ad6800;
+  }
+  .audit-abnormal-label {
+    display: inline-block; padding: 1px 7px; background: #fa8c16; color: #fff; border-radius: 3px;
+    font-size: 12px; margin-right: 7px;
+  }
+  .audit-abnormal-reason { margin-top: 6px; color: #874d00; }
+  .audit-section-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 0 14px 12px; }
+
+  /* 邮件记录抽屉：阶段 section */
+  .email-stage { border: 1px solid #e8e8e8; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+  .email-stage-header {
+    display: flex; align-items: center; gap: 8px; padding: 11px 14px; background: #fafbfc;
+  }
+  .email-stage-dot { width: 7px; height: 7px; border-radius: 50%; background: #1872a7; }
+  .email-stage-title { font-size: 13.5px; font-weight: 600; }
+  .email-stage-count { font-size: 11px; color: #999; margin-left: auto; }
+  .email-list { padding: 6px 14px 12px; }
+  .email-item { padding: 11px 0; border-bottom: 1px dashed #eee; }
+  .email-item:last-child { border-bottom: none; }
+  .email-item-head { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+  .email-item-title { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+  .email-item-time { font-size: 11px; color: #999; margin-left: auto; }
+  .email-item-body { font-size: 12px; color: #666; line-height: 1.65; }
+  .email-item-meta { font-size: 11px; color: #999; margin-top: 5px; }
+
+  .empty-tip { text-align: center; color: #bbb; font-size: 11px; padding: 28px 0; }
+</style>
+</head>
+<body>
+<div class="audit-page">
+  <!-- 机构 Tab -->
+  <div class="org-tabs" id="orgTabs">
+    <button class="org-tab active" onclick="setAuditOrg('hengrui')">恒瑞医药</button>
+    <button class="org-tab" onclick="setAuditOrg('kexin')">江苏科信</button>
+    <button class="org-tab" onclick="setAuditOrg('yunying')">运营二部</button>
+  </div>
+
+  <!-- 子 Tab -->
+  <div class="sub-tabs" id="subTabs">
+    <button class="sub-tab active" onclick="setAuditSubTab('pending')">待操作</button>
+    <button class="sub-tab" onclick="setAuditSubTab('done')">审核列表</button>
+    <button class="sub-tab" onclick="setAuditSubTab('log')">审核日志</button>
+  </div>
+
+  <!-- 筛选表单 -->
+  <div class="filter-form">
+    <div class="filter-grid">
+      <div class="filter-item"><label>筛选号</label><input id="fScreenNo" placeholder="请输入"></div>
+      <div class="filter-item"><label>患者编号</label><input id="fPatientNo" placeholder="请输入"></div>
+      <div class="filter-item"><label>患者缩写</label><input id="fPatientAbbr" placeholder="请输入"></div>
+      <div class="filter-item"><label>方案编号</label><input id="fSchemeNo" placeholder="请输入"></div>
+      <div class="filter-item filter-hide-on-log">
+        <label>审核类型</label>
+        <select id="fAuditType">
+          <option value="">请选择</option>
+          <option>预筛审批</option>
+          <option>主知情审批</option>
+          <option>筛选审批</option>
+          <option>导入审批</option>
+          <option>入组审批</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label>中心名称</label>
+        <div class="multi-select" id="fCenterWrap">
+          <div class="multi-select-trigger placeholder" id="fCenterTrigger" onclick="toggleCenter()">请选择中心（可搜索多选）</div>
+          <div class="multi-select-panel" id="fCenterPanel">
+            <div class="multi-select-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input id="fCenterSearch" placeholder="搜索中心号 / 中心名称" oninput="filterCenterOptions()">
+            </div>
+            <div class="multi-select-options" id="fCenterOptions"></div>
+            <div class="multi-select-empty" id="fCenterEmpty" style="display:none;">无匹配中心</div>
+          </div>
+        </div>
+      </div>
+      <div class="filter-item">
+        <label>审核状态</label>
+        <select id="fAuditStatus">
+          <option value="">请选择</option>
+          <option value="pending">审批中</option>
+          <option value="done">已审批</option>
+        </select>
+      </div>
+    
+      <div class="filter-item filter-hide-on-log"><label>待操作人</label><input id="fOperator" placeholder="请输入"></div>
+      <div class="filter-item filter-hide-on-log"><label>待审核人</label><input id="fAuditor" placeholder="请输入"></div>
+      
+      <div class="filter-item wide">
+        <label id="fDateLabel">提交日期</label>
+        <div class="date-range">
+          <input type="date" id="fDateFrom"> <span>至</span> <input type="date" id="fDateTo">
+        </div>
+      </div>
+      <div class="filter-item filter-hide-on-log">
+        <label>是否发送邮件</label>
+        <select id="fEmailSent">
+          <option value="">请选择</option>
+          <option>是</option>
+          <option>否</option>
+        </select>
+      </div>
+     
+      <div class="filter-item wide">
+        <label>排序</label>
+        <div style="display:flex;gap:6px;flex:1;min-width:0;">
+          <select id="fSortField" style="flex:1;height:34px;padding:0 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;">
+            <option value="">请选择</option>
+            <option value="submitTime">提交时间</option>
+            <option value="matchRate">匹配率</option>
+            <option value="patientNo">患者编号</option>
+          </select>
+          <select id="fSortDir" style="width:80px;height:34px;padding:0 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:12px;">
+            <option value="desc">降序</option>
+            <option value="asc">升序</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <!-- 按钮行 -->
+    <div class="filter-actions">
+      <button class="btn-action primary" onclick="applyFilter()">&#128269; 查询</button>
+      <button class="btn-action reset" onclick="resetFilter()">&#8635; 重置</button>
+      <button class="btn-action" onclick="alert('导出（原型演示）')">&#128194; 导出</button>
+      <button class="btn-action" onclick="alert('患者字段展示（原型演示）')">&#128203; 患者字段展示</button>
+      <button class="btn-action" onclick="alert('列设置（原型演示）')">&#9881; 列设置</button>
+      <button class="btn-action" onclick="alert('高级搜索（原型演示）')">&#128270; 高级搜索</button>
+    </div>
+  </div>
+
+  <!-- 数据表格 — 蓝色表头 -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead id="auditTableHead">
+        <tr>
+          <th class="col-seq">序号</th>
+          <th>患者编号</th>
+          <th>审批类型</th>
+          <th>患者编号</th>
+          <th>性别</th>
+          <th>年龄</th>
+          <th>方案编号</th>
+          <th>中心号</th>
+          <th>中心</th>
+          <th>匹配率</th>
+          <th>提交人</th>
+          <th>提交时间</th>
+          <th class="col-action">操作</th>
+        </tr>
+      </thead>
+      <tbody id="auditTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 分页 -->
+  <div class="pagination">
+    <div class="pagination-info">共 <strong id="totalCount">0</strong> 条记录</div>
+    <div class="pagination-controls" id="pageControls"></div>
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+      <div class="page-jump">前往 <input id="pageJump" type="number" min="1"> 页</div>
+      <div class="page-size">每页
+        <select id="pageSize" onchange="changePageSize()">
+          <option>10</option><option>20</option><option>50</option>
+        </select> 条
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 审批弹窗 -->
+<div class="modal-overlay" id="auditModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h3>审批</h3>
+      <button class="modal-close" onclick="closeAuditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="audit-modal-info">
+        <div class="info-item">审核名称：<b id="auditModalAuditName">—</b></div>
+        <div class="info-item">当前状态：<b id="auditCurrentStatus">审批中</b></div>
+      </div>
+      <div class="section-title">审批记录</div>
+      <table class="audit-record-table">
+        <thead>
+          <tr><th style="width:56px">折叠</th><th>操作人</th><th>操作状态</th><th>接收时间</th><th>操作时间</th><th>操作耗时</th></tr>
+        </thead>
+        <tbody id="auditRecordTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAuditModal()">取消</button>
+      <button class="btn danger" onclick="rejectAudit()">驳回</button>
+      <button class="btn primary" onclick="approveAudit()">通过</button>
+    </div>
+  </div>
+</div>
+
+<!-- 审批记录弹窗 -->
+<div class="modal-overlay" id="auditRecordModal">
+  <div class="modal-panel">
+    <div class="modal-header"><h3>审批记录</h3><button class="modal-close" onclick="closeAuditRecordModal()">✕</button></div>
+    <div class="modal-body" id="auditRecordContent"></div>
+  </div>
+</div>
+
+<!-- 邮件记录抽屉 -->
+<div class="drawer-overlay" id="emailDrawerOverlay">
+  <div class="drawer-panel">
+    <div class="drawer-header"><h3 id="emailDrawerTitle">邮件记录</h3><button class="modal-close" onclick="closeEmailDrawer()">✕</button></div>
+    <div class="drawer-body" id="emailDrawerBody"></div>
+  </div>
+</div>
+
+<!-- 审核备注弹窗 -->
+<div class="modal-overlay" id="auditRemarkModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h3>审核备注</h3><button class="modal-close" onclick="closeAuditRemark()">✕</button></div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:#666;margin-bottom:10px;">患者：<span id="remarkPatient" style="color:#1872a7;font-weight:600;"></span></div>
+      <textarea id="remarkText" rows="5" placeholder="请输入审核备注…" style="width:100%;padding:10px;border:1px solid #d9d9d9;border-radius:6px;font-size:13.5px;font-family:inherit;resize:vertical;outline:none;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAuditRemark()">取消</button>
+      <button class="btn primary" onclick="saveAuditRemark()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 数据（与截图一致）====================
+let auditOrg = 'hengrui';
+let auditSubTab = 'pending';
+
+// 转义 HTML，防止备注内容破坏结构
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+let currentPage = 1;
+let currentPageSize = 10;
+
+const auditData = {
+  hengrui: [
+    { patientNo:'PT_CN029_0874', auditType:'入组审批', abbr:'HYWU', sex:'男', age:44, schemeNo:'SHR-1918-305', centerNo:'CN029', center:'复旦大学附属中山医院青浦分院', matchRate:'91.18%', submitter:'张春', submitTime:'2026-08-14 09:30' },
+    { patientNo:'PT_CN006_0742', auditType:'入组审批', abbr:'ZYRO', sex:'女', age:54, schemeNo:'SHR-1918-305', centerNo:'CN006', center:'柳州市人民医院', matchRate:'94.12%', submitter:'赖静华', submitTime:'2026-08-14 09:25' },
+    { patientNo:'PT_CN012_0884', auditType:'预筛审批', abbr:'CZBI', sex:'男', age:52, schemeNo:'SHR-1918-305', centerNo:'CN012', center:'丽水市中心医院', matchRate:'0.0%', submitter:'江璐曦', submitTime:'2026-08-14 09:20' },
+    { patientNo:'PT_CN112_2293', auditType:'筛选审批', abbr:'MLDI', sex:'女', age:57, schemeNo:'HRS9531-310', centerNo:'CN112', center:'中国医学科学院阜外医院深圳医院', matchRate:'0.0%', submitter:'白金', submitTime:'2026-08-14 09:15' },
+    { patientNo:'PT_CN092_2899', auditType:'预筛审批', abbr:'ZXTU', sex:'女', age:48, schemeNo:'HRS-8080-305', centerNo:'CN092', center:'中山大学肿瘤防治中心', matchRate:'0.0%', submitter:'陈晓维', submitTime:'2026-08-14 09:10' },
+    { patientNo:'PT_CN022_0633', auditType:'入组审批', abbr:'FEGA', sex:'男', age:56, schemeNo:'SHR-1918-305', centerNo:'CN022', center:'南通市人民医院', matchRate:'94.12%', submitter:'梅婉婷', submitTime:'2026-08-14 09:05' },
+  ],
+  kexin: [
+    { patientNo:'PT_KX001_0101', auditType:'预筛审批', abbr:'KXAB', sex:'男', age:51, schemeNo:'KX-2024-01', centerNo:'KX01', center:'科信医学研究中心', matchRate:'96.0%', submitter:'陈医生', submitTime:'2026-08-13 16:40' },
+    { patientNo:'PT_KX002_0202', auditType:'筛选审批', abbr:'KXCD', sex:'女', age:59, schemeNo:'KX-2024-02', centerNo:'KX02', center:'科信第二研究中心', matchRate:'88.5%', submitter:'李护士', submitTime:'2026-08-13 15:20' },
+  ],
+  yunying: [
+    { patientNo:'PT_YY099_0001', auditType:'入组审批', abbr:'YYOP', sex:'女', age:55, schemeNo:'YY-OPS-09', centerNo:'YY09', center:'运营合作中心 A', matchRate:'98.0%', submitter:'运营-张', submitTime:'2026-08-12 14:10' },
+  ]
+};
+
+const auditDoneData = {
+  hengrui: [
+    { patientNo:'PT_CN029_1001', auditType:'入组审批', abbr:'HYWX', sex:'男', age:43, schemeNo:'SHR-1918-305', centerNo:'CN029', center:'复旦大学附属中山医院青浦分院', matchRate:'97.0%', submitter:'张春', submitTime:'2026-08-10 11:20' },
+    { patientNo:'PT_CN006_1002', auditType:'预筛审批', abbr:'ZYRX', sex:'女', age:58, schemeNo:'SHR-1918-305', centerNo:'CN006', center:'柳州市人民医院', matchRate:'95.5%', submitter:'赖静华', submitTime:'2026-08-09 10:45' },
+  ],
+  kexin: [],
+  yunying: []
+};
+
+// 本人（当前登录用户）历史参与过的所有审核 — 审核日志
+const auditLogData = [
+  { screenNo:'CN029_0874', patientNo:'PT_CN029_0874', auditType:'入组审批', auditName:'入组资格复审', abbr:'HYWU', sex:'男', age:44, schemeNo:'SHR-1918-305', centerNo:'CN029', center:'复旦大学附属中山医院青浦分院', matchRate:'91.18%', myRole:'入组审批员', myResult:'通过', latestOperator:'张春', latestTime:'2026-08-14 10:05', joinTime:'2026-08-14 09:40', finishTime:'2026-08-14 10:05' },
+  { screenNo:'CN029_1001', patientNo:'PT_CN029_1001', auditType:'入组审批', auditName:'入组资格初审', abbr:'HYWX', sex:'男', age:43, schemeNo:'SHR-1918-305', centerNo:'CN029', center:'复旦大学附属中山医院青浦分院', matchRate:'97.0%', myRole:'入组审批员', myResult:'通过', latestOperator:'张春', latestTime:'2026-08-10 11:50', joinTime:'2026-08-10 11:25', finishTime:'2026-08-10 11:50' },
+  { screenNo:'CN012_0884', patientNo:'PT_CN012_0884', auditType:'预筛审批', auditName:'预筛资格核查', abbr:'CZBI', sex:'男', age:52, schemeNo:'SHR-1918-305', centerNo:'CN012', center:'丽水市中心医院', matchRate:'0.0%', myRole:'预筛审批员', myResult:'驳回', latestOperator:'江璐曦', latestTime:'2026-08-14 09:35', joinTime:'2026-08-14 09:22', finishTime:'2026-08-14 09:35' },
+  { screenNo:'CN006_1002', patientNo:'PT_CN006_1002', auditType:'预筛审批', auditName:'预筛资格核查', abbr:'ZYRX', sex:'女', age:58, schemeNo:'SHR-1918-305', centerNo:'CN006', center:'柳州市人民医院', matchRate:'95.5%', myRole:'预筛审批员', myResult:'通过', latestOperator:'赖静华', latestTime:'2026-08-09 11:10', joinTime:'2026-08-09 10:50', finishTime:'2026-08-09 11:10' },
+  { screenNo:'KX001_0101', patientNo:'PT_KX001_0101', auditType:'预筛审批', auditName:'预筛资格核查', abbr:'KXAB', sex:'男', age:51, schemeNo:'KX-2024-01', centerNo:'KX01', center:'科信医学研究中心', matchRate:'96.0%', myRole:'预筛审批员', myResult:'通过', latestOperator:'陈医生', latestTime:'2026-08-13 17:10', joinTime:'2026-08-13 16:45', finishTime:'2026-08-13 17:10' },
+  { screenNo:'CN112_2293', patientNo:'PT_CN112_2293', auditType:'筛选审批', auditName:'筛选失败复核', abbr:'MLDI', sex:'女', age:57, schemeNo:'HRS9531-310', centerNo:'CN112', center:'中国医学科学院阜外医院深圳医院', matchRate:'0.0%', myRole:'筛选审批员', myResult:'驳回', latestOperator:'白金', latestTime:'2026-08-14 09:28', joinTime:'2026-08-14 09:18', finishTime:'2026-08-14 09:28' },
+  { screenNo:'YY099_0001', patientNo:'PT_YY099_0001', auditType:'入组审批', auditName:'入组资格复审', abbr:'YYOP', sex:'女', age:55, schemeNo:'YY-OPS-09', centerNo:'YY09', center:'运营合作中心 A', matchRate:'98.0%', myRole:'入组审批员', myResult:'通过', latestOperator:'运营-张', latestTime:'2026-08-12 14:40', joinTime:'2026-08-12 14:15', finishTime:'2026-08-12 14:40' },
+];
+
+const emailData = {
+  'PT_CN029_0874': {
+    '预筛阶段': [
+      { title:'【PT_CN029_0874】入组资格预审提醒', time:'2026-06-25 09:12', body:'您好，该患者的入组资料已提交，请于 48 小时内完成审批。', meta:'发件人：张春 ｜ 收件人：CRA专员 ｜ 状态：已读' },
+      { title:'【PT_CN029_0874】审批通过通知', time:'2026-06-26 14:30', body:'患者入组审批已通过，已进入下一阶段。', meta:'发件人：CRA专员 ｜ 收件人：张春 ｜ 状态：已读' },
+    ]
+  }
+};
+
+// ==================== 渲染 ====================
+function getList() {
+  let list;
+  if (auditSubTab === 'log') list = auditLogData;
+  else {
+    const src = auditSubTab === 'pending' ? auditData : auditDoneData;
+    list = src[auditOrg] || [];
+  }
+  // 审批备注模糊过滤
+  const kw = (window._fAuditRemark || '').trim().toLowerCase();
+  if (kw) {
+    list = list.filter(r => (r.remark || '').toLowerCase().includes(kw));
+  }
+  // 中心名称多选过滤（按中心号）
+  const centers = getCenterSelected();
+  if (centers.length) {
+    list = list.filter(r => centers.includes(r.centerNo));
+  }
+  return list;
+}
+
+function matchRateClass(r) {
+  const v = parseFloat(r.matchRate);
+  if (v === 0) return 'match-rate zero';
+  if (v >= 90) return 'match-rate high';
+  return 'match-rate';
+}
+
+function actionCell(r) {
+  return `<span class="action-link" onclick="openDetail('${r.patientNo}')">查看</span>` +
+         `<span class="action-link" onclick="openAuditRecordModal('${r.patientNo}')">审核记录</span>` +
+         `<span class="action-link" onclick="openEmailDrawer('${r.patientNo}')">邮件记录</span>` ;
+}
+
+// 审核备注弹窗
+let _remarkPatient = '';
+function openAuditRemark(patientNo) {
+  const r = (currentList || auditLogData).find(x => x.patientNo === patientNo);
+  _remarkPatient = patientNo;
+  document.getElementById('remarkPatient').textContent = patientNo + (r ? '（' + r.abbr + '）' : '');
+  document.getElementById('remarkText').value = r ? (r.remark || '') : '';
+  document.getElementById('auditRemarkModal').style.display = 'flex';
+}
+function closeAuditRemark() {
+  document.getElementById('auditRemarkModal').style.display = 'none';
+}
+function saveAuditRemark() {
+  const txt = document.getElementById('remarkText').value.trim();
+  const r = (currentList || auditLogData).find(x => x.patientNo === _remarkPatient);
+  if (r) r.remark = txt;
+  closeAuditRemark();
+}
+
+function renderTable() {
+  const isLog = auditSubTab === 'log';
+  const all = getList();
+  const total = all.length;
+  const totalPages = Math.max(1, Math.ceil(total / currentPageSize));
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * currentPageSize;
+  const rows = all.slice(start, start + currentPageSize);
+
+  // 表头（审核日志模式列不同）
+  const head = document.getElementById('auditTableHead');
+  if (isLog) {
+    head.innerHTML = `<tr>
+      <th class="col-seq">序号</th>
+      <th>筛选号</th>
+      <th>患者编号</th>
+      <th>患者缩写</th>
+      <th>性别</th>
+      <th>年龄</th>
+      <th>方案编号</th>
+      <th>中心号</th>
+      <th>中心</th>
+      <th>匹配率</th>
+      <th>最新操作人</th>
+      <th>最新操作时间</th>
+      <th>审核名称</th>
+      <th>审核状态</th>
+  
+      <th class="col-action">操作</th>
+    </tr>`;
+  } else {
+    head.innerHTML = `<tr>
+      <th class="col-seq">序号</th>
+      <th>患者编号</th>
+      <th>审批类型</th>
+      <th>患者缩写</th>
+      <th>性别</th>
+      <th>年龄</th>
+      <th>方案编号</th>
+      <th>中心号</th>
+      <th>中心</th>
+      <th>匹配率</th>
+      <th>提交人</th>
+      <th>提交时间</th>
+
+      <th class="col-action">操作</th>
+    </tr>`;
+  }
+
+  const body = document.getElementById('auditTableBody');
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="${isLog ? 16 : 14}" class="empty-tip">暂无数据</td></tr>`;
+  } else if (isLog) {
+    body.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td class="col-seq">${start + i + 1}</td>
+        <td>${r.screenNo || '-'}</td>
+        <td>${r.patientNo}</td>
+        <td>${r.abbr}</td>
+        <td>${r.sex}</td>
+        <td>${r.age}</td>
+        <td>${r.schemeNo}</td>
+        <td>${r.centerNo}</td>
+        <td>${r.center}</td>
+        <td class="${matchRateClass(r)}">${r.matchRate}</td>
+        <td>${r.latestOperator || r.submitter || '-'}</td>
+        <td>${r.latestTime || r.finishTime || r.joinTime || '-'}</td>
+        <td>${r.auditName || '-'}</td>
+        <td class="log-result ${r.myResult === '通过' ? 'pass' : 'reject'}">${r.myResult || '-'}</td>
+        <td class="action-cell col-action">${actionCell(r)}</td>
+      </tr>
+    `).join('');
+  } else {
+    body.innerHTML = rows.map((r, i) => `
+      <tr>
+        <td class="col-seq">${start + i + 1}</td>
+        <td>${r.patientNo}</td>
+        <td>${r.auditType}</td>
+        <td>${r.abbr}</td>
+        <td>${r.sex}</td>
+        <td>${r.age}</td>
+        <td>${r.schemeNo}</td>
+        <td>${r.centerNo}</td>
+        <td>${r.center}</td>
+        <td class="${matchRateClass(r)}">${r.matchRate}</td>
+        <td>${r.submitter}</td>
+        <td>${r.submitTime}</td>
+        <td class="action-cell col-action">${actionCell(r)}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('totalCount').textContent = total;
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const c = document.getElementById('pageControls');
+  let h = `<button class="page-btn" onclick="goPage(1)" ${currentPage===1?'disabled':''}>&laquo;</button>`;
+  h += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>&lsaquo;</button>`;
+  for (let p = 1; p <= totalPages; p++) h += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  h += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>&rsaquo;</button>`;
+  h += `<button class="page-btn" onclick="goPage(${totalPages})" ${currentPage===totalPages?'disabled':''}>&raquo;</button>`;
+  c.innerHTML = h;
+}
+
+function goPage(p) {
+  const t = Math.max(1, Math.ceil(getList().length / currentPageSize));
+  if (p<1||p>t) return; currentPage=p; renderTable();
+}
+function changePageSize() { currentPageSize=parseInt(document.getElementById('pageSize').value); currentPage=1; renderTable(); }
+document.getElementById('pageJump')?.addEventListener('keydown', e=>{ if(e.key==='Enter'){ goPage(parseInt(e.target.value)||1); e.target.value=''; }});
+
+// ==================== Tab ====================
+function setAuditOrg(org) {
+  auditOrg=org;
+  document.querySelectorAll('#orgTabs .org-tab').forEach(b=>b.classList.toggle('active', b.getAttribute('onclick').includes("'"+org+"'")));
+  currentPage=1; renderTable();
+}
+function setAuditSubTab(sub) {
+  auditSubTab=sub;
+  document.querySelectorAll('#subTabs .sub-tab').forEach(b=>b.classList.toggle('active', b.getAttribute('onclick').includes("'"+sub+"'")));
+  document.body.classList.toggle('tab-log', sub==='log');
+  const lbl=document.getElementById('fDateLabel');
+  if (lbl) lbl.textContent = sub==='log' ? '最新操作时间' : '提交日期';
+  currentPage=1; renderTable();
+}
+
+// ==================== 筛选 ====================
+function applyFilter() {
+  const informed = getInformedSelected();
+  // 审批备注关键字
+  const remarkKw = (document.getElementById('fAuditRemark')?.value || '').trim();
+  window._fAuditRemark = remarkKw;
+  const centers = getCenterSelected();
+  let msg = '查询（原型演示）：条件已读取';
+  if (informed.length) msg += '\n患者标签·知情状态：' + informed.join('、');
+  if (centers.length) msg += '\n中心：' + getCenterNames().join('、');
+  if (remarkKw) msg += '\n审批备注：' + remarkKw;
+  currentPage = 1;
+  renderTable();
+  alert(msg);
+}
+function resetFilter() {
+  ['fScreenNo','fPatientNo','fPatientAbbr','fSchemeNo','fAuditType','fAuditStatus','fOperator','fAuditor','fDateFrom','fDateTo','fEmailSent','fSortField','fSortDir','fAuditRemark'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  window._fAuditRemark = '';
+  document.querySelectorAll('#fInformedPanel input[type=checkbox]').forEach(cb=>cb.checked=false);
+  onInformedChange();
+  resetCenter();
+  currentPage = 1;
+  renderTable();
+}
+
+// ==================== 患者标签·知情状态（多选下拉）====================
+function toggleInformed() {
+  const panel = document.getElementById('fInformedPanel');
+  const open = panel.classList.contains('open');
+  document.querySelectorAll('.multi-select-panel.open').forEach(p=>p.classList.remove('open'));
+  if (!open) panel.classList.add('open');
+}
+function onInformedChange() {
+  const cbs = Array.from(document.querySelectorAll('#fInformedPanel input[type=checkbox]'));
+  const sel = cbs.filter(cb=>cb.checked).map(cb=>cb.value);
+  const trigger = document.getElementById('fInformedTrigger');
+  if (!sel.length) {
+    trigger.textContent = '请选择知情状态';
+    trigger.classList.add('placeholder');
+  } else {
+    trigger.textContent = '已选 ' + sel.join('/') + '（' + sel.length + '）';
+    trigger.classList.remove('placeholder');
+  }
+}
+function getInformedSelected() {
+  return Array.from(document.querySelectorAll('#fInformedPanel input[type=checkbox]'))
+    .filter(cb=>cb.checked).map(cb=>cb.value);
+}
+// 点击空白处关闭下拉
+document.addEventListener('click', e=>{
+  if (!e.target.closest('#fInformedWrap')) {
+    document.getElementById('fInformedPanel')?.classList.remove('open');
+  }
+  if (!e.target.closest('#fCenterWrap')) {
+    document.getElementById('fCenterPanel')?.classList.remove('open');
+  }
+});
+
+// ==================== 中心名称 联想多选 ====================
+const CENTER_OPTIONS = [
+  { no: 'CN029', name: '复旦大学附属中山医院青浦分院' },
+  { no: 'CN006', name: '柳州市人民医院' },
+  { no: 'CN012', name: '丽水市中心医院' },
+  { no: 'CN112', name: '中国医学科学院阜外医院深圳医院' },
+  { no: 'CN092', name: '中山大学肿瘤防治中心' },
+  { no: 'CN022', name: '南通市人民医院' },
+  { no: 'KX01', name: '科信医学研究中心' },
+  { no: 'KX02', name: '科信第二研究中心' },
+  { no: 'YY09', name: '运营合作中心 A' },
+];
+
+function renderCenterOptions() {
+  const box = document.getElementById('fCenterOptions');
+  if (!box) return;
+  const kw = (document.getElementById('fCenterSearch')?.value || '').trim().toLowerCase();
+  const sel = getCenterSelected();
+  const list = CENTER_OPTIONS.filter(o =>
+    !kw || o.no.toLowerCase().includes(kw) || o.name.toLowerCase().includes(kw)
+  );
+  box.innerHTML = list.map(o => {
+    const checked = sel.includes(o.no) ? 'checked' : '';
+    return `<label class="multi-select-option">
+      <input type="checkbox" value="${o.no}" ${checked} onchange="onCenterChange()">
+      <span class="center-no">${o.no}</span>
+      <span class="center-name">${o.name}</span>
+    </label>`;
+  }).join('');
+  document.getElementById('fCenterEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+function toggleCenter() {
+  const panel = document.getElementById('fCenterPanel');
+  const open = panel.classList.contains('open');
+  document.querySelectorAll('.multi-select-panel.open').forEach(p=>p.classList.remove('open'));
+  if (!open) {
+    panel.classList.add('open');
+    renderCenterOptions();
+    const s = document.getElementById('fCenterSearch');
+    if (s) { s.value=''; s.focus(); }
+  }
+}
+
+function filterCenterOptions() {
+  renderCenterOptions();
+}
+
+function onCenterChange() {
+  const sel = getCenterSelected();
+  const trigger = document.getElementById('fCenterTrigger');
+  if (!sel.length) {
+    trigger.textContent = '请选择中心（可搜索多选）';
+    trigger.classList.add('placeholder');
+  } else {
+    trigger.textContent = '已选 ' + sel.length + ' 个中心';
+    trigger.classList.remove('placeholder');
+  }
+}
+
+function getCenterSelected() {
+  return Array.from(document.querySelectorAll('#fCenterOptions input[type=checkbox]'))
+    .filter(cb=>cb.checked).map(cb=>cb.value);
+}
+
+function getCenterNames() {
+  const sel = getCenterSelected();
+  return CENTER_OPTIONS.filter(o => sel.includes(o.no)).map(o => o.name);
+}
+
+function resetCenter() {
+  document.querySelectorAll('#fCenterOptions input[type=checkbox]').forEach(cb=>cb.checked=false);
+  const s = document.getElementById('fCenterSearch');
+  if (s) s.value = '';
+  onCenterChange();
+}
+
+// ==================== 查看 ====================
+function openDetail(no){
+  // 跳转到匹配详情（查看）页，并标记来源为审核列表，以便退回时回到本列表
+  window.location.href = 'match-detail-check.html?from=audit&patientNo=' + encodeURIComponent(no);
+}
+
+// ==================== 审批弹窗 ====================
+let _curId=null,_curSn=null;
+function openAuditModal(id,sn){
+  _curId=id;_curSn=sn;
+  document.getElementById('auditModalAuditName').textContent=(id?id:'—')+'-审批中';
+  document.getElementById('auditCurrentStatus').textContent='审批中';
+  document.getElementById('auditRecordTableBody').innerHTML=[
+    {op:'张春',st:'已提交',cls:'submitted',recv:'',time:'2026-08-14 09:30',dur:''},
+    {op:'CRA专员',st:'待审批',cls:'pending',recv:'2026-08-14 09:30',time:'',dur:''},
+  ].map(r=>`<tr><td><span class="fold-icon">&rsaquo;</span></td><td>${r.op}</td><td><span class="audit-status-tag ${r.cls}">${r.st}</span></td><td>${r.recv}</td><td>${r.time}</td><td>${r.dur}</td></tr>`).join('');
+  document.getElementById('auditModal').classList.add('open');
+}
+function closeAuditModal(){ document.getElementById('auditModal').classList.remove('open'); }
+function rejectAudit(){ if(confirm('确认驳回？')){ alert('已驳回'); closeAuditModal(); } }
+function approveAudit(){ if(confirm('确认通过？')){ alert('已通过'); closeAuditModal(); } }
+
+// ==================== 审批记录弹窗 ====================
+function openAuditRecordModal(no){
+  document.getElementById('auditRecordContent').innerHTML=
+    buildSection('预筛审批记录',[
+      {op:'沈夏萍',role:'临床协调员',st:'已提交',cls:'submitted',t:'2026-06-29 18:52',d:'—'},
+      {op:'魏燕玲',role:'CRA专员',st:'待审批',cls:'pending',t:'—',d:'—'}
+    ])+
+    buildSection('入组审批记录',[
+      {op:'王主任',role:'入组审批员',st:'待审批',cls:'pending',t:'—',d:'—'}
+    ]);
+  document.getElementById('auditRecordModal').classList.add('open');
+}
+function closeAuditRecordModal(){ document.getElementById('auditRecordModal').classList.remove('open'); }
+function buildSection(title,list){
+  return `<div class="audit-section">
+    <div class="audit-section-header" onclick="toggleSec(this)"><span>${title}</span><span class="audit-section-toggle">^ 收起</span></div>
+    <div style="margin:10px 14px"><div class="audit-abnormal-notice"><span class="audit-abnormal-label">非正常流程</span><span>提示：若需要走正常流程，请驳回重新提交审批</span><div class="audit-abnormal-reason"><strong>原因：</strong>该患者比较特殊，经过跟医学经理沟通，需要走特殊审批流程</div></div></div>
+    <div class="audit-section-actions"><button class="btn" onclick="alert('下载（原型）')">下载</button><button class="btn primary" onclick="alert('预筛沟通（原型）')">预筛沟通</button></div>
+    <table class="audit-record-table"><thead><tr><th style="width:56px">折叠</th><th>操作人</th><th>角色</th><th>状态</th><th>时间</th><th>耗时</th></tr></thead><tbody>`+
+    list.map((r,i)=>`<tr><td style="text-align:center">${i===0?'<span style="cursor:pointer;color:#999">&rsaquo;</span>':''}</td><td>${r.op}</td><td>${r.role||''}</td><td><span class="audit-status-tag ${r.cls}">${r.st}</span></td><td>${r.t}</td><td>${r.d}</td></tr>`).join('')+`</tbody></table></div>`;
+}
+function toggleSec(h){
+  const s=h.closest('.audit-section'),tb=s.querySelector('.audit-record-table'),hidd=tb.style.display==='none';
+  tb.style.display=hidd?'':'none'; h.querySelector('.audit-section-toggle').textContent=hidd?'^ 收起':'∨ 展开';
+}
+
+// ==================== 邮件记录抽屉 ====================
+function openEmailDrawer(no){
+  const d=emailData[no]||{},stages=Object.keys(d);
+  document.getElementById('emailDrawerTitle').textContent=no+' 邮件记录';
+  document.getElementById('emailDrawerBody').innerHTML=!stages.length?'<div class="empty-tip">暂无邮件记录</div>':
+    stages.map(s=>`<div class="email-stage"><div class="email-stage-header"><span class="email-stage-dot"></span><span class="email-stage-title">${s}</span><span class="email-stage-count">${d[s].length} 封</span></div><div class="email-list">${
+      d[s].map(m=>`<div class="email-item"><div class="email-item-head"><span class="email-item-title">${m.title}</span><span class="email-item-time">${m.time}</span></div><div class="email-item-body">${m.body}</div><div class="email-item-meta">${m.meta}</div></div>`).join('')
+    }</div></div>`).join('');
+  document.getElementById('emailDrawerOverlay').classList.add('open');
+}
+function closeEmailDrawer(){ document.getElementById('emailDrawerOverlay').classList.remove('open'); }
+
+// ==================== 初始化 ====================
+document.addEventListener('DOMContentLoaded',()=>renderTable());
+</script>
+</body>
+</html>

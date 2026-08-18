@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<!--
+  患者标签配置 · 独立页面原型
+  功能：独立页面形式的患者标签配置，支持状态类型/选项的启用停用、字段联动、历史回填开关。
+  使用方法：直接双击在浏览器打开本文件即可。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>患者标签配置</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@6.5.0/css/all.min.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #1d2129; }
+
+  /* ===== 页面头部 ===== */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #fff;
+    border-bottom: 1px solid #e5e6eb;
+  }
+  .page-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #1d2129;
+  }
+  .header-close {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #86909c;
+    font-size: 20px;
+    transition: all .15s;
+  }
+  .header-close:hover { background: #f2f3f5; color: #333; }
+
+  /* ===== 页面主体 ===== */
+  .page-body {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  /* 工具栏 */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .toolbar-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2129;
+    white-space: nowrap;
+  }
+
+  /* 按钮通用 */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 7px 16px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .btn-sm { padding: 5px 14px; font-size: 13px; }
+  .btn-default {
+    background: #fff;
+    color: #4e5969;
+    border: 1px solid #c9cdd4;
+  }
+  .btn-default:hover { border-color: #165DFF; color: #165DFF; }
+  .btn-primary {
+    background: #165DFF;
+    color: #fff;
+  }
+  .btn-primary:hover { background: #0e42d6; }
+
+  /* 历史回填区域 */
+  .ps-update-history {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    background: #f7f8fa;
+    border: 1px solid #e5e6eb;
+    border-radius: 10px;
+    margin-bottom: 20px;
+  }
+  .ps-update-history-text { flex: 1; }
+  .ps-update-history-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    font-size: 14px;
+  }
+  .ps-update-history-desc {
+    font-size: 13px;
+    color: #86909c;
+    line-height: 1.7;
+    margin-top: 3px;
+  }
+
+  /* ===== 状态类型卡片 ===== */
+  .ps-group-card {
+    background: #fff;
+    border: 1px solid #e5e6eb;
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+  }
+  .ps-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .ps-group-name-ro {
+    font-weight: 700;
+    color: #1d2129;
+    font-size: 16px;
+  }
+  .ps-group-head-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ps-group-del {
+    font-size: 13px;
+    color: #f53f3f;
+    cursor:pointer;
+  }
+  .ps-group-desc {
+    font-size: 13px;
+    color: #86909c;
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  /* ===== 状态选项行 ===== */
+  .ps-status-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid #f0f1f3;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: #fafbfc;
+    flex-wrap: wrap;
+  }
+  .ps-status-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 50%;
+    background: #165DFF;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ps-status-name {
+    font-size: 14px;
+    color: #333;
+    flex: 1;
+    min-width: 80px;
+  }
+  .ps-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .ps-action-label {
+    font-size: 13px;
+    color: #86909c;
+  }
+  .ps-del {
+    font-size: 13px;
+    color: #f53f3f;
+    cursor: pointer;
+  }
+
+  /* 开关 */
+  .ps-switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .ps-switch input { opacity: 0; width: 0; height: 0; }
+  .ps-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #c9cdd4;
+    border-radius: 24px;
+    transition: .2s;
+  }
+  .ps-slider:before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+  }
+  .ps-switch input:checked + .ps-slider { background: #165DFF; }
+  .ps-switch input:checked + .ps-slider:before { transform: translateX(18px); }
+
+  /* 联动配置区 */
+  .ps-link-conds {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding-left: 34px;
+  }
+  .ps-cond-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ps-link-select {
+    border: 1px solid #c9cdd4;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    color: #1d2129;
+    background: #fff;
+    outline: none;
+    min-width: 140px;
+  }
+  .ps-link-select:focus { border-color: #165DFF; }
+  .ps-link-val { min-width: 110px; }
+  .ps-link-cond-del {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: transparent;
+    color: #c9cdd4;
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .ps-link-cond-del:hover { background: #ffece8; color: #f53f3f; }
+  .ps-link-add {
+    border: 1px dashed #165DFF;
+    background: #fff;
+    color: #165DFF;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .ps-link-add:hover { background: #165DFF; color: #fff; }
+
+  /* 新增行 */
+  .ps-add-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-left: 34px;
+  }
+  .ps-add-input {
+    flex: 1;
+    height: 36px;
+    border: 1px solid #c9cdd4;
+    border-radius: 6px;
+    padding: 0 12px;
+    font-size: 13px;
+    outline: none;
+    max-width: 280px;
+  }
+  .ps-add-input:focus { border-color: #165DFF; }
+  .ps-add-status {
+    flex: 0 0 auto;
+    border: 1px solid #165DFF;
+    background: #e8f3ff;
+    color: #165DFF;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .ps-add-status:hover { background: #d6e8ff; }
+  .ps-add-group-btn {
+    flex: 0 0 auto;
+    border: 1px solid #165DFF;
+    background: #165DFF;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .ps-add-group-btn:hover { background: #0e42d6; }
+
+  /* 底部操作栏 */
+  .footer-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 0 40px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: 30%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.75);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 100100;
+    opacity: 0;
+    transition: opacity .25s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  /* 禁用态 */
+  .ps-group-disabled { opacity: .55; }
+  .ps-group-disabled .ps-add-row,
+  .ps-group-disabled .ps-status-row .ps-row-actions { filter: grayscale(1); pointer-events: none; }
+</style>
+</head>
+<body>
+
+  <!-- 页面头部 -->
+  <div class="page-header">
+    <h1>患者标签配置</h1>
+    <span class="header-close" onclick="history.back()" title="关闭">&times;</span>
+  </div>
+
+  <!-- 页面主体 -->
+  <div class="page-body">
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <span class="toolbar-label">当前项目</span>
+      <button class="btn btn-default btn-sm" onclick="resetPsConfig()"><i class="fa-solid fa-rotate-left" style="margin-right:4px"></i>恢复默认</button>
+    </div>
+
+    <!-- 是否更新历史数据 -->
+    <div class="ps-update-history">
+      <label class="ps-switch" title="是否更新历史数据" style="flex-shrink:0;margin-top:2px">
+        <input type="checkbox" id="psUpdateHistory" onchange="window.PATIENT_STATUS_UPDATE_HISTORY=this.checked">
+        <span class="ps-slider"></span>
+      </label>
+      <div class="ps-update-history-text">
+        <div class="ps-update-history-title">是否更新历史数据</div>
+        <div class="ps-update-history-desc">开启后，保存配置时会按各选项的「联动字段」设置，自动回填 / 校正历史患者的状态数据（后端批量任务）。</div>
+      </div>
+    </div>
+
+    <!-- 配置面板（JS 动态渲染） -->
+    <div id="patientStatusPanel"></div>
+
+    <!-- 底部按钮 -->
+    <div class="footer-bar">
+      <button class="btn btn-default btn-sm" onclick="history.back()">关闭</button>
+      <button class="btn btn-primary btn-sm" onclick="savePsConfig()"><i class="fa-solid fa-floppy-disk" style="margin-right:6px"></i>保存配置（本项目生效）</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  /* ===================== 默认标签配置 ===================== */
+  const _DEFAULT_PS_GROUPS = [
+    { key:'consent', name:'知情状态', enabled:true, options:[
+      {id:'A', name:'待确认知情意向', enabled:true, links:[]},
+      {id:'B', name:'待签署知情', enabled:true, links:[]},
+      {id:'C', name:'已签署知情', enabled:true, links:[{field:'informedTime', op:'notEmpty'}]},
+      {id:'D', name:'知情失败', enabled:true, links:[{field:'screenFail', op:'eq', value:'是'}]},
+      {id:'E', name:'待定', enabled:true, links:[]}
+    ]},
+    { key:'enroll', name:'入组条件审核', enabled:true, options:[
+      {id:'A', name:'符合入组条件', enabled:true, links:[]},
+      {id:'B', name:'已有资料符合，仍需补充材料', enabled:true, links:[]},
+      {id:'C', name:'不符合（驳回）', enabled:true, links:[]}
+    ]}
+  ];
+
+  function _cleanPsName(name){
+    if(typeof name !== 'string') return name;
+    return name.replace(/（[^（）]*(?:联动|审核)[^（）]*）$/g, '').trim();
+  }
+  function _normalizePsGroups(groups){
+    (groups||[]).forEach(function(g){
+      (g.options||[]).forEach(function(s){
+        if(typeof s.name === 'string') s.name = _cleanPsName(s.name);
+        if(s.linkField && !s.links){
+          if(s.linkField==='informedTime') s.links = [{field:'informedTime', op:'notEmpty'}];
+          else if(s.linkField==='enrollAudit') s.links = [{field:'auditType', op:'eq', value:'入组审批'},{field:'auditResult', op:'eq', value:'通过'}];
+          else s.links = [{field:s.linkField, op:'notEmpty'}];
+          delete s.linkField;
+        }
+        if(!Array.isArray(s.links)) s.links = [];
+      });
+    });
+    return groups;
+  }
+  function _loadPsGroups(){
+    const base = JSON.parse(JSON.stringify(_DEFAULT_PS_GROUPS));
+    let saved = null;
+    try{ const g = JSON.parse(localStorage.getItem('ps_groups')); if(Array.isArray(g) && g.length) saved = _normalizePsGroups(g); }catch(e){}
+    if(!saved) return _normalizePsGroups(base);
+    saved.forEach(function(sg){
+      const bg = base.find(function(x){ return x.key === sg.key; });
+      if(!bg) { base.push(JSON.parse(JSON.stringify(sg))); return; }
+      bg.enabled = sg.enabled;
+      (sg.options||[]).forEach(function(so){
+        if(typeof so.name === 'string') so.name = _cleanPsName(so.name);
+        const bo = bg.options.find(function(x){ return x.id === so.id; });
+        if(bo){
+          bo.enabled = so.enabled;
+          if(Array.isArray(so.links)) bo.links = JSON.parse(JSON.stringify(so.links));
+          if(typeof so.name === 'string') bo.name = _cleanPsName(so.name);
+        } else {
+          const dup = bg.options.find(function(x){ return x.name === so.name; });
+          if(!dup) bg.options.push(JSON.parse(JSON.stringify(so)));
+        }
+      });
+    });
+    return _normalizePsGroups(base);
+  }
+  window.PATIENT_STATUS_GROUPS = _loadPsGroups();
+  function _savePsGroups(){ try{ localStorage.setItem('ps_groups', JSON.stringify(window.PATIENT_STATUS_GROUPS)); }catch(e){} }
+  function _findPsGroup(key){ return (window.PATIENT_STATUS_GROUPS||[]).find(function(g){return g.key===key;}); }
+  function _psEsc(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+
+  window.PATIENT_STATUS_UPDATE_HISTORY = false;
+
+  /* ===================== 可联动字段注册表 ===================== */
+  window.PATIENT_STATUS_LINK_FIELDS = {
+    informedTime:   { fieldLabel: '基本信息·知情时间', operators:['notEmpty'], values:[], get:function(pn){return'';} },
+    auditType:      { fieldLabel: '审核·审核类型',       operators:['eq','notEmpty'], values:['预筛审批','入组审批','筛选审批','主知情审批','导入审批','随机化审批'], get:function(pn){return'';} },
+    auditResult:    { fieldLabel: '审核·审核结论',       operators:['eq','notEmpty'], values:['通过','驳回'], get:function(pn){return'';} },
+    screenFail:     { fieldLabel: '基本信息·筛败',           operators:['eq'], values:['是','否'], get:function(pn){return'';} }
+  };
+  function _linkFieldKeys(){ return Object.keys(window.PATIENT_STATUS_LINK_FIELDS||{}); }
+
+  /* ===================== 渲染联动条件行 ===================== */
+  function _linkCondRow(key, id, cond, idx, total){
+    var fields = window.PATIENT_STATUS_LINK_FIELDS||{};
+    var fieldOpts = _linkFieldKeys().map(function(fk){
+      var f = fields[fk];
+      return '<option value="'+fk+'" '+(cond.field===fk?'selected':'')+'>'+_psEsc(f?f.fieldLabel:fk)+'</option>';
+    }).join('');
+    var f = fields[cond.field] || {operators:['notEmpty'], values:[]};
+    var opOpts = ['notEmpty','eq'].map(function(op){
+      var label = op==='notEmpty' ? '不为空' : '等于';
+      var ok = (f.operators||[]).indexOf(op)>=0;
+      return '<option value="'+op+'" '+(cond.op===op?'selected':'')+' '+(ok?'':'disabled')+'>'+label+'</option>';
+    }).join('');
+    var valOpts = (f.values||[]).map(function(v){
+      return '<option value="'+_psEsc(v)+'" '+(cond.value===v?'selected':'')+'">'+_psEsc(v)+'</option>';
+    }).join('');
+    var valSel = cond.op==='eq'
+      ? '<select class="ps-link-select ps-link-val" onchange="updatePsLinkCond(\''+key+'\',\''+id+'\','+idx+',\'value\',this.value)"><option value="">— 选值 —</option>'+valOpts+'</select>'
+      : '';
+    var delBtn = total > 1
+      ? '<span class="ps-link-cond-del" onclick="removePsLinkCond(\''+key+'\',\''+id+'\','+idx+')" title="删除该条件"><i class="fa-solid fa-xmark"></i></span>'
+      : '';
+    return '<div class="ps-cond-row">'
+      + '<select class="ps-link-select" onchange="updatePsLinkCond(\''+key+'\',\''+id+'\','+idx+',\'field\',this.value)">'+fieldOpts+'</select>'
+      + '<select class="ps-link-select" onchange="updatePsLinkCond(\''+key+'\',\''+id+'\','+idx+',\'op\',this.value)">'+opOpts+'</select>'
+      + valSel
+      + delBtn
+      + '</div>';
+  }
+
+  /* ===================== 主面板渲染 ===================== */
+  function psInnerHTML(){
+    var groups = window.PATIENT_STATUS_GROUPS || [];
+    var html = '';
+    groups.forEach(function(g){
+      var oi = 0;
+      var rows = (g.options||[]).map(function(s){
+        var _letter = String.fromCharCode(65 + (oi++));
+        var hasLinks = Array.isArray(s.links) && s.links.length > 0;
+        var linkCfg = hasLinks
+          ? ('<div class="ps-link-conds">'
+            + (s.links||[]).map(function(c,ci){ return _linkCondRow(g.key, s.id, c, ci, s.links.length); }).join('')
+            // + '<button class="ps-link-add" type="button" onclick="addPsLinkCond(\''+g.key+'\',\''+s.id+'\')"><i class="fa-solid fa-plus"></i> 添加联动字段（且）</button>'
+            + '</div>')
+          : '';
+        return '<div class="ps-status-row">'
+          + '<span class="ps-status-letter">'+_letter+'</span>'
+          + '<span class="ps-status-name">'+_psEsc(_cleanPsName(s.name))+'</span>'
+          + '<div class="ps-row-actions">'
+            + '<span class="ps-action-label">启用</span>'
+            + '<label class="ps-switch" title="启用 / 停用该状态">'
+              + '<input type="checkbox" '+(s.enabled!==false?'checked':'')+' onchange="togglePsStatus(\''+g.key+'\',\''+s.id+'\')">'
+              + '<span class="ps-slider"></span>'
+            + '</label>'
+            + '<span class="ps-action-label">联动</span>'
+            + '<label class="ps-switch" title="是否联动某个字段（可配置多字段与条件）">'
+              + '<input type="checkbox" '+(hasLinks?'checked':'')+' onchange="togglePsOptionLinks(\''+g.key+'\',\''+s.id+'\')">'
+              + '<span class="ps-slider"></span>'
+            + '</label>'
+            // + '<span class="ps-del" onclick="deletePsStatus(\''+g.key+'\',\''+s.id+'\')">删除</span>'
+          + '</div>'
+          + linkCfg
+        + '</div>';
+      }).join('');
+
+      html += '<div class="ps-group-card '+(g.enabled!==false?'':'ps-group-disabled')+'">'
+        + '<div class="ps-group-head">'
+          + '<span class="ps-group-name-ro">'+_psEsc(g.name)+'</span>'
+          + '<div class="ps-group-head-right">'
+            + '<label class="ps-switch" title="启用 / 停用整个类型">'
+              + '<input type="checkbox" '+(g.enabled!==false?'checked':'')+' onchange="togglePsGroup(\''+g.key+'\')">'
+              + '<span class="ps-slider"></span>'
+            + '</label>'
+            + '<span class="ps-group-del" onclick="deletePsGroup(\''+g.key+'\')"></span>'
+          + '</div>'
+        + '</div>'
+        + '<div class="ps-group-desc">该类型下每个选项可单独启用 / 停用，并可为「联动」配置多个字段条件（字段间为「且」关系）：每个字段可设置「不为空」或「等于某值」。</div>'
+        + (rows || '<div style="color:#bbb;font-size:13px;padding:8px 0;">暂无状态。</div>')
+        // + '<div class="ps-add-row">'
+        //   + '<input class="ps-add-input" id="psNew_'+g.key+'" placeholder="新增状态选项名称" />'
+        //   + '<button class="ps-add-status" onclick="addPsStatus(\''+g.key+'\')"><i class="fa-solid fa-plus"></i> 新增选项</button>'
+        // + '</div>'
+      + '</div>';
+    });
+
+    // 新增类型
+    html += '<div class="ps-group-card">'
+      + '<div class="ps-group-desc">新增一个患者标签「状态类型」（如「随访状态」）。</div>'
+      + '<div class="ps-add-row" style="padding-left:0">'
+        + '<input class="ps-add-input" id="psNewGroup" placeholder="新增状态类型名称" />'
+        + '<button class="ps-add-group-btn" onclick="addPsGroup()"><i class="fa-solid fa-plus"></i> 新增类型</button>'
+      + '</div>'
+    + '</div>';
+
+    return html;
+  }
+
+  window.renderPatientStatusConfig = function(){
+    var el = document.getElementById('patientStatusPanel');
+    if(el) el.innerHTML = psInnerHTML();
+  };
+
+  /* ===================== 联动交互 ===================== */
+  window.togglePsOptionLinks = function(key,id){
+    var g = _findPsGroup(key); if(!g) return;
+    var s = (g.options||[]).find(function(x){return x.id===id;}); if(!s) return;
+    if(!s.links || !s.links.length){ var fk = _linkFieldKeys()[0] || ''; s.links = fk ? [{field:fk, op:'notEmpty'}] : []; }
+    else { s.links = []; }
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.addPsLinkCond = function(key,id){
+    var g = _findPsGroup(key); if(!g) return;
+    var s = (g.options||[]).find(function(x){return x.id===id;}); if(!s) return;
+    if(!Array.isArray(s.links)) s.links=[];
+    var fk = _linkFieldKeys()[0] || '';
+    s.links.push(fk ? {field:fk, op:'notEmpty'} : {field:'', op:'notEmpty'});
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.updatePsLinkCond = function(key,id,idx,prop,val){
+    var g = _findPsGroup(key); if(!g) return;
+    var s = (g.options||[]).find(function(x){return x.id===id;}); if(!s) return;
+    if(!Array.isArray(s.links) || !s.links[idx]) return;
+    var c = s.links[idx];
+    if(prop==='field'){ c.field = val; var f=(window.PATIENT_STATUS_LINK_FIELDS||{})[val]||{operators:['notEmpty'],values:[]}; c.op = (f.operators||['notEmpty'])[0]||'notEmpty'; c.value = ''; }
+    else if(prop==='op'){ c.op = val; if(val==='eq'){ var f=(window.PATIENT_STATUS_LINK_FIELDS||{})[c.field]||{}; c.value = (f.values||[])[0]||''; } else { c.value=''; } }
+    else if(prop==='value'){ c.value = val; }
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.removePsLinkCond = function(key,id,idx){
+    var g = _findPsGroup(key); if(!g) return;
+    var s = (g.options||[]).find(function(x){return x.id===id;}); if(!s) return;
+    if(!Array.isArray(s.links)) return;
+    s.links.splice(idx,1); _savePsGroups(); window.renderPatientStatusConfig();
+  };
+
+  /* ===================== CRUD 操作 ===================== */
+  window.togglePsStatus = function(key,id){
+    var g = _findPsGroup(key); if(!g) return;
+    var s = (g.options||[]).find(function(x){return x.id===id;}); if(!s) return;
+    s.enabled = !s.enabled; _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.deletePsStatus = function(key,id){
+    var g = _findPsGroup(key); if(!g) return;
+    g.options = (g.options||[]).filter(function(x){return x.id!==id;});
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.addPsStatus = function(key){
+    var inp = document.getElementById('psNew_'+key); if(!inp) return;
+    var name = inp.value.trim(); if(!name){ showToast('请输入状态名称'); return; }
+    var g = _findPsGroup(key); if(!g) return;
+    g.options = g.options||[];
+    g.options.push({id:key+'_'+Date.now(), name:name, enabled:true});
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.deletePsGroup = function(key){
+    window.PATIENT_STATUS_GROUPS = (window.PATIENT_STATUS_GROUPS||[]).filter(function(g){return g.key!==key;});
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.addPsGroup = function(){
+    var inp = document.getElementById('psNewGroup'); if(!inp) return;
+    var name = inp.value.trim(); if(!name){ showToast('请输入状态类型名称'); return; }
+    window.PATIENT_STATUS_GROUPS = window.PATIENT_STATUS_GROUPS || [];
+    window.PATIENT_STATUS_GROUPS.push({key:'g_'+Date.now(), name:name, enabled:true, options:[]});
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+  window.togglePsGroup = function(key){
+    var g = _findPsGroup(key); if(!g) return;
+    g.enabled = !(g.enabled !== false);
+    _savePsGroups(); window.renderPatientStatusConfig();
+  };
+
+  window.resetPsConfig = function(){
+    try{ localStorage.removeItem('ps_groups'); }catch(e){}
+    window.PATIENT_STATUS_UPDATE_HISTORY = false;
+    var chk = document.getElementById('psUpdateHistory');
+    if(chk) chk.checked = false;
+    window.PATIENT_STATUS_GROUPS = JSON.parse(JSON.stringify(_DEFAULT_PS_GROUPS));
+    window.renderPatientStatusConfig();
+    showToast('已恢复默认配置');
+  };
+
+  window.savePsConfig = function(){
+    _savePsGroups();
+    showToast('患者标签配置已保存（本项目生效）');
+  };
+
+  /* ===================== Toast ===================== */
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    if(!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+  }
+  window.showWechatToast = showToast;
+
+  /* 初始化渲染 */
+  window.renderPatientStatusConfig();
+})();
+</script>
+</body>
+</html>

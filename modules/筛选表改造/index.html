@@ -16669,7 +16669,7 @@ function buildRefExtractRows(list) {
   if(!list.length) return '<tr><td colspan="5" style="text-align:center;color:#bbb;padding:40px 0">未查询到符合条件的项目，请调整查询条件后重试</td></tr>';
   return list.map(t => `
     <tr id="refExtRow_${t.id}" onclick="toggleRefExtract('${t.id}')" style="cursor:pointer;transition:background .15s">
-      <td style="text-align:center;width:44px"><input type="checkbox" id="refExtChk_${t.id}" onclick="event.stopPropagation();toggleRefExtract('${t.id}')"></td>
+      <td style="text-align:center;width:44px"><input type="radio" name="refExtRadio" id="refExtChk_${t.id}" onclick="event.stopPropagation();toggleRefExtract('${t.id}')"></td>
       <td>${t.id}</td>
       <td>${t.name}</td>
       <td>${t.type || '-'}</td>
@@ -16714,32 +16714,25 @@ function searchRefExtract() {
 }
 
 function toggleRefExtract(id) {
-  const idx = _refExtractSelected.indexOf(id);
   const chk = document.getElementById('refExtChk_'+id);
   const tr = document.getElementById('refExtRow_'+id);
-  if(idx >= 0) {
-    _refExtractSelected.splice(idx, 1);
-    if(chk) chk.checked = false;
-    if(tr) tr.classList.remove('selected');
-  } else {
+  const wasSelected = _refExtractSelected.indexOf(id) >= 0;
+
+  // 先清除所有已选（单选）
+  _refExtractSelected = [];
+  _otherProjectExtractConfigs.forEach(t => {
+    const c = document.getElementById('refExtChk_'+t.id);
+    const r = document.getElementById('refExtRow_'+t.id);
+    if(c) c.checked = false;
+    if(r) r.classList.remove('selected');
+  });
+
+  if(!wasSelected) {
     _refExtractSelected.push(id);
     if(chk) chk.checked = true;
     if(tr) tr.classList.add('selected');
   }
-  const c = document.getElementById('refExtractSelectedCount');
-  if(c) c.textContent = _refExtractSelected.length;
-}
-
-function selectAllRefExtract() {
-  const all = _otherProjectExtractConfigs.length;
-  const selectAll = _refExtractSelected.length < all;
-  _refExtractSelected = selectAll ? _otherProjectExtractConfigs.map(t=>t.id) : [];
-  _otherProjectExtractConfigs.forEach(t=>{
-    const chk = document.getElementById('refExtChk_'+t.id);
-    const tr = document.getElementById('refExtRow_'+t.id);
-    if(chk) chk.checked = selectAll;
-    if(tr) tr.classList.toggle('selected', selectAll);
-  });
+  // 点击已选项则取消选中，仍保持单选语义
   const c = document.getElementById('refExtractSelectedCount');
   if(c) c.textContent = _refExtractSelected.length;
 }
@@ -20234,10 +20227,10 @@ window.addEventListener('DOMContentLoaded', function() {
         <table class="ref-table">
           <thead>
             <tr>
-              <th style="text-align:center;width:44px"><input type="checkbox" id="refExtSelectAll" onclick="selectAllRefExtract()"></th>
+              <th style="text-align:center;width:44px">选择</th>
               <th>方案编号</th>
               <th>项目名称</th>
-              <th>项目类型</th>
+              <th>领域</th>
               <th style="width:80px;text-align:center">操作</th>
             </tr>
           </thead>

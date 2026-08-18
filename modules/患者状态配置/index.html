@@ -20140,7 +20140,9 @@ window.addEventListener('DOMContentLoaded', function() {
     { key:'consent', name:'知情状态', enabled:true, options:[
       {id:'A', name:'待确认知情意向', enabled:true, links:[]},
       {id:'B', name:'待签署知情', enabled:true, links:[]},
-      {id:'C', name:'已签署知情', enabled:true, links:[{field:'informedTime', op:'notEmpty'}]}
+      {id:'C', name:'已签署知情', enabled:true, links:[{field:'informedTime', op:'notEmpty'}]},
+      {id:'D', name:'知情失败', enabled:true, links:[{field:'screenFail', op:'eq', value:'是'}]},
+      {id:'E', name:'待定', enabled:true, links:[]}
     ]},
     { key:'enroll', name:'入组条件审核', enabled:true, options:[
       {id:'A', name:'符合入组条件', enabled:true, links:[]},
@@ -20170,8 +20172,32 @@ window.addEventListener('DOMContentLoaded', function() {
     return groups;
   }
   function _loadPsGroups(){
-    try{ const g = JSON.parse(localStorage.getItem('ps_groups')); if(Array.isArray(g) && g.length) return _normalizePsGroups(g); }catch(e){}
-    return JSON.parse(JSON.stringify(_DEFAULT_PS_GROUPS));
+    // 以默认数据为基准，保证新增选项（如 D 知情失败 / E 待定）始终出现
+    const base = JSON.parse(JSON.stringify(_DEFAULT_PS_GROUPS));
+    let saved = null;
+    try{ const g = JSON.parse(localStorage.getItem('ps_groups')); if(Array.isArray(g) && g.length) saved = _normalizePsGroups(g); }catch(e){}
+    if(!saved) return _normalizePsGroups(base);
+
+    // 用 localStorage 中用户手动改过的配置覆盖同名 group/option 的设置（enabled、links 等）
+    saved.forEach(function(sg){
+      const bg = base.find(function(x){ return x.key === sg.key; });
+      if(!bg) { base.push(JSON.parse(JSON.stringify(sg))); return; }
+      bg.enabled = sg.enabled;
+      (sg.options||[]).forEach(function(so){
+        if(typeof so.name === 'string') so.name = _cleanPsName(so.name);
+        const bo = bg.options.find(function(x){ return x.id === so.id; });
+        if(bo){
+          bo.enabled = so.enabled;
+          if(Array.isArray(so.links)) bo.links = JSON.parse(JSON.stringify(so.links));
+          if(typeof so.name === 'string') bo.name = _cleanPsName(so.name);
+        } else {
+          // 按 name 去重：若旧缓存选项名与已有默认选项同名（id 不同），跳过避免重复
+          const dup = bg.options.find(function(x){ return x.name === so.name; });
+          if(!dup) bg.options.push(JSON.parse(JSON.stringify(so)));
+        }
+      });
+    });
+    return _normalizePsGroups(base);
   }
   window.PATIENT_STATUS_GROUPS = _loadPsGroups();
   window._patientStatusStore = window._patientStatusStore || {};
@@ -20271,6 +20297,12 @@ window.addEventListener('DOMContentLoaded', function() {
       operators: ['eq', 'notEmpty'],
       values: ['通过','驳回'],
       get: function(patientNo){ return _patientAuditResult(patientNo); }
+    },
+    screenFail: {
+      fieldLabel: '筛选·筛败',
+      operators: ['eq'],
+      values: ['是', '否'],
+      get: function(patientNo){ return (window._patientStatusStore[patientNo]||{}).screenFail || ''; }
     }
   };
   // 取当前所有可联动字段 key 列表

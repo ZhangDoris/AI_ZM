@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APP端 - 重新匹配提示弹窗 - AI 智能预筛系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #333; background: #f0f2f5;
+    }
+    body { display: flex; min-height: 100vh; }
+
+    /* 左侧手机壳 */
+    .phone-stage {
+      flex: 1; padding: 24px;
+      display: flex; align-items: flex-start; justify-content: center;
+      background: #f5f7fa;
+    }
+    .phone-frame {
+      position: relative; width: 390px; background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 8px #1a1a1a, 0 0 0 10px #2c2c2c;
+      overflow: hidden;
+    }
+    .vconsole-badge {
+      position: absolute; top: 12px; left: -2px;
+      background: #07c160; color: #fff;
+      padding: 6px 14px 6px 10px; font-size: 13px; font-weight: 700;
+      border-radius: 0 4px 4px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 50; letter-spacing: 0.3px;
+    }
+    .phone-screen {
+      width: 100%; height: 700px; overflow-y: auto;
+      padding: 0; background: #f5f6f8; position: relative;
+    }
+
+    /* ===== 页面顶部导航 ===== */
+    .page-header {
+      background: #fff; padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .header-back { font-size: 17px; color: #1677ff; cursor: pointer; }
+    .header-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+
+    /* ===== 患者列表项（触发弹窗） ===== */
+    .patient-list { padding: 12px; }
+    .patient-card {
+      background: #fff; border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .pc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .pc-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .pc-meta { font-size: 13px; color: #999; margin-top: 2px; }
+    .pc-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #666; line-height: 22px; }
+    .pc-row i { width: 16px; text-align: center; color: #999; font-size: 12px; }
+    .pc-action { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .btn-match-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 5px 14px; border-radius: 20px;
+      background: linear-gradient(135deg, #1677ff, #4096ff);
+      color: #fff; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all .18s;
+      border: none; outline: none;
+    }
+    .btn-match-badge:hover { transform: scale(1.03); box-shadow: 0 3px 10px rgba(22,119,255,0.35); }
+    .btn-match-badge:active { transform: scale(0.97); }
+
+    /* ===== 提示弹窗（截图样式） ===== */
+    .tip-mask {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 2000; padding: 20px;
+    }
+    .tip-mask.open { display: flex; animation: fadeIn .2s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .tip-modal {
+      background: #fff; border-radius: 12px; width: 320px; max-width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: slideUp .25s ease; overflow: hidden;
+    }
+    .tip-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px; border-bottom: 1px solid #f0f0f0;
+      background: linear-gradient(135deg, #e9f3f7, #fff);
+    }
+    .tip-header i.fa-exclamation-triangle { color: #FAAD14; font-size: 16px; }
+    .tip-title { font-size: 15px; font-weight: 700; color: #1677ff; flex: 1; }
+    .tip-close-btn {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #999; font-size: 13px; cursor: pointer;
+      transition: all .15s; flex-shrink: 0;
+    }
+    .tip-close-btn:hover { background: #f0f0f0; color: #333; }
+
+    .tip-body { padding: 18px; font-size: 14px; color: #333; line-height: 1.75; }
+    .tip-info-box {
+      background: #FFFBE6; border: 1px solid #FFE58F; border-radius: 8px;
+      padding: 12px 14px; font-size: 14px; color: #614700; margin-bottom: 12px;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.65;
+    }
+    .tip-info-box i { color: #FAAD14; font-size: 15px; margin-top: 2px; flex-shrink: 0; }
+    .tip-extra-text { font-size: 12.5px; color: #999; margin-top: 4px; }
+
+    .tip-footer {
+      padding: 12px 18px; display: flex; justify-content: flex-end;
+      border-top: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .tip-btn-close {
+      padding: 7px 28px; border-radius: 6px; font-size: 14px; cursor: pointer;
+      border: 1px solid #d9d9d9; background: #fff; color: #333;
+      transition: all .18s;
+    }
+    .tip-btn-close:hover { border-color: #1677ff; color: #1677ff; }
+    .tip-btn-close:active { transform: scale(0.97); }
+
+    /* 右侧说明区 */
+    .desc-panel {
+      flex: 0 0 320px; padding: 24px 20px;
+      background: #fffbeb; border-left: 2px dashed #fcd34d;
+      overflow-y: auto; min-height: 100vh;
+    }
+    .desc-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 15px; font-weight: 700; color: #b45309;
+      margin-bottom: 16px; padding-bottom: 10px;
+      border-bottom: 1px solid #fde68a;
+    }
+    .desc-item {
+      background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 14px 16px; margin-bottom: 12px;
+      transition: all .2s;
+    }
+    .desc-item:hover { background: #fde68a; border-color: #f59e0b; }
+    .desc-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%; background: #f59e0b; color: #fff;
+      font-size: 12px; font-weight: 700; margin-right: 8px; flex-shrink: 0;
+    }
+    .desc-h { display: flex; align-items: center; font-size: 14px; font-weight: 600; color: #78350f; margin-bottom: 6px; }
+    .desc-p { font-size: 12.5px; color: #92400e; line-height: 1.65; }
+
+    /* 响应式 */
+    @media (max-width: 900px) {
+      body { flex-direction: column; }
+      .phone-stage { flex: none; padding: 16px; }
+      .phone-frame { width: 100%; max-width: 420px; margin: 0 auto; border-radius: 20px; }
+      .desc-panel { flex: none; min-height: auto; border-left: none; border-top: 2px dashed #fcd34d; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== 左侧：APP 手机壳 + 弹窗 ========== -->
+  <div class="phone-stage">
+    <div class="phone-frame">
+      <div class="vconsole-badge">vConsole</div>
+      <div class="phone-screen">
+
+        <!-- 页面头部 -->
+        <div class="page-header">
+          <span class="header-back"><i class="fas fa-chevron-left"></i></span>
+          <span class="header-title">患者列表</span>
+        </div>
+
+        <!-- 患者列表 -->
+        <div class="patient-list">
+          <!-- 患者1：点击项目匹配弹出提示 -->
+          <div class="patient-card proto-element" data-proto-id="1">
+            <div class="pc-head">
+              <div>
+                <div class="pc-name">张三</div>
+                <div class="pc-meta">男 · 45岁 · PT-2026-001</div>
+              </div>
+            </div>
+            <div class="pc-row"><i class="fas fa-hospital"></i><span>复旦大学附属中山医院青浦分院</span></div>
+            <div class="pc-row"><i class="fas fa-file-medical"></i><span>乳腺癌 · 测试项目5</span></div>
+            <div class="pc-action">
+              <button class="btn-match-badge proto-element" data-proto-id="2" onclick="openTipModal('张三')">
+                <i class="fas fa-sync-alt"></i> 项目匹配
+              </button>
+            </div>
+          </div>
+
+          <!-- 患者2 -->
+          <div class="patient-card">
+            <div class="pc-head">
+              <div>
+                <div class="pc-name">李四</div>
+                <div class="pc-meta">女 · 36岁 · PT-2026-002</div>
+              </div>
+            </div>
+            <div class="pc-row"><i class="fas fa-hospital"></i><span>柳州市人民医院</span></div>
+            <div class="pc-row"><i class="fas fa-file-medical"></i><span>高脂血症 · WYNA-301</span></div>
+            <div class="pc-action">
+              <button class="btn-match-badge" onclick="openTipModal('李四')">
+                <i class="fas fa-sync-alt"></i> 项目匹配
+              </button>
+            </div>
+          </div>
+
+          <!-- 患者3 -->
+          <div class="patient-card">
+            <div class="pc-head">
+              <div>
+                <div class="pc-name">王五</div>
+                <div class="pc-meta">男 · 58岁 · PT-2026-003</div>
+              </div>
+            </div>
+            <div class="pc-row"><i class="fas fa-hospital"></i><span>中山大学肿瘤防治中心</span></div>
+            <div class="pc-row"><i class="fas fa-file-medical"></i><span>高脂血症 · WYNA-301</span></div>
+            <div class="pc-action">
+              <button class="btn-match-badge" onclick="openTipModal('王五')">
+                <i class="fas fa-sync-alt"></i> 项目匹配
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 提示弹窗 ========== -->
+  <div class="tip-mask" id="tipModal">
+    <div class="tip-modal">
+      <!-- 头部：⚠ 提示 × -->
+      <div class="tip-header">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span class="tip-title">提示</span>
+        <span class="tip-close-btn" onclick="closeTipModal()"><i class="fas fa-times"></i></span>
+      </div>
+      <!-- 内容：黄色提示框 + 补充文字 -->
+      <div class="tip-body">
+        <div class="tip-info-box proto-element" data-proto-id="3">
+          <i class="fas fa-info-circle"></i>
+          <span><strong>检测到您的资料未发生变更，不支持再次匹配，您可直接提交审核</strong></span>
+        </div>
+        <div class="tip-extra-text">若筛选表提取失败，可在匹配详情·筛选表重新提取</div>
+      </div>
+      <!-- 底部：关闭按钮 -->
+      <div class="tip-footer">
+        <button class="tip-btn-close proto-element" data-proto-id="4" onclick="closeTipModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 右侧：功能说明 ========== -->
+  <div class="desc-panel" id="rightPanel">
+    <div class="desc-title">
+      <i class="fas fa-map-signs"></i> 功能说明
+    </div>
+
+    <div class="desc-item proto-desc" data-proto-id="1">
+      <div class="desc-h"><span class="desc-num">1</span>患者卡片</div>
+      <p class="desc-p">展示患者基本信息，包括姓名、性别、年龄、筛选号、所属中心和疾病/方案。点击「项目匹配」按钮可发起重新匹配。</p>
+    </div>
+
+    <div class="desc-item proto-desc" data-proto-id="2">
+      <div class="desc-h"><span class="desc-num">2</span>项目匹配按钮</div>
+      <p class="desc-p">点击后系统自动检测资料变更状态。若资料未发生变更，则弹出提示弹窗阻止重复匹配。</p>
+    </div>
+
+    <div class="desc-item proto-desc" data-proto-id="3">
+      <div class="desc-h"><span class="desc-num">3</span>提示信息区</div>
+      <p class="desc-p">黄色背景提示框，明确告知用户"资料未变更，不支持再次匹配"，并给出替代操作建议——可直接提交审核。</p>
+    </div>
+
+    <div class="desc-item proto-desc" data-proto-id="4">
+      <div class="desc-h"><span class="desc-num">4</span>关闭按钮</div>
+      <p class="desc-p">用户确认提示信息后点击关闭，弹窗消失返回列表页。也可通过右上角 × 图标关闭。</p>
+    </div>
+  </div>
+
+  <!-- SVG 连线层 -->
+  <svg id="connections" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1500;"></svg>
+
+  <script>
+    // ===== 弹窗控制 =====
+    function openTipModal(name) {
+      document.getElementById('tipModal').classList.add('open');
+    }
+    function closeTipModal() {
+      document.getElementById('tipModal').classList.remove('open');
+    }
+    // 点击遮罩也可关闭
+    document.getElementById('tipModal').addEventListener('click', function(e) {
+      if (e.target === this) closeTipModal();
+    });
+
+    // ===== 连线绘制 =====
+    const svg = document.getElementById('connections');
+    const connections = [];
+
+    function drawConnections() {
+      svg.innerHTML = '';
+      connections.length = 0;
+
+      const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+      const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+      leftElements.forEach(leftEl => {
+        const protoId = leftEl.getAttribute('data-proto-id');
+        const rightEl = document.querySelector(`.proto-desc[data-proto-id="${protoId}"]`);
+        if (!rightEl) return;
+
+        const leftRect = leftEl.getBoundingClientRect();
+        const rightRect = rightEl.getBoundingClientRect();
+        const svgRect = svg.getBoundingClientRect();
+
+        const x1 = leftRect.right - svgRect.left;
+        const y1 = leftRect.top + leftRect.height / 2 - svgRect.top;
+        const x2 = rightRect.left - svgRect.left;
+        const y2 = rightRect.top + rightRect.height / 2 - svgRect.top;
+
+        const cp1x = x1 + (x2 - x1) * 0.45;
+        const cp1y = y1;
+        const cp2x = x1 + (x2 - x1) * 0.55;
+        const cp2y = y2;
+
+        // 路径
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`);
+        path.setAttribute('class', 'connection-line');
+        path.setAttribute('data-proto-id', protoId);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#165DFF');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('opacity', '0.55');
+        path.style.transition = 'all .2s';
+        svg.appendChild(path);
+
+        // 编号标签
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bg.setAttribute('cx', midX); bg.setAttribute('cy', midY);
+        bg.setAttribute('r', 11);
+        bg.setAttribute('fill', '#165DFF');
+        svg.appendChild(bg);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX); text.setAttribute('y', midY);
+        text.setAttribute('dy', '0.05em');
+        text.setAttribute('fill', '#fff');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'central');
+        text.textContent = protoId;
+        svg.appendChild(text);
+
+        connections.push({ protoId, path, leftEl, rightEl });
+      });
+    }
+
+    function highlightConnection(protoId, active) {
+      const conn = connections.find(c => c.protoId === protoId);
+      if (!conn) return;
+      if (active) {
+        conn.path.setAttribute('stroke-width', '3');
+        conn.path.setAttribute('opacity', '1');
+        conn.path.style.filter = 'drop-shadow(0 0 3px rgba(22,93,255,0.4))';
+        conn.leftEl.classList.add('active-highlight');
+        conn.rightEl.classList.add('active-highlight');
+      } else {
+        conn.path.setAttribute('stroke-width', '2');
+        conn.path.setAttribute('opacity', '0.55');
+        conn.path.style.filter = '';
+        conn.leftEl.classList.remove('active-highlight');
+        conn.rightEl.classList.remove('active-highlight');
+      }
+    }
+
+    // 高亮样式
+    const style = document.createElement('style');
+    style.textContent = `
+      .proto-element { position:relative; transition:all .2s; border-radius:6px; }
+      .proto-element:hover { box-shadow:0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.15); background-color:rgba(22,93,255,0.03); }
+      .proto-element.active-highlight { box-shadow:0 0 0 2px #165DFF, 0 4px 12px rgba(22,93,255,0.25); background-color:rgba(22,93,255,0.05); }
+      .proto-desc { transition:all .2s; border-radius:6px; }
+      .proto-desc:hover { background-color:#fde68a !important; border-color:#f59e0b !important; box-shadow:0 2px 8px rgba(245,158,11,0.2); }
+      .proto-desc.active-highlight { background-color:#fde68a !important; border-color:#d97706 !important; box-shadow:0 2px 10px rgba(217,119,6,0.35); }
+      .connection-line { transition:all .2s; }
+    `;
+    document.head.appendChild(style);
+
+    function bindHoverEvents() {
+      document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+      document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+        el.addEventListener('mouseenter', () => highlightConnection(el.getAttribute('data-proto-id'), true));
+        el.addEventListener('mouseleave', () => highlightConnection(el.getAttribute('data-proto-id'), false));
+      });
+    }
+
+    // 初始化
+    function init() { drawConnections(); bindHoverEvents(); }
+    document.addEventListener('DOMContentLoaded', () => setTimeout(init, 150));
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(init, 180); });
+  </script>
+</body>
+</html>

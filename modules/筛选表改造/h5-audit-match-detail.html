@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APP 端 - 审核列表·匹配详情 - AI 智能预筛系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #333; background: #f0f2f5;
+    }
+    body { display: flex; min-height: 100vh; }
+
+    /* 左侧手机壳 */
+    .phone-stage {
+      flex: 0 0 82%; padding: 24px;
+      display: flex; align-items: flex-start; justify-content: center;
+      background: #f5f7fa;
+    }
+    .phone-frame {
+      position: relative; width: 390px; background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 8px #1a1a1a, 0 0 0 10px #2c2c2c;
+      overflow: hidden;
+    }
+    .vconsole-badge {
+      position: absolute; top: 12px; left: -2px;
+      background: #07c160; color: #fff;
+      padding: 6px 14px 6px 10px; font-size: 13px; font-weight: 700;
+      border-radius: 0 4px 4px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 50; letter-spacing: 0.3px;
+    }
+    .phone-screen {
+      width: 100%; height: 700px; overflow-y: auto;
+      padding: 0; background: #f5f6f8; position: relative;
+    }
+
+    /* ====== 顶部导航栏（截图一致）====== */
+    .nav-header {
+      background: #fff; padding: 10px 14px;
+      display: flex; align-items: center; gap: 8px;
+      border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 20;
+    }
+    .nav-back {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #1677ff; font-size: 15px; cursor: pointer; flex-shrink: 0;
+    }
+    .nav-title {
+      font-size: 15px; font-weight: 600; color: #1a1a1a;
+      flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-tag-super {
+      background: #1677ff; color: #fff;
+      font-size: 11px; font-weight: 600; padding: 3px 8px;
+      border-radius: 10px; flex-shrink: 0;
+    }
+
+    /* ====== 版本切换栏（截图一致）====== */
+    .version-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 16px; background: #fff; border-bottom: 1px solid #f0f0f0;
+    }
+    .version-label { font-size: 12px; color: #999; }
+    .version-btn {
+      padding: 4px 14px; border: 1px solid #d9d9d9; border-radius: 4px;
+      font-size: 12px; color: #666; background: #fff; cursor: pointer;
+    }
+    .version-btn.active { border-color: #1677ff; color: #1677ff; background: #e6f4ff; font-weight: 500; }
+
+    /* ====== 三Tab（截图一致）====== */
+    .md-tabs { display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; }
+    .md-tab {
+      flex: 1; text-align: center; padding: 12px 0; font-size: 14px;
+      color: #666; cursor: pointer; position: relative;
+    }
+    .md-tab.active { color: #1677ff; font-weight: 600; }
+    .md-tab.active::after {
+      content: ""; position: absolute; left: 50%; bottom: 0;
+      transform: translateX(-50%); width: 28px; height: 3px;
+      background: #1677ff; border-radius: 2px;
+    }
+
+    /* ====== 患者信息头部卡片（截图一致）====== */
+    .patient-head-card {
+      margin: 12px 12px 0; background: #fff; border-radius: 8px; padding: 14px 16px;
+    }
+    .patient-head-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .patient-name-row { display: flex; align-items: baseline; gap: 6px; }
+    .patient-name { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .patient-age { font-size: 14px; color: #666; }
+    .patient-status { font-size: 13px; color: #999; }
+    .patient-edit-icon {
+      color: #1677ff; font-size: 15px; cursor: pointer; flex-shrink: 0;
+    }
+    .patient-disease { font-size: 13px; color: #666; margin-top: 6px; }
+    .patient-disease b { color: #333; font-weight: 500; }
+
+    /* ====== 病史与资料行（截图一致）====== */
+    .materials-row {
+      margin: 10px 12px 0; background: #fff; border-radius: 8px;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .materials-left { display: flex; align-items: center; gap: 8px; }
+    .materials-icon-wrap {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: #e6f4ff; display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; position: relative;
+    }
+    .materials-icon-wrap i { color: #1677ff; font-size: 16px; }
+    .materials-count-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #1677ff; color: #fff; font-size: 10px; font-weight: 600;
+      min-width: 16px; height: 16px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 4px;
+    }
+    .materials-label { font-size: 14px; color: #333; }
+    .btn-mark-reserve {
+      background: #1677ff; color: #fff; border: none;
+      padding: 7px 20px; border-radius: 4px; font-size: 13px; font-weight: 500;
+      cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ====== 匹配度统计区（截图一致）====== */
+    .match-stats-card {
+      margin: 10px 12px 0; background: #fff; border-radius: 8px; padding: 16px;
+    }
+    .match-stats-top { display: flex; align-items: flex-start; gap: 20px; }
+    .match-stats-left { display: flex; gap: 24px; flex-shrink: 0; }
+    .match-stat-item { text-align: center; }
+    .match-stat-val { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+    .match-stat-val.highlight { color: #1a1a1a; }
+    .match-stat-lbl { font-size: 12px; color: #999; margin-top: 2px; }
+    .match-stats-desc { font-size: 13px; color: #666; line-height: 1.65; flex: 1; }
+
+    /* ====== AI 建议区（截图一致）====== */
+    .ai-suggest-card {
+      margin: 10px 12px 0; background: #fff; border-radius: 8px; padding: 14px 16px;
+    }
+    .ai-suggest-title { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-bottom: 10px; }
+    .ai-conclusion-row { display: flex; align-items: flex-start; gap: 8px; line-height: 1.65; }
+    .ai-icon-pending { color: #fa8c16; font-size: 15px; margin-top: 2px; flex-shrink: 0; }
+    .ai-icon-pass { color: #07c160; font-size: 15px; margin-top: 2px; flex-shrink: 0; }
+    .ai-text { font-size: 13px; color: #333; }
+
+    /* ====== 风险提示（截图一致）====== */
+    .risk-hint-card {
+      margin: 10px 12px 0; background: #fff; border-radius: 8px; padding: 12px 16px;
+    }
+    .risk-hint-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .risk-hint-title i { color: #fa8c16; font-size: 14px; }
+    .risk-list { margin: 0; padding-left: 18px; }
+    .risk-list li { font-size: 12px; color: #f53f3f; line-height: 1.85; }
+
+    /* ====== 匹配详情 Tab 内容（新版卡片）====== */
+    .md-section { padding: 10px 12px 60px; }
+    .match-card-list { display: flex; flex-direction: column; gap: 12px; }
+    .match-card { border: 1px solid #e8e8e8; border-radius: 8px; background: #fff; overflow: hidden; }
+    .match-card-head {
+      display: flex; align-items: flex-start; gap: 8px; padding: 10px 14px;
+      background: #fafcff; border-bottom: 1px solid #f0f0f0;
+    }
+    .match-index {
+      flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+      background: #1677ff; color: #fff; font-size: 12px;
+      display: inline-flex; align-items: center; justify-content: center; margin-top: 1px;
+    }
+    .match-type { font-weight: 500; color: #333; font-size: 13px; flex-shrink: 0; }
+    .match-title-text { font-size: 13px; color: #333; line-height: 1.5; flex: 1; word-break: break-word; }
+    .match-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .match-result-row { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.6; }
+    .match-result-row i { margin-top: 2px; flex-shrink: 0; font-size: 14px; }
+    .match-result-row.match { color: #00B42A; }
+    .match-result-row.pending { color: #FA8C16; }
+    .match-result-row.exclude { color: #F53F3F; }
+    .match-result-row .result-label { font-weight: 600; }
+    .ai-risk-hint {
+      font-size: 12px; color: #FA8C16; display: flex; align-items: center; gap: 6px;
+      margin-top: 4px; padding-top: 8px; border-top: 1px dashed #eee;
+    }
+    .match-card-foot {
+      display: flex; gap: 16px; padding: 8px 14px;
+      border-top: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .match-foot-btn { font-size: 12px; color: #1677ff; cursor: pointer; }
+    .match-foot-btn.disabled { color: #bfbfbf; cursor: not-allowed; }
+
+    /* 思考链 */
+    .tc-area { padding: 14px 12px 60px; }
+    .tc-empty { text-align: center; padding: 40px 20px; color: #999; }
+    .tc-state { text-align: center; padding: 50px 20px; }
+    .tc-state .ico { width: 72px; height: 72px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; font-size: 32px; }
+    .tc-state .ico.purple { background: #f3effc; color: #722ed1; }
+    .tc-state .ico.red { background: #fef0ef; color: #f5222d; }
+    .tc-state h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .tc-state h4.purple { color: #722ed1; }
+    .tc-state h4.red { color: #f5222d; }
+    .tc-state .desc { font-size: 13px; color: #666; margin-bottom: 18px; line-height: 1.6; }
+    .tc-state .btn-row { display: flex; gap: 10px; justify-content: center; }
+    .tc-state button { padding: 8px 18px; border-radius: 6px; font-size: 13px; border: none; cursor: pointer; }
+    .btn-blue { background: #1677ff; color: #fff; }
+    .btn-blue-line { background: #fff; color: #1677ff; border: 1px solid #1677ff !important; }
+
+    .tc-type-selector { display: flex; gap: 8px; margin-bottom: 10px; }
+    .tc-type-btn { padding: 5px 12px; border: 1px solid #d9d9d9; background: #fff; color: #666; border-radius: 4px; font-size: 12px; cursor: pointer; }
+    .tc-type-btn.tc-type-active { border-color: #1677ff; color: #1677ff; background: #f0f5ff; font-weight: 600; }
+
+    .tc-item { border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; margin-bottom: 10px; background: #fff; }
+    .tc-item .hd { display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer; background: #fafcff; }
+    .tc-item .num { width: 22px; height: 22px; border-radius: 50%; background: #722ed1; color: #fff; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tc-item .nm { font-size: 14px; font-weight: 600; color: #1a1a1a; flex: 1; }
+    .tc-item .ok-tag { font-size: 11px; color: #07c160; background: #e6f7ec; padding: 1px 8px; border-radius: 10px; }
+    .tc-item .body { padding: 12px 14px; font-size: 13px; color: #333; line-height: 1.7; display: none; white-space: pre-wrap; }
+    .tc-item.open .body { display: block; }
+    .disclaimer { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; color: #999; margin-top: 12px; line-height: 1.6; }
+
+    .hidden { display: none !important; }
+
+    /* ====== 审核列表屏（保留）====== */
+    .phone-header-old {
+      background: #fff; padding: 14px 16px;
+      display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 20;
+    }
+    .phone-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .tab-bar { display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; }
+    .tab-bar .tab { flex: 1; text-align: center; padding: 12px 0; font-size: 15px; color: #333; position: relative; cursor: pointer; }
+    .tab-bar .tab.active { color: #1677ff; font-weight: 600; }
+    .tab-bar .tab.active::after { content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 28px; height: 3px; background: #1677ff; border-radius: 2px; }
+
+    .audit-card { background: #fff; margin: 10px 12px; border-radius: 8px; overflow: hidden; }
+    .audit-card .hd { padding: 12px 14px 6px; display: flex; align-items: center; gap: 8px; }
+    .audit-card .name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .audit-card .meta { font-size: 12px; color: #999; }
+    .audit-card .pill { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+    .pill-blue { background: #e6f4ff; color: #1677ff; }
+    .pill-orange { background: #fff4e6; color: #fa8c16; }
+    .pill-green { background: #e6f7ec; color: #07c160; }
+    .pill-audit-name { background: #f0f5ff; color: #2b5aed; font-weight: 500; }
+    .audit-card .body { padding: 8px 14px; }
+    .audit-card .row { display: flex; font-size: 13px; line-height: 22px; color: #333; }
+    .audit-card .row .lbl { color: #999; min-width: 78px; flex-shrink: 0; }
+    .audit-card .row .val { flex: 1; }
+    .audit-card .pct-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px; }
+    .pct-pill { display: inline-block; padding: 4px 10px; border-radius: 4px; background: #fa8c16; color: #fff; font-size: 13px; font-weight: 600; }
+    .audit-card .action-bar { display: flex; gap: 8px; padding: 0 14px 12px; justify-content: flex-end; }
+    .audit-card .act-btn { padding: 6px 12px; border: 1px solid #1677ff; background: #fff; color: #1677ff; font-size: 12px; border-radius: 4px; cursor: pointer; }
+    .audit-card .act-btn.primary { background: #1677ff; color: #fff; }
+    .audit-card .files { padding: 8px 14px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; border-top: 1px solid #f5f5f5; }
+    .audit-card .files i { color: #1677ff; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="phone-stage">
+    <div class="phone-frame">
+      <div class="vconsole-badge">vConsole</div>
+      <div class="phone-screen">
+
+        <!-- ===== 审核列表屏 ===== -->
+        <div id="screen-audit">
+          <div class="phone-header-old">
+            <div class="phone-title">审核列表</div>
+          </div>
+          <div class="tab-bar">
+            <div class="tab active" onclick="switchAuditTab('pending')">待我审批</div>
+            <div class="tab" onclick="switchAuditTab('done')">已办</div>
+          </div>
+          <div id="auditList"></div>
+        </div>
+
+        <!-- ===== 匹配详情屏（按截图重做） ===== -->
+        <div id="screen-detail" class="hidden">
+
+          <!-- 顶部导航：返回 + 标题 + 超管标签 -->
+          <div class="nav-header">
+            <div class="nav-back" onclick="goBack()"><i class="fa-solid fa-chevron-left"></i></div>
+            <div class="nav-title" id="detailTitle">9 · 预提交9 | 匹配详情（测试项目5）</div>
+            <div class="nav-tag-super">超管</div>
+          </div>
+
+          <!-- 版本切换：新版 / 旧版 -->
+          <div class="version-bar">
+            <span class="version-label">版本</span>
+            <button class="version-btn active" id="ver-new" onclick="switchVersion('new')">新版</button>
+            <button class="version-btn" id="ver-old" onclick="switchVersion('old')">旧版</button>
+          </div>
+
+          <!-- 三Tab：匹配详情 / 筛选表 / 思考链 -->
+          <div class="md-tabs">
+            <div class="md-tab active" id="md-match" onclick="switchMdTab('match')">匹配详情</div>
+            <div class="md-tab" id="md-screen" onclick="switchMdTab('screen')">筛选表</div>
+            <div class="md-tab" id="md-think" onclick="switchMdTab('think')">思考链</div>
+          </div>
+
+          <!-- 内容区域 -->
+          <div id="mdBody"></div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========= 数据 =========
+    const AUDIT_DATA = {
+      pending: [
+        { patientNo: '预提交9', abbr: '预提交9', age: 45, gender: '未提交',
+          schemeNo: '测试项目5', centerNo: 'CN029', centerName: '复旦大学附属中山医院青浦分院',
+          matchPct: '86.4%', latestOp: '待审核', latestTime: '2026-08-17 10:00', auditName: 'V1审核', auditStatus: '审核中',
+          disease: '乳腺癌' },
+        { patientNo: 'WYNA-CN002', abbr: 'HGKD', age: 36, gender: '男',
+          schemeNo: 'WYNA-301', centerNo: 'CN006', centerName: '柳州市人民医院',
+          matchPct: '32.0%', latestOp: '待审核', latestTime: '2026-08-14 16:40', auditName: 'V1审核', auditStatus: '已提交',
+          disease: '高脂血症' },
+        { patientNo: 'WYNA-CN004', abbr: 'WSQ', age: 50, gender: '男',
+          schemeNo: 'WYNA-301', centerNo: 'CN112', centerName: '中国医学科学院阜外医院深圳医院',
+          matchPct: '66.0%', latestOp: '待审核', latestTime: '2026-08-14 11:05', auditName: 'V1审核', auditStatus: '审核中',
+          disease: '高脂血症' }
+      ],
+      done: [
+        { patientNo: 'WYNA-CN003', abbr: 'RFNE', age: 58, gender: '男',
+          schemeNo: 'WYNA-301', centerNo: 'CN092', centerName: '中山大学肿瘤防治中心',
+          matchPct: '91.2%', latestOp: '已通过', latestTime: '2026-08-12 14:22', auditName: '入组审核', auditStatus: '通过',
+          disease: '高脂血症' }
+      ]
+    };
+
+    // 截图数据：预提交9 的完整匹配详情
+    const MATCH_DETAIL = {
+      '预提交9': {
+        stage: '预提交9',
+        disease: '乳腺癌',
+        new: {
+          // 新版匹配详情 - 截图中的内容
+          matchRate: '86.4%',
+          pendingRate: '8.0%',
+          summary: '入选标准10条中，7条匹配，3条待定；排除标准22条中，17条匹配，5条待定。',
+          aiConclusion: '基础信息匹配，部分器官功能与合并疾病需补充评估后方可判定。',
+          risks: [
+            '排除标准4: 现有影像无法确认病灶长径≥10mm，建议补充增强CT明确可测量性',
+            '入选标准1: 病历记录患者偶有乏力，建议复核 ECOG 体力评分'
+          ],
+          materialsCount: 7,
+          matchCards: [
+            { no: 1, type: '入选', content: '年龄 18~75 岁，ECOG 0~1 分', result: '符合', resultDesc: '病历记录年龄 45 岁，ECOG 评分 0 分，满足入排要求。' },
+            { no: 2, type: '入选', content: '经组织学或细胞学确认的晚期/转移性实体瘤', result: '符合', resultDesc: '病理报告确诊浸润性导管癌，IV期。' },
+            { no: 3, type: '排除', content: '既往接受过针对当前适应症的靶向治疗', result: '不匹配', resultDesc: '无相关治疗记录。' },
+            { no: 4, type: '排除', content: '存在活动性脑转移或脑膜转移', result: '待定', resultDesc: '近期头颅 MRI 报告未见明确脑转移灶，但增强 CT 影像质量有限，建议补充确认。' }
+          ]
+        },
+        old: {
+          stats: [
+            { val: '86.4%', lbl: '综合匹配度' },
+            { val: '7/10', lbl: '入选满足' },
+            { val: '5条', lbl: '排除待定' }
+          ],
+          reason: '入选标准大部分满足，少数排除项需补充检查确认。',
+          protocol: { no: '测试项目5 V2.0', title: '评价某药物治疗晚期实体瘤的有效性与安全性的多中心临床研究', update: '2026-08-10 更新' },
+          ai: { conclusion: 'AI 建议：建议通过预筛，补充资料后可进入下一步。', reasons: ['入选标准基本满足', '排除项需补充确认'] }
+        }
+      },
+      'WYNA-CN001': {
+        stage: 'WYNA-CN001', disease: '高脂血症',
+        new: {
+          matchCards: [
+            { no: 1, type: '入选', content: '年龄 18~75 岁（含）', result: '符合', resultDesc: '病历记录年龄 43 岁，满足入排要求。' },
+            { no: 2, type: '入选', content: '经临床明确诊断的高脂血症患者', result: '符合', resultDesc: '病历主诊断：高脂血症（E78.500）。' },
+            { no: 3, type: '排除', content: '合并严重肝肾功能不全（eGFR<30）', result: '不匹配', resultDesc: '肌酐 63 μmol/L，eGFR 估算 >90，未达排除标准。' },
+            { no: 4, type: '入选', content: '筛选前 LDL-C ≥ 2.6 mmol/L 且经生活方式干预未达标', result: '符合', resultDesc: 'LDL-C 1.81 mmol/L（联合他汀治疗中，核验后判定符合干预背景）。' }
+          ],
+          ai: { conclusion: '综合判定：本患者符合入选标准，无明确排除项，建议进入下一步筛选流程。', risks: ['LDL-C 处于临界水平，建议复查并确认他汀治疗依从性。'], supplies: [{ name: '近 4 周内血脂复查报告', criteria: 'c4', desc: '确认筛选前 LDL-C 基线，建议补充上传。' }] }
+        },
+        old: { stats: [{ val: '78.5%', lbl: '综合匹配度' }, { val: '4/4', lbl: '入选满足' }, { val: '0', lbl: '排除命中' }], reason: '4 项入选标准全部命中，0 项排除标准命中，整体匹配度较高。', protocol: { no: 'WYNA-301 V3.0', title: '评价某降脂药物治疗高脂血症的有效性与安全性的随机、双盲、安慰剂对照 III 期临床研究', update: '2026-07-20 更新' }, ai: { conclusion: 'AI 建议：建议通过预筛，纳入筛选。', reasons: ['入选标准全部满足', '排除标准未命中', '合并用药可控'] } }
+      },
+      'WYNA-CN002': {
+        stage: 'WYNA-CN002', disease: '高脂血症',
+        new: {
+          matchCards: [
+            { no: 1, type: '入选', content: '年龄 18~75 岁（含）', result: '符合', resultDesc: '年龄 36 岁，满足入排要求。' },
+            { no: 2, type: '入选', content: '经临床明确诊断的高脂血症患者', result: '不匹配', resultDesc: '病历主诊断为"体检发现血脂异常"，未见明确诊断高脂血症记录。' },
+            { no: 3, type: '排除', content: '近 3 个月内参与其他药物临床试验', result: '待定', resultDesc: '病历未明确记录，需补充确认。' }
+          ],
+          ai: { conclusion: '综合判定：存在入选依据不足与排除项待确认，建议退回补充资料。', risks: ['高脂血症诊断依据不足，建议补充确诊资料。'], supplies: [{ name: '血脂异常确诊病历或门诊记录', criteria: 'c2', desc: '确认高脂血症临床诊断。' }, { name: '近 3 个月临床试验参与声明', criteria: 'c3', desc: '排除标准待确认项。' }] }
+        },
+        old: { stats: [{ val: '32.0%', lbl: '综合匹配度' }, { val: '1/3', lbl: '入选满足' }, { val: '1/3', lbl: '排除待定' }], reason: '仅 1 项入选满足，1 项排除待定，匹配度偏低。', protocol: { no: 'WYNA-301 V3.0', title: '评价某降脂药物治疗高脂血症的有效性与安全性的随机、双盲、安慰剂对照 III 期临床研究', update: '2026-07-20 更新' }, ai: { conclusion: 'AI 建议：暂不匹配，建议退回补充资料后重新评估。', reasons: ['高脂血症诊断依据不足', '排除标准待确认'] } }
+      },
+      'WYNA-CN004': {
+        stage: 'WYNA-CN004', disease: '高脂血症',
+        new: {
+          matchCards: [
+            { no: 1, type: '入选', content: '年龄 18~75 岁（含）', result: '符合', resultDesc: '年龄 50 岁，满足入排要求。' },
+            { no: 2, type: '入选', content: '经临床明确诊断的高脂血症患者', result: '符合', resultDesc: '病历主诊断：高脂血症。' },
+            { no: 3, type: '排除', content: '合并严重肝肾功能不全（eGFR<30）', result: '不匹配', resultDesc: '肾功能正常，未达排除标准。' }
+          ],
+          ai: { conclusion: '综合判定：基本符合入选，建议进入筛选。', risks: [], supplies: [{ name: '近 4 周血脂复查报告', criteria: 'c4', desc: '补充 LDL-C 基线确认。' }] }
+        },
+        old: { stats: [{ val: '66.0%', lbl: '综合匹配度' }, { val: '3/3', lbl: '入选满足' }, { val: '0', lbl: '排除命中' }], reason: '3 项入选满足，0 项排除命中，匹配度中等。', protocol: { no: 'WYNA-301 V3.0', title: '评价某降脂药物治疗高脂血症的有效性与安全性的随机、双盲、安慰剂对照 III 期临床研究', update: '2026-07-20 更新' }, ai: { conclusion: 'AI 建议：建议通过预筛。', reasons: ['入选标准满足', '排除标准未命中'] } }
+      },
+      'WYNA-CN003': {
+        stage: 'WYNA-CN003', disease: '高脂血症',
+        new: {
+          matchCards: [
+            { no: 1, type: '入选', content: '年龄 18~75 岁（含）', result: '符合', resultDesc: '年龄 58 岁，满足入排要求。' },
+            { no: 2, type: '入选', content: '经临床明确诊断的高脂血症患者', result: '符合', resultDesc: '病历主诊断：高脂血症。' },
+            { no: 3, type: '排除', content: '合并严重肝肾功能不全（eGFR<30）', result: '不匹配', resultDesc: '肾功能正常。' }
+          ],
+          ai: { conclusion: '综合判定：符合入选，已通过入组审核。', risks: [], supplies: [] }
+        },
+        old: { stats: [{ val: '91.2%', lbl: '综合匹配度' }, { val: '3/3', lbl: '入选满足' }, { val: '0', lbl: '排除命中' }], reason: '全部满足，匹配度高，已通过入组审核。', protocol: { no: 'WYNA-301 V3.0', title: '评价某降脂药物治疗高脂血症的有效性与安全性的随机、双盲、安慰剂对照 III 期临床研究', update: '2026-07-20 更新' }, ai: { conclusion: 'AI 建议：建议通过入组。', reasons: ['全部满足', '无排除项'] } }
+      }
+    };
+
+    const tcResultsByType = {
+      inclusion: [
+        { id: 'tc_001', name: '乳腺癌诊断核查', version: 'v3.0', markdown:
+`【患者基本信息】
+性别：女
+年龄：45 岁（截至 2026-08-17）
+
+【第一步】是否存在明确的恶性肿瘤病理诊断
+判定依据：病理报告显示"浸润性导管癌"，II级。
+结论：是
+
+【第二步】分期评估
+影像学检查提示 IV 期（骨转移）
+结论：晚期实体瘤，符合入组
+
+【风险判定逻辑】
+匹配场景：诊断明确，分期符合入选要求` },
+        { id: 'tc_002', name: '排除标准核查', version: 'v3.0', markdown:
+`【排除项逐条核对】
+1. 活动性脑转移：近期 MRI 未见明确脑转移灶（待增强CT确认）
+2. 既往靶向治疗史：无相关记录
+3. 严重脏器功能不全：肝肾功能指标正常
+
+【结论】
+大部分排除标准未命中，1项需补充影像确认` }
+      ],
+      screening: [
+        { id: 'tc_101', name: '筛选表填写完整性', version: 'v3.0', markdown:
+`【筛查表字段核对】
+1. 人口学信息：完整
+2. 既往病史：完整
+3. 用药史：完整
+4. 病理报告：已上传
+
+【结论】
+筛选表填写完整，可进入下一步` }
+      ]
+    };
+
+    // ========= 状态 =========
+    let auditSubTab = 'pending';
+    let currentDetail = null;
+    let currentVersion = 'new';
+    let currentMdTab = 'match';
+    let currentTcType = 'inclusion';
+
+    // ========= 审核列表渲染 =========
+    function switchAuditTab(tab) {
+      auditSubTab = tab;
+      document.querySelectorAll('#screen-audit .tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      renderAuditList();
+    }
+
+    function renderAuditList() {
+      const list = AUDIT_DATA[auditSubTab] || [];
+      const box = document.getElementById('auditList');
+      if (!list.length) { box.innerHTML = '<div style="text-align:center;color:#999;padding:40px;">暂无数据</div>'; return; }
+      box.innerHTML = list.map(a => {
+        const statusPill = a.auditStatus === '通过'
+          ? '<span class="pill pill-green">通过</span>'
+          : (a.auditStatus === '已提交' ? '<span class="pill pill-blue">已提交</span>'
+          : '<span class="pill pill-orange">' + a.auditStatus + '</span>');
+        return `
+        <div class="audit-card">
+          <div class="hd">
+            <span class="name">${a.abbr}</span>
+            <span class="meta">${a.gender} · ${a.age}岁</span>
+            <span class="pill pill-audit-name">${a.auditName}</span>
+            ${statusPill}
+          </div>
+          <div class="body">
+            <div class="row"><span class="lbl">筛选号</span><span class="val">${a.patientNo}</span></div>
+            <div class="row"><span class="lbl">方案编号</span><span class="val">${a.schemeNo}</span></div>
+            <div class="row"><span class="lbl">中心</span><span class="val">${a.centerNo} · ${a.centerName}</span></div>
+            <div class="row"><span class="lbl">最新操作</span><span class="val">${a.latestOp} · ${a.latestTime}</span></div>
+          </div>
+          <div class="pct-row"><span class="pct-pill">匹配率 ${a.matchPct}</span></div>
+          <div class="action-bar">
+            <button class="act-btn primary" onclick="openDetail('${a.patientNo}')"><i class="fa-solid fa-magnifying-glass"></i> 匹配详情</button>
+          </div>
+          <div class="files"><i class="fa-solid fa-paperclip"></i> 附件：知情同意书.pdf · 病历首页.pdf</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ========= 进入/返回详情 =========
+    function openDetail(patientNo) {
+      currentDetail = MATCH_DETAIL[patientNo];
+      if (!currentDetail) { alert('暂无该患者的匹配详情数据（原型演示）'); return; }
+      const src = AUDIT_DATA.pending.concat(AUDIT_DATA.done).find(x => x.patientNo === patientNo);
+      // 标题格式：序号 · 缩写 | 匹配详情（方案编号）
+      document.getElementById('detailTitle').textContent =
+        '9 · ' + (src ? src.abbr : patientNo) + ' | 匹配详情（' + (src ? src.schemeNo : '测试项目5') + '）';
+      document.getElementById('screen-audit').classList.add('hidden');
+      document.getElementById('screen-detail').classList.remove('hidden');
+      switchVersion('new');
+    }
+
+    function goBack() {
+      document.getElementById('screen-detail').classList.add('hidden');
+      document.getElementById('screen-audit').classList.remove('hidden');
+    }
+
+    // ========= 版本切换 =========
+    function switchVersion(v) {
+      currentVersion = v;
+      document.getElementById('ver-new').classList.toggle('active', v === 'new');
+      document.getElementById('ver-old').classList.toggle('active', v === 'old');
+      switchMdTab(currentMdTab);
+    }
+
+    // ========= 子 Tab 切换 =========
+    function switchMdTab(tab) {
+      currentMdTab = tab;
+      ['match','screen','think'].forEach(t => {
+        document.getElementById('md-' + t).classList.toggle('active', t === tab);
+      });
+      renderMdBody();
+    }
+
+    function renderMdBody() {
+      const box = document.getElementById('mdBody');
+      if (!currentDetail) return;
+      if (currentMdTab === 'match') box.innerHTML = renderMatchTab();
+      else if (currentMdTab === 'screen') box.innerHTML = renderScreenTab();
+      else box.innerHTML = renderThinkTab();
+    }
+
+    // ========= 匹配详情 Tab —— 截图样式（新版） =========
+    function resultRow(item) {
+      const r = item.result || '待定';
+      const desc = item.resultDesc || '';
+      let cls = 'pending', icon = 'fa-clock';
+      if (r === '符合' || r === '匹配') { cls = 'match'; icon = 'fa-check-circle'; }
+      if (r === '不匹配' || r === '不符合') { cls = 'exclude'; icon = 'fa-times-circle'; }
+      return `<div class="match-result-row ${cls}"><i class="fas ${icon}"></i><span><span class="result-label">${r}：</span>${desc}</span></div>`;
+    }
+
+    function criteriaCard(item) {
+      return `
+        <div class="match-card">
+          <div class="match-card-head">
+            <span class="match-index">${item.no}</span>
+            <span class="match-type">${item.type}：</span>
+            <span class="match-title-text">${item.content}</span>
+          </div>
+          <div class="match-card-body">
+            ${resultRow(item)}
+            <div class="ai-risk-hint"><i class="fas fa-exclamation-triangle"></i>风险提示：AI判定结果仅供参考，请以原始病历核对为准</div>
+          </div>
+          <div class="match-card-foot">
+            <span class="match-foot-btn">结果修正</span>
+            <span class="match-foot-btn disabled">修正记录</span>
+            <span class="match-foot-btn disabled">清空修正</span>
+          </div>
+        </div>`;
+    }
+
+    function renderMatchTab() {
+      const md = currentDetail[currentVersion];
+      if (currentVersion === 'new') {
+        // ========== 截图样式：新版匹配详情 ==========
+        const cards = md.matchCards ? md.matchCards.map(criteriaCard).join('') : '';
+        const matCount = md.materialsCount || 0;
+
+        // AI 结论行
+        let aiIconClass = 'ai-icon-pending';
+        if (md.aiConclusion && md.aiConclusion.includes('通过')) aiIconClass = 'ai-icon-pass';
+        const aiHtml = md.aiConclusion
+          ? `<div class="ai-suggest-card">
+               <div class="ai-suggest-title">AI 建议</div>
+               <div class="ai-conclusion-row">
+                 <i class="fa-solid fa-circle-check ${aiIconClass}"></i>
+                 <span class="ai-text">${md.aiConclusion}</span>
+               </div>
+             </div>`
+          : '';
+
+        // 风险提示
+        const riskHtml = (md.risks && md.risks.length)
+          ? `<div class="risk-hint-card">
+               <div class="risk-hint-title"><i class="fa-solid fa-triangle-exclamation"></i> 风险提示</div>
+               <ul class="risk-list">${md.risks.map(r => `<li>${r}</li>`).join('')}</ul>
+             </div>`
+          : '';
+
+        return `
+          <!-- 患者信息头部 -->
+          <div class="patient-head-card">
+            <div class="patient-head-row">
+              <div class="patient-name-row">
+                <span class="patient-name">${currentDetail.stage || '预提交9'}</span>
+                <span class="patient-age">${getCurrentPatientAge()}岁</span>
+                <span class="patient-status">${getCurrentPatientGender()}</span>
+              </div>
+              <i class="fa-regular fa-pen-to-square patient-edit-icon" onclick="alert('编辑患者信息（原型）')"></i>
+            </div>
+            <div class="patient-disease"><b>疾病领域：</b>${currentDetail.disease || '—'}</div>
+          </div>
+
+          <!-- 病史与资料 + 标记储备 -->
+          <div class="materials-row">
+            <div class="materials-left">
+              <div class="materials-icon-wrap">
+                <i class="fa-regular fa-folder-open"></i>
+                <span class="materials-count-badge">${matCount}</span>
+              </div>
+              <span class="materials-label">病史与资料</span>
+            </div>
+            <button class="btn-mark-reserve" onclick="alert('标记储备（原型）')">标记储备</button>
+          </div>
+
+          <!-- 匹配度统计 -->
+          <div class="match-stats-card">
+            <div class="match-stats-top">
+              <div class="match-stats-left">
+                <div class="match-stat-item">
+                  <div class="match-stat-val highlight">${md.matchRate || '86.4%'}</div>
+                  <div class="match-stat-lbl">匹配度</div>
+                </div>
+                <div class="match-stat-item">
+                  <div class="match-stat-val">${md.pendingRate || '8.0%'}</div>
+                  <div class="match-stat-lbl">待定占比</div>
+                </div>
+              </div>
+              <div class="match-stats-desc">${md.summary || ''}</div>
+            </div>
+          </div>
+
+          <!-- 匹配详情卡片列表 -->
+          ${cards ? `<div class="md-section" style="padding: 10px 12px 0;"><div class="section-title" style="font-size:14px;font-weight:600;color:#1a1a1a;margin:4px 2px 10px;">匹配详情</div><div class="match-card-list">${cards}</div></div>` : ''}
+
+          <!-- AI 建议 -->
+          ${aiHtml}
+
+          <!-- 风险提示 -->
+          ${riskHtml}
+        `;
+      } else {
+        // 旧版
+        const stats = md.stats.map(s => `<div class="stat"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+        const reasons = md.ai.reasons.map(r => `<li>${r}</li>`).join('');
+        return `
+          <div class="md-section">
+            <div class="match-stats-card">
+              <div class="stats-main" style="display:flex;gap:18px;flex-shrink:0;">${stats}</div>
+              <div class="stats-desc" style="font-size:13px;color:#666;line-height:1.7;margin-top:10px;">${md.reason}</div>
+            </div>
+            <div style="border:1px solid #f0f0f0;border-radius:6px;padding:14px;background:#fff;margin-top:10px;">
+              <div style="font-size:18px;font-weight:700;color:#1a1a1a;">${md.protocol.no}</div>
+              <div style="font-size:13px;color:#666;line-height:1.7;margin:8px 0 12px;">${md.protocol.title}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                <span style="font-size:13px;color:#1a1a1a;font-weight:500;">方案版本</span>
+                <span style="font-size:11px;color:#999;">${md.protocol.update}</span>
+              </div>
+            </div>
+            <div style="border:1px solid #f0f0f0;border-radius:6px;padding:14px;background:#fff;margin-top:10px;">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <i class="fa-solid fa-robot" style="color:#1677ff;font-size:18px;"></i>
+                <span style="font-size:15px;font-weight:600;color:#1a1a1a;">AI 建议</span>
+              </div>
+              <div style="font-size:13px;color:#333;line-height:1.7;">
+                <div style="display:flex;align-items:flex-start;gap:8px;line-height:1.65;">
+                  <i class="fa-solid fa-lightbulb" style="color:#fa8c16;margin-top:3px;"></i>
+                  <span>${md.ai.conclusion}</span>
+                </div>
+                <div style="margin-top:8px;color:#666;"><b>建议依据</b></div>
+                <ul style="margin:6px 0 0;padding-left:18px;color:#333;">${reasons}</ul>
+              </div>
+            </div>
+          </div>`;
+      }
+    }
+
+    function getCurrentPatientAge() {
+      const src = AUDIT_DATA.pending.concat(AUDIT_DATA.done).find(x => x.stage === currentDetail.stage || x.patientNo === currentDetail.stage);
+      return src ? src.age : 45;
+    }
+
+    function getCurrentPatientGender() {
+      const src = AUDIT_DATA.pending.concat(AUDIT_DATA.done).find(x => x.stage === currentDetail.stage || x.patientNo === currentDetail.stage);
+      return src ? src.gender : '未提交';
+    }
+
+    // ========= 筛选表 Tab =========
+    function renderScreenTab() {
+      const md = currentDetail[currentVersion];
+      if (currentVersion === 'new') {
+        const cards = md.matchCards ? md.matchCards.map(criteriaCard).join('') : '';
+        return `<div class="md-section"><div class="section-title" style="font-size:14px;font-weight:600;">筛选表</div><div class="match-card-list">${cards}</div></div>`;
+      } else {
+        const stats = md.stats.map(s => `<div class="stat" style="flex:1;background:#fafcff;border:1px solid #f0f0f0;border-radius:6px;padding:10px;text-align:center;"><div style="font-size:18px;font-weight:700;color:#1a1a1a;">${s.val}</div><div style="font-size:12px;color:#8c8c8c;margin-top:2px;">${s.lbl}</div></div>`).join('');
+        return `<div class="md-section"><div class="section-title" style="font-size:14px;font-weight:600;">筛选表（旧版）</div><div style="display:flex;gap:12px;background:#fff;border-radius:6px;padding:10px;border:1px solid #f0f0f0;">${stats}</div><div style="font-size:12px;color:#666;line-height:1.6;margin-top:10px;">${md.reason}</div></div>`;
+      }
+    }
+
+    // ========= 思考链 Tab =========
+    function renderThinkTab() {
+      const d = currentDetail;
+      if (!d) return '';
+      const pct = (AUDIT_DATA.pending.concat(AUDIT_DATA.done).find(x => x.patientNo === d.stage) || {}).matchPct || '0%';
+      const num = parseFloat(pct);
+      if (num < 40) {
+        return `<div class="tc-area"><div class="tc-state">
+          <div class="ico red"><i class="fas fa-times-circle"></i></div>
+          <h4 class="red">思考失败</h4>
+          <div class="desc">思考失败，请点击「AI思考」重新触发。</div>
+          <div class="btn-row"><button class="btn-blue" onclick="alert('已重新触发 AI 思考')"><i class="fas fa-redo"></i> AI思考</button></div>
+        </div></div>`;
+      }
+      if (num < 70) {
+        return `<div class="tc-area"><div class="tc-state">
+          <div class="ico purple"><i class="fas fa-spinner fa-spin"></i></div>
+          <h4 class="purple">AI 正在思考中，请稍后再来</h4>
+        </div></div>`;
+      }
+      const chains = tcResultsByType[currentTcType] || [];
+      if (chains.length === 0) {
+        return `<div class="tc-area">
+          <div class="tc-type-selector">
+            <button class="tc-type-btn ${currentTcType==='inclusion'?'tc-type-active':''}" onclick="switchTcType('inclusion')">入排条件</button>
+            <button class="tc-type-btn ${currentTcType==='screening'?'tc-type-active':''}" onclick="switchTcType('screening')">筛选表</button>
+          </div>
+          <div class="tc-empty"><div style="font-size:32px;margin-bottom:12px">🧠</div><div>暂无该类型的思考链结果</div></div>
+        </div>`;
+      }
+      let chainHtml = chains.map((chain, i) => `
+        <div class="tc-item${i === 0 ? ' open' : ''}">
+          <div class="hd" onclick="this.parentElement.classList.toggle('open')">
+            <span class="num">${i + 1}</span>
+            <span class="nm">${chain.name}</span>
+            <span class="ok-tag">已完成</span>
+          </div>
+          <div class="body">${chain.markdown}</div>
+        </div>`).join('');
+      return `
+        <div class="tc-area">
+          <div class="tc-type-selector">
+            <button class="tc-type-btn ${currentTcType==='inclusion'?'tc-type-active':''}" onclick="switchTcType('inclusion')">入排条件</button>
+            <button class="tc-type-btn ${currentTcType==='screening'?'tc-type-active':''}" onclick="switchTcType('screening')">筛选表</button>
+          </div>
+          ${chainHtml}
+          <div class="disclaimer"><i class="fas fa-info-circle"></i><span>以上内容由AI生成，仅供参考，请谨慎鉴别。</span></div>
+        </div>`;
+    }
+
+    function switchTcType(t) { currentTcType = t; renderMdBody(); }
+
+    // ========= 初始化 =========
+    renderAuditList();
+  </script>
+</body>
+</html>
