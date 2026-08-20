@@ -1560,10 +1560,11 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      gap: 0;
-      background: #f5f7fa;
-      border-radius: 8px 8px 0 0;
-      padding: 6px 10px;
+      gap: 24px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      border-radius: 0;
+      padding: 0 16px;
       overflow-x: auto;
     }
     .criteria-version-tabs .cvs-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -1577,32 +1578,66 @@
     }
     .criteria-version-tabs .cvs-action-btn:hover { background: #f5f7fa; color: #1677ff; border-color: #91caff; }
     .criteria-version-tab {
-      padding: 10px 18px;
-      font-size: 13px;
+      padding: 12px 4px;
+      font-size: 14px;
       color: #666;
       cursor: pointer;
-      background: #f5f7fa;
-      border-right: 1px solid #e8e8e8;
+      background: transparent;
+      border-bottom: 2px solid transparent;
       transition: all 0.2s;
-      min-width: 132px;
+      min-width: auto;
     }
     .criteria-version-tab:hover {
-      background: #e8f0ff;
       color: #1677ff;
     }
     .criteria-version-tab.active {
-      background: #fff;
       color: #1677ff;
       font-weight: 600;
-      border-bottom: 2px solid #1677ff;
+      border-bottom-color: #1677ff;
     }
     .criteria-version-tab.disabled-ver { opacity: 0.62; }
     .criteria-version-tab .ver-top { display: flex; align-items: center; gap: 6px; }
     .criteria-version-tab .ver-name { font-weight: 600; font-size: 14px; }
-    .criteria-version-tab .ver-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .criteria-version-tab .ver-dot { width: 6px; height: 6px; border-radius: 50%; }
     .criteria-version-tab .ver-dot.on { background: #52c41a; }
-    .criteria-version-tab .ver-dot.off { background: #bbb; }
-    .criteria-version-tab .ver-date { font-size: 11px; color: #999; margin-top: 2px; }
+    .criteria-version-tab .ver-dot.off { background: #bfbfbf; }
+    .criteria-version-tab .ver-date { display: none; }
+
+    /* 当前版本信息卡片 */
+    .version-current-bar {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px 24px;
+      margin: 16px; padding: 14px 18px;
+      background: #f0f9ff; border: 1px solid #d6eefc; border-radius: 8px;
+      font-size: 13px; color: #333;
+    }
+    .version-current-bar .vcb-label { color: #666; }
+    .version-current-bar .vcb-name { font-weight: 600; color: #1677ff; }
+    .version-current-bar .vcb-divider { color: #e0e0e0; }
+    .version-current-bar .vcb-rename {
+      display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+      color: #1677ff; font-size: 13px;
+    }
+    .version-current-bar .vcb-rename:hover { text-decoration: underline; }
+    .version-current-bar .vcb-rename i { font-size: 12px; }
+    .version-current-bar .vcb-meta { color: #666; font-size: 13px; }
+    .version-current-bar .vcb-meta b { color: #333; font-weight: 600; margin-left: 4px; }
+    .version-current-bar .vcb-divider { color: #e0e0e0; }
+    /* 启用停用 switch */
+    .vcb-switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-left: 8px; font-size: 13px; color: #666; }
+    .vcb-switch input { display: none; }
+    .vcb-switch-track {
+      position: relative; width: 40px; height: 22px; border-radius: 11px;
+      background: #bfbfbf; transition: background 0.2s; flex-shrink: 0;
+    }
+    .vcb-switch-thumb {
+      position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+      border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      transition: left 0.2s;
+    }
+    .vcb-switch.on .vcb-switch-track { background: #1677ff; }
+    .vcb-switch.on .vcb-switch-thumb { left: 20px; }
+    .vcb-switch-txt { min-width: 24px; }
+    .vcb-switch.on .vcb-switch-txt { color: #1677ff; }
     .criteria-content-area {
       background: #fff;
       border: 1px solid #e8e8e8;
@@ -1699,6 +1734,7 @@
     .btn-ghost { background: #f0f5ff; color: #1677ff; border: 1.5px solid #d6e4ff; }
     .btn-ghost:hover { background: #e6eeff; }
     .think-badge { font-style: normal; margin-left: 2px; background: #1677ff; color: #fff; font-size: 10px; line-height: 1; padding: 2px 5px; border-radius: 8px; }
+    .remark-count-badge { font-style: normal; color: #f5222d; font-size: 13px; font-weight: 600; margin-left: 2px; }
     .tc-context { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; background: #fafbff; }
     .tc-context-label { font-size: 12px; color: #999; margin-bottom: 6px; }
     .tc-context-text { font-size: 14px; line-height: 1.7; color: #1d2129; white-space: pre-wrap; word-break: break-word; }
@@ -3404,8 +3440,9 @@
     .criteria-textarea { width: 100%; min-height: 84px; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; resize: vertical; font-family: inherit; line-height: 1.6; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
     .criteria-textarea:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,0.12); }
     .criteria-textarea::placeholder { color: #bbb; }
-    .proj-criteria-table .action-cell { width: 92px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .proj-criteria-table .action-cell { width: 132px; min-width: 132px; text-align: left; padding-top: 14px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
     .proj-criteria-table thead th.action-cell { display: table-cell; padding-top: 10px; text-align: left; vertical-align: middle; }
+    .proj-criteria-table .config-action { white-space: nowrap; }
     .thinking-chain-row td { background: #fffdf7 !important; padding: 0; }
     .thinking-chain-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px 6px; }
     .thinking-chain-title { font-size: 12px; color: #d48806; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
@@ -15424,10 +15461,10 @@ let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningDa
 let uploadedFiles = [];
 
 // 入排标准版本列表（与 _projectCriteriaData 的版本一一对应）
-let activeCriteriaVersion = 'v2.0';
+let activeCriteriaVersion = 'v2.1';
 let criteriaVersions = [
-  { version:'v2.0', name:'入排标准 v2.0', date:'2026-06-22', status:'生效', editor:'张管理', enabled:true },
-  { version:'v1.0', name:'入排标准 v1.0', date:'2026-05-15', status:'历史', editor:'系统', enabled:false }
+  { version:'v2.1', name:'2.1方案', date:'2026-08-20', status:'生效', editor:'张琳', enabled:true },
+  { version:'v2.0', name:'2.0方案', date:'2026-06-22', status:'历史', editor:'张管理', enabled:false }
 ];
 
 function buildAdminProjectEdit(isNew) {
@@ -16157,9 +16194,33 @@ function renderCriteriaVersionTabs() {
         <span class="ver-name">${v.name || v.version}</span>
         <span class="ver-dot ${v.enabled ? 'on' : 'off'}" title="${v.enabled ? '已启用' : '已停用'}"></span>
       </div>
-   
     </div>
   `).join('');
+}
+
+function toggleCriteriaEnabled(version, enabled) {
+  const v = criteriaVersions.find(x => x.version === version);
+  if(!v) return;
+  v.enabled = enabled;
+  // 同步 tab 圆点状态
+  const tab = document.querySelector('.criteria-version-tab');
+  refreshCriteriaSection();
+}
+
+function renderCurrentVersionBar() {
+  const v = criteriaVersions.find(x => x.version === activeCriteriaVersion) || criteriaVersions[0];
+  return `
+    <div class="version-current-bar" id="currentVersionBar">
+      <span class="vcb-label">当前版本</span>
+      <span class="vcb-name">${v.name || v.version}</span>
+      <span class="vcb-rename" onclick="openCriteriaVersionNameModal('rename','${v.version}')"><i class="fa-solid fa-pen"></i> 重命名</span>
+      <label class="vcb-switch ${v.enabled ? 'on' : ''}">
+        <input type="checkbox" ${v.enabled ? 'checked' : ''} onchange="toggleCriteriaEnabled('${v.version}', this.checked)">
+        <span class="vcb-switch-track"><span class="vcb-switch-thumb"></span></span>
+        <span class="vcb-switch-txt">${v.enabled ? '启用' : '停用'}</span>
+      </label>
+    </div>
+  `;
 }
 
 function renderProjectCriteriaBody() {
@@ -16169,9 +16230,9 @@ function renderProjectCriteriaBody() {
       <div class="cvs-actions">
         <button class="cvs-action-btn" onclick="copyCriteriaVersion('${activeCriteriaVersion}')" title="复制当前版本"><i class="fa-solid fa-copy"></i></button>
         <button class="cvs-action-btn" onclick="deleteCriteriaVersion('${activeCriteriaVersion}')" title="删除版本"><i class="fa-solid fa-trash"></i></button>
-        <button class="cvs-edit-btn" onclick="openCriteriaVersionNameModal('rename','${activeCriteriaVersion}')" title="修改版本名称"><i class="fa-solid fa-pen"></i></button>
       </div>
     </div>
+    ${renderCurrentVersionBar()}
     <div class="criteria-content-area" id="criteriaContentArea">
       ${renderCriteriaVersionContent(activeCriteriaVersion)}
     </div>
@@ -16293,7 +16354,7 @@ function renderCriteriaVersionContent(ver) {
           </td>
           ${stageTds}
           <td class="action-cell">
-            <span class="config-action" onclick="openCriteriaRemarkModal('${ver}','${type}',${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注</span>
+            <span class="config-action" onclick="openCriteriaRemarkModal('${ver}','${type}',${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkRows.length ? `<em class="remark-count-badge">（${remarkRows.length}）</em>` : ''}</span>
             <span class="config-action" onclick="openRowThinkChain('inclusion','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('inclusion','${item.id}')}</span>
             ${items.length > 1 ? `<span class="delete-action" onclick="deleteProjectCriteriaRow('${ver}', '${type}', ${idx})">删除</span>` : ''}
           </td>
@@ -16691,6 +16752,7 @@ function deleteProjectCriteriaRow(ver, type, idx) {
 
 function refreshCriteriaSection() {
   const tabsContainer = document.getElementById('criteriaVersionTabs');
+  const currentBar = document.getElementById('currentVersionBar');
   const contentArea = document.getElementById('criteriaContentArea');
   if(tabsContainer) {
     tabsContainer.innerHTML = renderCriteriaVersionTabs();
@@ -16698,10 +16760,10 @@ function refreshCriteriaSection() {
     actions.className = 'cvs-actions';
     actions.innerHTML =
       '<button class="cvs-action-btn" onclick="copyCriteriaVersion(\'' + activeCriteriaVersion + '\')" title="复制当前版本"><i class="fa-solid fa-copy"></i></button>' +
-      '<button class="cvs-action-btn" onclick="deleteCriteriaVersion(\'' + activeCriteriaVersion + '\')" title="删除版本"><i class="fa-solid fa-trash"></i></button>' +
-      '<button class="cvs-edit-btn" onclick="openCriteriaVersionNameModal(\'rename\',\'' + activeCriteriaVersion + '\')" title="修改版本名称"><i class="fa-solid fa-pen"></i></button>';
+      '<button class="cvs-action-btn" onclick="deleteCriteriaVersion(\'' + activeCriteriaVersion + '\')" title="删除版本"><i class="fa-solid fa-trash"></i></button>';
     tabsContainer.appendChild(actions);
   }
+  if(currentBar) currentBar.outerHTML = renderCurrentVersionBar();
   if(contentArea) {
     contentArea.innerHTML = renderCriteriaVersionContent(activeCriteriaVersion);
     fitTableScrollToRows(contentArea, 10);
@@ -16987,7 +17049,7 @@ function renderScreeningContent() {
         </td>
         ${stageTds}
         <td class="action-cell">
-          <span class="config-action" onclick="openScreeningRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
+          <span class="config-action" onclick="openScreeningRemarkModal(${idx})"><i class="fa-regular fa-note-sticky"></i> 配置备注${remarkCount ? `<em class="remark-count-badge">（${remarkCount}）</em>` : ''}</span>
           <span class="config-action" onclick="openRowThinkChain('screening','${item.id}')"><i class="fa-solid fa-brain"></i> 思考链${projTcLinkedBadge('screening','${item.id}')}</span>
           ${items.length > 1 ? `<span class="delete-action" onclick="deleteScreeningRow(${idx})">删除</span>` : ''}
         </td>

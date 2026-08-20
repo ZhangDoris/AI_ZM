@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>入组审核沟通 - 医学关注改造</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #eef2f7; }
+
+  /* 主区域：放置弹窗与遮罩 */
+  .page-bg { background: linear-gradient(135deg, #e8f3f6 0%, #f8fafc 100%); min-height: 100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+
+  /* 遮罩 */
+  .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 720px; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(15,23,42,0.18); }
+
+  /* 顶部规则提示（参考图风格：淡黄底 + 左侧 i 图标 + 普通文字） */
+  .rule-alert { display: flex; gap: 14px; padding: 22px 24px; margin: 16px 24px 0; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px; color: #595959; font-size: 14px; line-height: 1.9; align-items: flex-start; }
+  .rule-alert .ico { flex-shrink:0; width:24px; height:24px; border-radius:50%; background:#fa8c16; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; margin-top: 2px; }
+  .rule-alert .text { flex: 1; }
+  .rule-alert .text p { margin: 0; }
+  .rule-alert .text p + p { margin-top: 4px; }
+  .rule-alert b { color: #595959; font-weight: 700; }
+
+  /* 字段标签 */
+  .field-label { font-size: 14px; color: #374151; margin-right: 12px; flex-shrink: 0; }
+  .field-search { flex: 1; height: 36px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; outline: none; transition: border-color .15s; background: #f9fafb; }
+  .field-search:focus { border-color: #1872a7 !important; background: #fff; }
+
+  /* 表格 */
+  .data-table { margin: 16px 24px 0; width: calc(100% - 48px); border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  .data-table thead th { background: #1872a7 !important; color: #fff; font-weight: 600; padding: 12px; text-align: left; border-top-left-radius: 6px; border-top-right-radius: 6px; }
+  .data-table thead th:last-child { text-align: center; }
+  .data-table tbody td { padding: 12px; border-bottom: 1px solid #f0f0f0; color: #374151; }
+  .data-table tbody td:last-child { text-align: center; }
+  .data-table tbody tr:hover td { background: #f3f8fa; }
+  .data-table tbody tr:last-child td:first-child { border-bottom-left-radius: 6px; }
+  .data-table tbody tr:last-child td:last-child { border-bottom-right-radius: 6px; }
+  .col-index { width: 64px; text-align: center; color: #9ca3af; }
+  .col-action a { color: #1872a7 !important; cursor: pointer; }
+  .col-action a:hover { text-decoration: underline; }
+
+  /* 文本域 */
+  .textarea-box { margin: 16px 24px 0; width: calc(100% - 48px); }
+  .textarea-box textarea { width: 100%; min-height: 96px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; resize: vertical; outline: none; transition: border-color .15s; }
+  .textarea-box textarea:focus { border-color: #1872a7 !important; }
+  .textarea-box textarea::placeholder { color: #c0c4cc; }
+
+  /* 附件 */
+  .attach-row { margin: 18px 24px 0; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #374151; }
+  .btn-upload { padding: 6px 14px; background: #1872a7 !important; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  .btn-upload:hover { background: #125a85 !important; }
+  .attach-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 24px 0; }
+  .attach-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #e8f3f6; border: 1px solid #9cc6d4; border-radius: 4px; font-size: 12px; color: #1872a7 !important; }
+  .attach-item i { cursor: pointer; color: #94a3b8; }
+
+  /* 底部按钮 */
+  .modal-foot { display: flex; justify-content: flex-end; gap: 12px; padding: 24px; border-top: 1px solid #f1f5f9; margin-top: 20px; }
+  .btn { padding: 8px 20px; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid transparent; }
+  .btn-default { background: #fff; border-color: #d1d5db; color: #374151; }
+  .btn-default:hover { border-color: #1872a7 !important; color: #1872a7 !important; }
+  .btn-primary { background: #1872a7 !important; color: #fff; }
+  .btn-primary:hover { background: #125a85 !important; }
+
+  /* 检索结果下拉 */
+  .search-wrap { position: relative; flex: 1; }
+  .search-result { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; max-height: 240px; overflow-y: auto; z-index: 5; box-shadow: 0 8px 24px rgba(0,0,0,0.08); display: none; }
+  .search-result .item { padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f3f4f6; display: flex; align-items: center; gap: 8px; }
+  .search-result .item:hover { background: #e8f3f6; }
+  .search-result .item:last-child { border-bottom: none; }
+  .search-result .item.added { color: #9ca3af; cursor: not-allowed; background: #f9fafb; }
+  /* 姓名 + 角色名 拼接样式 */
+  .name-with-role { font-size: 13px; color: #374151; }
+  .name-with-role .role-inline { color: #1872a7; font-size: 12px; margin-left: 4px; }
+
+  /* 顶部条 */
+  .modal-head { display: flex; align-items: center; justify-content: center; padding: 18px 24px; border-bottom: 1px solid #f1f5f9; position: relative; font-size: 16px; font-weight: 600; color: #111827; }
+  .modal-head .close { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #9ca3af; font-size: 18px; padding: 6px; }
+  .modal-head .close:hover { color: #374151; }
+
+  /* 人员行 */
+  .role-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; background: #e8f3f6; color: #1872a7 !important; }
+
+  @media (max-width: 640px) {
+    .modal-box { max-width: 100%; }
+    .rule-alert, .tip-card, .data-table, .textarea-box, .attach-row, .attach-list { margin-left: 16px; margin-right: 16px; width: auto; }
+    .data-table { width: calc(100% - 32px); }
+    .textarea-box { width: calc(100% - 32px); }
+    .modal-foot { flex-direction: column-reverse; }
+    .modal-foot .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-bg">
+
+  <!-- 顶部提示：当前页背景提示（演示用） -->
+  <div style="position:fixed; top:16px; left:16px; padding:8px 14px; background:rgba(255,255,255,0.85); border-radius:6px; font-size:12px; color:#475569; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+    <i class="fas fa-info-circle mr-1 text-[#1872a7]"></i>原型演示：背景层为示意
+  </div>
+
+  <!-- 弹窗 -->
+  <div class="modal-mask">
+    <div class="modal-box">
+
+      <!-- 标题 -->
+      <div class="modal-head">
+        入组审核沟通
+        <span class="close" onclick="showToast('已关闭弹窗', 'cancel')" title="关闭"><i class="fas fa-times"></i></span>
+      </div>
+
+      <!-- 人员选择区 -->
+      <div class="px-6 pt-4">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span class="field-label"><span style="color:#F53F3F;">*</span>请选择提醒人员：</span>
+          <div class="search-wrap">
+            <input type="text" class="field-search" id="userSearch" placeholder="请输入关键词搜索" oninput="renderUserResults()" onfocus="renderUserResults()" onkeydown="onSearchKeydown(event)">
+            <div class="search-result" id="userResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 提示卡片（参考图风格：淡黄底 + 左侧 i 图标） -->
+      <div class="rule-alert">
+        <div class="ico"><i class="fas fa-info"></i></div>
+        <div class="text">
+          <p>首次发送默认选中 CRC/协调员；后续发送默认选中上次人员。</p>
+          <p style="color:#bfbfbf;">提示：若需更改，可直接删除已选人员后重新添加。</p>
+        </div>
+      </div>
+
+      <!-- 已选人员表格 -->
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-index">序号</th>
+            <th>用户姓名</th>
+            <th>角色</th>
+            <th>手机号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <!-- 默认人员：王小珂（临床协调员） -->
+          <tr data-default="1">
+            <td class="col-index">1</td>
+            <td>王小珂</td>
+            <td><span class="role-badge">临床协调员</span></td>
+            <td>187****0085</td>
+            <td class="col-action"><a onclick="removeUserRow(this)">删除</a></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 批注 -->
+      <div class="textarea-box">
+        <textarea id="remarkInput" placeholder="添加批注"></textarea>
+      </div>
+
+      <!-- 附件 -->
+      <div class="attach-row">
+        <span>附件：</span>
+        <button type="button" class="btn-upload" onclick="fakeUpload()">点击上传</button>
+        <span style="color:#9ca3af; font-size:12px;">支持图片、PDF、Word、Excel，单文件 ≤ 20MB</span>
+      </div>
+      <div class="attach-list" id="attachList"></div>
+
+      <!-- 底部按钮 -->
+      <div class="modal-foot">
+        <button type="button" class="btn btn-default" onclick="showToast('已取消', 'cancel')">取消</button>
+        <button type="button" class="btn btn-primary" onclick="onSend()">发送</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed; top:24px; left:50%; transform:translateX(-50%) translateY(-20px); background:#fff; border:1px solid #e5e7eb; padding:10px 18px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.12); font-size:14px; color:#374151; opacity:0; transition:all .25s; z-index:200; display:flex; align-items:center; gap:8px;">
+  <i id="toastIcon" class="fas fa-check-circle text-[#00B42A]"></i>
+  <span id="toastText">操作成功</span>
+</div>
+
+<script>
+  // ====== 模拟人员数据（实际由接口返回） ======
+  // 每人包含：姓名、角色、手机号
+  const USERS = [
+    { name: '王小珂', role: 'CRA专员',  phone: '187****0085' },
+    { name: '刘雪红', role: 'CRA专员',  phone: '187****0085' },
+    { name: '李娜',   role: 'CRC专员',  phone: '138****2056' },
+    { name: '张敏',   role: '医学经理',  phone: '139****8810' },
+    { name: '王伟',   role: '临床协调员', phone: '136****4421' },
+    { name: '陈静',   role: '项目经理',  phone: '135****7790' },
+    { name: '刘洋',   role: '数据管理员', phone: '188****1133' },
+    { name: '赵琳',   role: 'TE-CRA',   phone: '189****6622' },
+    { name: '孙磊',   role: '临床协调员', phone: '186****9918' },
+    { name: '周丽',   role: '医学经理',  phone: '152****3344' },
+    { name: '吴军',   role: '质控员',    phone: '133****0067' },
+    { name: '郑伟',   role: '临床协调员', phone: '155****3322' },
+  ];
+
+  // 默认已选：王小珂（参考截图）
+  const selectedUsers = new Set(['王小珂']);
+
+  // 渲染检索结果（下拉项）
+  function renderUserResults() {
+    const kw = document.getElementById('userSearch').value.trim().toLowerCase();
+    const box = document.getElementById('userResult');
+    if (!box) return;
+
+    // 搜索时同时匹配 姓名、角色、手机号
+    const list = kw
+      ? USERS.filter(u =>
+          u.name.toLowerCase().includes(kw) ||
+          u.role.toLowerCase().includes(kw) ||
+          u.phone.toLowerCase().includes(kw)
+        )
+      : USERS;
+
+    if (!list.length) {
+      box.innerHTML = '<div class="item" style="color:#9ca3af; cursor:default;">未找到匹配的人员</div>';
+    } else {
+      box.innerHTML = list.map(u => {
+        const added = selectedUsers.has(u.name);
+        // 每个人名后拼接一个角色名（不带编号、不带头像）
+        return `<div class="item ${added ? 'added' : ''}" ${added ? '' : `onclick="addUser('${u.name}')"`}>
+          <span class="name-with-role">${u.name}<span class="role-inline">${u.role}</span></span>
+        </div>`;
+      }).join('');
+    }
+    box.style.display = 'block';
+  }
+
+  // 回车时：把搜索结果第一项未选中的人员加入
+  function onSearchKeydown(e) {
+    if (e.key === 'Enter') {
+      const box = document.getElementById('userResult');
+      const first = box && box.querySelector('.item:not(.added)');
+      if (first) {
+        // 找到对应姓名
+        const name = first.querySelector('.name-with-role').firstChild.textContent.trim();
+        addUser(name);
+      }
+    }
+  }
+
+  // 点击外部关闭下拉
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) {
+      const box = document.getElementById('userResult');
+      if (box) box.style.display = 'none';
+    }
+  });
+
+  // 添加人员：选完后清空搜索框，刷新表格
+  function addUser(name) {
+    if (!name || selectedUsers.has(name)) return;
+    selectedUsers.add(name);
+    refreshUserTable();
+    // 清空搜索框（用户需求：下拉框清空）
+    const input = document.getElementById('userSearch');
+    input.value = '';
+    input.focus();
+    renderUserResults();
+    showToast(`已添加：${name}`);
+  }
+
+  // 删除已选人员
+  function removeUserRow(el) {
+    const tr = el.closest('tr');
+    const name = tr.querySelector('td:nth-child(2)').textContent.trim();
+    // 默认人员不允许删除
+    if (tr.dataset.default === '1') {
+      showToast('默认人员不可删除', 'cancel');
+      return;
+    }
+    selectedUsers.delete(name);
+    tr.remove();
+    reindexTable();
+    renderUserResults();
+    showToast(`已移除：${name}`);
+  }
+
+  // 重建表格（保留默认行 + 已添加人员行，重新编号）
+  function refreshUserTable() {
+    const tbody = document.getElementById('userTableBody');
+    const defaultRow = tbody.querySelector('tr[data-default]');
+    tbody.innerHTML = '';
+    if (defaultRow && selectedUsers.has('王小珂')) tbody.appendChild(defaultRow);
+    let idx = 1;
+    selectedUsers.forEach(name => {
+      if (name === '王小珂') return;
+      const u = USERS.find(x => x.name === name);
+      if (!u) return;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="col-index">${idx++}</td>
+        <td>${u.name}</td>
+        <td><span class="role-badge">${u.role}</span></td>
+        <td>${u.phone}</td>
+        <td class="col-action"><a onclick="removeUserRow(this)">删除</a></td>`;
+      tbody.appendChild(tr);
+    });
+    reindexTable();
+  }
+
+  // 重新编号
+  function reindexTable() {
+    const rows = document.querySelectorAll('#userTableBody tr');
+    rows.forEach((tr, i) => {
+      tr.querySelector('.col-index').textContent = i + 1;
+    });
+  }
+
+  // 附件上传（演示）
+  let attachSeq = 0;
+  function fakeUpload() {
+    attachSeq += 1;
+    const name = `附件${attachSeq}.pdf`;
+    const list = document.getElementById('attachList');
+    const item = document.createElement('span');
+    item.className = 'attach-item';
+    item.innerHTML = `<i class="fas fa-file-pdf"></i>${name}<i class="fas fa-times" onclick="this.parentElement.remove()"></i>`;
+    list.appendChild(item);
+    showToast(`已上传：${name}`);
+  }
+
+  // 发送
+  function onSend() {
+    const names = Array.from(selectedUsers);
+    if (!names.length) {
+      showToast('请至少选择一位提醒人员', 'cancel');
+      return;
+    }
+    const remark = (document.getElementById('remarkInput').value || '').trim();
+    if (!remark) {
+      showToast('请输入批注内容', 'cancel');
+      return;
+    }
+    // 按需求：人名后拼接角色名（<姓名><角色>）
+    const listText = names.map(n => {
+      const u = USERS.find(x => x.name === n);
+      return u ? `${n}<${u.role}>` : n;
+    }).join('、');
+    showToast(`已发送给 ${listText}（${names.length} 人）`);
+  }
+
+  // Toast
+  function showToast(text, type = 'success') {
+    const t = document.getElementById('toast');
+    const i = document.getElementById('toastIcon');
+    document.getElementById('toastText').textContent = text;
+    i.className = type === 'cancel'
+      ? 'fas fa-times-circle text-[#F53F3F]'
+      : 'fas fa-check-circle text-[#00B42A]';
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(-20px)';
+    }, 2200);
+  }
+
+  // 初始化
+  renderUserResults();
+</script>
+</body>
+</html>

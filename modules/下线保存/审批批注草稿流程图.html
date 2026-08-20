@@ -1,0 +1,214 @@
+<!--
+  审批批注草稿暂存 · 流程图（可视化）
+  用 SVG 绘制的正式流程图，展示：写批注→触发离开(登录超时/系统更新)→重新登录弹窗→是/否分支。
+  技术栈：HTML + Tailwind CSS v3 (CDN) + Font Awesome (CDN) + 原生 JS(SVG)
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>审批批注草稿暂存 · 流程图</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC",sans-serif; background:#f0f4ff; color:#1a1a1a; }
+    .flow-wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px 60px; }
+    .title-bar { display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+    .title-bar .badge { width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,#1677ff,#0958d9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 18px rgba(22,119,255,.35);}
+    .title-bar h1 { font-size:20px; margin:0; }
+    .title-bar p { font-size:13px; color:#888; margin:2px 0 0; }
+    .svg-stage { background:#fff; border-radius:18px; box-shadow:0 12px 40px rgba(22,119,255,.10),0 0 0 1px rgba(22,119,255,.05); margin-top:18px; padding:8px; }
+    svg { width:100%; height:auto; display:block; }
+
+    /* 节点卡片 */
+    .node-box { fill:#ffffff; stroke:#e3e8f0; stroke-width:1.5; }
+    .node-title { font-size:14px; font-weight:700; fill:#1a1a1a; }
+    .node-sub { font-size:12px; fill:#6b7280; }
+    .node-ic { font-size:15px; }
+    .blue-bar { fill:#1677ff; }
+    .amber-bar { fill:#f59e0b; }
+    .green-bar { fill:#00b42a; }
+    .gray-bar { fill:#8c8c8c; }
+
+    /* 连接线 */
+    .edge { fill:none; stroke:#b9c2cf; stroke-width:2; }
+    .edge-hl { fill:none; stroke:#1677ff; stroke-width:2.5; }
+    .edge-label { font-size:11.5px; fill:#6b7280; }
+    .branch-yes { fill:#1677ff; }
+    .branch-no { fill:#8c8c8c; }
+
+    /* 图例 */
+    .legend { display:flex; flex-wrap:wrap; gap:18px; margin-top:18px; font-size:12.5px; color:#555; }
+    .legend span { display:inline-flex; align-items:center; gap:6px; }
+    .dot { width:12px;height:12px;border-radius:3px; }
+
+    /* hover 高亮组 */
+    .grp { cursor:default; }
+    .grp:hover .node-box { stroke:#1677ff; stroke-width:2.2; filter: drop-shadow(0 4px 10px rgba(22,119,255,.18)); }
+  </style>
+</head>
+<body>
+<div class="flow-wrap">
+  <div class="title-bar">
+    <div class="badge"><i class="fa-solid fa-diagram-project"></i></div>
+    <div>
+      <h1>审批批注草稿暂存 · 流程图</h1>
+      <p>覆盖「提交审核」与「审批」两类操作的草稿暂存，以及「登录超时」与「系统更新」两类中断场景的自动恢复路径</p>
+    </div>
+  </div>
+
+  <div class="svg-stage">
+    <svg viewBox="0 0 940 860" id="flowSvg" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#b9c2cf"></path>
+        </marker>
+        <marker id="arrowB" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#1677ff"></path>
+        </marker>
+        <marker id="arrowG" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L8,3 L0,6 Z" fill="#00b42a"></path>
+        </marker>
+      </defs>
+
+      <!-- ① 两个入口：提交审核 / 审批（并列） -->
+      <g class="grp" data-g="1">
+        <rect class="node-box" x="90" y="30" width="350" height="86" rx="12"></rect>
+        <rect class="blue-bar" x="90" y="30" width="6" height="86" rx="3"></rect>
+        <text class="node-ic" x="116" y="66" fill="#1677ff">&#xf09c;</text>
+        <text class="node-title" x="144" y="62">入口一：提交审核</text>
+        <text class="node-sub" x="144" y="86">在「提交审核」表单填写意见（写到一半）</text>
+      </g>
+      <g class="grp" data-g="1">
+        <rect class="node-box" x="500" y="30" width="350" height="86" rx="12"></rect>
+        <rect class="blue-bar" x="500" y="30" width="6" height="86" rx="3"></rect>
+        <text class="node-ic" x="526" y="66" fill="#1677ff">&#xf304;</text>
+        <text class="node-title" x="554" y="62">入口二：审批</text>
+        <text class="node-sub" x="554" y="86">在「审批批注」框写意见（写到一半）</text>
+      </g>
+      <!-- 两个入口 → 汇入统一暂存说明 -->
+      <path class="edge" d="M265,116 L265,140 L470,140" marker-end="url(#arrow)"></path>
+      <path class="edge" d="M675,116 L675,140 L470,140" marker-end="url(#arrow)"></path>
+
+      <!-- 统一暂存说明 -->
+      <g class="grp" data-g="11">
+        <rect class="node-box" x="270" y="142" width="400" height="62" rx="12"></rect>
+        <rect class="blue-bar" x="270" y="142" width="6" height="62" rx="3"></rect>
+        <text class="node-ic" x="296" y="178" fill="#1677ff">&#xf0c7;</text>
+        <text class="node-title" x="324" y="174">内容实时自动存服务器（无需手动保存）</text>
+        <text class="node-sub" x="324" y="196">「提交审核」与「审批」共用同一暂存机制</text>
+      </g>
+      <!-- ①→触发 -->
+      <path class="edge" d="M470,204 L470,238" marker-end="url(#arrow)"></path>
+
+      <!-- 触发离开（菱形/分支容器） -->
+      <g class="grp" data-g="2">
+        <rect class="node-box" x="180" y="240" width="580" height="92" rx="12"></rect>
+        <rect class="amber-bar" x="180" y="240" width="6" height="92" rx="3"></rect>
+        <text class="node-ic" x="206" y="272" fill="#f59e0b">&#xf071;</text>
+        <text class="node-title" x="234" y="268">触发离开</text>
+        <text class="node-sub" x="234" y="292">① 登录超时（被踢出重新登录）　|　② 系统更新（发版 / 页面刷新）</text>
+        <text class="node-sub" x="234" y="314">③ 断网（无网络）→ 见右侧本地保存分支</text>
+      </g>
+      <!-- 触发→重新登录 -->
+      <path class="edge" d="M470,332 L470,372" marker-end="url(#arrow)"></path>
+
+      <!-- 断网本地保存分支（右侧） -->
+      <g class="grp" data-g="8">
+        <rect class="node-box" x="600" y="250" width="320" height="86" rx="12"></rect>
+        <rect class="amber-bar" x="600" y="250" width="6" height="86" rx="3"></rect>
+        <text class="node-ic" x="626" y="284" fill="#f59e0b">&#xf775;</text>
+        <text class="node-title" x="654" y="280">断网：自动存浏览器本地</text>
+        <text class="node-sub" x="654" y="304">检测到无网络，自动写入 localStorage</text>
+        <text class="node-sub" x="654" y="324">仅本机可见，联网后自动同步</text>
+      </g>
+      <!-- 断网分支 → 重新登录检测（右侧汇入） -->
+      <path class="edge" d="M690,336 L690,411" marker-end="url(#arrow)"></path>
+      <text class="edge-label" x="700" y="378" fill="#f59e0b">本地草稿</text>
+
+      <!-- 重新登录检测 -->
+      <g class="grp" data-g="3">
+        <rect class="node-box" x="250" y="374" width="440" height="74" rx="12"></rect>
+        <rect class="blue-bar" x="250" y="374" width="6" height="74" rx="3"></rect>
+        <text class="node-ic" x="276" y="406" fill="#1677ff">&#xf2f6;</text>
+        <text class="node-title" x="304" y="402">用户重新登录成功</text>
+        <text class="node-sub" x="304" y="424">检测该任务：服务器草稿 + 本机浏览器草稿</text>
+      </g>
+      <!-- 检测→弹窗 -->
+      <path class="edge-hl" d="M470,448 L470,488" marker-end="url(#arrowB)"></path>
+
+      <!-- 弹窗模态 -->
+      <g class="grp" data-g="4">
+        <rect class="node-box" x="170" y="490" width="600" height="92" rx="12"></rect>
+        <rect class="amber-bar" x="170" y="490" width="6" height="92" rx="3"></rect>
+        <text class="node-ic" x="196" y="522" fill="#f59e0b">&#xf5a2;</text>
+        <text class="node-title" x="224" y="518">弹出模态框：是否返回继续填写？</text>
+        <text class="node-sub" x="224" y="542">「检测到未提交的草稿（提交审核 / 审批批注），是否返回继续？」</text>
+        <!-- 两个按钮示意 -->
+        <rect x="300" y="552" width="150" height="22" rx="11" fill="#1677ff"></rect>
+        <text x="375" y="567" font-size="11.5" fill="#fff" text-anchor="middle">是，返回继续</text>
+        <rect x="470" y="552" width="80" height="22" rx="11" fill="#f0f0f0" stroke="#d9d9d9"></rect>
+        <text x="510" y="567" font-size="11.5" fill="#555" text-anchor="middle">否</text>
+      </g>
+
+      <!-- 弹窗 → 是（左支） -->
+      <path class="edge" d="M300,582 L300,612" marker-end="url(#arrow)"></path>
+      <text class="edge-label branch-yes" x="270" y="602">选「是」</text>
+      <!-- 弹窗 → 否（右支） -->
+      <path class="edge" d="M680,536 L780,536 L780,612 L730,612" marker-end="url(#arrow)"></path>
+      <text class="edge-label branch-no" x="730" y="526">选「否」</text>
+
+      <!-- 是 → 任务页回填（区分提交审核 / 审批） -->
+      <g class="grp" data-g="5">
+        <rect class="node-box" x="100" y="614" width="390" height="120" rx="12"></rect>
+        <rect class="green-bar" x="100" y="614" width="6" height="120" rx="3"></rect>
+        <text class="node-ic" x="126" y="650" fill="#00b42a">&#xf064;</text>
+        <text class="node-title" x="154" y="646">自动跳转对应任务页并回填</text>
+        <text class="node-sub" x="154" y="672">· 提交审核：回填审核表单意见</text>
+        <text class="node-sub" x="154" y="694">· 审批：回填审批批注框</text>
+        <text class="node-sub" x="154" y="716">用户接着写 / 提交</text>
+      </g>
+      <!-- 否 → 留首页 -->
+      <g class="grp" data-g="6">
+        <rect class="node-box" x="510" y="614" width="370" height="120" rx="12"></rect>
+        <rect class="gray-bar" x="510" y="614" width="6" height="120" rx="3"></rect>
+        <text class="node-ic" x="536" y="650" fill="#8c8c8c">&#xf015;</text>
+        <text class="node-title" x="564" y="646">留在当前页（首页）</text>
+        <text class="node-sub" x="564" y="672">草稿保留服务器，不清除</text>
+        <text class="node-sub" x="564" y="694">提交审核 / 审批 共用暂存</text>
+        <text class="node-sub" x="564" y="716">下次登录仍可再询问</text>
+      </g>
+
+      <!-- 是支 → 提交清除 -->
+      <path class="edge-hl" d="M300,734 L300,770" marker-end="url(#arrowG)"></path>
+      <text class="edge-label" x="312" y="758">提交成功</text>
+
+      <!-- 清除草稿（底部横条） -->
+      <g class="grp" data-g="7">
+        <rect class="node-box" x="100" y="772" width="780" height="62" rx="12"></rect>
+        <rect class="green-bar" x="100" y="772" width="6" height="62" rx="3"></rect>
+        <text class="node-ic" x="126" y="810" fill="#00b42a">&#xf00c;</text>
+        <text class="node-title" x="154" y="798">清除该任务草稿（提交审核 / 审批 均适用）</text>
+        <text class="node-sub" x="154" y="820">下次进入该任务为干净状态（无残留草稿）</text>
+      </g>
+
+      <!-- 否支 → 回登录（虚线回环，表达"下次登录再问"） -->
+      <path class="edge" d="M780,734 L780,250 L780,240" stroke-dasharray="5 4" marker-end="url(#arrow)"></path>
+      <text class="edge-label" x="788" y="480" fill="#8c8c8c">下次登录再检测</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#1677ff"></i> 主流程 / 操作</span>
+    <span><i class="dot" style="background:#f59e0b"></i> 中断触发 / 弹窗 / 断网</span>
+    <span><i class="dot" style="background:#00b42a"></i> 恢复成功 / 清除</span>
+    <span><i class="dot" style="background:#8c8c8c"></i> 保留 / 暂不处理</span>
+  </div>
+  <div class="legend" style="color:#888;font-size:12px;">
+    <span><i class="fa-solid fa-wifi-slash" style="color:#f59e0b;"></i> 断网时草稿自动存浏览器 localStorage，联网后自动同步，重新登录同样会检测本机草稿</span>
+  </div>
+</div>
+</body>
+</html>

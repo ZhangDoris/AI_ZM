@@ -1,0 +1,392 @@
+<!--
+  审批批注草稿暂存 · 产品演示原型
+  功能：演示"登录超时 / 系统更新后，重新登录时弹出提示，是否返回上次填写一半的内容"这一交互。
+  覆盖两类操作：① 审批批注  ② 提交审核（共用同一暂存机制，弹窗文案与回填目标随类型变化）。
+  四屏流程：
+    1) 登录首页（对齐 modules/phase/index.html 视觉风格）
+    2) 登录成功 → 弹出"是否返回继续填写"模态框（是 / 否，文案随草稿类型）
+    3) 选"是"→ 跳转对应任务页（审批页 / 提交审核页），表单自动回填上次内容
+    4) 选"否"→ 留在首页，草稿保留
+  技术栈：HTML + Tailwind CSS v3 (CDN) + Font Awesome (CDN) + 原生 JS
+  布局：左 82% 界面演示，右 18% 方案说明（琥珀色系），SVG 连线 + 响应式。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>审批批注草稿暂存 · 产品原型</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #1677FF;
+      --primary-d: #0958d9;
+      --amber-bg: #FFFBEB;
+      --amber-line: #F5D690;
+      --amber-text: #92600A;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif; color: #1a1a1a; }
+    /* 整体左右分栏 */
+    .wrap { display: flex; height: 100vh; overflow: hidden; }
+    .left-pane { flex: 0 0 82%; max-width: 82%; border-right: 1px solid #e8e8e8; position: relative; overflow: auto; background: #f0f4ff; }
+    .right-pane { flex: 0 0 18%; max-width: 18%; background: var(--amber-bg); color: var(--amber-text); overflow: auto; padding: 20px 16px; border-left: 1px solid var(--amber-line); }
+    .right-pane h3 { font-size: 14px; margin: 0 0 10px; color: #b45309; display:flex; align-items:center; gap:6px;}
+    .right-pane .doc-item { background:#fff; border:1px solid var(--amber-line); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 12.5px; line-height: 1.6; }
+    .right-pane .num { display:inline-flex; width:18px;height:18px;background:#f59e0b;color:#fff;border-radius:50%;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-right:6px;flex:0 0 18px;}
+    .right-pane .doc-item b { color:#92400e; }
+    .right-pane .flow { background:#fff; border:1px solid var(--amber-line); border-radius:8px; padding:12px; font-size:12px; line-height:1.7;}
+    .right-pane .flow .step { padding:4px 0; border-bottom:1px dashed #f0e0b0;}
+    .right-pane .flow .step:last-child{border-bottom:none;}
+    /* SVG 连线层 */
+    #connector { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+    /* ===== 登录屏（对齐 phase 风格） ===== */
+    .login-bg { min-height: 100vh; background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f5f3ff 100%); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; padding: 40px 20px;}
+    .login-bg::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(22,119,255,.12) 0%,transparent 70%);top:-100px;left:-100px;animation:pulse 8s ease-in-out infinite;}
+    .login-bg::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.1) 0%,transparent 70%);bottom:-80px;right:-80px;animation:pulse 6s ease-in-out infinite reverse;}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.7}}
+    .login-card{background:#fff;border-radius:20px;padding:48px 44px 40px;width:420px;max-width:100%;box-shadow:0 20px 60px rgba(22,119,255,.12),0 0 0 1px rgba(22,119,255,.06);position:relative;z-index:10;}
+    .login-logo{text-align:center;margin-bottom:30px;}
+    .logo-icon{width:64px;height:64px;background:linear-gradient(135deg,#1677ff,#0958d9);border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:28px;color:#fff;margin-bottom:14px;box-shadow:0 8px 24px rgba(22,119,255,.4);}
+    .login-logo h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.5px;}
+    .login-logo p{font-size:13px;color:#888;margin:4px 0 0;}
+    .form-label{display:block;font-size:13px;font-weight:500;color:#555;margin-bottom:7px;}
+    .form-input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;background:#fafafa;outline:none;transition:.2s;}
+    .form-input:focus{border-color:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.12);background:#fff;}
+    .login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#1677ff,#0958d9);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px;box-shadow:0 6px 18px rgba(22,119,255,.38);}
+    .login-btn:hover{transform:translateY(-1px);}
+    .sim-row{display:flex;gap:10px;margin-top:18px;}
+    .sim-btn{flex:1;font-size:12px;padding:9px 6px;border:1px dashed #f59e0b;background:#fffbeb;color:#b45309;border-radius:9px;cursor:pointer;transition:.15s;}
+    .sim-btn:hover{background:#fef3c7;}
+    /* ===== 首页（卡片菜单） ===== */
+    .home-screen{background:#f5f7fa;min-height:100vh;padding:32px 24px;}
+    .home-top{display:flex;justify-content:flex-end;margin-bottom:48px;}
+    .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#1677ff,#0958d9);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;cursor:pointer;}
+    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px;max-width:760px;margin:0 auto;}
+    .menu-card{background:#fff;border-radius:14px;padding:22px 18px;text-shadow:none;border:1px solid #eef0f3;box-shadow:0 4px 14px rgba(0,0,0,.05);cursor:pointer;transition:.15s;}
+    .menu-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(22,119,255,.12);}
+    .menu-card .ic{width:40px;height:40px;border-radius:10px;background:#e8f0fe;color:#1677ff;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
+    .menu-card .t{font-size:14px;font-weight:600;color:#1a1a1a;}
+    /* ===== 模态弹窗（登录后检测草稿提示） ===== */
+    .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:200;}
+    .modal-box{background:#fff;border-radius:16px;width:420px;max-width:92%;padding:36px 32px;box-shadow:0 24px 60px rgba(0,0,0,.25);text-align:center;}
+    .modal-box .mi{width:64px;height:64px;border-radius:50%;background:#fff7e6;color:#fa8c16;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;}
+    .modal-box h4{margin:0 0 12px;font-size:18px;font-weight:600;color:#1a1a1a;}
+    .modal-box p{font-size:14px;color:#666;margin:0 0 28px;line-height:1.7;}
+    .modal-btns{display:flex;gap:14px;}
+    .modal-btns button{flex:1;height:42px;font-size:14px;border-radius:8px;cursor:pointer;transition:.15s;}
+    .btn-no{border:1px solid #d9d9d9;background:#fff;color:#555;}
+    .btn-no:hover{border-color:#1677ff;color:#1677ff;}
+    .btn-yes{border:none;background:#1677ff;color:#fff;font-weight:600;}
+    .btn-yes:hover{background:#0958d9;}
+    /* ===== 审批页 ===== */
+    .audit-screen{background:#f5f7fa;min-height:100vh;padding:24px;}
+    .audit-top{display:flex;align-items:center;justify-content:space-between;background:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:18px;}
+    .back-link{color:#1677ff;font-size:13px;cursor:pointer;}
+    .audit-card{background:#fff;border-radius:14px;padding:24px;max-width:680px;margin:0 auto;box-shadow:0 4px 14px rgba(0,0,0,.06);}
+    .audit-card h3{margin:0 0 4px;font-size:16px;}
+    .audit-card .sub{font-size:12px;color:#999;margin-bottom:18px;}
+    textarea.note{width:100%;min-height:160px;border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 14px;font-size:14px;resize:vertical;outline:none;background:#fafafa;}
+    textarea.note:focus{border-color:#1677ff;box-shadow:0 0 0 3px rgba(22,119,255,.12);background:#fff;}
+    .recovered-tip{background:#fffbeb;border:1px solid #f5d690;color:#92600a;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .auto-save{font-size:11px;color:#999;margin-top:8px;display:flex;align-items:center;gap:5px;}
+    /* 连线高亮目标 */
+    .hl { transition: box-shadow .2s, border-color .2s; }
+    .hl-active { box-shadow: 0 0 0 3px rgba(245,158,11,.55) !important; border-color:#f59e0b !important; }
+    .svg-line { transition: stroke-width .15s, stroke .15s; }
+    .svg-line.active { stroke:#f59e0b !important; stroke-width:4 !important; }
+    /* 移动端：上下布局，隐藏连线 */
+    @media (max-width: 880px) {
+      .wrap { flex-direction: column; height: auto; }
+      .left-pane, .right-pane { flex: none; max-width: 100%; width: 100%; border: none; }
+      #connector { display: none; }
+      .right-pane { border-top: 1px solid var(--amber-line); }
+      .mobile-toggle { display:block; }
+    }
+    .mobile-toggle { display:none; position:fixed; bottom:16px; right:16px; z-index:300; background:#f59e0b; color:#fff; border:none; border-radius:24px; padding:10px 16px; font-size:13px; box-shadow:0 6px 18px rgba(245,158,11,.5);}
+    .stage-hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#1677ff;color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:60;box-shadow:0 4px 12px rgba(22,119,255,.4);}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ================= 左侧：界面演示 ================= -->
+  <div class="left-pane" id="leftPane">
+    <div class="stage-hint" id="stageHint">演示屏 1 / 4：登录首页</div>
+    <svg id="connector"></svg>
+
+    <!-- 屏 1：登录首页 -->
+    <div id="screen-login" class="login-bg">
+      <div class="login-card">
+        <div class="login-logo">
+          <div class="logo-icon"><i class="fa-solid fa-flask-vial"></i></div>
+          <h1>艾迪研 · 智能预筛</h1>
+          <p>医药研究智能预筛平台</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">账号</label>
+          <input class="form-input" value="reviewer@adi" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">密码</label>
+          <input class="form-input" type="password" value="********" />
+        </div>
+        <button class="login-btn" onclick="doLogin()"><i class="fa-solid fa-arrow-right-to-bracket"></i> 登录</button>
+        <div class="sim-row">
+          <button class="sim-btn" id="el-timeout" onclick="simulate('timeout')"><i class="fa-solid fa-clock-rotate-left"></i> 模拟登录超时</button>
+          <button class="sim-btn" id="el-update" onclick="simulate('update')"><i class="fa-solid fa-arrows-rotate"></i> 模拟系统更新</button>
+        </div>
+        <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px;">下方两个按钮模拟"写到一半被迫离开"的触发条件</p>
+      </div>
+    </div>
+
+    <!-- 屏 2：首页（登录成功后） -->
+    <div id="screen-home" class="home-screen" style="display:none;">
+      <div class="home-top"><div class="avatar" title="reviewer@adi">R</div></div>
+      <div class="cards">
+        <div class="menu-card" onclick="enterTask('review')"><div class="ic"><i class="fa-solid fa-clipboard-check"></i></div><div class="t">预筛审批</div></div>
+        <div class="menu-card" onclick="enterTask('submit')"><div class="ic"><i class="fa-solid fa-paper-plane"></i></div><div class="t">提交审核</div></div>
+        <div class="menu-card"><div class="ic"><i class="fa-solid fa-users"></i></div><div class="t">患者管理</div></div>
+        <div class="menu-card"><div class="ic"><i class="fa-solid fa-chart-line"></i></div><div class="t">数据统计</div></div>
+        <div class="menu-card"><div class="ic"><i class="fa-solid fa-gear"></i></div><div class="t">系统设置</div></div>
+      </div>
+    </div>
+
+    <!-- 屏 3：审批页（含回填） -->
+    <div id="screen-audit" class="audit-screen" style="display:none;">
+      <div class="audit-top">
+        <span class="back-link" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i> 返回首页</span>
+        <div class="avatar" style="width:34px;height:34px;font-size:13px;">R</div>
+      </div>
+      <div class="audit-card">
+        <h3>预筛审批 · 患者 S00012</h3>
+        <div class="sub">项目 PROJ001 · 审批类型：入组匹配审核</div>
+        <div class="recovered-tip" id="recoveredTip" style="display:none;">
+          <i class="fa-solid fa-rotate-left"></i> 已为你恢复上次未提交的批注，可继续编辑
+        </div>
+        <label class="form-label">审批批注</label>
+        <textarea class="note" id="noteBox" placeholder="请输入审批意见…"></textarea>
+        <div class="auto-save"><i class="fa-solid fa-circle-check" style="color:#52c41a"></i> 内容已自动保存至服务器</div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button class="btn-yes" style="flex:1" onclick="submitNote()">提交审批</button>
+          <button class="btn-no" style="flex:1" onclick="goHome()">返回</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 屏 3b：提交审核页（含回填） -->
+    <div id="screen-submit" class="audit-screen" style="display:none;">
+      <div class="audit-top">
+        <span class="back-link" onclick="goHome()"><i class="fa-solid fa-arrow-left"></i> 返回首页</span>
+        <div class="avatar" style="width:34px;height:34px;font-size:13px;">R</div>
+      </div>
+      <div class="audit-card">
+        <h3>提交审核 · 患者 S00012</h3>
+        <div class="sub">项目 PROJ001 · 审核类型：入组匹配提交</div>
+        <div class="recovered-tip" id="recoveredTipSubmit" style="display:none;">
+          <i class="fa-solid fa-rotate-left"></i> 已为你恢复上次未提交的审核意见，可继续编辑
+        </div>
+        <label class="form-label">审核意见</label>
+        <textarea class="note" id="submitNoteBox" placeholder="请输入审核意见…"></textarea>
+        <div class="auto-save"><i class="fa-solid fa-circle-check" style="color:#52c41a"></i> 内容已自动保存至服务器</div>
+        <div style="display:flex;gap:12px;margin-top:16px;">
+          <button class="btn-yes" style="flex:1" onclick="submitReview()">提交审核</button>
+          <button class="btn-no" style="flex:1" onclick="goHome()">返回</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登录成功后的"是否返回"模态框（根据草稿类型展示不同文案） -->
+    <div id="draftModal" class="modal-mask" style="display:none;">
+      <div class="modal-box">
+        <div class="mi"><i class="fa-solid fa-clock-rotate-left"></i></div>
+        <h4 id="modalTitle">检测到未完成的操作</h4>
+        <p id="modalDesc">存在未完成填写的提交审核（「方案编号・患者姓名缩写」），是否返回继续填写？</p>
+        <div class="modal-btns">
+          <button class="btn-no" onclick="chooseNo()">否</button>
+          <button class="btn-yes" onclick="chooseYes()">是</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 右侧：方案说明 ================= -->
+  <div class="right-pane" id="rightPane">
+    <h3><i class="fa-solid fa-file-lines"></i> 方案说明</h3>
+    <div class="doc-item" id="doc-1">
+      <span class="num">1</span><b>触发条件</b>：用户在<b>审批批注</b>或<b>提交审核</b>中写到一半，因<b>登录超时</b>或<b>系统更新</b>被迫离开页面，内容实时存于服务器（两类操作共用同一暂存机制）。
+    </div>
+    <div class="doc-item" id="doc-2">
+      <span class="num">2</span><b>重新登录弹窗</b>：登录成功后系统检测到未提交草稿，弹出「是否返回继续填写？」模态框（文案随<b>审批/提交审核</b>类型变化），必须选择才能继续。
+    </div>
+    <div class="doc-item" id="doc-3">
+      <span class="num">3</span><b>选「是」</b>：自动跳转至对应任务，<b>直接回填</b>上次内容——审批回填批注框、提交审核回填审核意见框，用户接着写。
+    </div>
+    <div class="doc-item" id="doc-4">
+      <span class="num">4</span><b>选「否」</b>：留在当前页，<b>草稿保留</b>在服务器，下次登录仍可再询问；不回填、不清除。
+    </div>
+    <div class="doc-item" id="doc-5">
+      <span class="num">5</span><b>边界</b>：草稿仅本人可见；存服务器故清缓存/换设备不丢；一份任务仅留最新一份。
+    </div>
+    <h3 style="margin-top:18px;"><i class="fa-solid fa-diagram-project"></i> 流程图</h3>
+    <div class="flow">
+      <div class="step">① 写审批批注 / 提交审核意见 → 实时存服务器</div>
+      <div class="step">② 登录超时 / 系统更新 → 页面销毁</div>
+      <div class="step">③ 重新登录 → 检测草稿（自动识别类型）</div>
+      <div class="step">④ 弹窗：是否返回继续？（文案随类型）</div>
+      <div class="step">├ <b>是</b> → 跳转对应任务页 + 回填</div>
+      <div class="step">└ <b>否</b> → 留首页，草稿保留</div>
+      <div class="step">⑤ 提交成功 → 清除草稿</div>
+    </div>
+  </div>
+</div>
+<button class="mobile-toggle" onclick="toggleMobileDoc()">切换 说明 / 界面</button>
+
+<script>
+  // ===== 状态 =====
+  const DRAFT_CONTENT = "该患者符合入组标准，筛查号无冲突，建议通过预筛；需注意第3项实验室检查日期较早，建议复核。";
+  let pendingDraft = true;        // 模拟：服务器存在草稿
+  let pendingDraftType = 'review'; // 'review' = 审批批注  | 'submit' = 提交审核
+
+  // 屏显提示
+  const SCREEN_HINT = {
+    'screen-login':  '演示屏 1 / 4：登录首页',
+    'screen-home':   '演示屏 2 / 4：登录后首页',
+    'screen-audit':  '演示屏 3 / 4：审批页（回填）',
+    'screen-submit': '演示屏 4 / 4：提交审核页（回填）',
+  };
+
+  function showScreen(id){
+    ['screen-login','screen-home','screen-audit','screen-submit'].forEach(s=>{
+      const el = document.getElementById(s);
+      if(el) el.style.display = (s===id?'block':'none');
+    });
+    document.getElementById('stageHint').textContent = SCREEN_HINT[id] || '';
+    if(id!=='screen-login') document.getElementById('stageHint').style.display='block';
+    setTimeout(drawConnectors, 60);
+  }
+
+  // 从首页进入某一任务（review / submit）
+  function enterTask(type){
+    pendingDraftType = type;
+    if(type==='submit'){ showScreen('screen-submit'); }
+    else { showScreen('screen-audit'); }
+  }
+
+  // 模拟"写到一半被迫离开"
+  function simulate(type){
+    const label = type==='timeout' ? '登录超时' : '系统更新';
+    // 直接表现：回到登录页（内容已存服务器）
+    showScreen('screen-login');
+    document.getElementById('stageHint').textContent = `已模拟「${label}」，页面被销毁；${pendingDraftType==='submit'?'审核意见':'批注'}已存服务器`;
+    pendingDraft = true;
+  }
+
+  // 根据草稿类型设置弹窗文案
+  function applyModalText(){
+    const t = document.getElementById('modalTitle');
+    const d = document.getElementById('modalDesc');
+   
+  }
+
+  function doLogin(){
+    if(pendingDraft){
+      applyModalText();
+      // 弹出"是否返回继续填写"
+      document.getElementById('draftModal').style.display='flex';
+      showScreen('screen-home'); // 背后进入首页（弹窗覆盖）
+    } else {
+      showScreen('screen-home');
+    }
+  }
+
+  function chooseYes(){
+    document.getElementById('draftModal').style.display='none';
+    if(pendingDraftType==='submit'){
+      document.getElementById('submitNoteBox').value = DRAFT_CONTENT;
+      document.getElementById('recoveredTipSubmit').style.display='flex';
+      showScreen('screen-submit');
+    } else {
+      document.getElementById('screen-audit').querySelector('#noteBox').value = DRAFT_CONTENT;
+      document.getElementById('recoveredTip').style.display='flex';
+      showScreen('screen-audit');
+    }
+  }
+  function chooseNo(){
+    document.getElementById('draftModal').style.display='none';
+    // 留首页，草稿保留
+  }
+  function goHome(){
+    document.getElementById('recoveredTip').style.display='none';
+    document.getElementById('recoveredTipSubmit').style.display='none';
+    showScreen('screen-home');
+  }
+  function submitNote(){
+    pendingDraft = false;
+    alert('提交成功，草稿已清除');
+    goHome();
+  }
+  function submitReview(){
+    pendingDraft = false;
+    alert('提交成功，草稿已清除');
+    goHome();
+  }
+
+  // ===== SVG 连线 =====
+  function drawConnectors(){
+    const svg = document.getElementById('connector');
+    if(window.innerWidth <= 880){ svg.innerHTML=''; return; }
+    svg.innerHTML='';
+    svg.setAttribute('width', document.getElementById('leftPane').clientWidth);
+    svg.setAttribute('height', document.getElementById('leftPane').clientHeight);
+    const pairs = [
+      { from: 'el-timeout', to: 'doc-1', num: 1 },
+      { from: 'draftModal', to: 'doc-2', num: 2 },
+      { from: 'recoveredTip', to: 'doc-3', num: 3 },
+    ];
+    pairs.forEach(p=>{
+      const a = document.getElementById(p.from), b = document.getElementById(p.to);
+      if(!a||!b) return;
+      const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+      const lr = document.getElementById('leftPane').getBoundingClientRect();
+      const x1 = ar.right - lr.left, y1 = ar.top - lr.top + ar.height/2;
+      const x2 = br.left - lr.left, y2 = br.top - lr.top + br.height/2;
+      const mx = (x1 + x2)/2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`);
+      path.setAttribute('stroke', '#d9a441');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('fill','none');
+      path.setAttribute('class','svg-line');
+      path.dataset.from = p.from; path.dataset.to = p.to;
+      svg.appendChild(path);
+      // 编号
+      const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t.setAttribute('x', mx); t.setAttribute('y', (y1+y2)/2 - 6);
+      t.setAttribute('font-size','11'); t.setAttribute('fill','#b45309'); t.setAttribute('text-anchor','middle');
+      t.textContent = p.num;
+      svg.appendChild(t);
+    });
+    bindHover();
+  }
+  function bindHover(){
+    const setActive=(from,to,on)=>{
+      const el=document.getElementById(from); if(el) el.classList.toggle('hl-active',on);
+      document.querySelectorAll('.svg-line').forEach(l=>{ if(l.dataset.from===from&&l.dataset.to===to) l.classList.toggle('active',on); });
+    };
+    [['el-timeout','doc-1'],['draftModal','doc-2'],['recoveredTip','doc-3']].forEach(([f,t])=>{
+      const a=document.getElementById(f), b=document.getElementById(t);
+      if(a){ a.addEventListener('mouseenter',()=>setActive(f,t,true)); a.addEventListener('mouseleave',()=>setActive(f,t,false)); }
+      if(b){ b.addEventListener('mouseenter',()=>setActive(f,t,true)); b.addEventListener('mouseleave',()=>setActive(f,t,false)); }
+    });
+  }
+  window.addEventListener('resize', drawConnectors);
+  document.addEventListener('DOMContentLoaded', ()=>setTimeout(drawConnectors,60));
+
+  function toggleMobileDoc(){
+    const r=document.getElementById('rightPane');
+    r.style.display = r.style.display==='none' ? 'block':'none';
+  }
+</script>
+</body>
+</html>
