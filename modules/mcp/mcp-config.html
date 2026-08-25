@@ -1,0 +1,193 @@
+<!--
+  项目 MCP 配置管理（进入项目后配置）
+  - MCP：是否启用，切换即自动保存；启用后可下载 MCP 配置文件
+  - API 接口设置：是否启用 API 接口；数据获取范围（每个患者 / 时间段，时间段最多 3 天）
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>其它对接配置管理</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; color: #333; font-size: 13px; }
+
+    .page { max-width: 900px; margin: 0 auto; padding: 24px 16px 28px; min-height: 100%; display: flex; flex-direction: column; }
+
+    .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; flex: 1; display: flex; flex-direction: column; }
+    .card-body { padding: 22px 24px 24px; display: flex; flex-direction: column; flex: 1; }
+
+    .page-title { font-size: 16px; font-weight: 700; color: #111; }
+    .divider { height: 1px; background: #e8e8e8; margin: 16px 0 22px; }
+
+    .section { margin-bottom: 22px; }
+    .section-label { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 12px; }
+    .block-divider { height: 1px; background: #f0f0f0; margin: 22px 0; }
+
+    /* 开关 */
+    .switch-wrap { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+    .switch { position: relative; width: 46px; height: 24px; border-radius: 12px; background: #d9d9d9; transition: background .2s; flex-shrink: 0; }
+    .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .switch.on { background: #4e6ef2; }
+    .switch.on::after { left: 22px; }
+    .switch-label { font-size: 13px; color: #333; font-weight: 500; }
+
+    /* 子选项（启用后显示） */
+    .sub-options { margin-top: 14px; padding-left: 4px; }
+    .sub-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .sub-row label { font-size: 13px; color: #333; width: 110px; flex-shrink: 0; }
+    .sub-row select, .sub-row input {
+      border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px 10px; font-size: 13px;
+      outline: none; transition: border-color .2s; font-family: inherit; background: #fff;
+    }
+    .sub-row select:focus, .sub-row input:focus { border-color: #4e6ef2; }
+    .sub-hint { font-size: 12px; color: #888; margin-left: 4px; }
+
+    /* 下载入口 */
+    .download-area { margin-top: 6px; }
+    .btn-download { display: inline-flex; align-items: center; gap: 6px; background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; border-radius: 4px; padding: 8px 20px; font-size: 13px; cursor: pointer; }
+    .btn-download:hover { background: #f0f5ff; }
+
+    /* toast */
+    #toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.78); color: #fff; padding: 9px 18px; border-radius: 4px; font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="card">
+    <div class="card-body">
+      <div class="page-title">接入配置管理【高脂血症-1918-302】</div>
+      <div class="divider"></div>
+
+      <!-- MCP 配置 -->
+      <div class="section">
+        <div class="section-label">是否启用 MCP SERVER</div>
+        <div class="switch-wrap" onclick="toggleEnable('mcp')">
+          <div class="switch on" id="mcpSwitch"></div>
+          <span class="switch-label" id="mcpSwitchLabel">已启用</span>
+        </div>
+        <div class="download-area" id="mcpDownloadArea">
+          <button class="btn-download" onclick="downloadMcpConfig()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4e6ef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+             获取MCP操作手册
+          </button>
+           
+        </div>
+      </div>
+
+      <div class="block-divider"></div>
+
+      <!-- API 接口设置 -->
+      <div class="section">
+        <div class="section-label">获取患者病史信息 API 接口</div>
+        <div class="switch-wrap" onclick="toggleEnable('api')">
+          <div class="switch on" id="apiSwitch"></div>
+          <span class="switch-label" id="apiSwitchLabel">已启用</span>
+        </div>
+        <div class="sub-options" id="apiOptions">
+          
+          <div class="download-area" style="margin-top:4px;">
+            <button class="btn-download" onclick="downloadApiDoc()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4e6ef2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              接口文档
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const state = {
+    mcpEnabled: true,
+    apiEnabled: true,
+    apiScope: 'patient',   // patient | period
+    apiDays: 3
+  };
+  const mcpConfig = { url: 'https://mcp.project.internal/sse', authType: 'token', credential: '****************' };
+
+  function toggleEnable(type){
+    const isMcp = type === 'mcp';
+    const sw = document.getElementById(isMcp ? 'mcpSwitch' : 'apiSwitch');
+    const lbl = document.getElementById(isMcp ? 'mcpSwitchLabel' : 'apiSwitchLabel');
+    const on = !sw.classList.contains('on');
+    sw.classList.toggle('on', on);
+    lbl.textContent = on ? '已启用' : '已停用';
+
+    if(isMcp){
+      state.mcpEnabled = on;
+      document.getElementById('mcpDownloadArea').style.display = on ? 'block' : 'none';
+      toast('MCP ' + (on ? '已启用并保存' : '已停用并保存'));
+    } else {
+      state.apiEnabled = on;
+      document.getElementById('apiOptions').style.display = on ? 'block' : 'none';
+      toast('API 接口 ' + (on ? '已启用并保存' : '已停用并保存'));
+    }
+  }
+
+  function onScopeChange(){
+    const sel = document.getElementById('apiScope');
+    state.apiScope = sel.value;
+    document.getElementById('periodRow').style.display = sel.value === 'period' ? 'flex' : 'none';
+    toast('数据获取范围已保存：' + (sel.value === 'patient' ? '每个患者' : '时间段'));
+  }
+
+  document.getElementById('apiDays').addEventListener('input', function(){
+    let v = parseInt(this.value, 10);
+    if(isNaN(v)) return;
+    if(v > 3){ v = 3; this.value = 3; }
+    if(v < 1){ v = 1; this.value = 1; }
+    state.apiDays = v;
+  });
+
+  function downloadMcpConfig(){
+    const cfg = {
+      project: '高脂血症-1918-302',
+      mcpServer: mcpConfig,
+      generatedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mcp-config.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('已下载 MCP 配置文件');
+  }
+
+  function downloadApiDoc(){
+    const scope = state.apiScope === 'period'
+      ? `按时间段获取，最多 ${state.apiDays} 天`
+      : '按每个患者获取';
+    const doc = {
+      project: '高脂血症-1918-302',
+      api: '获取患者病史信息',
+      enabled: true,
+      scope: scope,
+      fields: ['主诉', '现病史', '既往史', '过敏史', '家族史', '用药史'],
+      generatedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'api-doc-patient-history.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('已下载接口文档');
+  }
+
+  function toast(msg){
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 1800);
+  }
+</script>
+</body>
+</html>

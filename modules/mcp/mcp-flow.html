@@ -1,0 +1,129 @@
+<!--
+  MCP 受试者患者画像生成 · 业务流程图（Visio 风格 · 极简）
+  纯矩形/菱形节点 + 箭头连线，灰边框白底，无装饰。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP 业务流程图</title>
+  <style>
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #fff; color: #222; margin: 0; padding: 24px; }
+    h1 { font-size: 16px; font-weight: 700; margin: 0 0 16px; }
+
+    /* 容器 */
+    .page { max-width: 900px; margin: 0 auto; }
+
+    /* 三层外框 */
+    .layer { border: 1.5px solid #555; border-radius: 4px; margin-bottom: 18px; background: #fff; }
+    .layer > .layer-title { border-bottom: 1.5px solid #555; padding: 6px 12px; font-weight: 700; font-size: 13px; background: #f2f2f2; }
+    .layer > .layer-body { padding: 14px 16px; }
+
+    /* 节点通用 */
+    .node { border: 1.5px solid #555; border-radius: 4px; background: #fff; padding: 8px 12px; font-size: 12.5px; line-height: 1.5; }
+    .node .n-title { font-weight: 600; }
+    .node .n-sub { color: #666; font-size: 11.5px; margin-top: 2px; }
+
+    /* 判断菱形 */
+    .diamond { border: 1.5px solid #555; background: #fff; padding: 10px 14px; font-size: 12.5px; font-weight: 600; text-align: center; border-radius: 4px; }
+    .diamond .d-sub { font-weight: 400; color: #666; font-size: 11px; margin-top: 3px; }
+
+    /* 两列分支 */
+    .branch { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .branch .col-title { font-size: 12px; font-weight: 700; text-align: center; margin-bottom: 8px; padding: 4px; border: 1.5px solid #555; border-radius: 4px; }
+    .branch .col { display: flex; flex-direction: column; gap: 10px; }
+
+    .col-step { display: flex; flex-direction: column; align-items: center; gap: 0; }
+    .col-step .node { width: 100%; }
+
+    /* 竖向箭头（HTML 实现，简单） */
+    .va { text-align: center; color: #165DFF; font-size: 14px; line-height: 1; margin: 4px 0; }
+
+    /* 子框（项目A/B） */
+    .sub { border: 1px dashed #999; border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; }
+    .sub .sub-title { font-size: 11.5px; font-weight: 700; margin-bottom: 6px; }
+    .sub .node { margin-bottom: 6px; }
+    .sub .node:last-child { margin-bottom: 0; }
+
+    .note { border: 1px solid #c00; color: #c00; border-radius: 4px; padding: 6px 10px; font-size: 12px; margin-top: 10px; background: #fff; }
+
+    @media (max-width: 640px) {
+      .branch { grid-template-columns: 1fr; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>MCP 受试者患者画像生成 · 业务流程图</h1>
+
+ 
+
+  <!-- 层 2 -->
+  <div class="layer">
+    <div class="layer-title">1. 项目层（系统管理员/医学/超级管理员/项目经理）</div>
+    <div class="layer-body">
+      <div class="sub">
+        <div class="sub-title">项目 A</div>
+        <div class="node">项目 MCP 配置管理</div>
+        <div class="node" style="margin-top:6px;">MCP 调用日志</div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">项目 B</div>
+        <div class="node">项目 MCP 配置管理</div>
+        <div class="node" style="margin-top:6px;">MCP 调用日志 </div>
+      </div>
+      <div class="note">强隔离约束：项目 A 的 MCP Server 不可读取项目 B 的受试者资料</div>
+    </div>
+  </div>
+
+  <div class="va">↓</div>
+
+  <!-- 层 3 -->
+  <div class="layer">
+    <div class="layer-title">2. 患者维度</div>
+    <div class="layer-body">
+      <div class="node"><span class="n-title">1. CRC / 协调员</span><div class="n-sub">录入受试者基础信息 + 上传病史与资料</div></div>
+
+      <div class="va">↓</div>
+
+      <div class="diamond">是否仍要进行项目匹配？<div class="d-sub">发起 MCP 调用，保存调用日志（含上传附件 id）</div></div>
+
+      <div class="va">↓</div>
+
+      <div class="branch">
+        <!-- 是 -->
+        <div class="col">
+          <div class="col-title">是 · 继续项目匹配</div>
+          <div class="col-step">
+            <div class="node">① 项目匹配（按规则匹配适配试验）</div>
+            <div class="va">↓</div>
+            <div class="node">② 调用 MCP 接入的模型（生成患者画像）</div>
+            <div class="va">↓</div>
+            <div class="node">③ 等待：匹配结果 + MCP 画像结果</div>
+            <div class="va">↓</div>
+            <div class="node">④ 前端展示：受试者详情页（画像 + 匹配结果，可看历史版本）</div>
+            <div class="va">↓</div>
+            <div class="node">⑤ 提交审核</div>
+          </div>
+        </div>
+        <!-- 否 -->
+        <div class="col">
+          <div class="col-title">否 · 不继续匹配</div>
+          <div class="col-step">
+            <div class="node">① 调用 MCP 接入的模型（生成患者画像）</div>
+            <div class="va">↓</div>
+            <div class="node">② 等待：MCP 画像结果</div>
+            <div class="va">↓</div>
+            <div class="node">③ 前端展示：受试者详情页（查看患者画像）</div>
+            <div class="va">↓</div>
+            <div class="node">④ 提交审核（跳过项目匹配与筛选表校验）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

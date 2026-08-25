@@ -1,0 +1,381 @@
+<!--
+  MCP 调用审计（独立页面）
+  进入项目后查看本项目 MCP 调用记录。页面铺满整屏，支持按方案编号 / 调用人 / 状态等筛选。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP 调用审计</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; color: #333; margin: 0; padding: 0; font-size: 13px; }
+
+    /* 铺满整个浏览器 */
+    .page { width: 100%; min-height: 100vh; padding: 20px 24px 32px; display: flex; flex-direction: column; }
+
+    .page-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 18px; }
+
+    /* 筛选栏 */
+    .filter { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; padding: 16px 18px; margin-bottom: 14px; }
+    .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px; }
+    .filter .f-item { display: flex; flex-direction: column; gap: 6px; }
+    .filter label { font-size: 12.5px; color: #555; }
+    .filter input, .filter select { border: 1px solid #d9d9d9; border-radius: 4px; padding: 7px 10px; font-size: 13px; outline: none; width: 100%; font-family: inherit; }
+    .filter input:focus, .filter select:focus { border-color: #4e6ef2; }
+    .filter .f-date-range { display: flex; align-items: center; gap: 6px; }
+    .filter .f-date-range input { flex: 1; min-width: 0; }
+    .filter .f-date-range span { color: #999; font-size: 12px; }
+    .filter-actions { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+    .btn.export { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
+    .btn.export:hover { background: #f0f5ff; }
+    .btn { background: #4e6ef2; color: #fff; border: none; border-radius: 4px; padding: 8px 18px; font-size: 13px; cursor: pointer; }
+    .btn:hover { background: #3d5bd9; }
+    .btn.ghost { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
+
+    /* 列表卡片 */
+    .card { background: #fff; border: 1px solid #e8e8e8; border-radius: 6px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .card-head { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e8e8e8; flex-shrink: 0; }
+    .card-head .title { flex: 1; font-size: 13px; font-weight: 700; }
+    .card-head .count { color: #52c41a; font-size: 12px; }
+    .card-head .count i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #52c41a; margin-right: 5px; }
+
+    .table-wrap { overflow: auto; flex: 1; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 11px 16px; font-size: 12.5px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    th { background: #fafafa; color: #666; font-weight: 600; font-size: 12px; position: sticky; top: 0; }
+    tbody tr:hover { background: #fafcff; }
+    td.center, th.center { text-align: center; width: 90px; }
+
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; }
+    .tag-success { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+    .tag-fail { background: #fff2f0; color: #cf1322; border: 1px solid #ffccc7; }
+    .link { color: #4e6ef2; cursor: pointer; }
+    .link:hover { text-decoration: underline; }
+
+    .empty { text-align: center; color: #999; padding: 28px 0; }
+
+    /* 分页 */
+    .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 12px 16px; border-top: 1px solid #e8e8e8; flex-shrink: 0; font-size: 13px; }
+    .page-total { color: #666; }
+    .page-size { display: flex; align-items: center; gap: 4px; }
+    .page-size select { border: 1px solid #d9d9d9; border-radius: 4px; padding: 5px 8px; font-size: 13px; outline: none; color: #333; }
+    .page-list { display: flex; align-items: center; gap: 6px; }
+    .page-list button {
+      min-width: 28px; height: 28px; padding: 0 6px; border: 1px solid #d9d9d9; border-radius: 4px;
+      background: #fff; color: #666; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .page-list button:hover:not(:disabled):not(.active) { color: #4e6ef2; border-color: #4e6ef2; }
+    .page-list button.active { background: #4e6ef2; color: #fff; border-color: #4e6ef2; }
+    .page-list button:disabled { color: #d9d9d9; border-color: #e8e8e8; cursor: not-allowed; background: #fafafa; }
+    .page-list .ellipsis { border: none; background: transparent; cursor: default; color: #999; }
+    .page-list .ellipsis:hover { color: #999; border-color: transparent; }
+    .page-jump { display: flex; align-items: center; gap: 6px; color: #666; }
+    .page-jump input { width: 42px; border: 1px solid #d9d9d9; border-radius: 4px; padding: 5px 6px; font-size: 13px; text-align: center; outline: none; }
+    .page-jump input:focus { border-color: #4e6ef2; }
+    .page-jump button { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; border-radius: 4px; padding: 5px 10px; font-size: 13px; cursor: pointer; }
+
+    @media (max-width: 640px) {
+      .page { padding: 14px 12px 24px; }
+      .filter-grid { grid-template-columns: 1fr; }
+      .filter input, .filter select { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="page-title">MCP 调用日志</div>
+
+  <!-- 筛选 -->
+  <div class="filter">
+    <div class="filter-grid">
+      <div class="f-item">
+        <label>方案编号</label>
+        <input type="text" id="fScheme" placeholder="请输入方案编号">
+      </div>
+      <div class="f-item">
+        <label>患者编号</label>
+        <input type="text" id="fSub" placeholder="请输入患者编号">
+      </div>
+      <div class="f-item">
+        <label>中心号</label>
+        <input type="text" id="fCenter" placeholder="请输入中心号">
+      </div>
+      <div class="f-item">
+        <label>调用人名称</label>
+        <input type="text" id="fUser" placeholder="请输入调用人名称">
+      </div>
+      <div class="f-item">
+        <label>调用状态</label>
+        <select id="fStatus">
+          <option value="">全部</option>
+          <option value="success">成功</option>
+          <option value="fail">失败</option>
+        </select>
+      </div>
+      <div class="f-item">
+        <label>调用时间</label>
+        <div class="f-date-range">
+          <input type="date" id="fStart">
+          <span>至</span>
+          <input type="date" id="fEnd">
+        </div>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn" onclick="query()">查询</button>
+      <button class="btn ghost" onclick="resetFilter()">重置</button>
+      <button class="btn export" onclick="exportData()">导出</button>
+    </div>
+  </div>
+
+  <!-- 列表 -->
+  <div class="card">
+    <div class="card-head">
+      <span class="title">调用记录</span>
+      <span class="count"><i></i>共 <span id="totalCount">0</span> 条</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="center">序号</th>
+            <th>方案编号</th>
+            <th>患者编号</th>
+            <th>姓名缩写</th>
+            <th>中心号</th>
+            <th>中心名称</th>
+            <th>调用时间</th>
+            <th>调用人名称</th>
+            <th>状态</th>
+            <th class="center">是否传输</th>
+            <th class="center">查看</th>
+          </tr>
+        </thead>
+        <tbody id="auditBody"></tbody>
+      </table>
+      <div class="empty" id="emptyTip" style="display:none;">未查询到调用记录</div>
+    </div>
+    <div class="pagination">
+      <div class="page-total">共 <span id="pageTotalCount">0</span> 条</div>
+      <div class="page-size">
+        <select id="pageSize" onchange="changePageSize()">
+          <option value="10">10条/页</option>
+          <option value="20">20条/页</option>
+          <option value="50">50条/页</option>
+        </select>
+      </div>
+      <div class="page-list" id="pageList"></div>
+      <div class="page-jump">
+        <span>前往</span>
+        <input type="number" id="jumpInput" min="1" onkeydown="if(event.key==='Enter'){jumpPage()}">
+        <span>页</span>
+        <button onclick="jumpPage()">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 调用记录数据
+  const RECORDS = [
+    { scheme: 'GPL-2023-0918', user: 'CRC-张三', time: '2026-08-24 10:12', status: 'success', transmitted: true,  sub: 'SUB_001', initial: 'W.M', centerNo: 'C-01', centerName: '北京协和医院' },
+    { scheme: 'GPL-2023-0918', user: 'CRC-李四', time: '2026-08-23 16:40', status: 'fail',    transmitted: false, sub: 'SUB_007', initial: 'L.J', centerNo: 'C-03', centerName: '上海中山医院' },
+    { scheme: 'GPL-2023-0918', user: 'CRC-张三', time: '2026-08-23 09:05', status: 'success', transmitted: true,  sub: 'SUB_003', initial: 'Z.L', centerNo: 'C-01', centerName: '北京协和医院' },
+    { scheme: 'GPL-2024-0312', user: 'CRC-王五', time: '2026-08-22 14:23', status: 'success', transmitted: true,  sub: 'SUB_012', initial: 'S.Q', centerNo: 'C-07', centerName: '广州医科大学附属第一医院' },
+    { scheme: 'GPL-2024-0312', user: 'CRC-赵六', time: '2026-08-21 11:48', status: 'fail',    transmitted: false, sub: 'SUB_009', initial: 'H.B', centerNo: 'C-05', centerName: '四川大学华西医院' }
+  ];
+
+  function statusTag(s){
+    return s === 'success'
+      ? '<span class="tag tag-success">成功</span>'
+      : '<span class="tag tag-fail">失败</span>';
+  }
+
+  function transmitTag(t){
+    const transmitted = (t === undefined || t === null) ? true : t;
+    return transmitted
+      ? '<span class="tag tag-success">已传输</span>'
+      : '<span class="tag tag-fail">未传输</span>';
+  }
+
+  // 分页状态
+  let filteredList = [];
+  const pageState = { current: 1, size: 10, total: 1 };
+
+  function renderRows(list){
+    filteredList = list;
+    pageState.total = Math.max(1, Math.ceil(list.length / pageState.size));
+    if(pageState.current > pageState.total) pageState.current = pageState.total;
+
+    const start = (pageState.current - 1) * pageState.size;
+    const pageData = list.slice(start, start + pageState.size);
+
+    const body = document.getElementById('auditBody');
+    body.innerHTML = pageData.map((r, i) => `
+      <tr>
+        <td class="center">${start + i + 1}</td>
+        <td>${r.scheme}</td>
+        <td>${r.sub}</td>
+        <td>${r.initial}</td>
+        <td>${r.centerNo}</td>
+        <td>${r.centerName}</td>
+        <td>${r.time}</td>
+        <td>${r.user}</td>
+        <td>${statusTag(r.status)}</td>
+        <td class="center">${transmitTag(r.transmitted)}</td>
+        <td class="center"><span class="link" onclick="viewDetail('${r.sub}')">查看</span></td>
+      </tr>
+    `).join('');
+
+    document.getElementById('totalCount').textContent = list.length;
+    document.getElementById('pageTotalCount').textContent = list.length;
+    document.getElementById('emptyTip').style.display = list.length ? 'none' : 'block';
+
+    renderPageNumbers();
+  }
+
+  function renderPageNumbers(){
+    const total = pageState.total;
+    const current = pageState.current;
+    const list = document.getElementById('pageList');
+    let html = '';
+
+    // 上一页
+    html += `<button onclick="prevPage()" ${current === 1 ? 'disabled' : ''}>&lt;</button>`;
+
+    // 计算页码
+    const pages = [];
+    if(total <= 7){
+      for(let i=1;i<=total;i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if(current > 4) pages.push('...');
+      const start = Math.max(2, current - 2);
+      const end = Math.min(total - 1, current + 2);
+      for(let i=start;i<=end;i++) pages.push(i);
+      if(current < total - 3) pages.push('...');
+      pages.push(total);
+    }
+
+    pages.forEach(p => {
+      if(p === '...'){
+        html += `<button class="ellipsis" disabled>...</button>`;
+      } else {
+        html += `<button class="${p === current ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+      }
+    });
+
+    // 下一页
+    html += `<button onclick="nextPage()" ${current === total ? 'disabled' : ''}>&gt;</button>`;
+
+    list.innerHTML = html;
+  }
+
+  function changePageSize(){
+    pageState.size = parseInt(document.getElementById('pageSize').value, 10);
+    pageState.current = 1;
+    renderRows(filteredList);
+  }
+
+  function goPage(n){
+    pageState.current = Math.max(1, Math.min(pageState.total, n));
+    renderRows(filteredList);
+  }
+
+  function prevPage(){ goPage(pageState.current - 1); }
+  function nextPage(){ goPage(pageState.current + 1); }
+
+  function jumpPage(){
+    const input = document.getElementById('jumpInput');
+    const n = parseInt(input.value, 10);
+    if(isNaN(n)) return;
+    goPage(n);
+    input.value = '';
+  }
+
+  function formatDate(d){
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function setDefaultDateRange(){
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 6); // 最近一周（含今天共 7 天）
+    document.getElementById('fEnd').value = formatDate(end);
+    document.getElementById('fStart').value = formatDate(start);
+  }
+
+  function getFilters(){
+    return {
+      scheme: document.getElementById('fScheme').value.trim(),
+      user: document.getElementById('fUser').value.trim(),
+      sub: document.getElementById('fSub').value.trim(),
+      center: document.getElementById('fCenter').value.trim(),
+      status: document.getElementById('fStatus').value,
+      start: document.getElementById('fStart').value,
+      end: document.getElementById('fEnd').value
+    };
+  }
+
+  function query(){
+    const f = getFilters();
+    const startTs = f.start ? new Date(f.start + 'T00:00:00').getTime() : null;
+    const endTs = f.end ? new Date(f.end + 'T23:59:59').getTime() : null;
+
+    const list = RECORDS.filter(r => {
+      const rTs = new Date(r.time.replace(' ', 'T')).getTime();
+      return (!f.scheme || r.scheme.includes(f.scheme)) &&
+             (!f.user   || r.user.includes(f.user)) &&
+             (!f.sub    || r.sub.includes(f.sub)) &&
+             (!f.center || r.centerNo.includes(f.center) || r.centerName.includes(f.center)) &&
+             (!f.status || r.status === f.status) &&
+             (!startTs  || rTs >= startTs) &&
+             (!endTs    || rTs <= endTs);
+    });
+    pageState.current = 1;
+    renderRows(list);
+  }
+
+  function resetFilter(){
+    ['fScheme','fUser','fSub','fCenter'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fStatus').value = '';
+    setDefaultDateRange();
+    query();
+  }
+
+  // 导出当前筛选结果（CSV）
+  function exportData(){
+    if(filteredList.length === 0){ alert('没有可导出的数据'); return; }
+    const headers = ['序号','方案编号','患者编号','姓名缩写','中心号','中心名称','调用时间','调用人名称','状态'];
+    const rows = filteredList.map((r, i) => [i + 1, r.scheme, r.sub, r.initial, r.centerNo, r.centerName, r.time, r.user, r.status === 'success' ? '成功' : '失败']);
+    const csv = [headers, ...rows].map(line => line.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    // 加 BOM 解决 Excel 中文乱码
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mcp-audit-export.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function viewDetail(id){
+    window.location.href = '文件页面重构说明.html';
+  }
+
+  setDefaultDateRange();
+  query();
+  // 兜底：若按默认最近一周无数据（演示数据不在本周内），则放宽时间条件展示全部
+  if(filteredList.length === 0){
+    document.getElementById('fStart').value = '';
+    document.getElementById('fEnd').value = '';
+    query();
+  }
+</script>
+</body>
+</html>

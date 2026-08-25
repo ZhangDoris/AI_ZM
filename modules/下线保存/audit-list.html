@@ -641,6 +641,15 @@
     background: #e8f4fc; border: 1px solid #b3d8f0; border-radius: 6px; font-size: 13px; color: #125c91;
   }
   .submit-banner i { color: #1872a7; }
+
+  /* ====== 轻提示 Toast（与手机端 h5-app-demo 保持一致）====== */
+  .toast-mini {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.8); color: #fff; padding: 9px 18px; border-radius: 8px;
+    font-size: 13px; z-index: 9999; opacity: 0; transition: opacity .3s;
+    pointer-events: none; max-width: 340px; text-align: center; line-height: 1.4;
+  }
+  .toast-mini.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -958,7 +967,7 @@
       </div>
       <div class="approve-form-actions">
         <label for="approveFormToggle" class="btn btn-default">取消</label>
-        <button class="btn btn-temp" onclick="alert('审核意见已暂存')">暂存</button>
+        <button class="btn btn-temp" onclick="toastMini('审核意见已暂存')">暂存</button>
         <button class="btn btn-primary" onclick="alert('审核已通过')">确认</button>
       </div>
     </div>
@@ -1007,7 +1016,7 @@
       </div>
       <div class="comm-form-actions">
         <label for="commFormToggle" class="btn btn-default">取消</label>
-        <button class="btn btn-temp" onclick="alert('沟通内容已暂存')">暂存</button>
+        <button class="btn btn-temp" onclick="toastMini('沟通内容已暂存')">暂存</button>
         <button class="btn btn-primary" onclick="alert('已发送入组沟通')">发送</button>
       </div>
     </div>
@@ -1475,6 +1484,17 @@ function closeEmailDrawer(){ document.getElementById('emailDrawerOverlay').class
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded',()=>renderTable());
+
+// ==================== 轻提示 Toast ====================
+function toastMini(msg){
+  const t=document.querySelector('.toast-mini');
+  if(!t){ alert(msg); return; }
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),1800);
+}
 </script>
+<div class="toast-mini"></div>
 </body>
 </html>

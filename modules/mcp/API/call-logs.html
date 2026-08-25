@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>接口调用日志</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f4f5fb; color: #333; }
+    .page { max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .page-header { margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #1d2129; }
+    .page-sub { font-size: 13px; color: #86909c; margin-top: 6px; }
+    .card { background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(93,88,220,.08); overflow: hidden; }
+
+    /* 查询栏 */
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; padding: 18px 24px; border-bottom: 1px solid #ecebf8; background: #fff; }
+    .filter-item { display: flex; flex-direction: column; gap: 6px; }
+    .filter-label { font-size: 13px; color: #4e5969; font-weight: 500; }
+    .filter-input, .filter-select { border: 1px solid #d6d4ee; border-radius: 4px; padding: 6px 10px; font-size: 13px; color: #333; outline: none; min-width: 160px; height: 34px; background: #fff; transition: border-color .2s; }
+    .filter-input:focus, .filter-select:focus { border-color: #5d58dc; }
+    .filter-actions { display: flex; align-items: flex-end; gap: 10px; margin-left: auto; }
+    .btn { border: none; border-radius: 4px; padding: 6px 18px; font-size: 13px; cursor: pointer; transition: all .2s; height: 34px; line-height: 22px; }
+    .btn-primary { background: #5d58dc; color: #fff; }
+    .btn-primary:hover { background: #4a45c4; }
+    .btn-ghost { background: #fff; color: #5d58dc; border: 1px solid #5d58dc; }
+    .btn-ghost:hover { background: #efeeff; }
+    .btn-sm { padding: 3px 10px; height: 26px; line-height: 20px; font-size: 12px; }
+    .btn-link { background: transparent; color: #5d58dc; border: none; padding: 0; height: auto; line-height: 1; font-size: 13px; }
+    .btn-link:hover { color: #4a45c4; text-decoration: underline; }
+
+    /* 表格 */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: #e3e1f5; color: #1d2129; font-size: 13px; font-weight: 600; text-align: center; padding: 12px 14px; border-bottom: 1px solid #d6d4ee; white-space: nowrap; }
+    tbody td { font-size: 13px; color: #1d2129; padding: 12px 14px; border-bottom: 1px solid #f2f1fb; vertical-align: middle; text-align: center; }
+    tbody tr:nth-child(even) { background: #fafaff; }
+    tbody tr:hover { background: #efeeff; }
+    .mono { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; }
+    .code-box { background: #f7f8fc; border: 1px solid #e3e1f5; border-radius: 4px; padding: 6px 8px; max-width: 240px; max-height: 80px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: #4e5969; font-size: 12px; text-align: left; }
+
+    /* 状态标签 */
+    .tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .tag-success { background: #e6f7ed; color: #1e8e4e; }
+    .tag-fail { background: #fdeeee; color: #c93636; }
+
+    .empty { text-align: center; padding: 48px 0; color: #86909c; font-size: 14px; }
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 14px 24px; font-size: 13px; color: #666; }
+    .pager-info { margin-right: 8px; }
+    .pager-select { border: 1px solid #d6d4ee; border-radius: 4px; padding: 4px 8px; color: #333; background: #fff; outline: none; }
+    .pager-btn, .pager-num { border: 1px solid #d6d4ee; background: #fff; color: #666; border-radius: 4px; min-width: 30px; height: 30px; line-height: 28px; text-align: center; cursor: pointer; font-size: 13px; padding: 0 8px; }
+    .pager-btn:hover, .pager-num:hover { border-color: #5d58dc; color: #5d58dc; }
+    .pager-num.active { background: #5d58dc; color: #fff; border-color: #5d58dc; }
+    .pager-input { border: 1px solid #d6d4ee; border-radius: 4px; width: 48px; height: 30px; text-align: center; outline: none; }
+    .pager-input:focus { border-color: #5d58dc; }
+    .pager-ellipsis { padding: 0 4px; color: #999; }
+
+    /* 返回内容弹窗 */
+    .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal { background: #fff; border-radius: 8px; width: 520px; max-width: 92vw; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(93,88,220,.25); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #ecebf8; font-size: 15px; font-weight: 600; color: #1d2129; }
+    .modal-close { cursor: pointer; color: #86909c; font-size: 16px; }
+    .modal-close:hover { color: #5d58dc; }
+    .modal-body { padding: 16px 18px; overflow: auto; }
+    .detail-info { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #ecebf8; }
+    .info-row { display: flex; align-items: baseline; gap: 12px; font-size: 13px; }
+    .info-label { width: 72px; flex-shrink: 0; color: #86909c; }
+    .info-value { color: #1d2129; }
+    .detail-section { margin-bottom: 16px; }
+    .detail-title { font-size: 13px; font-weight: 600; color: #5d58dc; margin-bottom: 8px; }
+    .modal-code { background: #f7f8fc; border: 1px solid #e3e1f5; border-radius: 4px; padding: 14px; font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 13px; color: #2c3e50; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+    .modal-footer { display: flex; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid #ecebf8; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">接口调用日志</div>
+        <div class="page-sub">记录每一次 API 调用的项目、调用人、时间、IP、参数与返回结果</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- 查询栏 -->
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label class="filter-label">项目编码</label>
+          <input class="filter-input" id="fProject" placeholder="如 PRJ-2023-0918" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">调用人</label>
+          <input class="filter-input" id="fCaller" placeholder="姓名 / 手机号" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">调用时间</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input class="filter-input" type="datetime-local" id="fStart" style="min-width:180px" />
+            <span style="color:#86909c">至</span>
+            <input class="filter-input" type="datetime-local" id="fEnd" style="min-width:180px" />
+          </div>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">调用状态</label>
+          <select class="filter-select" id="fStatus">
+            <option value="">全部</option>
+            <option value="success">成功</option>
+            <option value="fail">失败</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="queryLogs()"><i class="fas fa-search"></i> 查询</button>
+          <button class="btn btn-ghost" onclick="resetFilters()"><i class="fas fa-undo"></i> 重置</button>
+        </div>
+      </div>
+
+      <!-- 列表 -->
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">序号</th>
+            <th style="width:140px">项目编码</th>
+            <th style="width:180px">调用人</th>
+            <th style="width:170px">调用时间</th>
+            <th style="width:140px">IP 地址</th>
+            <th style="width:90px">调用状态</th>
+            <th style="width:120px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div class="pager" id="pager">
+        <span class="pager-info" id="totalText">共 0 条</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 调用详情查看弹窗 -->
+  <div class="modal-mask" id="respModal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <span>调用详情</span>
+        <i class="fas fa-times modal-close" onclick="closeRespModal()"></i>
+      </div>
+      <div class="modal-body">
+        <div class="detail-info" id="detailInfo"></div>
+        <div class="detail-section">
+          <div class="detail-title">请求参数</div>
+          <pre class="modal-code" id="reqText"></pre>
+        </div>
+        <div class="detail-section">
+          <div class="detail-title">返回结果</div>
+          <pre class="modal-code" id="respText"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeRespModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LOGS = [
+      {
+        project: 'PRJ-2023-0918',
+        caller: '张华-138****1234-医学经理',
+        time: '2026-08-25 10:12:33',
+        ip: '192.168.10.23',
+        request: '{\n  "patientId": "P10086",\n  "visitRange": "2024-01~2024-12"\n}',
+        response: '{\n  "code": 0,\n  "data": { "history": [ { "date": "2024-03-12", "diagnosis": "高血压" } ] }\n}',
+        status: 'success'
+      },
+      {
+        project: 'PRJ-2023-0918',
+        caller: '张华-138****1234-医学经理',
+        time: '2026-08-25 10:15:08',
+        ip: '192.168.10.23',
+        request: '{\n  "subjectId": "S203",\n  "protocolId": "PRJ-2023-0918"\n}',
+        response: '{\n  "code": 0,\n  "data": { "score": 0.87, "matchedRules": ["年龄","性别"] }\n}',
+        status: 'success'
+      },
+      {
+        project: 'PRJ-2024-0312',
+        caller: '李敏-139****5678-CRA',
+        time: '2026-08-24 16:42:51',
+        ip: '10.20.5.118',
+        request: '{\n  "fileId": "F20240801",\n  "template": "standard"\n}',
+        response: '{\n  "code": 0,\n  "data": { "pageId": "PG_20260824_014", "status": "ready" }\n}',
+        status: 'success'
+      },
+      {
+        project: 'PRJ-2024-0312',
+        caller: '李敏-139****5678-CRA',
+        time: '2026-08-24 17:03:20',
+        ip: '10.20.5.118',
+        request: '{\n  "startTime": "2026-08-23T00:00:00Z",\n  "endTime": "2026-08-24T00:00:00Z"\n}',
+        response: '{\n  "code": 40101,\n  "msg": "API key 已失效，请重新生成"\n}',
+        status: 'fail'
+      },
+      {
+        project: 'PRJ-2025-1107',
+        caller: '王强-137****9012-CRC',
+        time: '2026-08-23 09:31:47',
+        ip: '172.16.8.40',
+        request: '{\n  "patientId": "P20994"\n}',
+        response: '{\n  "code": 500,\n  "msg": "网关超时，请稍后重试"\n}',
+        status: 'fail'
+      },
+      {
+        project: 'PRJ-2025-1107',
+        caller: '王强-137****9012-CRC',
+        time: '2026-08-23 09:35:12',
+        ip: '172.16.8.40',
+        request: '{\n  "patientId": "P20994"\n}',
+        response: '{\n  "code": 0,\n  "data": { "history": [ { "date": "2025-02-09", "diagnosis": "糖尿病" } ] }\n}',
+        status: 'success'
+      }
+    ];
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function statusTag(s) {
+      return s === 'success'
+        ? '<span class="tag tag-success"><i class="fas fa-check-circle"></i> 成功</span>'
+        : '<span class="tag tag-fail"><i class="fas fa-times-circle"></i> 失败</span>';
+    }
+
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function getFiltered() {
+      const fp = document.getElementById('fProject').value.trim().toLowerCase();
+      const fc = document.getElementById('fCaller').value.trim().toLowerCase();
+      const fStart = document.getElementById('fStart').value; // yyyy-MM-ddTHH:mm
+      const fEnd = document.getElementById('fEnd').value;
+      const fs = document.getElementById('fStatus').value;
+      // 将日志时间 "2026-08-25 10:12:33" 转为 "2026-08-25T10:12:33" 以便比较
+      const norm = t => t.replace(' ', 'T');
+      return LOGS.filter(l => {
+        if (fp && !l.project.toLowerCase().includes(fp)) return false;
+        if (fc && !l.caller.toLowerCase().includes(fc)) return false;
+        const lt = norm(l.time);
+        if (fStart && lt < fStart) return false;
+        if (fEnd && lt > fEnd) return false;
+        if (fs && l.status !== fs) return false;
+        return true;
+      });
+    }
+
+    function renderTable() {
+      const all = getFiltered();
+      const total = all.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      const start = (currentPage - 1) * pageSize;
+      const list = all.slice(start, start + pageSize);
+      const body = document.getElementById('logBody');
+      if (list.length === 0) {
+        body.innerHTML = '<tr><td colspan="7" class="empty"><i class="fas fa-inbox"></i> 暂无调用日志</td></tr>';
+      } else {
+        body.innerHTML = list.map((l, i) => `
+          <tr>
+            <td>${start + i + 1}</td>
+            <td class="mono">${escapeHtml(l.project)}</td>
+            <td>${escapeHtml(l.caller)}</td>
+            <td class="mono">${escapeHtml(l.time)}</td>
+            <td class="mono">${escapeHtml(l.ip)}</td>
+            <td>${statusTag(l.status)}</td>
+            <td><button class="btn btn-link" onclick="viewResp(${start + i})">调用详情</button></td>
+          </tr>
+        `).join('');
+      }
+      renderPager(total, totalPages);
+      document.getElementById('totalText').textContent = '共 ' + total + ' 条';
+    }
+
+    function renderPager(total, totalPages) {
+      const pager = document.getElementById('pager');
+      let nums = [];
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) nums.push(i);
+      } else {
+        if (currentPage <= 4) {
+          nums = [1, 2, 3, 4, 5, 6, '...', totalPages];
+        } else if (currentPage >= totalPages - 3) {
+          nums = [1, '...', totalPages - 5, totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+        } else {
+          nums = [1, '...', currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2, '...', totalPages];
+        }
+      }
+      let html = '<span class="pager-info">共 ' + total + ' 条</span>';
+      html += '<select class="pager-select" onchange="changeSize(this.value)">';
+      [10, 20, 50, 100].forEach(n => {
+        html += '<option value="' + n + '"' + (n === pageSize ? ' selected' : '') + '>' + n + '条/页</option>';
+      });
+      html += '</select>';
+      html += '<button class="pager-btn" onclick="changePage(currentPage - 1)">&lt;</button>';
+      nums.forEach(n => {
+        if (n === '...') {
+          html += '<span class="pager-ellipsis">...</span>';
+        } else {
+          html += '<button class="pager-num ' + (n === currentPage ? 'active' : '') + '" onclick="changePage(' + n + ')">' + n + '</button>';
+        }
+      });
+      html += '<button class="pager-btn" onclick="changePage(currentPage + 1)">&gt;</button>';
+      html += '<span>前往</span><input class="pager-input" id="goPage" onkeydown="if(event.key===\'Enter\'){changePage(this.value)}" /><span>页</span>';
+      pager.innerHTML = html;
+    }
+
+    function changePage(p) {
+      const all = getFiltered();
+      const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+      let np = parseInt(p, 10);
+      if (isNaN(np)) return;
+      if (np < 1) np = 1;
+      if (np > totalPages) np = totalPages;
+      currentPage = np;
+      renderTable();
+    }
+
+    function changeSize(size) {
+      pageSize = parseInt(size, 10);
+      currentPage = 1;
+      renderTable();
+    }
+
+    function queryLogs() { currentPage = 1; renderTable(); }
+
+    function viewResp(idx) {
+      const l = getFiltered()[idx];
+      if (!l) return;
+      document.getElementById('detailInfo').innerHTML = `
+        <div class="info-row"><span class="info-label">项目编码</span><span class="info-value mono">${escapeHtml(l.project)}</span></div>
+        <div class="info-row"><span class="info-label">调用人</span><span class="info-value">${escapeHtml(l.caller)}</span></div>
+        <div class="info-row"><span class="info-label">调用时间</span><span class="info-value mono">${escapeHtml(l.time)}</span></div>
+        <div class="info-row"><span class="info-label">IP 地址</span><span class="info-value mono">${escapeHtml(l.ip)}</span></div>
+      `;
+      document.getElementById('reqText').textContent = l.request;
+      document.getElementById('respText').textContent = l.response;
+      document.getElementById('respModal').style.display = 'flex';
+    }
+
+    function closeRespModal() {
+      document.getElementById('respModal').style.display = 'none';
+    }
+
+    document.getElementById('respModal').addEventListener('click', e => {
+      if (e.target.id === 'respModal') closeRespModal();
+    });
+
+    function resetFilters() {
+      document.getElementById('fProject').value = '';
+      document.getElementById('fCaller').value = '';
+      document.getElementById('fStart').value = '';
+      document.getElementById('fEnd').value = '';
+      document.getElementById('fStatus').value = '';
+      currentPage = 1;
+      renderTable();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderTable);
+  </script>
+</body>
+</html>

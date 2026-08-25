@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>应用启动器 · 艾迪研</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background: #ffffff; color: #333; margin: 0; }
+    a { color: inherit; text-decoration: none; }
+
+    /* 顶部条：左侧 logo + 右侧头像 */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+    .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: #1872a7; }
+    .logo .logo-mark { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg,#1872a7 0%,#36a3ff 100%); display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; }
+    .user { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: #1872a7; color: #fff; display:flex; align-items:center; justify-content:center; font-weight: 600; }
+    .user .caret { color: #9ca3af; font-size: 10px; }
+
+    /* 主区域：白底 */
+    .main { max-width: 1200px; margin: 0 auto; padding: 36px 28px; }
+    .section-title { font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 18px; }
+    .section-sub { font-size: 13px; color: #6b7280; margin: -10px 0 18px; }
+
+    /* 应用图标网格（按截图一行 8 个） */
+    .app-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 14px; }
+    @media (max-width: 1100px) { .app-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media (max-width: 560px)  { .app-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .app-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all .18s; }
+    .app-cell:hover { border-color: #1872a7; box-shadow: 0 6px 16px rgba(24,114,167,0.12); transform: translateY(-2px); }
+    .app-cell.highlight { border: 2px solid #F53F3F; } /* 红框提示新增 */
+    .app-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+    .app-name { font-size: 13px; color: #374151; }
+    .app-tag { font-size: 10px; color: #F53F3F; font-weight: 600; padding: 1px 6px; background: #fff1f0; border-radius: 8px; margin-top: -4px; }
+
+    /* 图标配色（按截图） */
+    .ic-blue   { background: #1872a7; }
+    .ic-indigo { background: #6366f1; }
+    .ic-teal   { background: #14b8a6; }
+    .ic-cyan   { background: #06b6d4; }
+    .ic-sky    { background: #0ea5e9; }
+    .ic-purple { background: #8b5cf6; }
+    .ic-orange { background: #f59e0b; }
+    .ic-rose   { background: #f43f5e; }
+
+    /* 自绘 API 图标 */
+    .api-mark { position: relative; width: 44px; height: 44px; border-radius: 10px; background: linear-gradient(135deg, #1872a7 0%, #36a3ff 100%); display:flex; align-items:center; justify-content:center; color:#fff; overflow:hidden; }
+    .api-mark svg { width: 30px; height: 30px; }
+    .api-mark::after { content: "API"; position: absolute; bottom: 2px; right: 4px; font-size: 8px; font-weight: 700; color: #fff; opacity: .85; letter-spacing: 0.5px; }
+
+    /* Toast */
+    .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0,0,0,.78); color: #fff; padding: 10px 22px; border-radius: 4px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 200; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* 占位卡片（点击时显示的轻提示） */
+    .empty-hint { display: none; position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 100; align-items: center; justify-content: center; }
+    .empty-hint.show { display: flex; }
+    .empty-card { background: #fff; padding: 28px 32px; border-radius: 10px; min-width: 320px; max-width: 460px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.2); }
+    .empty-card .e-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+    .empty-card .e-desc { font-size: 13px; color: #6b7280; margin-bottom: 18px; }
+    .empty-card button { padding: 6px 18px; border: 1px solid #1872a7; background: #fff; color: #1872a7; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .empty-card button:hover { background: #1872a7; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部 -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark"><i class="fas fa-flask"></i></div>
+      艾迪研 · 智能预筛
+    </div>
+    <div class="user">
+      <div class="avatar">张</div>
+      <span>张琳</span>
+      <span class="caret"><i class="fas fa-caret-down"></i></span>
+    </div>
+  </div>
+
+  <!-- 主区域 -->
+  <div class="main">
+    <h2 class="section-title">应用中心</h2>
+    <div class="section-sub">点击图标进入对应功能模块。新增的「API 接口管理」支持 API key 创建、调用手册下载与接口日志查询。</div>
+
+    <div class="app-grid">
+
+      <!-- 1. 审核列表（灰） -->
+      <div class="app-cell" onclick="openHint('审核列表')">
+        <div class="app-icon" style="background:#6b7280"><i class="fas fa-search"></i></div>
+        <div class="app-name">审核列表</div>
+      </div>
+
+      <!-- 2. 智能筛选（蓝） -->
+      <div class="app-cell" onclick="openHint('智能筛选')">
+        <div class="app-icon ic-blue"><i class="fas fa-filter"></i></div>
+        <div class="app-name">智能筛选</div>
+      </div>
+
+      <!-- 3. 数据统计（紫） -->
+      <div class="app-cell" onclick="openHint('数据统计')">
+        <div class="app-icon ic-purple"><i class="fas fa-chart-bar"></i></div>
+        <div class="app-name">数据统计</div>
+      </div>
+
+      <!-- 4. 项目中心邀请码（青） -->
+      <div class="app-cell" onclick="openHint('项目中心邀请码')">
+        <div class="app-icon ic-teal"><i class="fas fa-hospital"></i></div>
+        <div class="app-name">项目中心邀请码</div>
+      </div>
+
+      <!-- 5. 项目整理后台（青蓝） -->
+      <div class="app-cell" onclick="openHint('项目整理后台')">
+        <div class="app-icon ic-cyan"><i class="fas fa-folder-tree"></i></div>
+        <div class="app-name">项目整理后台</div>
+      </div>
+
+      <!-- 6. 装载管理（橙） -->
+      <div class="app-cell" onclick="openHint('装载管理')">
+        <div class="app-icon ic-orange"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="app-name">装载管理</div>
+      </div>
+
+      <!-- 7. 测试后台（玫红） -->
+      <div class="app-cell" onclick="openHint('测试后台')">
+        <div class="app-icon ic-rose"><i class="fas fa-flask"></i></div>
+        <div class="app-name">测试后台</div>
+      </div>
+
+      <!-- 8. ⭐ 新增：API 接口管理（自绘 API 图标） -->
+      <div class="app-cell highlight" onclick="goApiKeys()">
+        <div class="api-mark" title="API 接口管理">
+          <!-- 自绘 API 图标：圆角方块内含两个互锁齿轮 + 中央 < > 括号 -->
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                <stop offset="100%" stop-color="#dbeafe" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+            <!-- 中央括号 -->
+            <text x="32" y="40" text-anchor="middle" font-size="26" font-weight="700" font-family="Consolas,Menlo,monospace" fill="url(#g1)">{ }</text>
+            <!-- 左上齿轮 -->
+            <g transform="translate(14 16)">
+              <circle r="6.5" fill="#ffffff" opacity="0.95"/>
+              <circle r="2.5" fill="#1872a7"/>
+              <g fill="#ffffff">
+                <rect x="-1" y="-9" width="2" height="3" rx="0.5"/>
+                <rect x="-1" y="6"  width="2" height="3" rx="0.5"/>
+                <rect x="-9" y="-1" width="3" height="2" rx="0.5"/>
+                <rect x="6"  y="-1" width="3" height="2" rx="0.5"/>
+                <rect x="-7" y="-7" width="3" height="2" rx="0.5" transform="rotate(-45)"/>
+                <rect x="4"  y="-7" width="3" height="2" rx="0.5" transform="rotate(45)"/>
+                <rect x="-7" y="5"  width="3" height="2" rx="0.5" transform="rotate(45)"/>
+                <rect x="4"  y="5"  width="3" height="2" rx="0.5" transform="rotate(-45)"/>
+              </g>
+            </g>
+            <!-- 右下齿轮 -->
+            <g transform="translate(50 48)">
+              <circle r="5.5" fill="#ffffff" opacity="0.95"/>
+              <circle r="2"   fill="#1872a7"/>
+              <g fill="#ffffff">
+                <rect x="-1" y="-7.5" width="2" height="2.5" rx="0.5"/>
+                <rect x="-1" y="5"    width="2" height="2.5" rx="0.5"/>
+                <rect x="-7.5" y="-1" width="2.5" height="2" rx="0.5"/>
+                <rect x="5"    y="-1" width="2.5" height="2" rx="0.5"/>
+              </g>
+            </g>
+            <!-- 连接线 -->
+            <path d="M20 22 Q32 30 44 42" stroke="#ffffff" stroke-width="1.4" fill="none" stroke-dasharray="2 2" opacity="0.85"/>
+          </svg>
+        </div>
+        <div class="app-name">API 接口管理</div>
+        <div class="app-tag">NEW</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 占位弹窗 -->
+  <div class="empty-hint" id="hint">
+    <div class="empty-card">
+      <div class="e-title" id="hintTitle">模块</div>
+      <div class="e-desc">该功能模块正在迭代中。</div>
+      <button onclick="closeHint()">我知道了</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function goApiKeys() {
+      // 跳转到同目录的 API keys 管理页
+      window.location.href = 'api-keys.html';
+    }
+    function openHint(name) {
+      document.getElementById('hintTitle').textContent = name;
+      document.getElementById('hint').classList.add('show');
+    }
+    function closeHint() {
+      document.getElementById('hint').classList.remove('show');
+    }
+    document.getElementById('hint').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeHint();
+    });
+  </script>
+</body>
+</html>

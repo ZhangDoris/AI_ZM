@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Keys 管理</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background-color: #ffffff; color: #333333; margin: 0; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ===== 公司 Tab（恒瑞医药 / 江苏科信 / 运营二部） ===== */
+    .company-tabs { display: inline-flex; align-items: stretch; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; background: #fff; margin: 0 0 16px; width: fit-content; }
+    .company-tab { padding: 6px 20px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #4b5563; background: #fff; border-right: 1px solid #d1d5db; transition: all .15s; user-select: none; }
+    .company-tab:last-child { border-right: none; }
+    .company-tab:hover { color: #1872a7; }
+    .company-tab.active { background: #1872a7; color: #fff; }
+
+    /* ===== 顶部标题 + 操作栏（截图风格：右上角刷新/重置/新增） ===== */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; }
+    .section-title { font-size: 20px; font-weight: 600; color: #1f2937; margin: 0; }
+    .section-desc { font-size: 13px; line-height: 1.7; color: #666; margin: 0 0 20px; }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 6px 0 18px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+    .btn-primary { background-color: #1872a7; color: #fff; border-color: #1872a7; }
+    .btn-primary:hover { background-color: #125a85; border-color: #125a85; }
+    .btn-default { background-color: #fff; color: #1872a7; border: 1px solid #1872a7; }
+    .btn-default:hover { background-color: #e8f3f6; }
+
+    /* ===== 筛选栏（行内布局） ===== */
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; background: #f5f7fa; padding: 16px 18px; border-radius: 6px; margin-bottom: 16px; }
+    .filter-item { display: flex; flex-direction: column; gap: 6px; }
+    .filter-item:nth-child(1) { flex: 0 0 200px; }
+    .filter-item:nth-child(2) { flex: 0 0 200px; }
+    .filter-item:nth-child(3) { flex: 0 0 240px; }
+    .filter-label { font-size: 13px; color: #666; font-weight: 500; }
+    .filter-actions { display: flex; gap: 12px; margin-left: auto; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #333; outline: none; background: #fff; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+
+    /* ===== 表格（蓝色表头 + 斑马纹） ===== */
+    .table-card { border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .api-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+    .api-table thead th { text-align: left; padding: 12px 16px; background: #1872a7; color: #fff; font-weight: 500; white-space: nowrap; }
+    .api-table tbody td { padding: 12px 16px; border-bottom: 1px solid #eef0f3; color: #4b5563; vertical-align: middle; }
+    .api-table tbody tr:nth-child(even) td { background: #f3f8fa; }
+    .api-table tbody tr:hover td { background: #e8f3f6; }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table td.center { text-align: center; }
+    .key-mask { font-family: monospace; background: #f5f7fa; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: #555; }
+
+    /* 行内操作按钮（蓝边框） */
+    .row-actions { display: inline-flex; gap: 6px; }
+    .op-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 26px; padding: 0 8px; border: 1px solid #1872a7; border-radius: 3px; color: #1872a7; background: #fff; cursor: pointer; transition: all .15s; }
+    .op-btn:hover { background: #1872a7; color: #fff; }
+    .op-btn.danger { border-color: #f56565; color: #f56565; }
+    .op-btn.danger:hover { background: #f56565; color: #fff; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+
+    /* ===== 分页 ===== */
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 16px 0; font-size: 13px; color: #6b7280; flex-wrap: wrap; }
+    .pager .total { color: #4b5563; }
+    .pager .total em { font-style: normal; color: #1872a7; }
+    .pager select { height: 28px; padding: 0 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; color: #4b5563; cursor: pointer; }
+    .pager .pages { display: inline-flex; gap: 4px; }
+    .pg { min-width: 30px; height: 30px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #fff; color: #4b5563; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .pg:hover { border-color: #1872a7; color: #1872a7; }
+    .pg.active { background: #1872a7; border-color: #1872a7; color: #fff; cursor: default; }
+    .pg.disabled { color: #c0c4cc; cursor: not-allowed; background: #fafafa; border-color: #e5e7eb; }
+
+    /* ===== 弹窗 ===== */
+    .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-mask.show { display: flex; }
+    .modal-content { background: #fff; border-radius: 8px; width: 560px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.18); }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+    .modal-close { font-size: 18px; color: #999; cursor: pointer; background: none; border: none; }
+    .modal-close:hover { color: #1872a7; }
+    .modal-body { padding: 24px; }
+    .form-row { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; color: #333; margin-bottom: 8px; font-weight: 500; }
+    .form-label .required { color: #F53F3F; margin-left: 4px; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+    .form-hint { font-size: 12px; color: #999; margin-top: 6px; }
+    /* searchable select */
+    .search-select { position: relative; }
+    .search-select .search-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 34px 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; background: #fff; cursor: pointer; }
+    .search-select .search-input:focus { border-color: #1872a7; }
+    .search-select .search-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; font-size: 12px; }
+    .search-select .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.1); z-index: 10; display: none; }
+    .search-select .search-dropdown.show { display: block; }
+    .search-select .search-option { padding: 9px 12px; font-size: 14px; color: #333; cursor: pointer; transition: background .15s; }
+    .search-select .search-option:hover, .search-select .search-option.active { background: #f3f8fa; color: #1872a7; }
+    .search-select .search-empty { padding: 12px; font-size: 13px; color: #999; text-align: center; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; cursor: pointer; }
+    .checkbox-item input { width: 16px; height: 16px; accent-color: #1872a7; cursor: pointer; }
+    .modal-footer { padding: 14px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
+    .btn-cancel { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 18px; font-size: 14px; color: #4b5563; cursor: pointer; }
+    .btn-cancel:hover { border-color: #1872a7; color: #1872a7; }
+    .btn-confirm { background: #1872a7; color: #fff; border: none; border-radius: 4px; padding: 8px 18px; font-size: 14px; cursor: pointer; }
+    .btn-confirm:hover { background: #125a85; }
+    .btn-confirm:disabled { background: #b3c6ff; cursor: not-allowed; }
+    /* created key display */
+    .created-box { background: #f3f8fa; border: 1px solid #cfe3eb; border-radius: 4px; padding: 16px; margin-top: 16px; }
+    .created-key { font-family: monospace; font-size: 14px; word-break: break-all; color: #1872a7; background: #fff; padding: 12px; border-radius: 4px; border: 1px dashed #9cc6d4; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .copy-tip { font-size: 12px; color: #F53F3F; margin-top: 8px; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0,0,0,.75); color: #fff; padding: 10px 24px; border-radius: 6px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 2000; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 768px) {
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-item { flex: none !important; }
+      .filter-actions { margin-left: 0; }
+      .pager { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 顶部：标题 -->
+    <div class="top-bar">
+      <div>
+        <h1 class="section-title">API keys</h1>
+      </div>
+    </div>
+
+   
+
+  
+
+    <!-- 公司 Tab -->
+    <div class="company-tabs" id="companyTabs">
+      <div class="company-tab active" data-company="hengrui" onclick="switchCompany(this)">恒瑞医药</div>
+      <div class="company-tab" data-company="jiangsu-kexin" onclick="switchCompany(this)">江苏科信</div>
+      <div class="company-tab" data-company="ops-dept2" onclick="switchCompany(this)">运营二部</div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-item">
+        <label class="filter-label">项目编码</label>
+        <input type="text" class="form-input" id="filterProject" placeholder="请输入项目编码" />
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">所属人员</label>
+        <input type="text" class="form-input" id="filterMember" placeholder="请输入所属人员" />
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">接口名称</label>
+        <select class="form-select" id="filterApi">
+          <option value="">全部接口</option>
+          <option value="patient-history">获取患者病史信息</option>
+          <option value="match-detail">匹配详情核对</option>
+          <option value="audit-log">调用审计日志</option>
+          <option value="file-rebuild">文件页面重构</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" onclick="queryKeys()">查询</button>
+        <button class="btn btn-default" onclick="resetFilters()">重置</button>
+        <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> 创建 API key</button>
+
+      </div>
+    </div>
+  <div class="section-desc">
+      列表内是你的全部 API key。API key 仅在创建时可见可复制，请妥善保存。不要与他人共享你的 API key，或将其暴露在浏览器或其他客户端代码中。<br>
+    </div>
+    <div class="table-card">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>项目编码</th>
+            <th>所属人员</th>
+            <th>接口名称</th>
+            <th>Key</th>
+            <th>创建日期</th>
+            <th style="width:120px;text-align:center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="keyTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pager">
+      <span class="total">共 <em id="totalCount">0</em> 条</span>
+      <span>
+        <select id="pageSize" onchange="onPageSizeChange()">
+          <option>10条/页</option>
+          <option>20条/页</option>
+          <option>50条/页</option>
+        </select>
+      </span>
+      <span class="pages" id="pagerPages"></span>
+      <span>前往 <input id="jumpInput" type="number" min="1" style="width:46px;height:28px;padding:0 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;" /> 页</span>
+    </div>
+  </div>
+
+  <!-- 创建 API key 弹窗 -->
+  <div class="modal-mask" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">创建 API key</div>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="createFormBody">
+        <div class="form-row">
+          <label class="form-label">项目编码 <span class="required">*</span></label>
+          <select class="form-select" id="projectCode" onchange="validateCreate()">
+            <option value="">请选择或搜索项目编码</option>
+            <option value="PRJ-2023-0918">PRJ-2023-0918</option>
+            <option value="PRJ-2024-0312">PRJ-2024-0312</option>
+            <option value="PRJ-2025-1107">PRJ-2025-1107</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label class="form-label">所属人员 <span class="required">*</span></label>
+          <div class="search-select" id="projMemberWrap">
+            <input type="text" class="search-input" id="projMemberInput" placeholder="请选择或搜索所属人员" autocomplete="off" />
+            <i class="fas fa-chevron-down search-arrow"></i>
+            <div class="search-dropdown" id="projMemberDropdown"></div>
+            <input type="hidden" id="projMember" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="form-label">接口名称 <span class="required">*</span></label>
+          <select class="form-select" id="apiSelect" onchange="validateCreate()">
+            <option value="">请选择接口名称</option>
+            <option value="patient-history">获取患者病史信息</option>
+            <option value="match-detail">匹配详情核对</option>
+            <option value="audit-log">调用审计日志</option>
+            <option value="file-rebuild">文件页面重构</option>
+          </select>
+        </div>
+        <div class="created-box" id="createdBox" style="display:none">
+          <div class="form-label">你的 API key</div>
+          <div class="created-key">
+            <span id="createdKeyText"></span>
+            <button class="btn-default" id="copyBtn" onclick="copyCreatedKey()">复制</button>
+          </div>
+          <div class="copy-tip">* API key 仅在本次弹窗内可复制。关闭后将无法再次查看，如需使用请重新创建。</div>
+          <button class="btn-default" id="downloadManualBtn" onclick="downloadCreatedManual()" style="margin-top:12px;width:100%;justify-content:center;display:inline-flex;align-items:center;gap:6px;">
+            <i class="fas fa-download"></i> 下载接口文档
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancel" onclick="closeCreateModal()">取消</button>
+        <button class="btn-confirm" id="confirmBtn" onclick="confirmCreate()" disabled>立即创建</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API_NAME_MAP = {
+      'patient-history': '获取患者病史信息',
+      'match-detail': '匹配详情核对',
+      'audit-log': '调用审计日志',
+      'file-rebuild': '文件页面重构'
+    };
+
+    const MEMBER_OPTIONS = [
+      { name: '张华', phone: '138****1234', role: '医学经理' },
+      { name: '李敏', phone: '139****5678', role: 'CRA' },
+      { name: '王强', phone: '137****9012', role: 'CRC' }
+    ];
+    const MEMBER_LABELS = MEMBER_OPTIONS.map(o => `${o.name}-${o.phone}-${o.role}`);
+
+    const KEYS = [
+      { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', apis: ['patient-history', 'match-detail'], fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { project: 'PRJ-2024-0312', member: '李敏-139****5678-CRA', apis: ['audit-log'], fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2025-03-31' }
+    ];
+
+    let createdKeyOnce = false; // 标识本次弹窗是否已复制过/关闭后不可再看
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function maskKey(key) {
+      if (!key || key.length < 12) return key;
+      return key.slice(0, 8) + '******' + key.slice(-4);
+    }
+
+    function apiNames(apis) {
+      return (apis || []).map(a => API_NAME_MAP[a] || a).join('、');
+    }
+
+    function getFiltered() {
+      const fp = document.getElementById('filterProject').value.trim().toLowerCase();
+      const fm = document.getElementById('filterMember').value.trim().toLowerCase();
+      const fa = document.getElementById('filterApi').value;
+      return KEYS.filter(k => {
+        if (fp && !k.project.toLowerCase().includes(fp)) return false;
+        if (fm && !k.member.toLowerCase().includes(fm)) return false;
+        if (fa && !k.apis.includes(fa)) return false;
+        return true;
+      });
+    }
+
+    function renderTable() {
+      const list = getFiltered();
+      const start = (currentPage - 1) * pageSize;
+      const pageList = list.slice(start, start + pageSize);
+      const tbody = document.getElementById('keyTableBody');
+      if (pageList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无符合条件的 API key</td></tr>';
+      } else {
+        tbody.innerHTML = pageList.map((k, i) => `
+          <tr>
+            <td>${k.project}</td>
+            <td>${k.member}</td>
+            <td>${apiNames(k.apis)}</td>
+            <td><span class="key-mask">${maskKey(k.fullKey)}</span></td>
+            <td>${k.createdAt}</td>
+            <td class="center">
+              <div class="row-actions">
+                <button class="op-btn" title="下载调用手册" onclick="downloadManual('${k.apis[0]}')"><i class="fas fa-download"></i></button>
+                <button class="op-btn danger" title="删除" onclick="deleteKey('${k.fullKey}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+      document.getElementById('totalCount').textContent = list.length;
+      renderPager(list.length);
+    }
+
+    function renderPager(total) {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const el = document.getElementById('pagerPages');
+      const items = [];
+      items.push(`<button class="pg ${currentPage===1?'disabled':''}" onclick="goPage(${currentPage-1})"><i class="fas fa-chevron-left"></i></button>`);
+      const arr = pageArr(currentPage, totalPages);
+      arr.forEach(p => {
+        if (p === '...') items.push('<span class="pg" style="border:none;background:transparent;cursor:default;">…</span>');
+        else items.push(`<button class="pg ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`);
+      });
+      items.push(`<button class="pg ${currentPage===totalPages?'disabled':''}" onclick="goPage(${currentPage+1})"><i class="fas fa-chevron-right"></i></button>`);
+      el.innerHTML = items.join('');
+    }
+    function pageArr(cur, total) {
+      if (total <= 7) return Array.from({length:total},(_,i)=>i+1);
+      if (cur <= 4) return [1,2,3,4,5,'...',total];
+      if (cur >= total-3) return [1,'...',total-4,total-3,total-2,total-1,total];
+      return [1,'...',cur-1,cur,cur+1,'...',total];
+    }
+    function goPage(p) {
+      const totalPages = Math.max(1, Math.ceil(getFiltered().length / pageSize));
+      if (p < 1 || p > totalPages || p === currentPage) return;
+      currentPage = p;
+      renderTable();
+    }
+    function onPageSizeChange() {
+      pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
+      currentPage = 1;
+      renderTable();
+    }
+
+    function queryKeys() { renderTable(); }
+
+    function resetFilters() {
+      document.getElementById('filterProject').value = '';
+      document.getElementById('filterMember').value = '';
+      document.getElementById('filterApi').value = '';
+      currentPage = 1;
+      renderTable();
+    }
+
+    function onRefresh() { renderTable(); }
+
+    // 公司 Tab 切换
+    function switchCompany(el) {
+      document.querySelectorAll('#companyTabs .company-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      // 切换后重置筛选并刷新（按公司过滤数据可在后端实现）
+      currentPage = 1;
+      const name = el.textContent.trim();
+      showToast('已切换到：' + name);
+      renderTable();
+    }
+
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('show');
+      resetCreateForm();
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('show');
+    }
+
+    function resetCreateForm() {
+      document.getElementById('projectCode').value = '';
+      setMemberValue('');
+      document.getElementById('apiSelect').selectedIndex = -1;
+      document.getElementById('createdBox').style.display = 'none';
+      document.getElementById('createdKeyText').textContent = '';
+      document.getElementById('copyBtn').textContent = '复制';
+      document.getElementById('confirmBtn').textContent = '立即创建';
+      document.getElementById('btnCancel').style.display = '';
+      createdKeyOnce = false;
+      window.createdApiId = null;
+      renderMemberOptions();
+      validateCreate();
+    }
+
+    function validateCreate() {
+      const project = document.getElementById('projectCode').value.trim();
+      const member = document.getElementById('projMember').value.trim();
+      const api = document.getElementById('apiSelect').value.trim();
+      const valid = project && member && api;
+      document.getElementById('confirmBtn').disabled = !valid;
+    }
+
+    function renderMemberOptions(keyword) {
+      const dropdown = document.getElementById('projMemberDropdown');
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = MEMBER_OPTIONS.filter(o => {
+        const label = `${o.name}-${o.phone}-${o.role}`.toLowerCase();
+        return label.includes(kw) || o.name.toLowerCase().includes(kw) || o.phone.includes(kw) || o.role.toLowerCase().includes(kw);
+      });
+      if (list.length === 0) {
+        dropdown.innerHTML = '<div class="search-empty">无匹配人员</div>';
+      } else {
+        dropdown.innerHTML = list.map(o => {
+          const label = `${o.name}-${o.phone}-${o.role}`;
+          return `<div class="search-option" data-value="${label}">${label}</div>`;
+        }).join('');
+      }
+    }
+
+    function setMemberValue(value) {
+      document.getElementById('projMember').value = value;
+      document.getElementById('projMemberInput').value = value;
+    }
+
+    function toggleMemberDropdown(show) {
+      const dropdown = document.getElementById('projMemberDropdown');
+      if (show) {
+        renderMemberOptions(document.getElementById('projMemberInput').value);
+        dropdown.classList.add('show');
+      } else {
+        dropdown.classList.remove('show');
+      }
+    }
+
+    function confirmCreate() {
+      // 已经在展示生成结果：再次点击「关闭」按钮直接关闭弹窗
+      if (document.getElementById('createdBox').style.display !== 'none') {
+        closeCreateModal();
+        return;
+      }
+      const project = document.getElementById('projectCode').value.trim();
+      const member = document.getElementById('projMember').value.trim();
+      const api = document.getElementById('apiSelect').value.trim();
+      if (!MEMBER_LABELS.includes(member)) {
+        showToast('请选择有效的所属人员');
+        return;
+      }
+      const newKey = 'sk-' + Array.from({ length: 48 }, () => 'abcdef0123456789'[Math.floor(Math.random() * 16)]).join('');
+      const today = new Date().toISOString().slice(0, 10);
+
+      KEYS.unshift({ project, member, apis: [api], fullKey: newKey, createdAt: today });
+      window.createdApiId = api; // 记录本次生成对应的接口，供下载操作手册使用
+
+      document.getElementById('createdKeyText').textContent = newKey;
+      document.getElementById('createdBox').style.display = 'block';
+      // 生成后：按钮文字改为"关闭"，并隐藏"取消"按钮
+      document.getElementById('confirmBtn').textContent = '关闭';
+      document.getElementById('btnCancel').style.display = 'none';
+      currentPage = 1;
+      renderTable();
+    }
+
+    // 生成 key 后，在弹窗内下载对应接口的操作手册
+    function downloadCreatedManual() {
+      const apiId = window.createdApiId;
+      if (!apiId) { showToast('暂未关联接口，无法下载手册'); return; }
+      downloadManual(apiId);
+    }
+
+    function copyCreatedKey() {
+      const key = document.getElementById('createdKeyText').textContent;
+      if (!key) return;
+      if (createdKeyOnce) {
+        showToast('API key 仅可复制一次，如需使用请重新创建');
+        return;
+      }
+      navigator.clipboard.writeText(key).then(() => {
+        createdKeyOnce = true;
+        document.getElementById('copyBtn').textContent = '已复制';
+        showToast('API key 已复制到剪贴板');
+      }).catch(() => {
+        showToast('复制失败，请手动复制');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function deleteKey(fullKey) {
+      if (!confirm('确定要删除该 API key 吗？删除后将无法恢复。')) return;
+      const idx = KEYS.findIndex(k => k.fullKey === fullKey);
+      if (idx >= 0) {
+        KEYS.splice(idx, 1);
+        renderTable();
+      }
+    }
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    // 各接口调用手册内容（每个接口文档不同）
+    const API_MANUALS = {
+      'patient-history': {
+        title: '获取患者病史信息 接口调用手册',
+        content: `# 获取患者病史信息 接口调用手册
+
+## 1. 接口说明
+- 接口名称：获取患者病史信息
+- 接口标识：patient-history
+- 功能描述：根据患者唯一标识查询其历史就诊记录、既往病史、用药史等核心信息。
+
+## 2. 请求地址
+\`\`\`
+POST https://api.ediyan.com/v1/patient/history
+\`\`\`
+
+## 3. 请求头
+| 参数 | 说明 |
+| --- | --- |
+| Authorization | Bearer <你的 API key> |
+| Content-Type | application/json |
+
+## 4. 请求参数（Body）
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| patientId | string | 是 | 患者唯一标识 |
+| visitRange | string | 否 | 时间范围，如 2024-01~2024-12 |
+
+## 5. 返回示例
+\`\`\`json
+{
+  "code": 0,
+  "data": {
+    "patientId": "P10086",
+    "history": [ { "date": "2024-03-12", "diagnosis": "高血压" } ]
+  }
+}
+\`\`\`
+
+## 6. 注意事项
+- 单次请求建议不超过 50 条患者 ID。
+- 病史信息属敏感数据，请严格按授权范围使用。
+`
+      },
+      'match-detail': {
+        title: '匹配详情核对 接口调用手册',
+        content: `# 匹配详情核对 接口调用手册
+
+## 1. 接口说明
+- 接口名称：匹配详情核对
+- 接口标识：match-detail
+- 功能描述：查询受试者与研究方案的匹配评分及命中/排除规则明细。
+
+## 2. 请求地址
+\`\`\`
+POST https://api.ediyan.com/v1/match/detail
+\`\`\`
+
+## 3. 请求头
+| 参数 | 说明 |
+| --- | --- |
+| Authorization | Bearer <你的 API key> |
+| Content-Type | application/json |
+
+## 4. 请求参数（Body）
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| subjectId | string | 是 | 受试者 ID |
+| protocolId | string | 是 | 研究方案 ID |
+
+## 5. 返回示例
+\`\`\`json
+{
+  "code": 0,
+  "data": {
+    "score": 0.87,
+    "matchedRules": ["年龄", "性别"],
+    "excludedRules": []
+  }
+}
+\`\`\`
+
+## 6. 注意事项
+- 匹配规则随方案版本更新，请确认使用最新 protocolId。
+`
+      },
+      'audit-log': {
+        title: '调用审计日志 接口调用手册',
+        content: `# 调用审计日志 接口调用手册
+
+## 1. 接口说明
+- 接口名称：调用审计日志
+- 接口标识：audit-log
+- 功能描述：拉取指定时间窗口内 API 的调用流水，用于合规审计与异常排查。
+
+## 2. 请求地址
+\`\`\`
+GET https://api.ediyan.com/v1/audit/log
+\`\`\`
+
+## 3. 请求头
+| 参数 | 说明 |
+| --- | --- |
+| Authorization | Bearer <你的 API key> |
+
+## 4. 查询参数（Query）
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| startTime | string | 是 | 起始时间 ISO8601 |
+| endTime | string | 是 | 结束时间 ISO8601 |
+
+## 5. 返回示例
+\`\`\`json
+{
+  "code": 0,
+  "data": {
+    "logs": [ { "ts": "2026-08-25T10:00:00Z", "api": "patient-history" } ]
+  }
+}
+\`\`\`
+
+## 6. 注意事项
+- 日志默认保留 180 天，超出范围将无法查询。
+- 审计日志仅授权人员可访问。
+`
+      },
+      'file-rebuild': {
+        title: '文件页面重构 接口调用手册',
+        content: `# 文件页面重构 接口调用手册
+
+## 1. 接口说明
+- 接口名称：文件页面重构
+- 接口标识：file-rebuild
+- 功能描述：对脱敏后的文件生成可预览的标准化页面并回传页面标识。
+
+## 2. 请求地址
+\`\`\`
+POST https://api.ediyan.com/v1/file/rebuild
+\`\`\`
+
+## 3. 请求头
+| 参数 | 说明 |
+| --- | --- |
+| Authorization | Bearer <你的 API key> |
+| Content-Type | application/json |
+
+## 4. 请求参数（Body）
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| fileId | string | 是 | 源文件 ID |
+| template | string | 否 | 页面模板，默认 standard |
+
+## 5. 返回示例
+\`\`\`json
+{
+  "code": 0,
+  "data": { "pageId": "PG_20260825_001", "status": "ready" }
+}
+\`\`\`
+
+## 6. 注意事项
+- 重构仅对已完成脱敏的文件生效。
+- 生成页面受访问权限控制，请勿外泄 pageId。
+`
+      }
+    };
+
+    function downloadManual(apiId) {
+      const manual = API_MANUALS[apiId];
+      if (!manual) {
+        showToast('暂未提供该接口的调用手册');
+        return;
+      }
+      const blob = new Blob([manual.content], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = manual.title + '.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // 所属人员可搜索下拉事件绑定
+    (function initMemberSelect() {
+      const input = document.getElementById('projMemberInput');
+      const dropdown = document.getElementById('projMemberDropdown');
+      const wrap = document.getElementById('projMemberWrap');
+
+      input.addEventListener('focus', () => toggleMemberDropdown(true));
+      input.addEventListener('input', () => renderMemberOptions(input.value));
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          const val = input.value.trim();
+          if (MEMBER_LABELS.includes(val)) {
+            setMemberValue(val);
+            validateCreate();
+          } else if (!document.getElementById('projMember').value) {
+            setMemberValue('');
+            validateCreate();
+          } else {
+            setMemberValue(document.getElementById('projMember').value);
+          }
+          toggleMemberDropdown(false);
+        }, 180);
+      });
+
+      dropdown.addEventListener('mousedown', e => {
+        const option = e.target.closest('.search-option');
+        if (!option) return;
+        const value = option.dataset.value;
+        setMemberValue(value);
+        toggleMemberDropdown(false);
+        validateCreate();
+      });
+
+      document.addEventListener('click', e => {
+        if (!wrap.contains(e.target)) toggleMemberDropdown(false);
+      });
+    })();
+
+    // 点击遮罩关闭弹窗
+    document.getElementById('createModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeCreateModal();
+    });
+
+    // 回车跳转
+    document.getElementById('jumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const p = parseInt(e.target.value, 10);
+        if (p) goPage(p);
+      }
+    });
+
+    // 输入筛选即时过滤
+    ['filterProject','filterMember','filterApi'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => { currentPage = 1; renderTable(); });
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>

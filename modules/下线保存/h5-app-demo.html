@@ -1240,17 +1240,28 @@
       flex: 1; padding: 10px 0; border: none; border-radius: 6px;
       font-size: 14px; font-weight: 500; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      background: #1677ff; color: #fff;
+      background: #409eff; color: #fff;
     }
-    .approve-sheet .approve-btn:active { background: #0958d9; }
-    .approve-sheet .approve-btn.blue { background: #1677ff; color: #fff; }
-    .approve-sheet .approve-btn.blue:active { background: #0958d9; }
+    .approve-sheet .approve-btn:active { background: #337ecc; }
+    .approve-sheet .approve-btn.blue { background: #409eff; color: #fff; }
+    .approve-sheet .approve-btn.blue:active { background: #337ecc; }
     .approve-sheet .approve-btn.outline {
-      background: #1677ff; color: #fff; border: 1px solid #1677ff;
+      background: #409eff; color: #fff; border: 1px solid #409eff;
     }
-    .approve-sheet .approve-btn.outline:active { background: #0958d9; }
+    .approve-sheet .approve-btn.outline:active { background: #337ecc; }
 
     .req-star { color: #f53f3f; margin-right: 2px; }
+
+    /* 审核弹窗模式状态行（通过批注撰写中 / 审核沟通撰写中） */
+    .approve-mode-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #409eff; font-weight: 500;
+      padding: 8px 0 12px;
+    }
+    .approve-mode-title::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: #409eff; flex-shrink: 0;
+    }
 
     /* ====== 审核弹窗内"沟通"展开区：选择人员 + 附件 ====== */
     .approve-comm-section {
@@ -2103,19 +2114,23 @@
             <div class="fg" id="approveCurrentStatusRow">
               <label class="fg-label">当前状态：<span class="approve-audit-type">入组审核</span> <span class="approve-status-tag">审核中</span></label>
             </div>
-            <div class="fg">
-              <label class="fg-label">审批批注：</label>
-              <textarea class="fg-textarea" id="approveRemark" placeholder="请输入审批批注" maxlength="1000" oninput="updateApproveCounter()"></textarea>
-              <div class="textarea-counter"><span id="approveCounter">0</span>/1000</div>
-            </div>
-            <div class="fg">
-              <label class="fg-label"><span class="req-star">*</span>审核人：</label>
-              <div class="approver-select-bar" onclick="alert('打开审核人选择器')">
-                <div class="approver-tags">
-                  <span class="approver-tag">医学经理186<i class="fas fa-times-circle"></i></span>
-                  <span class="approver-tag">潘婷<i class="fas fa-times-circle"></i></span>
+            <!-- 通过内容：初始不展示，点击"通过"后展示 -->
+            <div id="approvePassContent" style="display:none;">
+              <div class="approve-mode-title" id="approveModeTitle">通过批注撰写中</div>
+              <div class="fg">
+                <label class="fg-label">审批批注：</label>
+                <textarea class="fg-textarea" id="approveRemark" placeholder="请输入审批批注" maxlength="1000" oninput="updateApproveCounter()"></textarea>
+                <div class="textarea-counter"><span id="approveCounter">0</span>/1000</div>
+              </div>
+              <div class="fg">
+                <label class="fg-label"><span class="req-star">*</span>审核人：</label>
+                <div class="approver-select-bar" onclick="alert('打开审核人选择器')">
+                  <div class="approver-tags">
+                    <span class="approver-tag">医学经理186<i class="fas fa-times-circle"></i></span>
+                    <span class="approver-tag">潘婷<i class="fas fa-times-circle"></i></span>
+                  </div>
+                  <i class="fas fa-chevron-down approver-arrow"></i>
                 </div>
-                <i class="fas fa-chevron-down approver-arrow"></i>
               </div>
             </div>
           </div>
@@ -2128,9 +2143,6 @@
                 <span class="comm-picker-label">请选择提醒人员</span>
                 <span class="comm-picker-value"><span class="comm-picker-count">1</span><i class="fas fa-chevron-right"></i></span>
               </div>
-              <div class="comm-selected-summary">
-                <span class="comm-selected-tag">王小珂（临床协调员 / 187****0085）</span>
-              </div>
             </div>
             <div class="fg">
               <label class="fg-label">沟通批注：</label>
@@ -2139,7 +2151,6 @@
             <div class="fg">
               <label class="fg-label">附件：</label>
               <button type="button" class="comm-upload-btn" onclick="alert('已选择文件')"><i class="fas fa-paperclip"></i> 添加附件</button>
-              <span class="comm-attach-tip">支持图片、PDF、Word、Excel，单文件 ≤ 20MB</span>
             </div>
           </div>
         </div>
@@ -2148,7 +2159,9 @@
           <button class="approve-btn blue" id="btnApproveReject" onclick="onApproveReject()">驳回</button>
           <button class="approve-btn blue" id="btnApprovePass" onclick="onApprovePass()">通过</button>
           <button class="approve-btn outline" id="btnApproveCancel" style="display:none;" onclick="onApproveCancel()">取消</button>
+          <button class="approve-btn outline" id="btnApproveTemp" style="display:none;" onclick="onApproveTemp()">暂存</button>
           <button class="approve-btn blue" id="btnApproveConfirm" style="display:none;" onclick="onApprovePass()">确认</button>
+          <button class="approve-btn blue" id="btnApproveSend" style="display:none;" onclick="onApproveSend()">发送</button>
         </div>
       </div>
 
@@ -3291,31 +3304,51 @@ HDL-C：1.09 mmol/L
 
     function renderApproveMode() {
       const initial = document.getElementById('approveInitialSection');
+      const passContent = document.getElementById('approvePassContent');
       const commSec = document.getElementById('approveCommSection');
       const btnPass = document.getElementById('btnApprovePass');
       const btnComm = document.getElementById('btnApproveComm');
       const btnReject = document.getElementById('btnApproveReject');
       const btnCancel = document.getElementById('btnApproveCancel');
+      const btnTemp = document.getElementById('btnApproveTemp');
       const btnConfirm = document.getElementById('btnApproveConfirm');
-      // 初始/通过：显示 当前状态 + 审批批注 + 审核人；沟通：显示沟通区
+      const btnSend = document.getElementById('btnApproveSend');
+      // 初始/通过：显示当前状态；通过才显示批注+审核人；沟通：显示沟通区
       if (initial) initial.style.display = approveMode === 'comm' ? 'none' : 'block';
+      if (passContent) passContent.style.display = approveMode === 'pass' ? 'block' : 'none';
       if (commSec) commSec.style.display = approveMode === 'comm' ? 'block' : 'none';
-      // 通过模式：隐藏"当前状态"行（仅审核批注 + 审核人）
-      const statusRow = document.getElementById('approveCurrentStatusRow');
-      if (statusRow) statusRow.style.display = approveMode === 'pass' ? 'none' : 'block';
-      // 通过模式：底部按钮变为 取消 + 确认
+      // 模式小标题（状态行）
+      const modeTitle = document.getElementById('approveModeTitle');
+      if (modeTitle) modeTitle.textContent = approveMode === 'comm' ? '审核沟通' : '审核批注';
+      // 底部按钮切换
       const isPass = approveMode === 'pass';
-      if (btnComm) btnComm.style.display = isPass ? 'none' : 'flex';
-      if (btnReject) btnReject.style.display = isPass ? 'none' : 'flex';
-      if (btnPass) btnPass.style.display = isPass ? 'none' : 'flex';
-      if (btnCancel) btnCancel.style.display = isPass ? 'flex' : 'none';
+      const isComm = approveMode === 'comm';
+      if (btnComm) btnComm.style.display = (isPass || isComm) ? 'none' : 'flex';
+      if (btnReject) btnReject.style.display = (isPass || isComm) ? 'none' : 'flex';
+      if (btnPass) btnPass.style.display = (isPass || isComm) ? 'none' : 'flex';
+      // 通过模式：取消 + 确认；沟通模式：取消 + 发送；初始：正常三按钮
+      if (btnCancel) btnCancel.style.display = (isPass || isComm) ? 'flex' : 'none';
+      if (btnTemp) btnTemp.style.display = (isPass || isComm) ? 'flex' : 'none';
       if (btnConfirm) btnConfirm.style.display = isPass ? 'flex' : 'none';
-      if (btnComm) btnComm.textContent = approveMode === 'comm' ? '返回' : '沟通';
+      if (btnSend) btnSend.style.display = isComm ? 'flex' : 'none';
+      if (btnComm) btnComm.textContent = isComm ? '返回' : '沟通';
     }
 
     function onApproveCancel() {
       approveMode = 'initial';
       renderApproveMode();
+    }
+
+    function onApproveTemp() {
+      approveMode = 'initial';
+      renderApproveMode();
+      toastMini('已暂存草稿');
+    }
+
+    function onApproveSend() {
+      toastMini('沟通已发送');
+      closeApprove();
+      approveMode = 'initial';
     }
 
     function updateApproveCounter() {
