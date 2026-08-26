@@ -13,6 +13,24 @@
     .data-table tbody tr:hover { background-color: #f7faff; }
     .tag-green { background-color: #e8ffea; color: #00b42a; }
     .tag-gray { background-color: #f2f3f5; color: #4e5969; }
+
+    /* 中心列表表格：列头不换行、横向滚动、左右侧列固定 */
+    .center-table-wrap { overflow-x: auto; }
+    .center-table-wrap table { min-width: 1400px; }
+    .center-table-wrap th,
+    .center-table-wrap td { white-space: nowrap; }
+    .sticky-left-0 { position: sticky; left: 0; z-index: 20; }
+    .sticky-left-1 { position: sticky; left: 40px; z-index: 20; }
+    .sticky-right-0 { position: sticky; right: 0; z-index: 20; }
+    .center-table-wrap thead th.sticky-left-0,
+    .center-table-wrap thead th.sticky-left-1,
+    .center-table-wrap thead th.sticky-right-0 { background-color: #f5f7fa; }
+    .center-table-wrap tbody td.sticky-left-0,
+    .center-table-wrap tbody td.sticky-left-1,
+    .center-table-wrap tbody td.sticky-right-0 { background-color: #ffffff; }
+    .center-table-wrap tbody tr:hover td.sticky-left-0,
+    .center-table-wrap tbody tr:hover td.sticky-left-1,
+    .center-table-wrap tbody tr:hover td.sticky-right-0 { background-color: #f7faff; }
     input::placeholder, select option:first-child { color: #bfbfbf; }
     /* 删除确认弹窗 */
     .modal-overlay { background: rgba(0,0,0,0.45); }
@@ -36,17 +54,16 @@
     .status-passed { background: #e8ffea; color: #00b42a; }
     .btn-sm { padding: 3px 10px; font-size: 12px; border-radius: 4px; }
     .transfer-batch-bar { background: #e6f7ff; border: 1px solid #91d5ff; }
-    .patient-list-scroll { max-height: 55vh; overflow-y: auto; }
+    .patient-list-scroll { max-height: 100%; overflow-y: auto; }
     .info-tip { background: #FFFBE6; border: 1px solid #FFE58F; }
     .btn-outline { border: 1px solid #d9d9d9; background: #fff; color: #333; }
     .btn-outline:hover { border-color: #165DFF; color: #165DFF; }
-    /* 中心状态 switch 开关 */
-    .cs-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
-    .cs-switch input { opacity: 0; width: 0; height: 0; }
-    .cs-slider { position: absolute; cursor: pointer; inset: 0; background: #c9cdd4; border-radius: 22px; transition: .2s; }
-    .cs-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
-    .cs-switch input:checked + .cs-slider { background: #00B42A; }
-    .cs-switch input:checked + .cs-slider:before { transform: translateX(20px); }
+    /* 中心状态 文字标签 */
+    .cs-status { display: inline-block; padding: 2px 10px; border-radius: 4px; font-size: 12px; line-height: 18px; }
+    .cs-started { background: #e8ffea; color: #00b42a; }
+    .cs-notstarted { background: #f2f3f5; color: #4e5969; }
+    .cs-paused { background: #fff7e6; color: #d46b08; }
+    .cs-closed { background: #ffece8; color: #f53f3f; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -104,8 +121,7 @@
         <button class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px] flex items-center gap-1" onclick="openImportModal()"><i class="fas fa-upload text-xs"></i>导入</button>
         <button class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px] flex items-center gap-1"><i class="fas fa-download text-xs"></i>导出</button>
         <button class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px] flex items-center gap-1"><i class="fas fa-trash-alt text-xs"></i>删除选中 (0)</button>
-        <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] flex items-center gap-1 hover:bg-gray-50" onclick="openDeleteLogModal()"><i class="fas fa-history text-xs"></i>删除日志</button>
-        <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] flex items-center gap-1 hover:bg-gray-50" onclick="openHandoverLog()"><i class="fas fa-exchange-alt text-xs"></i>交接日志</button>
+        <button class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] flex items-center gap-1 hover:bg-gray-50" onclick="openAllLogModal()"><i class="fas fa-history text-xs"></i>操作日志</button>
 
       </div>
     </div>
@@ -202,12 +218,12 @@
     </div>
 
     <!-- 数据表格 -->
-    <div class="bg-white border border-gray-200 rounded overflow-x-auto">
+    <div class="bg-white border border-gray-200 rounded center-table-wrap">
       <table class="data-table w-full text-left border-collapse">
         <thead>
           <tr>
-            <th class="px-3 py-2.5 border-b border-gray-200 text-center w-10"></th>
-            <th class="px-3 py-2.5 border-b border-gray-200">中心名称</th>
+            <th class="sticky-left-0 px-3 py-2.5 border-b border-gray-200 text-center w-10"></th>
+            <th class="sticky-left-1 px-3 py-2.5 border-b border-gray-200 w-44">中心名称</th>
             <th class="px-3 py-2.5 border-b border-gray-200">科室</th>
             <th class="px-3 py-2.5 border-b border-gray-200">中心号</th>
             <th class="px-3 py-2.5 border-b border-gray-200">PI</th>
@@ -219,13 +235,13 @@
             <th class="px-3 py-2.5 border-b border-gray-200">城市</th>
             <th class="px-3 py-2.5 border-b border-gray-200 text-center">是否组长单位</th>
             <th class="px-3 py-2.5 border-b border-gray-200 text-center">中心状态</th>
-            <th class="px-3 py-2.5 border-b border-gray-200 text-center">操作</th>
+            <th class="sticky-right-0 px-3 py-2.5 border-b border-gray-200 text-center">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr class="border-b border-gray-100">
-            <td class="px-3 py-2.5 text-center"><input type="checkbox"></td>
-            <td class="px-3 py-2.5 font-medium">山东省肿瘤医院</td>
+            <td class="sticky-left-0 px-3 py-2.5 text-center"><input type="checkbox"></td>
+            <td class="sticky-left-1 px-3 py-2.5 font-medium">山东省肿瘤医院</td>
             <td class="px-3 py-2.5 text-gray-500"></td>
             <td class="px-3 py-2.5 text-[#165DFF]">CN001</td>
             <td class="px-3 py-2.5">于金明</td>
@@ -236,19 +252,18 @@
             <td class="px-3 py-2.5">山东省</td>
             <td class="px-3 py-2.5">济南市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-green">是</span></td>
-            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-山东省肿瘤医院" checked onchange="toggleCenterStatus('山东省肿瘤医院', this)"><span class="cs-slider"></span></label></td>
-            <td class="px-3 py-2.5 text-center whitespace-nowrap">
+            <td class="px-3 py-2.5 text-center"><span class="cs-status cs-started cursor-pointer" id="csLabel-山东省肿瘤医院" onclick="openCenterStatus('山东省肿瘤医院')">已启动</span></td>
+            <td class="sticky-right-0 px-3 py-2.5 text-center">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
               <a id="delBadge-山东省肿瘤医院" class="text-[grey] text-[13px] cursor-pointer ml-2 disabled" >删除（12）</a>
-              <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('山东省肿瘤医院')">患者管理</a>
+              <a id="pmBtn-山东省肿瘤医院" class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('山东省肿瘤医院')">患者管理</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberManage('山东省肿瘤医院')">成员管理</a>
-              <a class="text-[#722ED1] text-[13px] cursor-pointer ml-2" onclick="openCenterLog('山东省肿瘤医院')">日志</a>
             </td>
           </tr>
           <tr>
-            <td class="px-3 py-2.5 text-center"><input type="checkbox"></td>
-            <td class="px-3 py-2.5 font-medium">安阳市人民医院</td>
+            <td class="sticky-left-0 px-3 py-2.5 text-center"><input type="checkbox"></td>
+            <td class="sticky-left-1 px-3 py-2.5 font-medium">安阳市人民医院</td>
             <td class="px-3 py-2.5 text-gray-500"></td>
             <td class="px-3 py-2.5 text-[#165DFF]">CN</td>
             <td class="px-3 py-2.5">王</td>
@@ -259,19 +274,18 @@
             <td class="px-3 py-2.5">河南省</td>
             <td class="px-3 py-2.5">安阳市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-gray">否</span></td>
-            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-安阳市人民医院" onchange="toggleCenterStatus('安阳市人民医院', this)"><span class="cs-slider"></span></label></td>
-            <td class="px-3 py-2.5 text-center whitespace-nowrap">
+            <td class="px-3 py-2.5 text-center"><span class="cs-status cs-paused cursor-pointer" id="csLabel-安阳市人民医院" onclick="openCenterStatus('安阳市人民医院')">已暂停</span></td>
+            <td class="sticky-right-0 px-3 py-2.5 text-center">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
               <a id="delBadge-安阳市人民医院" class="text-gray-400 text-[13px] ml-2 select-none" title="该中心下仍有患者或参研人员，请先进行患者管理/成员管理后再删除">删除（8）</a>
-              <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('安阳市人民医院')">患者管理</a>
+              <a id="pmBtn-安阳市人民医院" class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('安阳市人民医院')">患者管理</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberManage('安阳市人民医院')">成员管理</a>
-              <a class="text-[#722ED1] text-[13px] cursor-pointer ml-2" onclick="openCenterLog('安阳市人民医院')">日志</a>
             </td>
           </tr>
           <tr>
-            <td class="px-3 py-2.5 text-center"><input type="checkbox"></td>
-            <td class="px-3 py-2.5 font-medium">广东省人民医院</td>
+            <td class="sticky-left-0 px-3 py-2.5 text-center"><input type="checkbox"></td>
+            <td class="sticky-left-1 px-3 py-2.5 font-medium">广东省人民医院</td>
             <td class="px-3 py-2.5 text-gray-500">肿瘤内科</td>
             <td class="px-3 py-2.5 text-[#165DFF]">CN099</td>
             <td class="px-3 py-2.5">李教授</td>
@@ -282,14 +296,13 @@
             <td class="px-3 py-2.5">广东省</td>
             <td class="px-3 py-2.5">广州市</td>
             <td class="px-3 py-2.5 text-center"><span class="px-2 py-0.5 rounded text-[12px] tag-gray">否</span></td>
-            <td class="px-3 py-2.5 text-center"><label class="cs-switch"><input type="checkbox" id="statusSwitch-广东省人民医院" checked onchange="toggleCenterStatus('广东省人民医院', this)"><span class="cs-slider"></span></label></td>
-            <td class="px-3 py-2.5 text-center whitespace-nowrap">
+            <td class="px-3 py-2.5 text-center"><span class="cs-status cs-started cursor-pointer" id="csLabel-广东省人民医院" onclick="openCenterStatus('广东省人民医院')">已启动</span></td>
+            <td class="sticky-right-0 px-3 py-2.5 text-center">
               <a class="text-[#165DFF] text-[13px] cursor-pointer">编辑</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2">审批流程设置</a>
               <a id="delBadge-广东省人民医院" class="text-red-500 text-[13px] cursor-pointer ml-2 font-medium" onclick="openDeleteSimple('广东省人民医院')">删除（0）</a>
-              <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('广东省人民医院')">患者管理</a>
+              <a id="pmBtn-广东省人民医院" class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openPatientList('广东省人民医院')">患者管理</a>
               <a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberManage('广东省人民医院')">成员管理</a>
-              <a class="text-[#722ED1] text-[13px] cursor-pointer ml-2" onclick="openCenterLog('广东省人民医院')">日志</a>
             </td>
           </tr>
         </tbody>
@@ -305,9 +318,11 @@
         </div>
         <div class="px-6 py-5">
           <p class="text-sm text-gray-600 mb-3">当前状态：<span id="csCurrentStatus" class="font-medium"></span></p>
-          <div class="flex gap-3">
-            <button id="csEnableBtn" onclick="setCenterStatus(true)" class="flex-1 px-3 py-2 bg-[#00B42A] text-white text-sm rounded-lg hover:bg-green-600">启用 / 已启动</button>
-            <button id="csDisableBtn" onclick="setCenterStatus(false)" class="flex-1 px-3 py-2 bg-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-400">停用 / 未启动</button>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="setCenterStatus('started')" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:border-[#00B42A] text-gray-700">已启动</button>
+            <button onclick="setCenterStatus('notstarted')" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:border-gray-400 text-gray-700">未启动</button>
+            <button onclick="setCenterStatus('paused')" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:border-[#d46b08] text-gray-700">已暂停</button>
+            <button onclick="setCenterStatus('closed')" class="px-3 py-2 text-sm rounded-lg border border-gray-200 hover:border-[#F53F3F] text-gray-700">已关闭</button>
           </div>
           <p class="text-xs text-gray-400 mt-3">提示：患者填写知情同意时间时，若中心为「未启动」将提示立即启动。</p>
         </div>
@@ -357,6 +372,15 @@
           </div>
 
           <div>
+            <label class="text-sm text-gray-700 font-medium">交接原因 <span class="text-red-500">*</span></label>
+            <select id="hoReason" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none">
+              <option value="离职">离职</option>
+              <option value="岗位调动">岗位调动</option>
+              <option value="其它">其它</option>
+            </select>
+          </div>
+
+          <div>
             <label class="text-sm text-gray-700 font-medium">交接说明</label>
             <textarea id="hoNote" rows="2" placeholder="请输入交接说明（选填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#165DFF] outline-none"></textarea>
           </div>
@@ -374,21 +398,38 @@
   <div id="memberPatientModal" class="modal-overlay fixed inset-0 z-[115] flex items-center justify-center" style="display:none" onclick="if(event.target===this)closeMemberPatient()">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden flex flex-col" style="max-height:88vh">
       <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-800">成员患者管理</h3>
-          <p class="text-xs text-gray-500 mt-0.5" id="mpMemberInfo">--</p>
-        </div>
+        <h3 class="text-lg font-semibold text-gray-800">成员患者管理 <span class="text-sm font-normal text-gray-500" id="mpMemberInfo">- --</span></h3>
         <button onclick="closeMemberPatient()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
       </div>
 
-      <!-- 工具栏 -->
+      <!-- 查询条件 -->
       <div class="px-6 py-3 border-b border-gray-100 bg-white shrink-0">
-        <div class="flex items-center gap-3">
-          <span class="text-[13px] text-gray-500">共 <b id="mpTotalCount" class="text-gray-700">0</b> 名在管患者</span>
-          <button onclick="openMpBatchHandover()" class="ml-auto bg-[#165DFF] text-white px-3 py-1.5 rounded text-[13px] font-medium hover:bg-blue-600 transition">
-            <i class="fas fa-exchange-alt mr-1"></i>全部患者交接
-          </button>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">姓名缩写：</label>
+            <input id="mpSearchName" type="text" placeholder="请输入" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-32 focus:border-[#165DFF] outline-none">
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600">患者状态：</label>
+            <select id="mpSearchStatus" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-28 focus:border-[#165DFF] outline-none bg-white">
+              <option value="">全部</option>
+              <option value="未提交">未提交</option>
+              <option value="审核中">审核中</option>
+              <option value="通过">通过</option>
+            </select>
+          </div>
+          <button onclick="mpSearch()" class="ml-2 bg-[#165DFF] text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-600"><i class="fas fa-search mr-1"></i>查询</button>
+          <button onclick="mpReset()" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-50"><i class="fas fa-redo-alt mr-1"></i>重置</button>
         </div>
+       
+      </div>
+
+      <!-- 统计行 -->
+      <div class="flex items-center gap-6 px-6 py-2 border-b border-gray-100 bg-gray-50 text-[13px] text-gray-600">
+        <span>共 <b class="text-gray-800" id="mpTotalCount">0</b> 条</span>
+        <span>未提交 <b class="text-gray-800" id="mpCountUnaudited">0</b></span>
+        <span>审核中 <b class="text-gray-800" id="mpCountAuditing">0</b></span>
+        <span>通过 <b class="text-gray-800" id="mpCountPassed">0</b></span>
       </div>
 
       <!-- 患者列表 -->
@@ -398,11 +439,12 @@
             <tr class="border-b border-t border-gray-200">
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-10"><input type="checkbox" id="mpSelectAll" onchange="toggleMpSelectAll()" class="accent-[#165DFF]"></th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-12">序号</th>
-              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者编号</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">姓名缩写</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">年龄</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">性别</th>
-              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">领域</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者编号</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建时间</th>
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建人</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者状态</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] text-center w-24">操作</th>
             </tr>
@@ -415,8 +457,8 @@
       <div class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50 shrink-0">
         <span class="text-[12px] text-gray-400" id="mpSelectedInfo"></span>
         <div class="flex items-center gap-2">
-          <button onclick="openMpBatchHandover()" id="mpBatchBtn" class="px-3 py-1.5 bg-[#165DFF] text-white text-[13px] rounded-lg hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed" disabled>
-            交接选中（<b id="mpSelectedCount">0</b>）
+          <button onclick="openMpBatchHandover()" id="mpBatchBtn" class="px-3 py-1.5 bg-[#165DFF] text-white text-[13px] rounded-lg hover:bg-blue-600 transition min-w-[120px]">
+            <i class="fas fa-exchange-alt mr-1"></i><span id="mpBatchBtnText">全部患者交接</span>
           </button>
           <button onclick="closeMemberPatient()" class="px-4 py-1.5 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">关闭</button>
         </div>
@@ -603,71 +645,253 @@
       </div>
     </div>
 
-    <!-- ===== 独立的删除日志弹窗（顶级，不嵌套于其他弹窗内） ===== -->
-    <div id="deleteLogModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 hidden">
-      <div class="bg-white rounded-xl shadow-xl w-[1100px] max-w-[95vw] max-h-[88vh] flex flex-col">
-        <div class="flex items-center justify-between px-5 py-3 border-b">
-          <div class="text-[15px] font-semibold flex items-center gap-2"><i class="fas fa-history text-[#165DFF]"></i>参研中心删除日志</div>
-          <button onclick="closeModal('deleteLogModal')" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+    <!-- ===== 统一的操作日志弹窗（修改 / 删除 / 患者转移 / 成员交接） ===== -->
+    <div id="allLogModal" class="fixed inset-0 bg-white z-50 hidden flex flex-col">
+      <datalist id="centerOptions"></datalist>
+      <div class="w-full h-full flex flex-col max-w-[1280px] mx-auto">
+        <div class="flex items-center justify-between px-6 py-3 border-b shadow-sm">
+          <div class="flex items-center gap-3">
+            <button onclick="closeModal('allLogModal')" class="flex items-center gap-1.5 text-gray-600 hover:text-[#165DFF] text-[14px] px-3 py-1.5 rounded-lg hover:bg-gray-100 transition">
+              <i class="fas fa-arrow-left"></i>返回
+            </button>
+            <div class="text-[16px] font-semibold flex items-center gap-2"><i class="fas fa-history text-[#165DFF]"></i>操作日志</div>
+          </div>
         </div>
-              <!-- 查询条件 -->
-              <div class="px-5 py-3 border-b bg-gray-50/60 flex flex-wrap items-end gap-3">
-                <div class="flex flex-col gap-1">
-                  <label class="text-[12px] text-gray-500">中心名称</label>
-                  <input id="dlName" type="text" placeholder="输入中心名称" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-44 focus:outline-none focus:border-[#165DFF]">
-                </div>  
-                <div class="flex flex-col gap-1">
-                  <label class="text-[12px] text-gray-500">中心号</label>
-                  <input id="dlCode" type="text" placeholder="输入中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-36 focus:outline-none focus:border-[#165DFF]">
-                </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-[12px] text-gray-500">删除时间段</label>
-                  <div class="flex items-center gap-1.5">
-                    <input id="dlFrom" type="datetime-local" class="border border-gray-300 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#165DFF]">
-                    <span class="text-gray-400 text-[12px]">至</span>
-                    <input id="dlTo" type="datetime-local" class="border border-gray-300 rounded px-2 py-1.5 text-[12px] focus:outline-none focus:border-[#165DFF]">
-                  </div>
-                </div>
-                <button onclick="renderDeleteLog()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px]">查询</button>
-                <button onclick="dlReset()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50">重置</button>
+        <div class="px-5 py-3 border-b flex flex-wrap gap-3">
+          <button id="alTabModify" onclick="switchAllLogTab('modify')" class="px-3 py-1.5 text-[13px] rounded-lg bg-[#165DFF] text-white">修改日志</button>
+          <button id="alTabDelete" onclick="switchAllLogTab('delete')" class="px-3 py-1.5 text-[13px] rounded-lg bg-gray-100 text-gray-600">删除日志</button>
+          <button id="alTabTransfer" onclick="switchAllLogTab('transfer')" class="px-3 py-1.5 text-[13px] rounded-lg bg-gray-100 text-gray-600">患者转移日志</button>
+          <button id="alTabHandover" onclick="switchAllLogTab('handover')" class="px-3 py-1.5 text-[13px] rounded-lg bg-gray-100 text-gray-600">成员交接日志</button>
+        </div>
+
+        <!-- 修改日志 -->
+        <div id="panelModify" class="flex-1 overflow-auto p-4">
+          <div class="flex flex-col gap-3 mb-3 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">中心名称</label>
+                <input id="alMlCenter" type="text" placeholder="输入中心名称" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
               </div>
-              <div class="overflow-auto p-4">
-                <table class="w-full text-left border-collapse">
-                  <thead><tr class="bg-gray-50">
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心名称</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心号</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">科室</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">PI</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">省份</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">城市</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 text-center">是否组长单位</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除原因</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除时间</th>
-                    <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除人</th>
-                  </tr></thead>
-                  <tbody id="deleteLogBody"></tbody>
-                </table>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">中心号</label>
+                <input id="alMlCode" type="text" placeholder="输入中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">操作时间</label>
+                <div class="flex items-center gap-1.5">
+                  <input id="alMlTimeStart" type="date" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                  <span class="text-gray-400 text-[13px]">至</span>
+                  <input id="alMlTimeEnd" type="date" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                </div>
+              </div>
+              <div></div><div></div>
+              <div class="flex items-end gap-3 justify-end">
+                <button onclick="alogPager.modify.page=1;renderAllModifyLog()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px]">查询</button>
+                <button onclick="document.getElementById('alMlCenter').value='';document.getElementById('alMlCode').value='';document.getElementById('alMlTimeStart').value='';document.getElementById('alMlTimeEnd').value='';alogPager.modify.page=1;renderAllModifyLog()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50">重置</button>
               </div>
             </div>
           </div>
+          <table class="w-full text-left border-collapse">
+            <thead><tr class="bg-gray-50">
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 w-12 text-center">序号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">操作人</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">操作时间</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 text-center">操作</th>
+            </tr></thead>
+            <tbody id="alModifyBody"></tbody>
+          </table>
+        </div>
 
-    <!-- 分页 -->
-    <div class="flex items-center justify-between mt-3 text-[13px]">
-      <span class="text-gray-500">共 3 条</span>
-      <div class="flex items-center gap-2">
-        <select class="border border-gray-300 rounded px-2 py-1 text-gray-700">
-          <option>10条/页</option>
-          <option>20条/页</option>
-          <option>50条/页</option>
-        </select>
-        <button class="px-2 py-1 border border-gray-300 rounded text-gray-500"><i class="fas fa-chevron-left text-xs"></i></button>
-        <button class="px-3 py-1 border border-gray-300 rounded bg-[#165DFF] text-white">1</button>
-        <button class="px-2 py-1 border border-gray-300 rounded text-gray-500"><i class="fas fa-chevron-right text-xs"></i></button>
-        <span class="text-gray-500 ml-1">前往</span>
-        <input type="text" value="1" class="border border-gray-300 rounded w-10 px-1 py-1 text-center">
-        <span class="text-gray-500">页</span>
+        <!-- 删除日志 -->
+        <div id="panelDelete" class="flex-1 overflow-auto p-4 hidden">
+          <div class="flex flex-col gap-3 mb-3 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">中心名称</label>
+                <input id="alDlName" type="text" placeholder="输入中心名称" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">中心号</label>
+                <input id="alDlCode" type="text" placeholder="输入中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">删除时间段</label>
+                <div class="flex items-center gap-1.5">
+                  <input id="alDlFrom" type="datetime-local" class="border border-gray-300 rounded px-2 py-1.5 text-[12px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                  <span class="text-gray-400 text-[12px]">至</span>
+                  <input id="alDlTo" type="datetime-local" class="border border-gray-300 rounded px-2 py-1.5 text-[12px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                </div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">删除原因</label>
+                <select id="alDlReason" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF] bg-white">
+                  <option value="">全部</option>
+                  <option value="同一中心多条重复记录，清理冗余数据">同一中心多条重复记录，清理冗余数据</option>
+                  <option value="错误加入">错误加入</option>
+                  <option value="其它">其它</option>
+                </select>
+              </div>
+              <div></div>
+              <div class="flex items-end gap-3 justify-end">
+                <button onclick="alogPager.del.page=1;renderAllDeleteLog()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px]">查询</button>
+                <button onclick="document.getElementById('alDlName').value='';document.getElementById('alDlCode').value='';document.getElementById('alDlFrom').value='';document.getElementById('alDlTo').value='';document.getElementById('alDlReason').value='';alogPager.del.page=1;renderAllDeleteLog()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50">重置</button>
+              </div>
+            </div>
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead><tr class="bg-gray-50">
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 w-12 text-center">序号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">科室</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">PI</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">省份</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">城市</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 text-center">是否组长单位</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除原因</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除原因</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">备注</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除时间</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">删除人</th>
+            </tr></thead>
+            <tbody id="alDeleteBody"></tbody>
+          </table>
+        </div>
+
+        <!-- 患者转移日志 -->
+        <div id="panelTransfer" class="flex-1 overflow-auto p-4 hidden">
+          <div class="flex flex-col gap-3 mb-3 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">姓名缩写</label>
+                <input id="alTlPatient" type="text" placeholder="输入姓名缩写" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">原中心名称</label>
+                <input id="alTlFrom" type="text" list="centerOptions" placeholder="输入或选择中心" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">原中心号</label>
+                <input id="alTlFromCode" type="text" placeholder="输入原中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">目标中心名称</label>
+                <input id="alTlTo" type="text" list="centerOptions" placeholder="输入或选择中心" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">目标中心号</label>
+                <input id="alTlToCode" type="text" placeholder="输入目标中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">转移原因</label>
+                <select id="alTlReason" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF] bg-white">
+                  <option value="">全部</option>
+                  <option>同中心数据合并</option>
+                  <option>变更就诊医院</option>
+                  <option>其它</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-1">
+                <label class="text-[12px] text-gray-500 whitespace-nowrap">转移时间</label>
+                <input id="alTlTimeStart" type="date" class="border border-gray-300 rounded px-2 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                <span class="text-gray-400 text-[12px]">至</span>
+                <input id="alTlTimeEnd" type="date" class="border border-gray-300 rounded px-2 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div></div>
+              <div class="flex items-end gap-3 justify-end">
+                <button onclick="alogPager.transfer.page=1;renderAllTransferLog()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px]">查询</button>
+                <button onclick="document.getElementById('alTlPatient').value='';document.getElementById('alTlFrom').value='';document.getElementById('alTlFromCode').value='';document.getElementById('alTlTo').value='';document.getElementById('alTlToCode').value='';document.getElementById('alTlReason').value='';document.getElementById('alTlTimeStart').value='';document.getElementById('alTlTimeEnd').value='';alogPager.transfer.page=1;renderAllTransferLog()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50">重置</button>
+              </div>
+            </div>
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead><tr class="bg-gray-50">
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 w-12 text-center">序号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">姓名缩写</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">目标中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">目标中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">转移原因</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">备注</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">转移时间</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">操作人</th>
+            </tr></thead>
+            <tbody id="alTransferBody"></tbody>
+          </table>
+        </div>
+
+        <!-- 成员交接日志 -->
+        <div id="panelHandover" class="flex-1 overflow-auto p-4 hidden">
+          <div class="flex flex-col gap-3 mb-3 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
+            <div class="grid grid-cols-3 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">原交接人名称</label>
+                <input id="alHoOldName" type="text" placeholder="输入原交接人" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">目标交接人名称</label>
+                <input id="alHoNewName" type="text" placeholder="输入目标交接人" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">原中心名称</label>
+                <input id="alHoFrom" type="text" list="centerOptions" placeholder="输入或选择中心" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">原中心号</label>
+                <input id="alHoFromCode" type="text" placeholder="输入原中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">目标中心名称</label>
+                <input id="alHoTo" type="text" list="centerOptions" placeholder="输入或选择中心" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">目标中心号</label>
+                <input id="alHoToCode" type="text" placeholder="输入目标中心号" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-[12px] text-gray-500">交接原因</label>
+                <input id="alHoReason" type="text" placeholder="输入交接原因" class="border border-gray-300 rounded px-2.5 py-1.5 text-[13px] w-full focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex items-center gap-1">
+                <label class="text-[12px] text-gray-500 whitespace-nowrap">交接时间</label>
+                <input id="alHoTimeStart" type="date" class="border border-gray-300 rounded px-2 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+                <span class="text-gray-400 text-[12px]">至</span>
+                <input id="alHoTimeEnd" type="date" class="border border-gray-300 rounded px-2 py-1.5 text-[13px] flex-1 focus:outline-none focus:border-[#165DFF]">
+              </div>
+              <div class="flex items-end gap-3 justify-end">
+                <button onclick="alogPager.handover.page=1;renderAllHandoverLog()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded text-[13px]">查询</button>
+                <button onclick="document.getElementById('alHoOldName').value='';document.getElementById('alHoNewName').value='';document.getElementById('alHoFrom').value='';document.getElementById('alHoFromCode').value='';document.getElementById('alHoTo').value='';document.getElementById('alHoToCode').value='';document.getElementById('alHoReason').value='';document.getElementById('alHoTimeStart').value='';document.getElementById('alHoTimeEnd').value='';alogPager.handover.page=1;renderAllHandoverLog()" class="bg-white border border-gray-300 text-gray-700 px-4 py-1.5 rounded text-[13px] hover:bg-gray-50">重置</button>
+              </div>
+            </div>
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead><tr class="bg-gray-50">
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600 w-12 text-center">序号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">交接时间</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原交接人</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原角色</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">原中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">新交接人</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">新角色</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">目标中心名称</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">目标中心号</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">交接患者数</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">交接原因</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">交接说明</th>
+              <th class="px-3 py-2 border-b text-[12px] font-semibold text-gray-600">操作人</th>
+            </tr></thead>
+            <tbody id="alHandoverBody"></tbody>
+          </table>
+        </div>
+        <!-- 通用分页条 -->
+        <div id="alogPager" class="flex items-center justify-between mt-3 px-4 pb-4 text-[13px]"></div>
       </div>
     </div>
+
   </main>
 
   <!-- 成功提示 Toast -->
@@ -715,13 +939,10 @@
 
   <!-- ===== n≠0 患者管理弹窗（参考原型） ===== -->
   <div id="patientListModal" class="modal-overlay modal-hidden fixed inset-0 z-[75] flex items-center justify-center" onclick="if(event.target===this)closePatientList()">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden" style="max-height:92vh;">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl mx-4 overflow-hidden flex flex-col" style="max-height:92vh;">
       <!-- 头部 -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-list-ul text-[#1890FF] mr-2"></i>患者管理</h3>
-          <p class="text-xs text-gray-500 mt-0.5" id="plCenterInfo">--</p>
-        </div>
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
+        <h3 class="text-lg font-semibold text-gray-800">患者管理 <span class="text-sm font-normal text-gray-500" id="plCenterInfo">- --</span></h3>
         <button onclick="closePatientList()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
       </div>
 
@@ -729,12 +950,12 @@
       <div class="px-6 py-3 border-b border-gray-100 bg-white">
         <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
           <div class="flex items-center gap-2">
-            <label class="text-[13px] text-gray-700 whitespace-nowrap">姓名缩写：</label>
-            <input type="text" id="plSearchName" placeholder="请输入" class="border border-gray-300 rounded px-2.5 py-1 text-[13px] w-32 focus:border-[#165DFF] outline-none" oninput="filterPatientList()">
+            <label class="text-sm text-gray-600 whitespace-nowrap">姓名缩写：</label>
+            <input type="text" id="plSearchName" placeholder="请输入" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-40 focus:border-[#165DFF] outline-none" oninput="filterPatientList()">
           </div>
           <div class="flex items-center gap-2">
-            <label class="text-[13px] text-gray-700 whitespace-nowrap">患者状态：</label>
-            <select id="plSearchStatus" class="border border-gray-300 rounded px-2.5 py-1 text-[13px] w-32 focus:border-[#165DFF] outline-none" onchange="filterPatientList()">
+            <label class="text-sm text-gray-600 whitespace-nowrap">患者状态：</label>
+            <select id="plSearchStatus" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-32 focus:border-[#165DFF] outline-none bg-white" onchange="filterPatientList()">
               <option value="">全部</option>
               <option value="未提交">未提交</option>
               <option value="审核中">审核中</option>
@@ -742,36 +963,22 @@
             </select>
           </div>
           <div class="flex items-center gap-2">
-            <button onclick="filterPatientList()" class="bg-[#165DFF] text-white px-3 py-1 rounded text-[13px]"><i class="fas fa-search text-xs mr-1"></i>查询</button>
-            <button onclick="resetPatientFilter()" class="btn-outline px-3 py-1 rounded text-[13px]"><i class="fas fa-redo text-xs mr-1"></i>重置</button>
-          </div>
-          <div class="ml-auto">
-            <button onclick="openBatchTransfer()" class="bg-[#1890FF] text-white px-3 py-1 rounded text-[13px] font-medium">
-              <i class="fas fa-exchange-alt mr-1"></i>全部患者转移
-            </button>
+            <button onclick="filterPatientList()" class="bg-[#165DFF] text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-600"><i class="fas fa-search text-xs mr-1"></i>查询</button>
+            <button onclick="resetPatientFilter()" class="btn-outline px-4 py-1.5 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"><i class="fas fa-redo text-xs mr-1"></i>重置</button>
           </div>
         </div>
       </div>
 
-      <!-- 统计提示 -->
-      <div class="px-6 py-2 flex items-center gap-4 text-[13px] text-gray-500">
-        <span>共 <b id="plTotalCount" class="text-gray-700">0</b> 条</span>
-        <span class="text-green-600">未提交：<b id="plStatusUnsubmitted">0</b></span>
-        <span class="text-orange-500">审核中：<b id="plStatusAuditing">0</b></span>
-        <span class="text-green-600">通过：<b id="plStatusPassed">0</b></span>
-        <span class="text-red-500 ml-auto" id="plFilteredBadge" style="display:none;">已筛选，显示部分记录</span>
-      </div>
-
       <!-- 患者表格 -->
-      <div class="patient-list-scroll">
+      <div class="patient-list-scroll px-6 py-2 flex-1 min-h-0 overflow-y-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b border-t border-gray-200">
+              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-10 text-center"><input type="checkbox" id="plSelectAll" onchange="togglePlSelectAll()" class="accent-[#165DFF]"></th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1] w-12">序号</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">姓名缩写</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">年龄</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">性别</th>
-              <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">领域</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">患者编号</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建时间</th>
               <th class="px-3 py-2.5 text-[12px] text-gray-600 bg-gray-50 sticky top-0 z-[1]">创建人</th>
@@ -781,6 +988,23 @@
           </thead>
           <tbody id="plTableBody"></tbody>
         </table>
+      </div>
+
+      <!-- 患者列表分页 -->
+      <div id="plPager" class="flex items-center justify-between mt-2 px-6 py-2 text-[13px]"></div>
+
+      <!-- 底部操作栏 -->
+      <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <span class="text-sm text-gray-500" id="plSelectedInfo">已选 0 名患者</span>
+        <div class="flex items-center gap-2">
+          <button onclick="openBatchTransfer('selected')" id="plBatchBtn" class="bg-[#165DFF] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+            <i class="fas fa-exchange-alt mr-1"></i>批量转移（选中 <b id="plSelectedCount">0</b>）
+          </button>
+          <button onclick="openBatchTransfer('all')" class="bg-[#1890FF] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-500 transition">
+            <i class="fas fa-exchange-alt mr-1"></i>所有患者转移
+          </button>
+          <button onclick="closePatientList()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">关闭</button>
+        </div>
       </div>
 
      
@@ -820,9 +1044,9 @@
         <div>
           <label class="text-sm text-gray-700 font-medium">转移原因 <span class="text-red-500">*</span></label>
           <select id="stTransferReason" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none">
-            <option value="">请选择</option>
             <option>同中心数据合并</option>
             <option>变更就诊医院</option>
+            <option>其它</option>
           </select>
         </div>
      
@@ -845,12 +1069,12 @@
   <div id="batchTransferModal" class="modal-overlay modal-hidden fixed inset-0 z-[85] flex items-center justify-center" onclick="if(event.target===this)closeBatchTransfer()">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
       <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-        <h3 class="text-base font-semibold text-gray-800"><i class="fas fa-exchange-alt text-[#1890FF] mr-2"></i>全部患者转移</h3>
+        <h3 class="text-base font-semibold text-gray-800"><i class="fas fa-exchange-alt text-[#1890FF] mr-2"></i>患者转移</h3>
         <button onclick="closeBatchTransfer()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
       </div>
       <div class="px-5 py-4 space-y-4">
         <div class="bg-blue-50 border border-blue-100 rounded-lg p-3">
-          <p class="text-sm text-gray-700">将当前中心下<strong id="btPatientCount">0</strong>名患者全部转移</p>
+          <p class="text-sm text-gray-700">将当前中心下<strong id="btPatientCount">0</strong>名患者转移</p>
           <p class="text-xs text-gray-500 mt-1" id="btAuditHint" style="display:none;">其中 <b class="text-[#D46B08]">0</b> 名审核中患者，转移后审核人员将发生变动（默认目标中心所有 CRA + 医学），请确认。</p>
         </div>
         <div>
@@ -862,9 +1086,9 @@
         <div>
           <label class="text-sm text-gray-700 font-medium">转移原因 <span class="text-red-500">*</span></label>
           <select id="btTransferReason" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#165DFF] outline-none">
-            <option value="">请选择</option>
             <option>同中心数据合并</option>
             <option>变更就诊医院</option>
+            <option>其它</option>
           </select>
         </div>
       
@@ -877,7 +1101,7 @@
       <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 bg-gray-50">
         <button onclick="closeBatchTransfer()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
         <button onclick="confirmBatchTransfer()" class="px-4 py-2 bg-[#165DFF] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">
-          <i class="fas fa-check mr-1"></i>确认转移全部
+          <i class="fas fa-check mr-1"></i>确认转移
         </button>
       </div>
     </div>
@@ -1017,8 +1241,8 @@
       <div class="px-6 py-4">
         <div class="flex gap-3 mb-4">
           <div class="flex items-center gap-2">
-            <label class="text-sm text-gray-600">用户ID：</label>
-            <input id="usSearchId" type="text" placeholder="用户ID" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-40 focus:border-[#165DFF] outline-none">
+            <label class="text-sm text-gray-600">手机号：</label>
+            <input id="usSearchPhone" type="text" placeholder="手机号" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-40 focus:border-[#165DFF] outline-none">
           </div>
           <div class="flex items-center gap-2">
             <label class="text-sm text-gray-600">人员姓名：</label>
@@ -1031,7 +1255,7 @@
             <thead>
               <tr class="bg-blue-50">
                 <th class="px-3 py-2.5 border-b border-gray-200 text-[13px] font-semibold text-gray-600 text-center w-12"></th>
-                <th class="px-3 py-2.5 border-b border-gray-200 text-[13px] font-semibold text-gray-600">用户ID</th>
+                <th class="px-3 py-2.5 border-b border-gray-200 text-[13px] font-semibold text-gray-600">手机号</th>
                 <th class="px-3 py-2.5 border-b border-gray-200 text-[13px] font-semibold text-gray-600">人员姓名</th>
                 <th class="px-3 py-2.5 border-b border-gray-200 text-[13px] font-semibold text-gray-600">角色</th>
               </tr>
@@ -1067,6 +1291,10 @@
             <input type="hidden" id="mfUserId" value="">
             <button onclick="openUserSelect()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 bg-white">选择</button>
           </div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">手机号</label>
+          <input id="mfPhone" type="text" readonly placeholder="选择人员后自动带入" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-600 outline-none cursor-not-allowed">
         </div>
         <div>
           <label class="text-sm text-gray-700 font-medium">角色 <span class="text-red-500">*</span></label>
@@ -1133,6 +1361,13 @@
         { id: 'P108', name: '孙八', age: 44, gender: '女', field: '肝部', screenNo: 'SCR-108', createTime: '2025-07-02 09:15', creator: '周CRC', status: '通过', statusClass: 'status-passed' }
       ]
     };
+    // 为所有患者补充姓名缩写（使用姓名）
+    for (var cname in patientData) {
+      var plist = patientData[cname];
+      for (var pi=0; pi<plist.length; pi++) {
+        if (!plist[pi].nameAbbr) plist[pi].nameAbbr = plist[pi].name;
+      }
+    }
 
     // 各中心参研人员
     var staffData = {
@@ -1174,16 +1409,16 @@
 
     // 系统人员池（用于选择弹窗）
     var systemUsers = [
-      { userId: '100000', name: '何悦', role: '系统管理员' },
-      { userId: '100001', name: '李四', role: '中央管理' },
-      { userId: '100002', name: '单勐也', role: '中央项目管理' },
-      { userId: '100003', name: '张五', role: '中央项目管理' },
-      { userId: '100418', name: '冉俊杰', role: '临床协调员' },
-      { userId: '100419', name: '李秋露', role: '临床协调员' },
-      { userId: '100420', name: '邵启龙', role: 'CRA专员' },
-      { userId: '100421', name: '王晓明', role: '运营部PM' },
-      { userId: '100422', name: '赵志强', role: '医学经理' },
-      { userId: '100423', name: '陈小红', role: 'CRC' }
+      { userId: '100000', phone: '138****0001', name: '何悦', role: '系统管理员' },
+      { userId: '100001', phone: '138****0002', name: '李四', role: '中央管理' },
+      { userId: '100002', phone: '138****0003', name: '单勐也', role: '中央项目管理' },
+      { userId: '100003', phone: '138****0004', name: '张五', role: '中央项目管理' },
+      { userId: '100418', phone: '138****0418', name: '冉俊杰', role: '临床协调员' },
+      { userId: '100419', phone: '138****0419', name: '李秋露', role: '临床协调员' },
+      { userId: '100420', phone: '138****0420', name: '邵启龙', role: 'CRA专员' },
+      { userId: '100421', phone: '138****0421', name: '王晓明', role: '运营部PM' },
+      { userId: '100422', phone: '138****0422', name: '赵志强', role: '医学经理' },
+      { userId: '100423', phone: '138****0423', name: '陈小红', role: 'CRC' }
     ];
 
     var currentCenterName = null;
@@ -1192,14 +1427,23 @@
     var currentMemberEditId = null; // 当前编辑的成员ID
     var selectedUserId = null; // 人员选择弹窗中选中的userId
 
-    // 中心启用状态：true=已启动，false=未启动
+    // 中心状态：'started'=已启动，'notstarted'=未启动，'paused'=已暂停，'closed'=已关闭
     var centerStatus = {
-      '山东省肿瘤医院': true,
-      '安阳市人民医院': true,
-      '广东省人民医院': true,
-      '中南大学湘雅二医院': true,
-      '北京协和医院': true
+      '山东省肿瘤医院': 'started',
+      '安阳市人民医院': 'paused',
+      '广东省人民医院': 'started',
+      '中南大学湘雅二医院': 'notstarted',
+      '北京协和医院': 'closed'
     };
+    var CS_LABEL = { started: '已启动', notstarted: '未启动', paused: '已暂停', closed: '已关闭' };
+    var CS_CLASS = { started: 'cs-started', notstarted: 'cs-notstarted', paused: 'cs-paused', closed: 'cs-closed' };
+    function renderCsLabel(name) {
+      var el = document.getElementById('csLabel-' + name);
+      if (!el) return;
+      var st = centerStatus[name] || 'notstarted';
+      el.textContent = CS_LABEL[st];
+      el.className = 'cs-status ' + CS_CLASS[st];
+    }
 
     // 中心元数据（用于删除日志记录）
     var centerMeta = {
@@ -1221,23 +1465,50 @@
     };
 
     // 各中心患者转移日志
-    var transferLog = [];
+    var transferLog = [
+      { time: '2026/8/18 10:24:36', patient: '王**', fromCenter: '山东省肿瘤医院', fromCode: 'CN001', toCenter: '广东省人民医院', toCode: 'CN099', audit: '赵CRA', reason: '患者搬家至广州，就近随访', remark: '已提前与原中心 PI 沟通', operator: '系统管理员' },
+      { time: '2026/8/19 15:02:11', patient: '李**', fromCenter: '安阳市人民医院', fromCode: 'CN002', toCenter: '山东省肿瘤医院', toCode: 'CN001', audit: '周CRC', reason: '研究中心方案调整', remark: '需重新签署知情同意', operator: '系统管理员' }
+    ];
     // 各中心成员交接日志
     var memberChangeLog = [];
-    var handoverLog = []; // 成员交接日志
+    var handoverLog = [
+      { time: '2026/8/17 11:30:05', fromMember: '陈CRA', fromRole: 'CRA', fromCenter: '山东省肿瘤医院', fromCode: 'CN001', toMember: '孙CRA', toRole: 'CRA', toCenter: '山东省肿瘤医院', toCode: 'CN001', patientCount: 12, reason: '人员离职', note: 'CRA离职交接', operator: '系统管理员' },
+      { time: '2026/8/20 09:45:22', fromMember: '刘经理', fromRole: '医学经理', fromCenter: '安阳市人民医院', fromCode: 'CN002', toMember: '吴经理', toRole: '医学经理', toCenter: '广东省人民医院', toCode: 'CN099', patientCount: 5, reason: '岗位调动', note: '跨中心调动交接', operator: '系统管理员' }
+    ]; // 成员交接日志
     // 各中心删除日志（删除原因 + 删除时间）
-    var deleteLog = [];
+    var deleteLog = [
+      { center: '广州市第一人民医院', code: 'CN015', dept: '肿瘤内科', pi: '陈教授', province: '广东省', city: '广州市', leader: '否', reason: '同一中心多条重复记录，清理冗余数据', remark: '', time: '2026/8/22 16:10:05', operator: '系统管理员' },
+      { center: '成都市第三人民医院', code: 'CN028', dept: '呼吸科', pi: '周医生', province: '四川省', city: '成都市', leader: '否', reason: '错误加入', remark: '', time: '2026/8/21 10:32:48', operator: '李秋露' },
+      { center: '武汉市中心医院', code: 'CN036', dept: '消化内科', pi: '吴教授', province: '湖北省', city: '武汉市', leader: '否', reason: '其它', remark: '测试删除', time: '2026/8/19 14:05:11', operator: '张五' },
+      { center: '西安市人民医院', code: 'CN045', dept: '乳腺外科', pi: '赵医生', province: '陕西省', city: '西安市', leader: '否', reason: '同一中心多条重复记录，清理冗余数据', remark: '', time: '2026/8/18 09:20:33', operator: '系统管理员' },
+      { center: '杭州市第一人民医院', code: 'CN052', dept: '血液科', pi: '孙教授', province: '浙江省', city: '杭州市', leader: '否', reason: '错误加入', remark: '', time: '2026/8/15 17:45:02', operator: '邵启龙' },
+      { center: '南京市鼓楼医院', code: 'CN061', dept: '神经内科', pi: '郑医生', province: '江苏省', city: '南京市', leader: '是', reason: '其它', remark: '测试删除', time: '2026/8/12 11:08:27', operator: '系统管理员' },
+      { center: '长沙市第一医院', code: 'CN073', dept: '心内科', pi: '冯教授', province: '湖南省', city: '长沙市', leader: '否', reason: '其它', remark: '测试删除', time: '2026/8/09 15:33:19', operator: '李秋露' }
+    ];
+    // 各中心修改日志（中心/成员信息变更）
+    var modifyLog = [
+      { time: '2026/8/20 14:32:10', center: '山东省肿瘤医院', code: 'CN001', type: '新增', operator: '系统管理员',
+        before: null, after: { 中心名称: '山东省肿瘤医院', 中心号: 'CN001', 状态: '已启动', 省: '山东省', 市: '济南市', PI: '于金明' } },
+      { time: '2026/8/21 09:15:43', center: '山东省肿瘤医院', code: 'CN001', type: '修改', operator: '系统管理员',
+        before: { 角色: 'CRA' }, after: { 角色: '资深CRA' } },
+      { time: '2026/8/22 16:48:02', center: '广东省人民医院', code: 'CN099', type: '修改', operator: '系统管理员',
+        before: { 科室: '肿瘤内科', PI: '李教授' }, after: { 科室: '肿瘤外科', PI: '李教授' } }
+    ];
     // 当前操作人（原型默认）
     var currentOperator = '系统管理员';
 
     // 记录日志的辅助函数
-    function addTransferLog(centerName, patientName, target, auditPersons, operator) {
+    function addTransferLog(centerName, centerCode, patientName, target, targetCode, auditPersons, operator, reason, remark) {
       transferLog.unshift({
         time: new Date().toLocaleString('zh-CN'),
-        center: centerName,
+        fromCenter: centerName,
+        fromCode: centerCode || '',
         patient: patientName,
-        target: target,
+        toCenter: target,
+        toCode: targetCode || '',
         audit: auditPersons,
+        reason: reason || '',
+        remark: remark || '',
         operator: operator || '当前用户'
       });
     }
@@ -1255,6 +1526,20 @@
         newPhone: e.newPhone || '',
         newRole: e.newRole || '',
         detail: detail || ''
+      });
+    }
+    // 记录「修改日志」：中心/成员信息变更
+    // type: 新增 / 修改 / 删除
+    // before / after 均为 JSON 对象（展示用）
+    function addModifyLog(centerName, centerCode, type, operator, before, after) {
+      modifyLog.unshift({
+        time: new Date().toLocaleString('zh-CN'),
+        center: centerName,
+        code: centerCode || '',
+        type: type || '修改',
+        operator: operator || '当前用户',
+        before: before || null,
+        after: after || null
       });
     }
 
@@ -1339,11 +1624,14 @@
     // ========== 患者管理弹窗 ==========
     function openPatientList(centerName) {
       currentCenterName = centerName;
-      document.getElementById('plCenterInfo').textContent = '中心：' + centerName + ' | 项目：SHR-A2102-203';
+      var centerCode = (centerMeta[centerName] || {}).code || '--';
+      document.getElementById('plCenterInfo').textContent = '- 中心：' + centerName + '（' + centerCode + '） | 项目：SHR-A2102-203';
       document.getElementById('plSearchName').value = '';
       document.getElementById('plSearchStatus').value = '';
-      document.getElementById('plFilteredBadge').style.display = 'none';
       if (!transferredPatientIds[centerName]) transferredPatientIds[centerName] = {};
+      plPager.page = 1;
+      plSelectedIds = [];
+      updatePlBatchBtn();
       renderPatientList(centerName);
       document.getElementById('patientListModal').classList.remove('modal-hidden');
     }
@@ -1355,11 +1643,12 @@
     function resetPatientFilter() {
       document.getElementById('plSearchName').value = '';
       document.getElementById('plSearchStatus').value = '';
-      document.getElementById('plFilteredBadge').style.display = 'none';
+      plPager.page = 1;
       renderPatientList(currentCenterName);
     }
 
     function filterPatientList() {
+      plPager.page = 1;
       renderPatientList(currentCenterName);
     }
 
@@ -1367,39 +1656,37 @@
       var allPatients = patientData[centerName] || [];
       var searchName = (document.getElementById('plSearchName').value || '').trim().toLowerCase();
       var searchStatus = document.getElementById('plSearchStatus').value;
-      var hasFilter = searchName || searchStatus;
-      document.getElementById('plFilteredBadge').style.display = hasFilter ? 'inline' : 'none';
-      document.getElementById('plTotalCount').textContent = allPatients.length;
 
-      // 统计全量
-      var unsub = 0, audit = 0, pass = 0;
-      for (var i = 0; i < allPatients.length; i++) {
-        if (allPatients[i].status === '未提交') unsub++;
-        else if (allPatients[i].status === '审核中') audit++;
-        else if (allPatients[i].status === '通过') pass++;
-      }
-      document.getElementById('plStatusUnsubmitted').textContent = unsub;
-      document.getElementById('plStatusAuditing').textContent = audit;
-      document.getElementById('plStatusPassed').textContent = pass;
-
-      // 表体
+      // 过滤
       var transferred = transferredPatientIds[centerName] || {};
-      var html = '';
-      var idx = 0, shown = 0;
+      var filtered = [];
       for (var i = 0; i < allPatients.length; i++) {
         var p = allPatients[i];
-        idx++;
         var nameLower = p.name.toLowerCase();
         if (searchName && nameLower.indexOf(searchName) === -1) continue;
         if (searchStatus && p.status !== searchStatus) continue;
-        shown++;
+        filtered.push(p);
+      }
+
+      // 分页
+      var st = plPager;
+      var pages = Math.max(1, Math.ceil(filtered.length / st.size));
+      if (st.page > pages) st.page = pages;
+      if (st.page < 1) st.page = 1;
+      var pageRows = filtered.slice((st.page - 1) * st.size, st.page * st.size);
+
+      // 表体
+      var html = '';
+      var startNo = (st.page - 1) * st.size;
+      for (var j = 0; j < pageRows.length; j++) {
+        var p = pageRows[j];
         var isTransferred = transferred[p.id];
         html += '<tr class="border-b border-gray-100 hover:bg-gray-50' + (isTransferred ? ' bg-green-50' : '') + '">';
-        html += '<td class="px-3 py-2.5 text-[13px]">' + idx + '</td>';
+        html += '<td class="px-3 py-2.5 text-center">' + (isTransferred ? '<span class="text-green-500"><i class="fas fa-check"></i></span>' : '<input type="checkbox" class="accent-[#165DFF] pl-cb" value="' + p.id + '" onchange="togglePlItem(this)">') + '</td>';
+        html += '<td class="px-3 py-2.5 text-[13px]">' + (startNo + j + 1) + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + (isTransferred ? '<i class="fas fa-check-circle text-green-500 mr-1" title="已转移"></i>' : '') + p.name + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + p.age + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + p.gender + '</td>';
-        html += '<td class="px-3 py-2.5 text-[13px]">' + p.field + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + p.screenNo + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + p.createTime + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + p.creator + '</td>';
@@ -1412,7 +1699,93 @@
         }
         html += '</td></tr>';
       }
+      if (filtered.length === 0) {
+        html = '<tr><td colspan="10" class="px-3 py-8 text-center text-gray-400 text-sm">暂无患者数据</td></tr>';
+      }
       document.getElementById('plTableBody').innerHTML = html;
+      var sa = document.getElementById('plSelectAll');
+      if (sa) sa.checked = false;
+      plSelectedIds = [];
+      updatePlBatchBtn();
+      renderPlPager(filtered.length);
+    }
+
+    // 患者列表分页状态
+    var plPager = { page: 1, size: 10 };
+    var plSelectedIds = [];   // 已勾选的患者ID
+    var plBatchMode = 'all';  // 'all' | 'selected'
+
+    function togglePlItem(el) {
+      var id = el.value;
+      if (el.checked) {
+        if (plSelectedIds.indexOf(id) === -1) plSelectedIds.push(id);
+      } else {
+        var k = plSelectedIds.indexOf(id);
+        if (k > -1) plSelectedIds.splice(k, 1);
+      }
+      updatePlBatchBtn();
+    }
+    function togglePlSelectAll() {
+      var checked = document.getElementById('plSelectAll').checked;
+      var boxes = document.querySelectorAll('#plTableBody .pl-cb');
+      plSelectedIds = [];
+      for (var i = 0; i < boxes.length; i++) {
+        boxes[i].checked = checked;
+        if (checked) plSelectedIds.push(boxes[i].value);
+      }
+      updatePlBatchBtn();
+    }
+    function updatePlBatchBtn() {
+      var btn = document.getElementById('plBatchBtn');
+      var cnt = document.getElementById('plSelectedCount');
+      var info = document.getElementById('plSelectedInfo');
+      if (cnt) cnt.textContent = plSelectedIds.length;
+      if (btn) btn.disabled = plSelectedIds.length === 0;
+      if (info) info.textContent = '已选 ' + plSelectedIds.length + ' 名患者';
+    }
+    function renderPlPager(total) {
+      var st = plPager;
+      var size = st.size;
+      var pages = Math.max(1, Math.ceil(total / size));
+      var start = total === 0 ? 0 : (st.page - 1) * size + 1;
+      var end = Math.min(total, st.page * size);
+      var html = '<span class="text-gray-500">共 ' + total + ' 条' + (total > 0 ? ('，当前 ' + start + '-' + end) : '') + '</span>';
+      html += '<div class="flex items-center gap-2">';
+      html += '<select onchange="plChangeSize(this.value)" class="border border-gray-300 rounded px-2 py-1 text-gray-700">';
+      var sizes = [10, 20, 50];
+      for (var s = 0; s < sizes.length; s++) {
+        html += '<option value="' + sizes[s] + '"' + (sizes[s] === size ? ' selected' : '') + '>' + sizes[s] + ' 条/页</option>';
+      }
+      html += '</select>';
+      html += '<button onclick="plGoto(' + (st.page - 1) + ')" class="px-2 py-1 border border-gray-300 rounded ' + (st.page <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100') + '"><i class="fas fa-chevron-left text-xs"></i></button>';
+      var pageList = buildPageList(st.page, pages);
+      for (var p = 0; p < pageList.length; p++) {
+        var pg = pageList[p];
+        if (pg === '...') {
+          html += '<span class="px-1 text-gray-400">…</span>';
+        } else {
+          html += '<button onclick="plGoto(' + pg + ')" class="px-3 py-1 border rounded ' + (pg === st.page ? 'border-[#165DFF] bg-[#165DFF] text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100') + '">' + pg + '</button>';
+        }
+      }
+      html += '<button onclick="plGoto(' + (st.page + 1) + ')" class="px-2 py-1 border border-gray-300 rounded ' + (st.page >= pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100') + '"><i class="fas fa-chevron-right text-xs"></i></button>';
+      html += '<span class="text-gray-500 ml-1">前往</span>';
+      html += '<input id="plGotoInput" type="text" value="' + st.page + '" class="border border-gray-300 rounded w-12 px-1 py-1 text-center" onkeydown="if(event.key===\'Enter\')plGoto(parseInt(this.value)||1)">';
+      html += '<span class="text-gray-500">页</span>';
+      html += '</div>';
+      var box = document.getElementById('plPager');
+      if (box) box.innerHTML = html;
+    }
+    function plGoto(p) {
+      var total = (patientData[currentCenterName] || []).length;
+      var pages = Math.max(1, Math.ceil(total / plPager.size));
+      p = Math.max(1, Math.min(pages, p || 1));
+      plPager.page = p;
+      renderPatientList(currentCenterName);
+    }
+    function plChangeSize(v) {
+      plPager.size = parseInt(v) || 10;
+      plPager.page = 1;
+      renderPatientList(currentCenterName);
     }
 
     // ========== 单条转移 ==========
@@ -1434,25 +1807,42 @@
     }
 
     // ========== 批量转移 ==========
-    function openBatchTransfer() {
+    function openBatchTransfer(mode) {
+      plBatchMode = mode === 'selected' ? 'selected' : 'all';
       var allPatients = patientData[currentCenterName] || [];
       var transferred = transferredPatientIds[currentCenterName] || {};
-      var remaining = 0, auditCount = 0;
-      for (var i = 0; i < allPatients.length; i++) {
-        if (!transferred[allPatients[i].id]) {
-          remaining++;
-          if (allPatients[i].status === '审核中') auditCount++;
-        }
-      }
-      if (remaining === 0) { alert('所有患者已转移完毕'); return; }
 
-      document.getElementById('btPatientCount').textContent = remaining;
-      var auditHint = document.getElementById('btAuditHint');
-      if (auditCount > 0) {
-        auditHint.style.display = 'block';
-        auditHint.querySelector('b').textContent = auditCount;
+      if (plBatchMode === 'selected') {
+        if (plSelectedIds.length === 0) { alert('请先勾选患者'); return; }
+        // 过滤出选中且未转移的患者
+        var selRemaining = [];
+        for (var s = 0; s < plSelectedIds.length; s++) {
+          var sid = plSelectedIds[s];
+          if (!transferred[sid]) selRemaining.push(sid);
+        }
+        if (selRemaining.length === 0) { alert('所选患者均已转移'); return; }
+        plSelectedIds = selRemaining;
+        updatePlBatchBtn();
+        document.getElementById('btPatientCount').textContent = selRemaining.length;
+        document.getElementById('btAuditHint').style.display = selRemaining.length > 0 ? 'block' : 'none';
+        document.getElementById('btAuditHint').querySelector('b').textContent = 0;
       } else {
-        auditHint.style.display = 'none';
+        var remaining = 0, auditCount = 0;
+        for (var i = 0; i < allPatients.length; i++) {
+          if (!transferred[allPatients[i].id]) {
+            remaining++;
+            if (allPatients[i].status === '审核中') auditCount++;
+          }
+        }
+        if (remaining === 0) { alert('所有患者已转移完毕'); return; }
+        document.getElementById('btPatientCount').textContent = remaining;
+        var auditHint = document.getElementById('btAuditHint');
+        if (auditCount > 0) {
+          auditHint.style.display = 'block';
+          auditHint.querySelector('b').textContent = auditCount;
+        } else {
+          auditHint.style.display = 'none';
+        }
       }
       document.getElementById('btTargetCenter').value = '';
       document.getElementById('btTransferReason').value = '';
@@ -1553,16 +1943,19 @@
         var sCount = (staffData[name] || []).length;
         var total = pCount + sCount;
         badge.textContent = '删除（' + total + '）';
+        var pmBtn = document.getElementById('pmBtn-' + name);
         if (total > 0) {
           // 仍有患者或参研人员：灰色不可点击，需先处理
           badge.className = 'text-gray-400 text-[13px] ml-2 select-none';
           badge.removeAttribute('onclick');
           badge.title = '该中心下仍有 ' + total + ' 项数据（患者 ' + pCount + ' / 参研人员 ' + sCount + '），请先进行患者管理或成员管理后再删除';
+          if (pmBtn) pmBtn.style.display = '';
         } else {
           // 无数据：红色可点击删除
           badge.className = 'text-red-500 text-[13px] cursor-pointer ml-2 font-medium';
           badge.setAttribute('onclick', "openDeleteSimple('" + name + "')");
           badge.title = '该中心下无患者和参研人员，可直接删除';
+          if (pmBtn) pmBtn.style.display = 'none';
         }
       }
     }
@@ -1645,12 +2038,12 @@
           // 已停用：提供「启用」按钮，可直接恢复
           html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="enableMember(\'' + m.id + '\')">启用</a>';
         }
-        // 删除按钮始终展示，格式：删除（患者数）
+        // 删除按钮：数字>0 时灰色不可点击；=0 时可点击删除
         if (hasPatient) {
-          html += '<a class="text-red-400 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')" title="该成员名下有患者，需先停用并交接">删除（' + patCount + '）</a>';
+          html += '<a class="text-gray-300 text-[13px] ml-2 select-none cursor-not-allowed" title="该成员名下有患者，需先停用并交接">删除（' + patCount + '）</a>';
           html += '<a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberPatient(\'' + m.id + '\')">患者交接</a>';
         } else {
-          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')">删除（' + patCount + '）</a>';
+          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')">删除（0）</a>';
         }
         html += '</td></tr>';
       }
@@ -1684,6 +2077,7 @@
         if (m) {
           document.getElementById('mfName').value = m.name;
           document.getElementById('mfUserId').value = m.userId;
+          document.getElementById('mfPhone').value = m.phone || '';
           document.getElementById('mfRole').value = m.role;
           document.getElementById('mfResponsibleCenter').value = m.responsibleCenter || '';
           document.getElementById('mfViewCenter').value = m.viewCenter || '';
@@ -1691,6 +2085,7 @@
       } else {
         document.getElementById('mfName').value = '';
         document.getElementById('mfUserId').value = '';
+        document.getElementById('mfPhone').value = '';
         document.getElementById('mfRole').value = '';
         document.getElementById('mfResponsibleCenter').value = currentCenterName;
         document.getElementById('mfViewCenter').value = '';
@@ -1705,7 +2100,7 @@
 
     // ========== 人员选择弹窗 ==========
     function openUserSelect() {
-      document.getElementById('usSearchId').value = '';
+      document.getElementById('usSearchPhone').value = '';
       document.getElementById('usSearchName').value = '';
       selectedUserId = null;
       renderUserSelect();
@@ -1718,12 +2113,12 @@
     }
 
     function renderUserSelect() {
-      var searchId = (document.getElementById('usSearchId').value || '').trim();
+      var searchPhone = (document.getElementById('usSearchPhone').value || '').trim();
       var searchName = (document.getElementById('usSearchName').value || '').trim().toLowerCase();
       var filtered = [];
       for (var i = 0; i < systemUsers.length; i++) {
         var u = systemUsers[i];
-        if (searchId && u.userId.indexOf(searchId) === -1) continue;
+        if (searchPhone && u.phone.indexOf(searchPhone) === -1) continue;
         if (searchName && u.name.toLowerCase().indexOf(searchName) === -1) continue;
         filtered.push(u);
       }
@@ -1734,7 +2129,7 @@
         var checked = selectedUserId === u.userId ? 'checked' : '';
         html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
         html += '<td class="px-3 py-2.5 text-center"><input type="radio" name="usRadio" value="' + u.userId + '" ' + checked + ' onchange="selectedUserId=\'' + u.userId + '\'"></td>';
-        html += '<td class="px-3 py-2.5 text-[13px]">' + u.userId + '</td>';
+        html += '<td class="px-3 py-2.5 text-[13px]">' + u.phone + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + u.name + '</td>';
         html += '<td class="px-3 py-2.5 text-[13px]">' + u.role + '</td>';
         html += '</tr>';
@@ -1762,6 +2157,7 @@
       if (user) {
         document.getElementById('mfName').value = user.name;
         document.getElementById('mfUserId').value = user.userId;
+        document.getElementById('mfPhone').value = user.phone || '';
       }
       closeUserSelect();
     }
@@ -1929,7 +2325,7 @@
           var r = importParsedRows[k];
           if (Object.keys(r.errors).length === 0 && r.name && allCenters.indexOf(r.name) === -1) {
             allCenters.push(r.name);
-            centerStatus[r.name] = true;
+            centerStatus[r.name] = 'notstarted';
           }
         }
 
@@ -1973,45 +2369,28 @@
       }
     }
 
-    // ========== 中心状态（启动/停用） —— switch 开关，不弹窗 ==========
+    // ========== 中心状态（已启动 / 未启动 / 已暂停 / 已关闭） —— 文字标签 + 弹窗设置 ==========
     function openCenterStatus(centerName) {
-      // 保留兼容：直接打开状态编辑逻辑入口（现已改用 switch，不再弹窗）
-      var sw = document.getElementById('statusSwitch-' + centerName);
-      if (sw) toggleCenterStatus(centerName, sw);
+      currentCenterName = centerName;
+      var st = centerStatus[centerName] || 'notstarted';
+      document.getElementById('csCenterName').textContent = centerName;
+      document.getElementById('csCurrentStatus').textContent = CS_LABEL[st];
+      var modal = document.getElementById('centerStatusModal');
+      if (modal) modal.classList.remove('modal-hidden');
     }
     function closeCenterStatus() {
       var modal = document.getElementById('centerStatusModal');
       if (modal) modal.classList.add('modal-hidden');
     }
-    // switch 切换处理：停用前校验本中心是否存在「未提交 / 待审核」患者
-    function toggleCenterStatus(centerName, checkbox) {
-      var wantStart = checkbox.checked;
-      if (!wantStart) {
-        // 停用：检查本中心是否有未提交 / 待审核（审核中）患者
-        var list = patientData[centerName] || [];
-        var blocking = 0;
-        for (var pi = 0; pi < list.length; pi++) {
-          var st = list[pi].status;
-          if (st === '未提交' || st === '待审核' || st === '审核中') blocking++;
-        }
-        if (blocking > 0) {
-          showToast('确认本中心患者都已完成审核或者是转移，才可以停用', 'warn');
-          checkbox.checked = true; // 回滚，保持启动
-          return;
-        }
-      }
-      applyCenterStatus(centerName, wantStart);
+    function applyCenterStatus(centerName, st) {
+      centerStatus[centerName] = st;
+      renderCsLabel(centerName);
+      addMemberLog(centerName, '中心状态变更', '—', '', '中心状态变更为' + CS_LABEL[st]);
+      showToast('中心「' + centerName + '」状态已设为「' + CS_LABEL[st] + '」');
     }
-    function applyCenterStatus(centerName, started) {
-      centerStatus[centerName] = started;
-      var sw = document.getElementById('statusSwitch-' + centerName);
-      if (sw) sw.checked = started;
-      addMemberLog(centerName, started ? '中心启动' : '中心停用', '—', '', '中心状态变更为' + (started ? '已启动' : '未启动'));
-      showToast('中心「' + centerName + '」已' + (started ? '启动' : '停用'));
-    }
-    function setCenterStatus(started) {
+    function setCenterStatus(st) {
       if (!currentCenterName) return;
-      applyCenterStatus(currentCenterName, started);
+      applyCenterStatus(currentCenterName, st);
       closeCenterStatus();
     }
 
@@ -2029,20 +2408,39 @@
       var ownPats = [];
       for (var pi = 0; pi < pats.length; pi++) { if (pats[pi].creator === m.name) ownPats.push(pats[pi]); }
 
+      document.getElementById('hoMemberName').textContent = m.name + '（' + m.role + '）';
+      var hint = document.getElementById('hoHint');
       if (ownPats.length > 0) {
-        // 有在管患者：不弹窗，仅提示需先交接
-        var auditing = 0;
-        for (var ai = 0; ai < ownPats.length; ai++) {
-          if (ownPats[ai].status === '审核中' || ownPats[ai].status === '待审核') auditing++;
-        }
-        showToast('该成员名下仍有 ' + ownPats.length + ' 名在管患者（其中 ' + auditing + ' 名「审核中」），请先在「患者管理」中完成交接后再停用。', 'warn');
-        return;
+        hint.textContent = '该成员名下有 ' + ownPats.length + ' 名在管患者，停用前需先交接给本中心其他成员。';
+        hint.style.display = 'block';
+      } else {
+        hint.textContent = '该成员名下暂无在管患者，可填写交接原因后直接停用。';
+        hint.style.display = 'block';
       }
 
-      // 无在管患者：直接停用，不弹窗
-      m.status = '停用';
-      showToast('成员「' + m.name + '」已停用');
-      renderMemberList(currentCenterName);
+      // 重置表单
+      var allRad = document.querySelector('input[name="hoScope"][value="all"]');
+      if (allRad) allRad.checked = true;
+      document.getElementById('hoReason').value = '';
+      document.getElementById('hoNote').value = '';
+      switchHoScope();
+
+      // 患者列表
+      document.getElementById('hoPatientTotal').textContent = ownPats.length;
+      renderHoPatientList(m.name, ownPats);
+      document.getElementById('hoPatientBox').style.display = ownPats.length > 0 ? 'block' : 'none';
+      document.getElementById('hoPatientEmpty').style.display = ownPats.length > 0 ? 'none' : 'block';
+
+      // 交接给：本中心其他成员
+      var sel = document.getElementById('hoTarget');
+      var opts = '<option value="">请选择交接人</option>';
+      for (var j = 0; j < list.length; j++) {
+        if (list[j].id !== m.id) opts += '<option value="' + list[j].id + '">' + list[j].name + '（' + list[j].role + '）</option>';
+      }
+      sel.innerHTML = opts;
+
+      // 打开弹窗
+      document.getElementById('memberHandoverModal').classList.remove('modal-hidden');
     }
 
     function renderHoPatientList(memberName, ownPats) {
@@ -2088,6 +2486,10 @@
         if (list[i].id === targetId) t = list[i];
       }
       if (!m) return;
+
+      // 交接原因必填
+      var hoReasonVal = document.getElementById('hoReason').value;
+      if (!hoReasonVal) { alert('请选择交接原因'); return; }
 
       // 确认时再次检查：若仍有审核中患者，阻止停用
       var patients = patientData[currentCenterName] || [];
@@ -2138,17 +2540,37 @@
         var hoNoteVal = document.getElementById('hoNote').value.trim();
         handoverLog.unshift({
           time: new Date().toLocaleString('zh-CN'),
-          center: currentCenterName,
+          fromCenter: currentCenterName,
+          fromCode: (centerInfo[currentCenterName]||{}).code,
           fromMember: m.name,
           fromRole: m.role,
+          toCenter: t.center || currentCenterName,
+          toCode: (centerInfo[t.center || currentCenterName]||{}).code,
           toMember: t.name,
           toRole: t.role,
           patientCount: moved,
+          reason: hoReasonVal,
           note: hoNoteVal || '',
           operator: '当前用户'
         });
       } else {
         addMemberLog(currentCenterName, '停用', m.name, m.role, '无在管患者，直接停用', { oldName: m.name, oldPhone: m.phone });
+        // 无在管患者也记录交接日志（含交接原因）
+        handoverLog.unshift({
+          time: new Date().toLocaleString('zh-CN'),
+          fromCenter: currentCenterName,
+          fromCode: (centerInfo[currentCenterName]||{}).code,
+          fromMember: m.name,
+          fromRole: m.role,
+          toCenter: '—',
+          toCode: '—',
+          toMember: '—',
+          toRole: '—',
+          patientCount: 0,
+          reason: hoReasonVal,
+          note: '',
+          operator: '当前用户'
+        });
       }
       closeHandover();
       renderMemberList(currentCenterName);
@@ -2160,6 +2582,7 @@
     function saveMember() {
       var name = document.getElementById('mfName').value.trim();
       var userId = document.getElementById('mfUserId').value.trim();
+      var phone = document.getElementById('mfPhone').value.trim();
       var role = document.getElementById('mfRole').value;
       var responsibleCenter = document.getElementById('mfResponsibleCenter').value;
       var viewCenter = document.getElementById('mfViewCenter').value;
@@ -2171,22 +2594,26 @@
         for (var i = 0; i < list.length; i++) {
           if (list[i].id === currentMemberEditId) {
             var oldRole = list[i].role;
-            list[i].name = name; list[i].userId = userId; list[i].role = role;
+            var oldName = list[i].name;
+            list[i].name = name; list[i].userId = userId; list[i].phone = phone; list[i].role = role;
             list[i].responsibleCenter = responsibleCenter; list[i].viewCenter = viewCenter;
             // 角色变化导致待审核人增减
             syncPendingReviewer(currentCenterName, list[i], oldRole, role);
             addMemberLog(currentCenterName, '编辑', name, role, '角色变更：' + oldRole + ' → ' + role, { oldName: name, newRole: role });
+            if (oldName !== name) addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 姓名: oldName }, { 姓名: name });
+            if (oldRole !== role) addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 角色: oldRole }, { 角色: role });
+            addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 负责中心: list[i].responsibleCenter }, { 负责中心: responsibleCenter });
             break;
           }
         }
         showToast('成员信息已更新');
       } else {
         var newId = 'M' + Date.now();
-        var phone = '138****0000';
+        var matchedPhone = '138****0000';
         for (var j = 0; j < systemUsers.length; j++) {
-          if (systemUsers[j].userId === userId) { phone = '138****' + userId.slice(-4); break; }
+          if (systemUsers[j].userId === userId) { matchedPhone = systemUsers[j].phone || ('138****' + userId.slice(-4)); break; }
         }
-        var newMember = { id: newId, userId: userId, name: name, role: role, phone: phone, responsibleCenter: responsibleCenter, viewCenter: viewCenter, status: '启用' };
+        var newMember = { id: newId, userId: userId, name: name, role: role, phone: matchedPhone, responsibleCenter: responsibleCenter, viewCenter: viewCenter, status: '启用' };
         list.push(newMember);
         // CRA/医学自动加入待审核人
         if (isAuditRole(role)) {
@@ -2266,7 +2693,7 @@
     // 在单条/批量转移确认时记录日志
     function logTransfer(patientName, target) {
       var auditors = getDefaultAuditors(target);
-      addTransferLog(currentCenterName, patientName, target, auditors.join('、'), '当前用户');
+      addTransferLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, patientName, target, (centerInfo[target]||{}).code, auditors.join('、'), '当前用户');
     }
 
     // ========== 图2：重写 confirmSingleTransfer / confirmBatchTransfer 写日志 ==========
@@ -2288,13 +2715,25 @@
       if (!reason) { alert('请选择转移原因'); return; }
       var allPatients = patientData[currentCenterName] || [];
       var movedCount = 0;
-      for (var pid in transferredPatientIds[currentCenterName]) {
-        if (transferredPatientIds[currentCenterName].hasOwnProperty(pid)) {
-          transferredPatientIds[currentCenterName][pid] = true;
-          movedCount++;
+      if (plBatchMode === 'selected') {
+        for (var k = 0; k < plSelectedIds.length; k++) {
+          var pid = plSelectedIds[k];
+          if (!transferredPatientIds[currentCenterName][pid]) {
+            transferredPatientIds[currentCenterName][pid] = true;
+            movedCount++;
+          }
+        }
+        plSelectedIds = [];
+        updatePlBatchBtn();
+      } else {
+        for (var pid2 in transferredPatientIds[currentCenterName]) {
+          if (transferredPatientIds[currentCenterName].hasOwnProperty(pid2)) {
+            transferredPatientIds[currentCenterName][pid2] = true;
+            movedCount++;
+          }
         }
       }
-      logTransfer('全部患者（' + movedCount + '名）', target);
+      logTransfer(plBatchMode === 'selected' ? ('选中患者（' + movedCount + '名）') : ('全部患者（' + movedCount + '名）'), target);
       closeBatchTransfer();
       renderPatientList(currentCenterName);
       showToast('已转移 ' + movedCount + ' 名患者至「' + target + '」（原因：' + reason + '，审核：' + getDefaultAuditors(target).join('、') + '）。');
@@ -2303,6 +2742,7 @@
     // ========== 成员患者管理弹窗 ==========
     var mpMemberId = null;  // 当前查看的成员ID
     var mpSelectedIds = []; // 已勾选的患者患者编号
+    var mpCurrentPatients = []; // 当前成员名下的全部患者（用于查询）
 
     /** 将 memberData（按中心分组）合并为扁平数组 */
     function getAllMembers() {
@@ -2328,10 +2768,15 @@
         for (var i=0;i<allMembers.length;i++){ if(allMembers[i].id === memberId){ m = allMembers[i]; break; } }
         if (!m) return;
 
-        document.getElementById('mpMemberInfo').textContent = m.name + '（' + m.role + '）';
+        var mpInfoEl = document.getElementById('mpMemberInfo');
+        if (!mpInfoEl) {
+          var mpTitle = document.querySelector('#memberPatientModal h3');
+          if (mpTitle) { mpInfoEl = document.createElement('span'); mpInfoEl.id = 'mpMemberInfo'; mpTitle.appendChild(mpInfoEl); }
+        }
+        if (mpInfoEl) mpInfoEl.textContent = '- ' + m.name + '（' + m.role + '）';
 
         // 按 creator 字段筛选该成员名下的所有患者（遍历所有中心）
-        var pats = [];
+        mpCurrentPatients = [];
         if (typeof patientData !== 'undefined' && patientData) {
           var centerNames = Object.keys(patientData);
           for (var ci=0;ci<centerNames.length;ci++) {
@@ -2339,35 +2784,83 @@
             if (centerPats) {
               for (var pi=0;pi<centerPats.length;pi++) {
                 if (centerPats[pi].creator === m.name) {
-                  pats.push(centerPats[pi]);
+                  mpCurrentPatients.push(centerPats[pi]);
                 }
               }
             }
           }
         }
 
-        document.getElementById('mpTotalCount').textContent = pats.length;
-
-        // 重置全选
+        // 重置查询条件与全选
+        var mpSearchNameEl = document.getElementById('mpSearchName');
+        var mpSearchStatusEl = document.getElementById('mpSearchStatus');
+        var mpSelectAllEl = document.getElementById('mpSelectAll');
+        if (mpSearchNameEl) mpSearchNameEl.value = '';
+        if (mpSearchStatusEl) mpSearchStatusEl.value = '';
         mpSelectedIds = [];
-        document.getElementById('mpSelectAll').checked = false;
+        if (mpSelectAllEl) mpSelectAllEl.checked = false;
         updateMpBatchBtn();
 
-        renderMpTable(m, pats);
-        document.getElementById('memberPatientModal').style.display = 'flex';
-      } catch(err) { alert('openMemberPatient 出错：'+(err&&err.message?err.message:err)); }
+        renderMpTable(m, mpCurrentPatients);
+        var mpModalEl = document.getElementById('memberPatientModal');
+        if (mpModalEl) mpModalEl.style.display = 'flex';
+      } catch(err) { console.error('openMemberPatient 出错：', err); }
     }
 
     function closeMemberPatient() {
       document.getElementById('memberPatientModal').style.display = 'none';
       mpMemberId = null;
       mpSelectedIds = [];
+      mpCurrentPatients = [];
+    }
+
+    /** 更新状态统计 */
+    function updateMpStats(patients) {
+      var total = (patients || []).length;
+      var unaudited = 0, auditing = 0, passed = 0;
+      for (var i=0; i<total; i++) {
+        if (patients[i].status === '未提交') unaudited++;
+        else if (patients[i].status === '审核中') auditing++;
+        else if (patients[i].status === '通过') passed++;
+      }
+      var mpTC = document.getElementById('mpTotalCount');
+      var mpCU = document.getElementById('mpCountUnaudited');
+      var mpCA = document.getElementById('mpCountAuditing');
+      var mpCP = document.getElementById('mpCountPassed');
+      if (mpTC) mpTC.textContent = total;
+      if (mpCU) mpCU.textContent = unaudited;
+      if (mpCA) mpCA.textContent = auditing;
+      if (mpCP) mpCP.textContent = passed;
+    }
+
+    /** 查询 */
+    function mpSearch() {
+      if (!mpCurrentPatients) return;
+      var nameKw = (document.getElementById('mpSearchName').value || '').trim();
+      var status = document.getElementById('mpSearchStatus').value;
+      var filtered = [];
+      for (var i=0; i<mpCurrentPatients.length; i++) {
+        var p = mpCurrentPatients[i];
+        if (nameKw && (p.nameAbbr || '').indexOf(nameKw) === -1) continue;
+        if (status && p.status !== status) continue;
+        filtered.push(p);
+      }
+      renderMpTable(null, filtered);
+    }
+
+    /** 重置 */
+    function mpReset() {
+      document.getElementById('mpSearchName').value = '';
+      document.getElementById('mpSearchStatus').value = '';
+      renderMpTable(null, mpCurrentPatients);
     }
 
     /** 渲染患者列表 */
     function renderMpTable(member, patients) {
+      updateMpStats(patients);
       var tbody = document.getElementById('mpTableBody');
       var emptyTip = document.getElementById('mpEmptyTip');
+      if (!tbody) return;
       if (!patients || patients.length === 0) {
         tbody.innerHTML = '';
         emptyTip.style.display = '';
@@ -2380,13 +2873,14 @@
         html += '<tr class="border-b border-gray-100 hover:bg-gray-50">';
         html += '<td class="px-3 py-2"><input type="checkbox" value="'+p.screenNo+'" onchange="toggleMpItem(this)" class="accent-[#165DFF] mp-cb"></td>';
         html += '<td class="px-3 py-2 text-sm text-gray-500 text-center">'+(i+1)+'</td>';
-        html += '<td class="px-3 py-2 text-sm text-gray-800 font-medium">'+(p.id||'--')+'</td>';
-        html += '<td class="px-3 py-2 text-sm text-gray-700">'+p.nameAbbr+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-700">'+(p.nameAbbr||'-')+'</td>';
         html += '<td class="px-3 py-2 text-sm text-gray-600">'+p.age+'</td>';
         html += '<td class="px-3 py-2 text-sm text-gray-600">'+p.gender+'</td>';
-        html += '<td class="px-3 py-2 text-sm text-gray-600">'+(p.field||'-')+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-800 font-medium">'+(p.id||'--')+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-600">'+(p.createTime||'-')+'</td>';
+        html += '<td class="px-3 py-2 text-sm text-gray-600">'+(p.creator||'-')+'</td>';
         html += '<td class="px-3 py-2"><span class="text-xs px-1.5 py-0.5 rounded '+p.statusClass+'">'+p.status+'</span></td>';
-        html += '<td class="px-3 py-2 text-center"><button onclick="openMpSingleHo(\''+p.screenNo+'\',\''+escapeHtml(p.nameAbbr)+'\')" class="text-[#165DFF] hover:text-blue-700 text-[13px]">交接</button></td>';
+        html += '<td class="px-3 py-2 text-center"><button onclick="openMpSingleHo(\''+p.screenNo+'\',\''+escapeHtml(p.nameAbbr||'-')+'\')" class="text-[#165DFF] hover:text-blue-700 text-[13px]">交接</button></td>';
         html += '</tr>';
       }
       tbody.innerHTML = html;
@@ -2430,10 +2924,13 @@
 
     function updateMpBatchBtn() {
       var btn = document.getElementById('mpBatchBtn');
-      var cntEl = document.getElementById('mpSelectedCount');
+      var textEl = document.getElementById('mpBatchBtnText');
       var infoEl = document.getElementById('mpSelectedInfo');
-      cntEl.textContent = mpSelectedIds.length;
-      btn.disabled = mpSelectedIds.length===0;
+      if (mpSelectedIds.length > 0) {
+        textEl.innerHTML = '交接选中（<b id="mpSelectedCount">' + mpSelectedIds.length + '</b>）';
+      } else {
+        textEl.innerHTML = '全部患者交接';
+      }
       infoEl.textContent = mpSelectedIds.length>0 ? '已选 '+mpSelectedIds.length+' 名患者' : '';
     }
 
@@ -2692,6 +3189,9 @@
       var el = document.getElementById(id);
       if (el) el.classList.add('hidden');
     }
+    function closeModifyLogView() {
+      document.getElementById('modifyLogViewModal').classList.add('hidden');
+    }
 
     // 重置患者转移日志查询条件
     function tlReset() {
@@ -2711,69 +3211,433 @@
       renderCenterLog(document.getElementById('clCenterName').textContent);
     }
 
-    // 打开独立的删除日志弹窗
-    function openDeleteLogModal() {
-      document.getElementById('dlName').value = '';
-      document.getElementById('dlCode').value = '';
-      document.getElementById('dlFrom').value = '';
-      document.getElementById('dlTo').value = '';
-      renderDeleteLog();
-      document.getElementById('deleteLogModal').classList.remove('hidden');
+    // ========== 统一操作日志弹窗（4 个 Tab） ==========
+    var allLogTab = 'modify';
+    function openAllLogModal() {
+      document.getElementById('alMlCenter').value = '';
+      document.getElementById('alMlCode').value = '';
+      document.getElementById('alMlTimeStart').value = '';
+      document.getElementById('alMlTimeEnd').value = '';
+      document.getElementById('alDlName').value = '';
+      document.getElementById('alDlCode').value = '';
+      document.getElementById('alDlFrom').value = '';
+      document.getElementById('alDlTo').value = '';
+      document.getElementById('alDlReason').value = '';
+      document.getElementById('alTlPatient').value = '';
+      document.getElementById('alTlFrom').value = '';
+      document.getElementById('alTlFromCode').value = '';
+      document.getElementById('alTlTo').value = '';
+      document.getElementById('alTlToCode').value = '';
+      document.getElementById('alTlReason').value = '';
+      document.getElementById('alTlTimeStart').value = '';
+      document.getElementById('alTlTimeEnd').value = '';
+      document.getElementById('alHoOldName').value = '';
+      document.getElementById('alHoNewName').value = '';
+      document.getElementById('alHoFrom').value = '';
+      document.getElementById('alHoFromCode').value = '';
+      document.getElementById('alHoTo').value = '';
+      document.getElementById('alHoToCode').value = '';
+      document.getElementById('alHoReason').value = '';
+      document.getElementById('alHoTimeStart').value = '';
+      document.getElementById('alHoTimeEnd').value = '';
+      alogPager.modify.page = 1; alogPager.del.page = 1; alogPager.transfer.page = 1; alogPager.handover.page = 1;
+      switchAllLogTab('modify');
+      document.getElementById('allLogModal').classList.remove('hidden');
     }
-
-    // 重置查询条件
-    function dlReset() {
-      document.getElementById('dlName').value = '';
-      document.getElementById('dlCode').value = '';
-      document.getElementById('dlFrom').value = '';
-      document.getElementById('dlTo').value = '';
-      renderDeleteLog();
+    function switchAllLogTab(tab) {
+      allLogTab = tab;
+      var map = { modify: 'alTabModify', delete: 'alTabDelete', transfer: 'alTabTransfer', handover: 'alTabHandover' };
+      var panels = { modify: 'panelModify', delete: 'panelDelete', transfer: 'panelTransfer', handover: 'panelHandover' };
+      for (var k in map) {
+        document.getElementById(map[k]).className = 'px-3 py-1.5 text-[13px] rounded-lg ' + (k === tab ? 'bg-[#165DFF] text-white' : 'bg-gray-100 text-gray-600');
+        document.getElementById(panels[k]).classList.toggle('hidden', k !== tab);
+      }
+      if (tab === 'modify') renderAllModifyLog();
+      else if (tab === 'delete') renderAllDeleteLog();
+      else if (tab === 'transfer') renderAllTransferLog();
+      else if (tab === 'handover') renderAllHandoverLog();
     }
-
-    // 渲染删除日志（带查询过滤）
-    function renderDeleteLog() {
-      var kw = document.getElementById('dlName').value.trim().toLowerCase();
-      var codeKw = document.getElementById('dlCode').value.trim().toLowerCase();
-      var fromV = document.getElementById('dlFrom').value; // datetime-local 字符串
-      var toV = document.getElementById('dlTo').value;
-      var dBody = document.getElementById('deleteLogBody');
-      var dh = '';
-      if (deleteLog.length === 0) {
-        dh = '<tr><td colspan="10" class="px-3 py-6 text-center text-gray-400 text-sm">暂无删除日志</td></tr>';
+    function renderAllModifyLog() {
+      var kw = document.getElementById('alMlCenter').value.trim().toLowerCase();
+      var codeKw = document.getElementById('alMlCode').value.trim().toLowerCase();
+      var ts = document.getElementById('alMlTimeStart').value;
+      var te = document.getElementById('alMlTimeEnd').value;
+      var rows = [];
+      for (var i = 0; i < modifyLog.length; i++) {
+        var z = modifyLog[i];
+        if (kw && (z.center || '').toLowerCase().indexOf(kw) === -1) continue;
+        if (codeKw && (z.code || '').toLowerCase().indexOf(codeKw) === -1) continue;
+        if (ts || te) {
+          var t = (z.time || '').substring(0, 10);
+          if (ts && t < ts) continue;
+          if (te && t > te) continue;
+        }
+        z._i = i;
+        rows.push(z);
+      }
+      var st = alogPager.modify;
+      var total = rows.length;
+      alogTotalCache.modify = total;
+      var pageRows = rows.slice((st.page - 1) * st.size, st.page * st.size);
+      var b = document.getElementById('alModifyBody');
+      var h = '';
+      if (total === 0) {
+        h = '<tr><td colspan="6" class="px-3 py-6 text-center text-gray-400 text-sm">暂无修改日志</td></tr>';
       } else {
-        for (var d = 0; d < deleteLog.length; d++) {
-          var z = deleteLog[d];
-          // 中心名称过滤
-          if (kw && (z.center || '').toLowerCase().indexOf(kw) === -1) continue;
-          // 中心号过滤
-          if (codeKw && (z.code || '').toLowerCase().indexOf(codeKw) === -1) continue;
-          // 时间段过滤
-          if (fromV || toV) {
-            var t = new Date(z.time.replace(/\//g, '-'));
-            if (fromV && t < new Date(fromV)) continue;
-            if (toV && t > new Date(toV)) continue;
-          }
-          dh += '<tr class="border-b border-gray-100 hover:bg-gray-50">'+
-            '<td class="px-3 py-2 text-[12px] text-gray-800 font-medium">' + (z.center || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.code || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.dept || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.pi || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.province || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.city || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px] text-center">' + (z.leader || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.reason || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.time || '—') + '</td>'+
-            '<td class="px-3 py-2 text-[12px]">' + (z.operator || '—') + '</td>'+
+        for (var j = 0; j < pageRows.length; j++) {
+          var zz = pageRows[j];
+          var seq = (st.page - 1) * st.size + j + 1;
+          h += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+            '<td class="px-3 py-2 text-[12px] text-center">' + seq + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + zz.center + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-[#165DFF]">' + (zz.code || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + zz.operator + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + zz.time + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-center"><a class="text-[#165DFF] text-[13px] cursor-pointer" onclick="viewModifyLog(' + zz._i + ')">查看</a></td>' +
           '</tr>';
         }
-        if (dh === '') dh = '<tr><td colspan="10" class="px-3 py-6 text-center text-gray-400 text-sm">未找到匹配的删除日志</td></tr>';
+        if (h === '') h = '<tr><td colspan="6" class="px-3 py-6 text-center text-gray-400 text-sm">未找到匹配的修改日志</td></tr>';
       }
-      dBody.innerHTML = dh;
+      b.innerHTML = h;
+      renderAlogPager(total);
+    }
+    function viewModifyLog(i) {
+      var z = modifyLog[i];
+      if (!z) return;
+      document.getElementById('mlvCenter').textContent = z.center;
+      document.getElementById('mlvCode').textContent = z.code || '—';
+      document.getElementById('mlvOperator').textContent = z.operator;
+      document.getElementById('mlvTime').textContent = z.time;
+      document.getElementById('mlvAfter').textContent = z.after ? JSON.stringify(z.after, null, 2) : '（无）';
+      document.getElementById('mlvBefore').textContent = z.before ? JSON.stringify(z.before, null, 2) : '（无）';
+      document.getElementById('modifyLogViewModal').classList.remove('hidden');
+    }
+    function renderAllDeleteLog() {
+      var kw = document.getElementById('alDlName').value.trim().toLowerCase();
+      var codeKw = document.getElementById('alDlCode').value.trim().toLowerCase();
+      var fromV = document.getElementById('alDlFrom').value;
+      var toV = document.getElementById('alDlTo').value;
+      var reasonKw = document.getElementById('alDlReason').value;
+      var rows = [];
+      for (var d = 0; d < deleteLog.length; d++) {
+        var z = deleteLog[d];
+        if (kw && (z.center || '').toLowerCase().indexOf(kw) === -1) continue;
+        if (codeKw && (z.code || '').toLowerCase().indexOf(codeKw) === -1) continue;
+        if (reasonKw && z.reason !== reasonKw) continue;
+        if (fromV || toV) {
+          var t = new Date(z.time.replace(/\//g, '-'));
+          if (fromV && t < new Date(fromV)) continue;
+          if (toV && t > new Date(toV)) continue;
+        }
+        rows.push(z);
+      }
+      var st = alogPager.del;
+      var total = rows.length;
+      alogTotalCache.del = total;
+      var pageRows = rows.slice((st.page - 1) * st.size, st.page * st.size);
+      var b = document.getElementById('alDeleteBody');
+      var h = '';
+      if (total === 0) {
+        h = '<tr><td colspan="12" class="px-3 py-6 text-center text-gray-400 text-sm">暂无删除日志</td></tr>';
+      } else {
+        for (var j = 0; j < pageRows.length; j++) {
+          var zz = pageRows[j];
+          var seq = (st.page - 1) * st.size + j + 1;
+          h += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+            '<td class="px-3 py-2 text-[12px] text-center">' + seq + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-gray-800 font-medium">' + (zz.center || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.code || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.dept || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.pi || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.province || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.city || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-center">' + (zz.leader || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.reason || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.remark || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.time || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.operator || '—') + '</td>' +
+          '</tr>';
+        }
+        if (h === '') h = '<tr><td colspan="11" class="px-3 py-6 text-center text-gray-400 text-sm">未找到匹配的删除日志</td></tr>';
+      }
+      b.innerHTML = h;
+      renderAlogPager(total);
+    }
+    function renderAllTransferLog() {
+      var kw = document.getElementById('alTlPatient').value.trim().toLowerCase();
+      var fromKw = parseCenterName(document.getElementById('alTlFrom').value).toLowerCase();
+      var toKw = parseCenterName(document.getElementById('alTlTo').value).toLowerCase();
+      var fromCodeKw = document.getElementById('alTlFromCode').value.trim().toLowerCase();
+      var toCodeKw = document.getElementById('alTlToCode').value.trim().toLowerCase();
+      var reasonKw = document.getElementById('alTlReason').value.trim();
+      var ts = document.getElementById('alTlTimeStart').value;
+      var te = document.getElementById('alTlTimeEnd').value;
+      var rows = [];
+      for (var i = 0; i < transferLog.length; i++) {
+        var z = transferLog[i];
+        if (kw && (z.patient || '').toLowerCase().indexOf(kw) === -1) continue;
+        if (fromKw && (z.fromCenter || '').toLowerCase().indexOf(fromKw) === -1) continue;
+        if (toKw && (z.toCenter || '').toLowerCase().indexOf(toKw) === -1) continue;
+        if (fromCodeKw && (z.fromCode || '').toLowerCase().indexOf(fromCodeKw) === -1) continue;
+        if (toCodeKw && (z.toCode || '').toLowerCase().indexOf(toCodeKw) === -1) continue;
+        if (reasonKw && (z.reason || '—') !== reasonKw) continue;
+        if (ts || te) {
+          var t = (z.time || '').substring(0, 10);
+          if (ts && t < ts) continue;
+          if (te && t > te) continue;
+        }
+        rows.push(z);
+      }
+      var st = alogPager.transfer;
+      var total = rows.length;
+      alogTotalCache.transfer = total;
+      var pageRows = rows.slice((st.page - 1) * st.size, st.page * st.size);
+      var b = document.getElementById('alTransferBody');
+      var h = '';
+      if (total === 0) {
+        h = '<tr><td colspan="10" class="px-3 py-6 text-center text-gray-400 text-sm">暂无患者转移日志</td></tr>';
+      } else {
+        for (var j = 0; j < pageRows.length; j++) {
+          var zz = pageRows[j];
+          var seq = (st.page - 1) * st.size + j + 1;
+          h += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+          '<td class="px-3 py-2 text-[12px] text-center">' + seq + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.patient || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.fromCenter || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px] text-[#165DFF]">' + (zz.fromCode || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.toCenter || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px] text-[#165DFF]">' + (zz.toCode || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.reason || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.remark || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.time || '—') + '</td>' +
+          '<td class="px-3 py-2 text-[12px]">' + (zz.operator || '—') + '</td>' +
+          '</tr>';
+        }
+        if (h === '') h = '<tr><td colspan="10" class="px-3 py-6 text-center text-gray-400 text-sm">未找到匹配的患者转移日志</td></tr>';
+      }
+      b.innerHTML = h;
+      renderAlogPager(total);
+    }
+    function renderAllHandoverLog() {
+      var oldKw = document.getElementById('alHoOldName').value.trim().toLowerCase();
+      var newKw = document.getElementById('alHoNewName').value.trim().toLowerCase();
+      var fromKw = parseCenterName(document.getElementById('alHoFrom').value).toLowerCase();
+      var fromCodeKw = document.getElementById('alHoFromCode').value.trim().toLowerCase();
+      var toKw = parseCenterName(document.getElementById('alHoTo').value).toLowerCase();
+      var toCodeKw = document.getElementById('alHoToCode').value.trim().toLowerCase();
+      var reasonKw = document.getElementById('alHoReason').value.trim();
+      var ts = document.getElementById('alHoTimeStart').value;
+      var te = document.getElementById('alHoTimeEnd').value;
+      var rows = [];
+      for (var i = 0; i < handoverLog.length; i++) {
+        var z = handoverLog[i];
+        if (oldKw && (z.fromMember || '').toLowerCase().indexOf(oldKw) === -1) continue;
+        if (newKw && (z.toMember || '').toLowerCase().indexOf(newKw) === -1) continue;
+        if (fromKw && (z.fromCenter || '').toLowerCase().indexOf(fromKw) === -1) continue;
+        if (fromCodeKw && (z.fromCode || '').toLowerCase().indexOf(fromCodeKw) === -1) continue;
+        if (toKw && (z.toCenter || '').toLowerCase().indexOf(toKw) === -1) continue;
+        if (toCodeKw && (z.toCode || '').toLowerCase().indexOf(toCodeKw) === -1) continue;
+        if (reasonKw && (z.reason || '—').indexOf(reasonKw) === -1) continue;
+        if (ts || te) {
+          var t = (z.time || '').substring(0, 10).replace(/\//g, '-');
+          if (ts && t < ts) continue;
+          if (te && t > te) continue;
+        }
+        rows.push(z);
+      }
+      var st = alogPager.handover;
+      var total = rows.length;
+      alogTotalCache.handover = total;
+      var pageRows = rows.slice((st.page - 1) * st.size, st.page * st.size);
+      var b = document.getElementById('alHandoverBody');
+      var h = '';
+      if (total === 0) {
+        h = '<tr><td colspan="14" class="px-3 py-6 text-center text-gray-400 text-sm">暂无成员交接日志</td></tr>';
+      } else {
+        for (var j = 0; j < pageRows.length; j++) {
+          var zz = pageRows[j];
+          var seq = (st.page - 1) * st.size + j + 1;
+          h += '<tr class="border-b border-gray-100 hover:bg-gray-50">' +
+            '<td class="px-3 py-2 text-[12px] text-center">' + seq + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.time || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.fromMember || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.fromRole || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.fromCenter || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-[#165DFF]">' + (zz.fromCode || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.toMember || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.toRole || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.toCenter || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-[#165DFF]">' + (zz.toCode || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px] text-center">' + (zz.patientCount || 0) + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.reason || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.note || '—') + '</td>' +
+            '<td class="px-3 py-2 text-[12px]">' + (zz.operator || '—') + '</td>' +
+          '</tr>';
+        }
+        if (h === '') h = '<tr><td colspan="14" class="px-3 py-6 text-center text-gray-400 text-sm">未找到匹配的成员交接日志</td></tr>';
+      }
+      b.innerHTML = h;
+      renderAlogPager(total);
     }
 
+    // 初始化：填充中心联想下拉选项（中心号-中心名称）
+    (function fillCenterOptions() {
+      var dl = document.getElementById('centerOptions');
+      if (!dl) return;
+      var html = '';
+      for (var i = 0; i < allCenters.length; i++) {
+        var nm = allCenters[i];
+        var code = getCenterMeta(nm).code;
+        html += '<option value="' + (code ? (code + '-' + nm) : nm) + '"></option>';
+      }
+      dl.innerHTML = html;
+    })();
+    // 从「中心号-中心名称」输入值解析出中心名称
+    function parseCenterName(v) {
+      v = (v || '').trim();
+      if (!v) return '';
+      var idx = v.indexOf('-');
+      return idx !== -1 ? v.substring(idx + 1).trim() : v;
+    }
+    // 动态填充原因下拉：从数据去重 reason，保留当前选中值
+    function fillReasonSelect(selId, arr) {
+      var sel = document.getElementById(selId);
+      if (!sel) return;
+      var cur = sel.value;
+      var seen = {}, opts = ['<option value="">全部</option>'];
+      for (var i = 0; i < arr.length; i++) {
+        var r = arr[i].reason;
+        if (!r) continue;
+        if (seen[r]) continue;
+        seen[r] = true;
+        opts.push('<option value="' + r + '">' + r + '</option>');
+      }
+      sel.innerHTML = opts.join('');
+      sel.value = cur;
+    }
+
+    // 操作日志分页状态：每个 tab 独立的页码与每页条数
+    var alogPager = {
+      modify:   { page: 1, size: 10 },
+      del:      { page: 1, size: 10 },
+      transfer: { page: 1, size: 10 },
+      handover: { page: 1, size: 10 }
+    };
+    // 当前 tab 对应的分页 key 与渲染函数名
+    function alogCurrentKey() {
+      var map = { 'modify': 'modify', 'delete': 'del', 'transfer': 'transfer', 'handover': 'handover' };
+      return map[allLogTab] || 'modify';
+    }
+    // 通用分页器渲染：total 总条数
+    function renderAlogPager(total) {
+      var key = alogCurrentKey();
+      var st = alogPager[key];
+      var size = st.size;
+      var pages = Math.max(1, Math.ceil(total / size));
+      if (st.page > pages) st.page = pages;
+      if (st.page < 1) st.page = 1;
+      var start = (st.page - 1) * size + 1;
+      var end = Math.min(total, st.page * size);
+      var html = '<span class="text-gray-500">共 ' + total + ' 条' + (total > 0 ? ('，当前 ' + start + '-' + end) : '') + '</span>';
+      html += '<div class="flex items-center gap-2">';
+      html += '<select id="alogPageSize" onchange="alogChangeSize(this.value)" class="border border-gray-300 rounded px-2 py-1 text-gray-700">';
+      var sizes = [10, 20, 50];
+      for (var s = 0; s < sizes.length; s++) {
+        html += '<option value="' + sizes[s] + '"' + (size === sizes[s] ? ' selected' : '') + '>' + sizes[s] + '条/页</option>';
+      }
+      html += '</select>';
+      html += '<button onclick="alogGoto(' + (st.page - 1) + ')" class="px-2 py-1 border border-gray-300 rounded ' + (st.page <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100') + '"><i class="fas fa-chevron-left text-xs"></i></button>';
+      // 页码（最多显示首尾及当前页附近）
+      var pageList = buildPageList(st.page, pages);
+      for (var p = 0; p < pageList.length; p++) {
+        var pg = pageList[p];
+        if (pg === '...') {
+          html += '<span class="px-1 text-gray-400">…</span>';
+        } else {
+          html += '<button onclick="alogGoto(' + pg + ')" class="px-3 py-1 border rounded ' + (pg === st.page ? 'border-[#165DFF] bg-[#165DFF] text-white' : 'border-gray-300 text-gray-600 hover:bg-gray-100') + '">' + pg + '</button>';
+        }
+      }
+      html += '<button onclick="alogGoto(' + (st.page + 1) + ')" class="px-2 py-1 border border-gray-300 rounded ' + (st.page >= pages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100') + '"><i class="fas fa-chevron-right text-xs"></i></button>';
+      html += '<span class="text-gray-500 ml-1">前往</span>';
+      html += '<input id="alogGotoInput" type="text" value="' + st.page + '" class="border border-gray-300 rounded w-12 px-1 py-1 text-center" onkeydown="if(event.key===\'Enter\')alogGoto(parseInt(this.value)||1)">';
+      html += '<span class="text-gray-500">页</span>';
+      html += '</div>';
+      var box = document.getElementById('alogPager');
+      if (box) box.innerHTML = html;
+    }
+    function buildPageList(cur, total) {
+      if (total <= 7) {
+        var all = [];
+        for (var i = 1; i <= total; i++) all.push(i);
+        return all;
+      }
+      var list = [1];
+      var s = Math.max(2, cur - 1), e = Math.min(total - 1, cur + 1);
+      if (s > 2) list.push('...');
+      for (var i = s; i <= e; i++) list.push(i);
+      if (e < total - 1) list.push('...');
+      list.push(total);
+      return list;
+    }
+    function alogGoto(p) {
+      var key = alogCurrentKey();
+      var pages = Math.max(1, Math.ceil(alogTotalCache[key] / alogPager[key].size));
+      p = Math.max(1, Math.min(pages, p || 1));
+      alogPager[key].page = p;
+      alogRenderCurrent();
+    }
+
+    function alogChangeSize(v) {
+      var key = alogCurrentKey();
+      alogPager[key].size = parseInt(v) || 10;
+      alogPager[key].page = 1;
+      alogRenderCurrent();
+    }
+    // 各 tab 数据总数缓存（用于分页器计算）
+    var alogTotalCache = { modify: 0, del: 0, transfer: 0, handover: 0 };
+    // 根据当前 tab 调用对应渲染
+    function alogRenderCurrent() {
+      if (alogActiveTab === 'modify') renderAllModifyLog();
+      else if (alogActiveTab === 'delete') renderAllDeleteLog();
+      else if (alogActiveTab === 'transfer') renderAllTransferLog();
+      else if (alogActiveTab === 'handover') renderAllHandoverLog();
+    }
     // 初始化：根据当前数据刷新各中心删除徽标的可点击状态
     refreshCenterTable();
+    // 初始化：刷新各中心状态文字标签
+    if (typeof allCenters !== 'undefined') {
+      for (var ci = 0; ci < allCenters.length; ci++) renderCsLabel(allCenters[ci]);
+    }
   </script>
+
+  <!-- ===== 修改日志详情查看弹窗 ===== -->
+  <div id="modifyLogViewModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[120] hidden" onclick="if(event.target===this)closeModifyLogView()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">修改日志详情</h3>
+        <button onclick="closeModifyLogView()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+          <div><span class="text-gray-500">中心名称：</span><span id="mlvCenter" class="text-gray-800 font-medium"></span></div>
+          <div><span class="text-gray-500">中心号：</span><span id="mlvCode" class="text-[#165DFF]"></span></div>
+          <div><span class="text-gray-500">操作人：</span><span id="mlvOperator" class="text-gray-800"></span></div>
+          <div class="col-span-2"><span class="text-gray-500">操作时间：</span><span id="mlvTime" class="text-gray-800"></span></div>
+        </div>
+        <div>
+          <p class="text-[13px] font-semibold text-gray-700 mb-1.5">操作后内容</p>
+          <pre id="mlvAfter" class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-[12px] text-gray-700 whitespace-pre-wrap font-mono"></pre>
+        </div>
+        <div>
+          <p class="text-[13px] font-semibold text-gray-700 mb-1.5">修改前内容</p>
+          <pre id="mlvBefore" class="bg-gray-50 border border-gray-200 rounded-lg p-3 text-[12px] text-gray-700 whitespace-pre-wrap font-mono"></pre>
+        </div>
+      </div>
+      <div class="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeModifyLogView()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">关闭</button>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

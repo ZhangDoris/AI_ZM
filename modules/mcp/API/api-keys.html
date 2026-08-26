@@ -88,6 +88,8 @@
     .search-select { position: relative; }
     .search-select .search-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 34px 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; background: #fff; cursor: pointer; }
     .search-select .search-input:focus { border-color: #1872a7; }
+    .search-select .search-input:disabled { background: #f5f7fa; color: #c0c4cc; cursor: not-allowed; border-color: #e5e7eb; }
+    .search-select.is-disabled .search-arrow { color: #d1d5db; }
     .search-select .search-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; font-size: 12px; }
     .search-select .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.1); z-index: 10; display: none; }
     .search-select .search-dropdown.show { display: block; }
@@ -143,11 +145,21 @@
     <div class="filter-bar">
       <div class="filter-item">
         <label class="filter-label">项目编码</label>
-        <input type="text" class="form-input" id="filterProject" placeholder="请输入项目编码" />
+        <div class="search-select" id="filterProjectWrap">
+          <input type="text" class="search-input" id="filterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
+          <i class="fas fa-chevron-down search-arrow"></i>
+          <div class="search-dropdown" id="filterProjectDropdown"></div>
+          <input type="hidden" id="filterProjectValue" />
+        </div>
       </div>
       <div class="filter-item">
         <label class="filter-label">所属人员</label>
-        <input type="text" class="form-input" id="filterMember" placeholder="请输入所属人员" />
+        <div class="search-select" id="filterMemberWrap">
+          <input type="text" class="search-input" id="filterMember" placeholder="请先选择项目编码" autocomplete="off" disabled />
+          <i class="fas fa-chevron-down search-arrow"></i>
+          <div class="search-dropdown" id="filterMemberDropdown"></div>
+          <input type="hidden" id="filterMemberValue" />
+        </div>
       </div>
       <div class="filter-item">
         <label class="filter-label">接口名称</label>
@@ -265,12 +277,33 @@
       'file-rebuild': '文件页面重构'
     };
 
+    // 查询栏：项目编码可选项
+    const PROJECT_OPTIONS = ['PRJ-2023-0918', 'PRJ-2024-0312', 'PRJ-2025-1107'];
+
+    // 查询栏：项目编码 -> 所属人员 映射（选择项目编码后才可选项目人员）
+    const PROJECT_MEMBERS = {
+      'PRJ-2023-0918': [
+        { name: '张华', phone: '138****1234', role: '医学经理' },
+        { name: '李敏', phone: '139****5678', role: 'CRA' }
+      ],
+      'PRJ-2024-0312': [
+        { name: '李敏', phone: '139****5678', role: 'CRA' },
+        { name: '王强', phone: '137****9012', role: 'CRC' }
+      ],
+      'PRJ-2025-1107': [
+        { name: '王强', phone: '137****9012', role: 'CRC' },
+        { name: '张华', phone: '138****1234', role: '医学经理' }
+      ]
+    };
+    function memberLabel(o) { return `${o.name}-${o.phone}-${o.role}`; }
+
+    // 创建弹窗：人员可选项（不依赖项目编码）
     const MEMBER_OPTIONS = [
       { name: '张华', phone: '138****1234', role: '医学经理' },
       { name: '李敏', phone: '139****5678', role: 'CRA' },
       { name: '王强', phone: '137****9012', role: 'CRC' }
     ];
-    const MEMBER_LABELS = MEMBER_OPTIONS.map(o => `${o.name}-${o.phone}-${o.role}`);
+    const MEMBER_LABELS = MEMBER_OPTIONS.map(o => memberLabel(o));
 
     const KEYS = [
       { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', apis: ['patient-history', 'match-detail'], fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
@@ -291,8 +324,8 @@
     }
 
     function getFiltered() {
-      const fp = document.getElementById('filterProject').value.trim().toLowerCase();
-      const fm = document.getElementById('filterMember').value.trim().toLowerCase();
+      const fp = document.getElementById('filterProjectValue').value.trim().toLowerCase();
+      const fm = document.getElementById('filterMemberValue').value.trim().toLowerCase();
       const fa = document.getElementById('filterApi').value;
       return KEYS.filter(k => {
         if (fp && !k.project.toLowerCase().includes(fp)) return false;
@@ -365,8 +398,8 @@
     function queryKeys() { renderTable(); }
 
     function resetFilters() {
-      document.getElementById('filterProject').value = '';
-      document.getElementById('filterMember').value = '';
+      setFilterProject('');
+      setFilterMember('');
       document.getElementById('filterApi').value = '';
       currentPage = 1;
       renderTable();
@@ -759,9 +792,127 @@ POST https://api.ediyan.com/v1/file/rebuild
     });
 
     // 输入筛选即时过滤
-    ['filterProject','filterMember','filterApi'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => { currentPage = 1; renderTable(); });
+    ['filterApi'].forEach(id => {
+      document.getElementById(id).addEventListener('change', () => { currentPage = 1; renderTable(); });
     });
+
+    /* ===== 查询栏：项目编码搜索下拉（单选） ===== */
+    const filterProjectInput = document.getElementById('filterProject');
+    const filterProjectDropdown = document.getElementById('filterProjectDropdown');
+    const filterProjectWrap = document.getElementById('filterProjectWrap');
+
+    function renderFilterProjectOptions(keyword) {
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = PROJECT_OPTIONS.filter(p => p.toLowerCase().includes(kw));
+      if (list.length === 0) {
+        filterProjectDropdown.innerHTML = '<div class="search-empty">无匹配项目编码</div>';
+      } else {
+        filterProjectDropdown.innerHTML = list.map(p =>
+          `<div class="search-option" data-value="${p}">${p}</div>`
+        ).join('');
+      }
+    }
+
+    function setFilterProject(value) {
+      document.getElementById('filterProjectValue').value = value;
+      filterProjectInput.value = value;
+      filterProjectDropdown.classList.remove('show');
+      // 切换项目编码：清空所属人员，并联动启用/禁用
+      setFilterMember('');
+      if (value) {
+        filterMemberInput.disabled = false;
+        filterMemberWrap.classList.remove('is-disabled');
+        filterMemberInput.placeholder = '请选择或搜索所属人员';
+      } else {
+        filterMemberInput.disabled = true;
+        filterMemberWrap.classList.add('is-disabled');
+        filterMemberInput.placeholder = '请先选择项目编码';
+      }
+      currentPage = 1;
+      renderTable();
+    }
+
+    filterProjectInput.addEventListener('focus', () => {
+      renderFilterProjectOptions(filterProjectInput.value);
+      filterProjectDropdown.classList.add('show');
+    });
+    filterProjectInput.addEventListener('input', () => renderFilterProjectOptions(filterProjectInput.value));
+    filterProjectInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        const val = filterProjectInput.value.trim();
+        if (PROJECT_OPTIONS.includes(val)) setFilterProject(val);
+        else if (!document.getElementById('filterProjectValue').value) setFilterProject('');
+        else filterProjectInput.value = document.getElementById('filterProjectValue').value;
+        filterProjectDropdown.classList.remove('show');
+      }, 180);
+    });
+    filterProjectDropdown.addEventListener('mousedown', e => {
+      const option = e.target.closest('.search-option');
+      if (!option) return;
+      setFilterProject(option.dataset.value);
+    });
+    document.addEventListener('click', e => {
+      if (!filterProjectWrap.contains(e.target)) filterProjectDropdown.classList.remove('show');
+    });
+
+    /* ===== 查询栏：所属人员搜索下拉（单选，依赖项目编码） ===== */
+    const filterMemberInput = document.getElementById('filterMember');
+    const filterMemberDropdown = document.getElementById('filterMemberDropdown');
+    const filterMemberWrap = document.getElementById('filterMemberWrap');
+
+    function renderFilterMemberOptions(keyword) {
+      const project = document.getElementById('filterProjectValue').value;
+      if (!project) { filterMemberDropdown.innerHTML = '<div class="search-empty">请先选择项目编码</div>'; return; }
+      const members = PROJECT_MEMBERS[project] || [];
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = members.filter(o => memberLabel(o).toLowerCase().includes(kw));
+      if (list.length === 0) {
+        filterMemberDropdown.innerHTML = '<div class="search-empty">无匹配人员</div>';
+      } else {
+        filterMemberDropdown.innerHTML = list.map(o => {
+          const label = memberLabel(o);
+          return `<div class="search-option" data-value="${label}">${label}</div>`;
+        }).join('');
+      }
+    }
+
+    function setFilterMember(value) {
+      document.getElementById('filterMemberValue').value = value;
+      filterMemberInput.value = value;
+      filterMemberDropdown.classList.remove('show');
+      currentPage = 1;
+      renderTable();
+    }
+
+    filterMemberInput.addEventListener('focus', () => {
+      if (filterMemberInput.disabled) return;
+      renderFilterMemberOptions(filterMemberInput.value);
+      filterMemberDropdown.classList.add('show');
+    });
+    filterMemberInput.addEventListener('input', () => renderFilterMemberOptions(filterMemberInput.value));
+    filterMemberInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        const val = filterMemberInput.value.trim();
+        const project = document.getElementById('filterProjectValue').value;
+        const members = PROJECT_MEMBERS[project] || [];
+        if (members.some(o => memberLabel(o) === val)) setFilterMember(val);
+        else if (!document.getElementById('filterMemberValue').value) setFilterMember('');
+        else filterMemberInput.value = document.getElementById('filterMemberValue').value;
+        filterMemberDropdown.classList.remove('show');
+      }, 180);
+    });
+    filterMemberDropdown.addEventListener('mousedown', e => {
+      const option = e.target.closest('.search-option');
+      if (!option) return;
+      setFilterMember(option.dataset.value);
+    });
+    document.addEventListener('click', e => {
+      if (!filterMemberWrap.contains(e.target)) filterMemberDropdown.classList.remove('show');
+    });
+
+    // 初始：所属人员禁用（未选择项目编码）
+    filterMemberInput.disabled = true;
+    filterMemberWrap.classList.add('is-disabled');
 
     renderTable();
   </script>
