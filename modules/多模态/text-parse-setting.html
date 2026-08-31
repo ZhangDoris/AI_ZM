@@ -1,0 +1,300 @@
+<!--
+  多模态文字解析设置 原型说明
+  --------------------------------------------------------------------------
+  功能：在数据预筛项目中配置"文字解析"引擎。
+    · 多模态解析：利用多模态大模型直接理解图像内容，默认模型为「混元多模态」。
+    · 传统 OCR 解析：基于光学字符识别，可切换解析引擎，默认可选项为「华为」，
+      并额外提供「审核」能力（对识别结果做合规审核）。
+  使用方法：
+    · 左侧为设置主界面，右侧为功能说明文档（琥珀色区）。
+    · 鼠标悬停左侧元素（或右侧说明）时，对应 SVG 连线会高亮加粗。
+    · 手机端自动切换为上下布局，点击「切换视图」在"仅界面 / 界面+说明"间切换。
+  风格：参照 center-management / 页面版本配置（紫系 #5d58dc）
+  --------------------------------------------------------------------------
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多模态文字解析设置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    /* 主色：紫 #5d58dc；成功绿 #00B42A；错误红 #F53F3F */
+
+    /* ===== 布局 ===== */
+    #app { display: flex; height: calc(100vh - 56px); }
+    #leftPane { width: 82%; border-right: 1px solid #e5e7eb; overflow-y: auto; background: #FFFFFF; }
+    #rightPane { width: 18%; background: #FFF8E8; overflow-y: auto; padding: 20px 16px; }
+    #linkSvg { position: fixed; top: 56px; left: 0; width: 100%; height: calc(100vh - 56px); pointer-events: none; z-index: 30; }
+
+    /* 右侧说明区（紫系协调） */
+    .doc-card { background: #FFFCF3; border: 1px solid #FCE3A6; border-left: 3px solid #FAAD14; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; transition: all .15s; }
+    .doc-card h4 { color: #D48806; font-size: 13px; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .doc-card p { color: #614700; font-size: 12px; line-height: 1.65; margin: 0; }
+
+    /* 解析方式：药丸 chip 单选（参照截图） */
+    .parse-mode-row { display: flex; align-items: center; gap: 12px; }
+    .pm-chip { cursor: pointer; display: inline-flex; align-items: center; gap: 7px; padding: 8px 18px; border: 1.5px solid #ddd; border-radius: 999px; font-size: 13px; color: #666; background: #fff; transition: all .15s; user-select: none; }
+    .pm-chip:hover { border-color: #b3a9f5; color: #5d58dc; }
+    .pm-chip.active { border-color: #5d58dc; background: #5d58dc; color: #fff; box-shadow: 0 2px 8px rgba(93,88,220,.25); }
+    .pm-dot { width: 11px; height: 11px; border-radius: 50%; border: 2px solid currentColor; box-sizing: border-box; position: relative; flex-shrink: 0; }
+    .pm-chip.active .pm-dot::after { content:''; position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:4px;border-radius:50%;background:#fff;display:block; }
+
+    /* 模型单行按钮（参照截图） */
+    .model-btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mbtn { border: 1.5px solid #ddd; border-radius: 6px; padding: 8px 14px; font-size: 13px; color: #444; background: #fff; cursor: pointer; transition: all .12s; white-space: nowrap; }
+    .mbtn:hover { border-color: #b3a9f5; color: #5d58dc; background: #fafaff; }
+    .mbtn.active { border-color: #5d58dc; color: #5d58dc; background: #f7f6fd; font-weight: 600; box-shadow: 0 1px 6px rgba(93,88,220,.15); }
+
+    /* 表单字段标签 */
+    .field-label { font-size: 13px; color: #333; font-weight: 600; margin-bottom: 8px; display:flex; align-items:center; gap:6px; }
+    .field-label i { color: #5d58dc; }
+
+    /* 选择框/输入统一样式（圆角、聚焦紫） */
+    select, input[type=text] { width: 100%; border: 1px solid #d9d9d9; border-radius: 8px; padding: 10px 13px; font-size: 13px; color:#333; background:#fff; transition: all .15s; }
+    select:focus, input[type=text]:focus { outline: none; border-color: #5d58dc; box-shadow: 0 0 0 3px rgba(93,88,220,.12); }
+    .hint { font-size: 12px; color: #86909c; margin-top: 6px; line-height: 1.55; }
+    .readonly-value { font-size: 13px; color: #333; background: #f7f8fa; border: 1px solid #eee; border-radius: 8px; padding: 10px 13px; display: inline-block; font-weight: 600; }
+
+    /* 按钮（紫系主按钮 + 描边次按钮） */
+    .btn-primary { background:#5d58dc; color:#fff; padding:9px 22px; border-radius:8px; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .15s; display:inline-flex;align-items:center;gap:6px; }
+    .btn-primary:hover { background:#4f4ac4; box-shadow: 0 2px 10px rgba(93,88,220,.25); }
+    .btn-ghost { background:#fff; border:1px solid #d9d9d9; color:#666; padding:9px 22px; border-radius:8px; font-size:13px; cursor:pointer; transition:all .15s; }
+    .btn-ghost:hover { border-color:#5d58dc; color:#5d58dc; }
+
+    /* 标签 */
+    .badge-default { background:#eee9fe; color:#5d58dc; font-size:11px; padding:2px 9px; border-radius:4px; margin-left:8px; font-weight:600; letter-spacing:.3px; }
+    .tag-audit { background:#fff1f0; color:#f53f3f; font-size:11px; padding:2px 9px; border-radius:4px; font-weight:600; }
+
+    /* 配置区块容器（白底圆角卡片） */
+    .cfg-block { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 24px 26px; margin-bottom: 18px; box-shadow: 0 1px 4px rgba(0,0,0,.04); transition: all .15s; }
+    .cfg-block:hover { box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+
+    /* 复选框美化 */
+    input[type=checkbox] { accent-color: #5d58dc; width: 16px; height: 16px; cursor: pointer; }
+
+    /* 连线编号气泡 */
+    .link-num { font-size: 11px; fill: #5d58dc; font-weight: 700; }
+
+    /* 手机端 */
+    @media (max-width: 768px) {
+      #app { flex-direction: column; height: auto; }
+      #leftPane { width: 100%; border-right: none; }
+      #rightPane { width: 100%; display: none; }
+      #rightPane.show { display: block; }
+      #linkSvg { display: none !important; }
+      .mobile-show-doc { display: block !important; }
+      #mobileToggle { display: inline-flex !important; }
+    }
+    #mobileToggle { display: none; }
+    .mobile-show-doc { display: none; }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- 顶部导航 -->
+  <header class="bg-white border-b border-gray-200 h-14 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-[#5d58dc] rounded-lg flex items-center justify-center text-white">
+        <i class="fas fa-microchip text-sm"></i>
+      </div>
+      <span class="text-[15px] font-semibold text-gray-800">智能预筛 · 文字解析设置</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="mobileToggle" class="btn-ghost text-[12px] py-1 px-3"><i class="fas fa-columns mr-1"></i>切换视图</button>
+      <span class="text-[13px] text-gray-500 hidden sm:inline"><i class="fas fa-user-circle mr-1"></i>管理员</span>
+    </div>
+  </header>
+
+
+
+  <div id="app">
+    <!-- ============ 左侧：设置主界面 ============ -->
+    <div id="leftPane" class="p-6">
+      <div class="max-w-3xl mx-auto">
+
+        <!-- 标题区 -->
+        <div class="mb-7">
+          <h1 class="text-[19px] font-bold text-gray-800 mb-1">解析引擎配置</h1>
+        </div>
+
+        <!-- 解析方式选择（药丸 chip） -->
+        <div class="cfg-block" id="el-mode-box">
+          <div class="field-label mb-3" id="el-mode"><i class="far fa-check-circle"></i>解析方式</div>
+          <div class="parse-mode-row">
+            <label class="pm-chip active" data-val="multimodal" onclick="switchParseMode(this)">
+              <input type="radio" name="parseMode" value="multimodal" checked hidden>
+              <span class="pm-dot"></span>多模态解析
+            </label>
+            <label class="pm-chip" data-val="ocr" onclick="switchParseMode(this)">
+              <input type="radio" name="parseMode" value="ocr" hidden>
+              <span class="pm-dot"></span>传统 OCR 解析（仅支持“华为”）
+            </label>
+          </div>
+        </div>
+
+        <!-- 多模态：模型选择（单行按钮） -->
+        <div class="cfg-block" id="el-mm-model-box">
+          <div class="field-label mb-2" id="el-mm-model">选择模型</div>
+          <div class="model-btn-row">
+            <button type="button" class="mbtn active" data-model="qwen3-vl-32b-instruct">qwen3-vl-32b-instruct</button>
+           
+          </div>
+        </div>
+
+       
+
+        <!-- 操作按钮 -->
+        <div class="flex items-center gap-3 pt-1">
+          <span class="text-[12px] text-gray-400 mr-auto"><i class="fas fa-info-circle mr-1"></i>修改将于下次匹配任务生效</span>
+          <button class="btn-primary"><i class="fas fa-save mr-1"></i>保存设置</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ============ 右侧：功能说明 ============ -->
+    <div id="rightPane">
+      <div class="text-[12px] font-bold text-[#D48806] uppercase tracking-wide mb-3"><i class="fas fa-book-open mr-1"></i>功能说明</div>
+
+      <div class="doc-card" data-link="1">
+        <h4><span class="link-num">1</span> 解析方式</h4>
+        <p>系统支持两种文字解析路线：<b>多模态解析</b>（大模型理解图像）与<b>传统 OCR 解析</b>（光学识别）。默认启用多模态，可在两者间切换。</p>
+      </div>
+
+      <div class="doc-card" data-link="2">
+        <h4><span class="link-num">2</span> 多模态默认模型</h4>
+        <p>多模态解析默认采用「<b>混元多模态</b>」模型，具备更强的图文语义理解能力，用户也可按需切换到其他多模态大模型。</p>
+      </div>
+
+      <div class="doc-card" data-link="3">
+        <h4><span class="link-num">3</span> 传统 OCR 引擎</h4>
+        <p>传统 OCR 解析固定使用「<b>华为</b>」引擎，无需额外选择，开箱即用。</p>
+      </div>
+
+      <div class="doc-card" data-link="4">
+        <h4><span class="link-num">4</span> 识别后审核（可选）</h4>
+        <p>「<b>审核</b>」为可选能力，开启后会对 OCR 提取的文字进行合规与敏感信息校验，作为预筛质量的额外保障层。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ 解析方式切换（药丸 chip） ============
+    function switchParseMode(el) {
+      document.querySelectorAll('.pm-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      el.querySelector('input').checked = true;
+      const isMM = el.dataset.val === 'multimodal';
+      document.getElementById('el-mm-model-box').classList.toggle('hidden', !isMM);
+      document.getElementById('el-ocr-box').classList.toggle('hidden', isMM);
+      drawLinks();
+    }
+
+    // 模型按钮点击
+    let selectedModel = 'qwen3-vl-32b-instruct';
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('mbtn')) {
+        e.target.closest('.model-btn-row').querySelectorAll('.mbtn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedModel = e.target.dataset.model;
+      }
+    });
+
+    // ============ 手机端切换视图 ============
+    const mobileToggle = document.getElementById('mobileToggle');
+    const rightPane = document.getElementById('rightPane');
+    mobileToggle.addEventListener('click', () => {
+      rightPane.classList.toggle('show');
+    });
+
+    // ============ SVG 连线 ============
+    const svg = document.getElementById('linkSvg');
+    // left 元素 id -> 对应说明编号
+    const links = [
+      { from: 'el-mode',        num: 1 },
+      { from: 'el-mm-model',   num: 2 },
+      { from: 'el-ocr-engine', num: 3 },
+      { from: 'el-ocr-audit',  num: 4 },
+    ];
+
+    function getRightCard(num) {
+      return document.querySelector(`.doc-card[data-link="${num}"]`);
+    }
+
+    function drawLinks() {
+      if (window.innerWidth <= 768) { svg.innerHTML = ''; return; }
+      svg.innerHTML = '';
+      links.forEach(l => {
+        const from = document.getElementById(l.from);
+        const to = getRightCard(l.num);
+        if (!from || !to) return;
+        // 左侧元素若被隐藏（非当前模式）则跳过
+        if (from.offsetParent === null) return;
+
+        const fr = from.getBoundingClientRect();
+        const tr = to.getBoundingClientRect();
+        const svgTop = svg.getBoundingClientRect().top;
+
+        const x1 = fr.right;
+        const y1 = fr.top + fr.height / 2 - svgTop;
+        const x2 = tr.left;
+        const y2 = tr.top + tr.height / 2 - svgTop;
+
+        const cx = (x1 + x2) / 2;
+        const d = `M ${x1} ${y1} C ${cx} ${y1}, ${cx} ${y2}, ${x2} ${y2}`;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', '#5d58dc');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('data-num', l.num);
+        path.setAttribute('class', 'link-path');
+        path.style.opacity = '0.55';
+        path.style.transition = 'stroke-width .15s, opacity .15s';
+        svg.appendChild(path);
+
+        // 编号气泡（中点）
+        const mx = (x1 + cx) / 2 + 4;
+        const my = (y1 + y2) / 2 - 6;
+        const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', mx);
+        txt.setAttribute('y', my);
+        txt.setAttribute('class', 'link-num');
+        txt.textContent = l.num;
+        svg.appendChild(txt);
+      });
+    }
+
+    // ============ 高亮联动 ============
+    function highlight(num, on) {
+      const path = svg.querySelector(`path[data-num="${num}"]`);
+      const left = document.getElementById(links.find(l => l.num === num).from);
+      const right = getRightCard(num);
+      if (path) { path.setAttribute('stroke-width', on ? '4' : '2'); path.style.opacity = on ? '1' : '0.55'; }
+      if (left) left.classList.toggle('hl-target', on);
+      if (right) right.classList.toggle('hl', on);
+    }
+
+    links.forEach(l => {
+      const left = document.getElementById(l.from);
+      const right = getRightCard(l.num);
+      if (left) left.addEventListener('mouseenter', () => highlight(l.num, true));
+      if (left) left.addEventListener('mouseleave', () => highlight(l.num, false));
+      if (right) {
+        right.addEventListener('mouseenter', () => highlight(l.num, true));
+        right.addEventListener('mouseleave', () => highlight(l.num, false));
+      }
+    });
+
+    // ============ 初始化与重算 ============
+    window.addEventListener('DOMContentLoaded', drawLinks);
+    window.addEventListener('load', drawLinks);
+    window.addEventListener('resize', drawLinks);
+  </script>
+</body>
+</html>

@@ -1,0 +1,382 @@
+<!--
+  HYE--审核记录 · 手机端原型
+  功能：展示单条审核记录详情，含修改状态标签、字段对比
+  特点：手机端全屏、左上角返回、状态标签、重点关注列表
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>HYE--审核记录</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", sans-serif;
+      color: #1a1a1a;
+      background: #f5f7fa;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    .phone-frame {
+      width: 390px;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 420px) {
+      .phone-frame { width: 100%; }
+    }
+
+    /* ===== 顶部导航栏 ===== */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .nav-back {
+      font-size: 18px;
+      color: #333;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .nav-title {
+      flex: 1;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-right: 24px; /* 抵消返回按钮宽度居中 */
+    }
+
+    /* ===== 提交人信息区 ===== */
+    .submitter-section {
+      padding: 20px 16px 4px;
+    }
+
+    .submitter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .submitter-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .status-tag.pending {
+      background: #e6f7ff;
+      color: #1677ff;
+      border: 1px solid #91d5ff;
+    }
+
+    .submit-time {
+      font-size: 13px;
+      color: #999;
+    }
+
+    /* ===== 左侧时间轴 ===== */
+    .phone-frame {
+      position: relative;
+      padding-left: 28px;
+    }
+
+    .timeline-line {
+      position: absolute;
+      left: 12px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #e0e0e0;
+      z-index: 1;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -16px;
+      top: 26px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d0d0d0;
+      border: 2px solid #fff;
+      z-index: 2;
+    }
+
+    .submitter-section {
+      position: relative;
+    }
+
+    /* ===== 重点关注区 ===== */
+    .focus-section {
+      padding: 4px 16px 32px;
+    }
+
+    .focus-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 14px;
+    }
+
+    /* ===== 字段行 ===== */
+    .field-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 11px 0;
+      position: relative;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .field-row:last-child { border-bottom: none; }
+
+    /* 未修改小标签：置于每行右侧角落 */
+    .mod-tag {
+      position: absolute;
+      right: 0;
+      top: 11px;
+      font-size: 11px;
+      color: #bbb;
+      background: #f5f5f5;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 1px 6px;
+      line-height: 1.4;
+    }
+
+    /* 块级字段的标签放在值区域右上角 */
+    .field-block .mod-tag { top: 11px; }
+
+    /* 块级字段：label 整行，value 下方缩进 */
+    .field-block { flex-direction: column; align-items: stretch; }
+    .field-block .field-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      margin-bottom: 8px;
+    }
+    .field-block .field-status {
+      width: 52px;
+      flex-shrink: 0;
+    }
+    .field-block .field-label {
+      width: auto;
+      flex: 1;
+      line-height: 1.6;
+    }
+    .field-block .field-value {
+      padding-left: 0;
+      width: 100%;
+    }
+
+    .field-status {
+      flex-shrink: 0;
+      width: 52px;
+      font-size: 12px;
+      color: #bbb;
+      padding-top: 2px;
+    }
+    .field-status:empty { display: none; }
+
+    .field-label {
+      flex-shrink: 0;
+      width: 72px;
+      font-size: 14px;
+      color: #666;
+      padding-top: 1px;
+      line-height: 1.5;
+    }
+
+    .field-value {
+      flex: 1;
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.65;
+      word-break: break-all;
+    }
+
+    /* 值域内嵌套结构 */
+    .nested-item {
+      display: inline;
+    }
+
+    .nested-key {
+      color: #666;
+    }
+
+    .nested-val {
+      color: #1a1a1a;
+    }
+
+    /* 多值列表 */
+    .value-list {
+      list-style: none;
+      padding: 0;
+      margin: 4px 0 0;
+    }
+
+    .value-list li {
+      padding-left: 1em;
+      text-indent: -1em;
+      line-height: 1.75;
+      font-size: 14px;
+    }
+
+    .value-list li::before {
+      content: "·";
+      margin-right: 4px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+  <!-- 左侧时间轴线 -->
+  <div class="timeline-line"></div>
+
+  <!-- 顶部导航 -->
+  <div class="nav-bar">
+    <div class="nav-back" onclick="history.back()">
+      <i class="fa-solid fa-chevron-left"></i>
+    </div>
+    <div class="nav-title">HYE--审核记录</div>
+  </div>
+
+  <!-- 提交人信息 -->
+  <div class="submitter-section">
+    <div class="timeline-dot"></div>
+    <div class="submitter-row">
+      <span class="submitter-name">黄正&lt;临床协调员&gt;</span>
+      <span class="status-tag pending">发起</span>
+    </div>
+    <div class="submit-time">提交时间：2026-08-28 13:14:11</div>
+  </div>
+
+  <!-- 重点关注 -->
+  <div class="focus-section">
+    <h3 class="submit-time">重点关注：</h3>
+
+    <!-- 性别 -->
+    <div class="field-row">
+      <span class="mod-tag">未修改</span>
+      <span class="field-label">性别：</span>
+      <span class="field-value">女</span>
+    </div>
+
+    <!-- 年龄 -->
+    <div class="field-row">
+      <span class="mod-tag">未修改</span>
+      <span class="field-label">年龄：</span>
+      <span class="field-value">63周岁</span>
+    </div>
+<div class="field-row field-block">
+      <span class="mod-tag">未修改</span>
+            <div class="field-head">
+        <span class="field-label">身高：</span>     
+    </div>
+      <span class="field-value">150cm<span class="nested-item">（测量日期：2026-03-19）</span></span>
+    </div>
+ 
+<div class="field-row field-block">
+      <span class="mod-tag">未修改</span>
+            <div class="field-head">
+        <span class="field-label">体重：</span>     
+    </div>
+      <span class="field-value">87kg<span class="nested-item">（测量日期：2026-03-19）</span></span>
+    </div>
+    <!-- BMI -->
+ 
+<div class="field-row field-block">
+      <span class="mod-tag">未修改</span>
+            <div class="field-head">
+        <span class="field-label">BMI：</span>     
+    </div>
+      <span class="field-value">38.7 kg/m²，符合2型糖尿病标准（≥22 kg/m²）</span>
+    </div>
+    <!-- ASCVD -->
+
+    <div class="field-row field-block">
+      <span class="mod-tag">未修改</span>
+            <div class="field-head">
+        <span class="field-label">是否有ASCVD：</span>     
+    </div>
+      <span class="field-value"><span class="nested-key">有ASCVD事件</span>，<span class="nested-val">冠状动脉粥样硬化性心脏病</span></span>
+    </div>
+  
+
+    <!-- 入院记录疾病史（块级） -->
+    <div class="field-row field-block">
+      <span class="mod-tag">未修改</span>
+      <div class="field-head">
+        <span class="field-label">入院记录疾病史：</span>
+      </div>
+      <span class="field-value"><span class="nested-val">1. 复杂冠状动脉病变：- 冠脉造影结果：右冠优势型，RCA近中段完全闭塞，LAD近段60%狭窄，LCX近段40%狭窄</span></span>
+    </div>
+
+  </div><!-- /focus-section -->
+
+  <!-- ===== 第二条记录 ===== -->
+  <div class="submitter-section" style="border-top: 8px solid #f5f7fa;">
+    <div class="timeline-dot"></div>
+    <div class="submitter-row">
+      <span class="submitter-name">李启昱&lt;CRA专员&gt;</span>
+      <span class="status-tag pending">待审核</span>
+    </div>
+  </div>
+  <div class="focus-section">
+    <div class="field-row">
+      <span class="field-status"></span>
+      <span class="field-label">批注：</span>
+      <span class="field-value"></span>
+    </div>
+    <div class="field-row">
+      <span class="field-status"></span>
+      <span class="field-label">操作时间：</span>
+      <span class="field-value">2026-08-28 13:48:10</span>
+    </div>
+    <div class="field-row">
+      <span class="field-status"></span>
+      <span class="field-label">操作耗时：</span>
+      <span class="field-value"></span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

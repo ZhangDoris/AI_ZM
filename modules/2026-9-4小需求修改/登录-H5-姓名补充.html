@@ -1,0 +1,338 @@
+<!--
+  请完善个人信息 · 手机端原型
+  功能：演示首次登录后必须补充姓名才能进入系统
+  特点：手机端全屏、无关闭按钮、必填校验、保存后进入首页
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>请完善个人信息</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", sans-serif;
+      color: #1a1a1a;
+      background: #f5f7fa;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    /* 手机模拟器外框（PC 预览用） */
+    .phone-frame {
+      width: 390px;
+      max-width: 100%;
+      margin: 20px auto;
+      background: #fff;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      position: relative;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 420px) {
+      .phone-frame { width: 100%; margin: 0; }
+    }
+
+    /* ===== 头部图标区 ===== */
+    .header-icon-area {
+      text-align: center;
+      padding: 48px 24px 28px;
+      position: relative;
+    }
+
+    .header-icon-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fff7e6, #ffecd1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      color: #fa8c16;
+      box-shadow: 0 4px 18px rgba(250,140,22,.25);
+    }
+
+    /* ===== 标题区 ===== */
+    .form-title {
+      font-size: 21px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: center;
+      margin: 0 0 6px;
+      letter-spacing: .5px;
+    }
+
+    .form-subtitle {
+      font-size: 13.5px;
+      color: #999;
+      text-align: center;
+      margin: 0 0 32px;
+      line-height: 1.5;
+    }
+
+    /* ===== 表单区 ===== */
+    .form-body {
+      flex: 1 0 auto;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .field-label .required {
+      color: #f53f3f;
+      font-weight: 600;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 15px 16px;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #fafafa;
+      outline: none;
+      transition: all .2s ease;
+      -webkit-appearance: none;
+    }
+
+    .field-input:focus {
+      border-color: #1677ff;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(22,119,255,.10);
+    }
+
+    .field-input.error {
+      border-color: #f53f3f;
+      background: #fff1f0;
+      animation: shake .35s ease;
+    }
+
+    .field-input.readonly {
+      background: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      50% { transform: translateX(6px); }
+      75% { transform: translateX(-4px); }
+    }
+
+    .error-hint {
+      font-size: 12px;
+      color: #f53f3f;
+      margin-top: -4px;
+      padding-left: 2px;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .error-hint.show { opacity: 1; }
+
+    /* ===== 底部保存按钮（触底固定） ===== */
+    .save-bar {
+      padding: 16px 24px calc(16px + env(safe-area-inset-bottom));
+      background: #fff;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .btn-save {
+      width: 100%;
+      height: 50px;
+      border: none;
+      border-radius: 13px;
+      background: linear-gradient(135deg, #1677ff, #0958d9);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .25s ease;
+      box-shadow: 0 4px 14px rgba(22,119,255,.30);
+      letter-spacing: 1px;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .btn-save:hover {
+      background: linear-gradient(135deg, #0958d9, #003eb3);
+      box-shadow: 0 6px 20px rgba(22,119,255,.45);
+      transform: translateY(-1px);
+    }
+
+    .btn-save:active {
+      transform: translateY(0) scale(.99);
+      box-shadow: 0 2px 8px rgba(22,119,255,.25);
+    }
+
+    /* ===== 成功状态 ===== */
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,.95);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn .3s ease;
+    }
+
+    .success-overlay.show { display: flex; }
+
+    .success-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #52c41a, #389e0d);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(82,196,26,.35);
+      margin-bottom: 20px;
+      animation: popIn .4s cubic-bezier(.175,.885,.32,1.275) both;
+    }
+
+    .success-text {
+      font-size: 19px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+
+    .success-sub {
+      font-size: 14px;
+      color: #888;
+    }
+
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes popIn {
+      from { transform: scale(.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <!-- 头部图标 -->
+  <div class="header-icon-area">
+    <div class="header-icon-circle"><i class="fa-solid fa-user-pen"></i></div>
+  </div>
+
+  <!-- 标题 -->
+  <h1 class="form-title">请完善个人信息</h1>
+  <p class="form-subtitle">需补充姓名后才能使用系统</p>
+
+  <!-- 表单 -->
+  <div class="form-body">
+    <div class="field-group">
+      <label class="field-label"><span class="required">*</span> 姓名：</label>
+      <input id="userNameInput"
+             class="field-input"
+             type="text"
+             placeholder="请输入姓名"
+             autocomplete="off"
+             maxlength="20" />
+      <span class="error-hint" id="nameError">请输入您的姓名</span>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label"><span class="required">*</span> 手机号：</label>
+      <input id="userPhoneInput"
+             class="field-input readonly"
+             type="tel"
+             value="13243211234"
+             readonly />
+    </div>
+  </div>
+
+  <!-- 底部保存按钮 -->
+  <div class="save-bar">
+    <button class="btn-save" onclick="saveUserName()">
+      <i class="fa-solid fa-check"></i> 保存
+    </button>
+  </div>
+</div>
+
+<!-- 成功提示覆盖层 -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-icon"><i class="fa-solid fa-check"></i></div>
+  <p class="success-text">保存成功</p>
+  <p class="success-sub">正在进入首页…</p>
+</div>
+
+<script>
+  const nameInput = document.getElementById('userNameInput');
+  const nameError = document.getElementById('nameError');
+
+  // 输入时清除错误态
+  nameInput.addEventListener('input', function() {
+    this.classList.remove('error');
+    nameError.classList.remove('show');
+  });
+
+  function saveUserName() {
+    const name = nameInput.value.trim();
+
+    if (!name) {
+      // 校验失败：标红 + 抖动 + 显示提示
+      nameInput.classList.add('error');
+      nameError.classList.add('show');
+      nameInput.focus();
+      return;
+    }
+
+    // 模拟保存
+    const btn = document.querySelector('.btn-save');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中…';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '.75';
+
+    setTimeout(function() {
+      // 显示成功
+      document.getElementById('successOverlay').classList.add('show');
+    }, 800);
+
+    setTimeout(function() {
+      // 跳转首页（实际项目中跳转）
+      location.href = './登录-H5.html';
+    }, 2200);
+  }
+</script>
+
+</body>
+</html>

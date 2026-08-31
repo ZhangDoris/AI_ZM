@@ -179,25 +179,13 @@
       </button>
     </div>
 
-    <!-- 成员列表表格 -->
-    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <table class="data-table w-full text-[13px]">
-        <thead>
-          <tr>
-            <th class="px-3 py-2.5 text-center w-10"><input type="checkbox" class="rounded"></th>
-            <th class="px-3 py-2.5 text-left">姓名</th>
-            <th class="px-3 py-2.5 text-left">角色</th>
-            <th class="px-3 py-2.5 text-left">负责中心</th>
-            <th class="px-3 py-2.5 text-left">仅查看授权中心</th>
-            <th class="px-3 py-2.5 text-left">手机号</th>
-            <th class="px-3 py-2.5 text-left">状态</th>
-            <th class="px-3 py-2.5 text-center">操作</th>
-          </tr>
-        </thead>
-        <tbody id="memberTableBody"></tbody>
-      </table>
+    <!-- 成员卡片列表 -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div id="memberList" class="space-y-3"></div>
+      <!-- 空状态 -->
+      <div id="memberEmpty" class="hidden py-12 text-center text-gray-400 text-sm">未找到匹配的成员</div>
       <!-- 分页 -->
-      <div class="flex items-center justify-between px-4 py-2.5 border-t border-gray-200">
+      <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
         <span class="text-[12px] text-gray-500" id="totalCount">共 0 条</span>
         <div class="flex items-center gap-1">
           <select class="border border-gray-300 rounded px-2 py-1 text-[12px] text-gray-600">
@@ -820,10 +808,19 @@
       });
     }
 
-    function renderMemberTable() {
+    function renderMemberList() {
       var list = getFilteredMembers();
       document.getElementById('totalCount').textContent = '共 ' + list.length + ' 条';
-      var html = '';
+      var container = document.getElementById('memberList');
+      var empty = document.getElementById('memberEmpty');
+      container.innerHTML = '';
+
+      if (list.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
       for (var i = 0; i < list.length; i++) {
         var m = list[i];
         var status = m.status || '启用';
@@ -839,79 +836,84 @@
         // 当前搜索关键词（用于搜索时全展开 + 高亮）
         var curFc = (document.getElementById('filterCenter').value || '').trim().toLowerCase();
 
-        // 负责中心：行内紧凑展示（少量全列，多量显示前N个+展开剩余）
+        // 负责中心：始终全量展示，搜索关键词传入以高亮匹配项
         var cCount = m.centers ? m.centers.length : 0;
         var centerHtml = '';
         if (cCount === 0) {
           centerHtml = '<span class="text-gray-300">-</span>';
-        } else if (curFc && cCount > 4) {
-          // 搜索状态下：全部展开并高亮匹配项
-          centerHtml = renderInlineCenters(m.centers, false, m.id, 'centers', 0, curFc);
-        } else if (cCount <= 4) {
-          // 少量中心：直接展示标签
-          centerHtml = renderInlineCenters(m.centers, false, m.id, 'centers');
         } else {
-          // 多中心：显示前3个 + "共N个"展开按钮
-          var showList = m.centers.slice(0, 3);
-          var restCount = cCount - 3;
-          centerHtml = renderInlineCenters(showList, true, m.id, 'centers', restCount);
+          centerHtml = renderInlineCenters(m.centers, false, m.id, 'centers', 0, curFc);
         }
-        // 仅查看授权中心
+
+        // 仅查看授权中心：始终全量展示，搜索关键词传入以高亮匹配项
         var hasView = m.viewCenters && m.viewCenters.length && m.viewCenters[0] !== '-';
         var vCount = hasView ? m.viewCenters.length : 0;
         var viewHtml = '';
         if (!hasView) {
           viewHtml = '<span class="text-gray-300">-</span>';
-        } else if (curFc && vCount > 4) {
-          viewHtml = renderInlineCenters(m.viewCenters, false, m.id, 'viewCenters', 0, curFc);
-        } else if (vCount <= 4) {
-          viewHtml = renderInlineCenters(m.viewCenters, false, m.id, 'viewCenters');
         } else {
-          var vShowList = m.viewCenters.slice(0, 3);
-          var vRestCount = vCount - 3;
-          viewHtml = renderInlineCenters(vShowList, true, m.id, 'viewCenters', vRestCount);
+          viewHtml = renderInlineCenters(m.viewCenters, false, m.id, 'viewCenters', 0, curFc);
         }
 
-        html += '<tr>';
-        html += '<td class="px-3 py-2.5 text-center"><input type="checkbox" class="rounded"></td>';
-        html += '<td class="px-3 py-2.5 font-medium text-gray-800">' + m.name + '</td>';
-        html += '<td class="px-3 py-2.5 text-gray-600">' + m.role + '</td>';
-        html += '<td class="px-3 py-2.5 max-w-lg">' + centerHtml + '</td>';
-        html += '<td class="px-3 py-2.5 max-w-[180px]">' + viewHtml + '</td>';
-        html += '<td class="px-3 py-2.5 text-gray-600">' + m.phone + '</td>';
-        html += '<td class="px-3 py-2.5 text-center">' + statusTag + '</td>';
-        html += '<td class="px-3 py-2.5 text-center whitespace-nowrap">';
-        html += '<a class="text-[#165DFF] text-[13px] cursor-pointer" onclick="openEditMember(\'' + m.id + '\')">编辑</a>';
+        // 操作按钮
+        var actionHtml = '';
+        actionHtml += '<button class="px-3 py-1 text-[13px] text-[#165DFF] hover:bg-blue-50 rounded transition" onclick="openEditMember(\'' + m.id + '\')">编辑</button>';
 
         if (status === '启用') {
-          // 停用时若有患者必须先交接
-          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openHandover(\'' + m.id + '\')">停用</a>';
-         html += '<a class="text-[#165DFF] text-[13px] cursor-pointer ml-2" onclick="openMemberPatient(\'' + m.id + '\')">患者交接</a>';
-
+          actionHtml += '<button class="px-3 py-1 text-[13px] text-red-500 hover:bg-red-50 rounded transition" onclick="openHandover(\'' + m.id + '\')">停用</button>';
+          actionHtml += '<button class="px-3 py-1 text-[13px] text-[#165DFF] hover:bg-blue-50 rounded transition" onclick="openMemberPatient(\'' + m.id + '\')">患者交接</button>';
         } else {
-          html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="enableMember(\'' + m.id + '\')">启用</a>';
+          actionHtml += '<button class="px-3 py-1 text-[13px] text-green-600 hover:bg-green-50 rounded transition" onclick="enableMember(\'' + m.id + '\')">启用</button>';
         }
 
-        // 删除：无患者=红色可点，有患者=灰色不可点
         if (hasPatient) {
-          html += '<a class="text-gray-400 text-[13px] cursor-not-allowed ml-2" title="该成员名下有患者，不可删除，请先停用并交接">删除（' + patCount + '）</a>';
+          actionHtml += '<button class="px-3 py-1 text-[13px] text-gray-300 cursor-not-allowed" title="该成员名下有患者，不可删除，请先停用并交接">删除（' + patCount + '）</button>';
         } else {
-          html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openDelete(\'' + m.id + '\')">删除（' + patCount + '）</a>';
+          actionHtml += '<button class="px-3 py-1 text-[13px] text-red-500 hover:bg-red-50 rounded transition" onclick="openDelete(\'' + m.id + '\')">删除（' + patCount + '）</button>';
         }
-        html += '</td></tr>';
+
+        var avatar = '<div class="w-10 h-10 rounded-full bg-blue-50 text-[#165DFF] flex items-center justify-center text-[15px] font-medium shrink-0">' + escapeHtml(m.name.charAt(0)) + '</div>';
+
+        // 中心区块：空数据时不显示标题行，减少留白
+        var centerBlock = '';
+        if (centerHtml.indexOf('text-gray-300') === -1) {
+          centerBlock = '<div class="mt-2"><span class="text-[12px] text-gray-400 mr-1">负责中心</span>' + centerHtml + '</div>';
+        }
+        var viewBlock = '';
+        if (viewHtml.indexOf('text-gray-300') === -1) {
+          viewBlock = '<div class="mt-1"><span class="text-[12px] text-gray-400 mr-1">仅查看</span>' + viewHtml + '</div>';
+        }
+
+        var card = document.createElement('div');
+        card.className = 'member-card bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition';
+        card.innerHTML =
+          '<div class="flex items-start gap-4">' +
+            '<input type="checkbox" class="mt-2.5 rounded cursor-pointer">' +
+            avatar +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="flex flex-col gap-2">' +
+                '<div class="flex items-center gap-3 flex-wrap">' +
+                  '<span class="font-semibold text-gray-800 text-[15px]">' + escapeHtml(m.name) + '</span>' +
+                  '<span class="text-[12px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded">' + escapeHtml(m.role) + '</span>' +
+                  statusTag +
+                  '<span class="text-[13px] text-gray-600"><i class="fas fa-phone text-gray-300 text-xs mr-1"></i>' + escapeHtml(m.phone) + '</span>' +
+                  '<div class="flex items-center flex-wrap gap-1 shrink-0 ml-auto">' + actionHtml + '</div>' +
+                '</div>' +
+                centerBlock +
+                viewBlock +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        container.appendChild(card);
       }
-      if (list.length === 0) {
-        html = '<tr><td colspan="8" class="px-3 py-8 text-center text-gray-400 text-sm">未找到匹配的成员</td></tr>';
-      }
-      document.getElementById('memberTableBody').innerHTML = html;
     }
 
-    function doSearch() { renderMemberTable(); showToast('查询完成'); }
+    function doSearch() { renderMemberList(); showToast('查询完成'); }
     function doReset() {
       document.getElementById('filterCenter').value = '';
       document.getElementById('filterRole').value = '';
       document.getElementById('filterName').value = '';
-      renderMemberTable();
+      renderMemberList();
       showToast('已重置筛选条件');
     }
 
@@ -1272,7 +1274,7 @@
         showToast('新增成员成功！');
       }
       closeModal('memberFormModal');
-      renderMemberTable();
+      renderMemberList();
     }
 
     // ========== 成员患者管理（交接） ==========
@@ -1422,7 +1424,7 @@
       }
       closeMpSingleHo();
       renderMpTable();
-      renderMemberTable();
+      renderMemberList();
       showToast('已将该患者交接给「' + sel.value + '」');
     }
 
@@ -1473,7 +1475,7 @@
       list.forEach(function(p) { var idx = patients.indexOf(p); if (idx > -1) patients.splice(idx, 1); });
       closeMpBatchHo();
       renderMpTable();
-      renderMemberTable();
+      renderMemberList();
       showToast('已交接 ' + list.length + ' 名患者给「' + toName + '」');
     }
 
@@ -1500,7 +1502,7 @@
         // 无在管患者：直接停用，不弹窗
         m.status = '停用';
         showToast('成员「' + m.name + '」已停用');
-        renderMemberTable();
+        renderMemberList();
       } catch (err) {
         alert('openHandover 出错：' + (err && err.message ? err.message : err));
       }
@@ -1594,7 +1596,7 @@
       }
       m.status = '停用';
       closeHandover();
-      renderMemberTable();
+      renderMemberList();
     }
 
     // ========== 启用 ==========
@@ -1603,7 +1605,7 @@
       if (!m) return;
       m.status = '启用';
       showToast('成员「' + m.name + '」已启用');
-      renderMemberTable();
+      renderMemberList();
     }
 
     // ========== 删除（校验患者） ==========
@@ -1627,7 +1629,7 @@
       if (m && patientData[m.name]) patientData[m.name] = [];
       deleteMemberId = null;
       closeModal('deleteConfirmModal');
-      renderMemberTable();
+      renderMemberList();
       showToast('成员已删除');
     }
 
@@ -1786,7 +1788,7 @@
         }
         setImportLoading(false);
         if (failCount === 0) {
-          renderMemberTable();
+          renderMemberList();
           closeImportModal();
           showToast('数据导入成功，共 ' + successCount + ' 条。');
           return;
@@ -1868,7 +1870,7 @@
     }
 
     // ========== 初始化 ==========
-    document.addEventListener('DOMContentLoaded', function() { renderMemberTable(); });
+    document.addEventListener('DOMContentLoaded', function() { renderMemberList(); });
   </script>
 </body>
 </html>

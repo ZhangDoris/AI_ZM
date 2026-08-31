@@ -788,7 +788,7 @@
       <div class="float-action-bar" id="floatActionBar" style="display:none;">
         <button class="float-btn float-btn-blue" onclick="openAuditRecordModal()"> 审核</button>
         <button class="float-btn float-btn-blue" onclick="openAuditRecordModal()">审核记录</button>
-        <button class="float-btn float-btn-blue" onclick="openMyRemarkApp()"> 我的批注</button>
+        <button class="float-btn float-btn-blue" onclick="openMyRemarkApp()"> 我的批注<span class="ar-myremark-badge" id="floatMyRemarkBadge">2</span></button>
       </div>
 
     </div>
@@ -1095,7 +1095,8 @@
     }
 
     function openH5Detail() {
-      const no = h5SelectedNo || (AUDIT_DATA.pending[0] && AUDIT_DATA.pending[0].patientNo);
+      // 优先用选中的卡片；否则回退到有匹配详情数据的「预提交9」（原型演示）
+      const no = h5SelectedNo || (AUDIT_DATA.pending.find(x => MATCH_DETAIL[x.patientNo]) && AUDIT_DATA.pending.find(x => MATCH_DETAIL[x.patientNo]).patientNo) || '预提交9';
       if (!no) { alert('请先选择一条记录'); return; }
       openDetail(no);
     }
@@ -1505,12 +1506,12 @@
       const ta = document.getElementById('arRemarkTextarea');
       if (ta) ta.value = '';
       updateArCharCount();
-      // 更新我的批注数量徽章
+      // 更新我的批注数量徽章（弹窗内 + 底部浮动栏同步）
+      const count = personalRemarksApp.filter(r => r.mine).length;
       const badge = document.getElementById('arMyRemarkBadge');
-      if (badge) {
-        const count = personalRemarksApp.filter(r => r.mine).length;
-        badge.textContent = count;
-      }
+      if (badge) badge.textContent = count;
+      const floatBadge = document.getElementById('floatMyRemarkBadge');
+      if (floatBadge) floatBadge.textContent = count;
     }
     function closeAuditRecordModal() {
       document.getElementById('auditRecordModal').classList.remove('open');
