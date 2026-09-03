@@ -1684,6 +1684,37 @@
     .sub-remark-del:hover { text-decoration: underline; }
     .config-action { color: #1677ff; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 4px; }
     .config-action:hover { text-decoration: underline; }
+
+    /* 引用提取配置明细 - 按阶段备注卡片效果 */
+    .ref-table .sub-remark-title { display: block; }
+    .ref-table .sub-remark-title-box {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #f0f7ff; border: 1px solid #e0ecff; border-left: 3px solid #1677ff;
+      border-radius: 8px;
+      font-size: 13px; color: #1677ff; font-weight: 600;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .ref-table .sub-remark-title:hover .sub-remark-title-box { background: #e6f1ff; border-color: #c2dfff; }
+    .ref-table .sub-remark-title.expanded .sub-remark-title-box { background: #e6f1ff; border-color: #91caff; }
+    .ref-table .sub-remark-title .sub-remark-toggle { color: #1677ff; margin-left: auto; font-size: 11px; }
+    .ref-table .sub-remark-body-wrap {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.25s ease, opacity 0.2s ease, padding 0.2s ease;
+      padding-top: 0;
+    }
+    .ref-table .sub-remark-title.expanded + .sub-remark-body-wrap,
+    .ref-table .sub-remark-body-wrap.expanded {
+      max-height: 800px; opacity: 1; padding-top: 10px;
+    }
+    .ref-table .sub-remark-empty {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 24px; color: #999; font-size: 13px;
+      background: #fafbff; border: 1px dashed #e0ecff; border-radius: 8px; margin-top: 8px;
+      text-align: center;
+    }
+
     .criteria-version-tabs .cvs-edit-btn {
       display: inline-flex; align-items: center; justify-content: center;
       width: 28px; height: 28px; border-radius: 6px;
@@ -1810,10 +1841,14 @@
     .tc-view-stage { margin-bottom: 16px; border: 1px solid #eef0f4; border-radius: 8px; overflow: hidden; background: #fbfcfe; }
     .tc-view-stage-name { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: linear-gradient(90deg,#eef4ff,#f6f9ff); border-bottom: 1px solid #e6efff; font-size: 13px; font-weight: 600; color: #1677ff; }
     .tc-view-stage-count { font-size: 12px; color: #888; font-weight: 500; }
-    .tc-view-step { display: flex; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f2f4f8; }
+    .tc-view-step { display: flex; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #f2f4f8; }
     .tc-view-step:last-child { border-bottom: none; }
-    .tc-view-step-idx { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: #1677ff; background: #eef4ff; border-radius: 6px; padding: 3px 8px; height: fit-content; }
-    .tc-view-step-content { font-size: 13px; color: #444; line-height: 1.7; }
+    .tc-view-step-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; background: #1677ff; margin-top: 6px; position: relative; }
+    .tc-view-step-dot::after { content: ''; position: absolute; left: 50%; top: 14px; transform: translateX(-50%); width: 2px; height: 32px; background: #d6e4ff; }
+    .tc-view-step:last-child .tc-view-step-dot::after { display: none; }
+    .tc-view-step-main { flex: 1 1 auto; min-width: 0; }
+    .tc-view-step-idx { display: inline-block; font-size: 12px; font-weight: 600; color: #1677ff; background: #eef4ff; border-radius: 6px; padding: 3px 8px; margin-bottom: 6px; }
+    .tc-view-step-content { font-size: 13px; color: #444; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
     .tc-view-empty { padding: 14px; font-size: 12px; color: #999; }
     /* 编辑弹窗：思考链步骤 */
     .tc-edit-type-tabs { display: flex; gap: 8px; margin: 6px 0 10px; }
@@ -3377,7 +3412,7 @@
     .proj-criteria-table .action-row { display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
     .proj-criteria-table .action-row:first-child { margin-top: 0; }
     .proj-criteria-table .config-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
-    .proj-criteria-table .config-action .think-badge { background: #fa8c16; color: #fff; font-size: 10px; font-style: normal; padding: 0 5px; border-radius: 8px; margin-left: 4px; line-height: 14px; }
+    .proj-criteria-table .config-action .think-badge { font-style: normal; color: #ff4d4f; font-size: 12px; margin-left: 2px; line-height: 1; background: none; padding: 0; border-radius: 0; }
     .proj-criteria-table .delete-action { color: #ff4d4f; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; border: 1px solid #ffccc7; background: #fff1f0; }
     .proj-criteria-table .delete-action:hover { background: #ffccc7; }
     .proj-criteria-table .add-action { color: #1677ff; cursor: pointer; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 6px; height: 24px; border-radius: 4px; border: 1px dashed #91caff; background: #f0f7ff; }
@@ -7253,7 +7288,6 @@ function buildDetailContent(row) {
         </div>
         <div style="padding:12px 20px">
           <label style="font-weight:600;font-size:12px;color:#555">备注：</label>
-          <textarea disabled style="margin-top:6px">内容由AI生成，仅供参考，请谨慎鉴别</textarea>
         </div>
       </div>
     </div>
@@ -7664,7 +7698,7 @@ function updatePRDPanel(mod, sub, targetId) {
              <li><strong>匹配详情</strong>：入组阶段和预筛阶段写死的地方，需要根据项目配置 修改，匹配详情中可以查看患者基本信息和 病史与资料</li>
             <li><strong>审批记录 和邮件记录页面也需要修改</strong>：需要展示项目配置的阶段，之前是写死的</li>
              <li><strong>编辑页面</strong>：所有 时候 都展示  筛选号和知情时间，不需要隐藏，只有必填校验  ，跟项目配置保持一致，项目配置在哪个阶段是必填，就必须填写</li>
-      <li >提交审核的检测阶段是否匹配的文案修改：「检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交」 改成  “检测到您已跨阶段，匹配成功后系统将自动为您提交。”。</li>
+      <li >提交审核的检测阶段是否匹配的文案修改：「检测到您已跨阶段，需要进行入组匹配，匹配成功后系统会自动帮您提交」 改成  "检测到您已跨阶段，匹配成功后系统将自动为您提交。"。</li>
 
              </ul>`
         },
@@ -7682,15 +7716,15 @@ function updatePRDPanel(mod, sub, targetId) {
           title: '★ 修改点③ 项目中配置（本次修改）',
           content: `<ul class="prd-list">
              <li><strong>页面右侧加了页面导航：点击对应的导航，左侧内容需要到对应的区域</strong></li>
-             <li><strong>项目管理的列表上加了 “页面版本”按钮</strong></li>
+             <li><strong>项目管理的列表上加了 "页面版本"按钮</strong></li>
              <li><strong>功能优化： 1. 思考链 跟入排和筛选表绑定， 入排和筛选表在哪个阶段启用，就需要在不同阶段显示不同的思考链；2. 流程模板 删除判断的时候，加一个  删除的条件，只判断有效的患者数据是否启用，删除了的不算在内;3. 入排 隐藏版本号，版本名称不能重复；4. 思考链 选择入排版本的时候去掉版本号</strong></li>
             <li><strong>审批阶段设置（没选中审批阶段的时候，下面的 模块都是收缩起来的，点击收缩 会有对应的效果）</strong>：
               <ul><li>项目编辑/新建页新增「审批阶段设置」模块：始终可以编辑</li>
              
                 阶段增删规则：</li><li>
-                可选范围：仅允许选择「系统管理 → 审批阶段配置」中状态为“已启用”的阶段。</li><li>
+                可选范围：仅允许选择「系统管理 → 审批阶段配置」中状态为"已启用"的阶段。</li><li>
                 不可删除/取消勾选的条件（满足任一即锁定）：</li><li>
-                该阶段在下方列表中已处于“启用”状态。</li><li>
+                该阶段在下方列表中已处于"启用"状态。</li><li>
                 项目级自定义：支持在项目级别定义特殊阶段，该配置仅对当前项目生效，不同步保存至系统全局模板。</li>
                  顺序调整：<ul><li>
                1.  默认阶段顺序继承自系统模板。</li><li>
@@ -10174,7 +10208,7 @@ const _emailRecordsData = {
       { sendTime:'2026-07-10 14:32:15', sender:'刘雪红', recipient:'研究者A', cc:'CRA专员188', subject:'预筛审核通知 - ZWMS', status:'已发送', statusClass:'green' },
       { sendTime:'2026-07-09 09:18:42', sender:'系统', recipient:'刘雪红', cc:'-', subject:'预筛资料补充提醒', status:'已保存', statusClass:'gray' }
     ],
-    ST03: [
+    入组阶段: [
       { sendTime:'2026-07-12 11:05:33', sender:'刘雪红', recipient:'研究者A', cc:'CRC专员', subject:'入组确认邮件 - ZWMS', status:'已发送', statusClass:'green' }
     ]
   },
@@ -10236,7 +10270,7 @@ function closeEmailDrawer() {
 let _stageConfigData = [
   { id:'ST01', name:'预筛阶段', order:1, color:'#1677ff', auditTypes:['预筛审批','主知情审批'], status:'enabled', remark:'患者筛选与初步资格判定阶段', updater:'张管理', time:'2026-06-22 10:30' },
   { id:'ST02', name:'筛选阶段', order:2, color:'#722ed1', auditTypes:['筛选审批','导入审批'], status:'enabled', remark:'正式筛选入组资格阶段', updater:'李明', time:'2026-06-18 14:20' },
-  { id:'ST03', name:'入组阶段', order:3, color:'#52c41a', auditTypes:['入组审批'], status:'enabled', remark:'患者入组确认阶段', updater:'张管理', time:'2026-06-15 09:15' },
+  { id:'入组阶段', name:'入组阶段', order:3, color:'#52c41a', auditTypes:['入组审批'], status:'enabled', remark:'患者入组确认阶段', updater:'张管理', time:'2026-06-15 09:15' },
 ];
 // 新增阶段时默认选中的颜色（在 renderProjectStageSettings 中按未占用色刷新）
 let _addStageSelColor = '#1677ff';
@@ -14609,39 +14643,39 @@ const _defaultProjectCriteriaData = {
   'v2.0': {
     inclusionWeight:50, exclusionWeight:50,
     inclusion: [
-      { id:'I01', content:'年龄≥18周岁且≤75周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I04', content:'ECOG体力状况评分0或1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I06', content:'主要器官功能基本正常', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+      { id:'I01', content:'年龄≥18周岁且≤75周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I04', content:'ECOG体力状况评分0或1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I06', content:'主要器官功能基本正常', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } }
     ],
     exclusion: [
-      { id:'E01', content:'既往接受过抗HER2靶向治疗（辅助治疗除外）', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E07', content:'研究者判断不适合参加本研究的其他情况', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+      { id:'E01', content:'既往接受过抗HER2靶向治疗（辅助治疗除外）', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E07', content:'研究者判断不适合参加本研究的其他情况', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } }
     ]
   },
   'v1.0': {
     inclusionWeight:50, exclusionWeight:50,
     inclusion: [
-      { id:'I01', content:'年龄≥18周岁且≤70周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I02', content:'经组织学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I04', content:'ECOG体力状况评分0-1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+      { id:'I01', content:'年龄≥18周岁且≤70周岁，男女不限', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I02', content:'经组织学确诊的HER2阳性乳腺癌', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I03', content:'新辅助治疗后存在浸润癌残留', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I04', content:'ECOG体力状况评分0-1分', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'I05', content:'预期生存时间≥3个月', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } }
     ],
     exclusion: [
-      { id:'E01', content:'既往接受过抗HER2靶向治疗', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } },
-      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, 'ST03':{ remark:'', enabled:true } } }
+      { id:'E01', content:'既往接受过抗HER2靶向治疗', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E02', content:'有症状的脑转移或脑膜转移', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E03', content:'入组前4周内接受过大手术', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E04', content:'活动性自身免疫性疾病', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E05', content:'妊娠期或哺乳期女性', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } },
+      { id:'E06', content:'已知对试验药物成分过敏', stageConfig:{ 'ST01':{ remark:'', enabled:true }, '入组阶段':{ remark:'', enabled:true } } }
     ]
   }
 };
@@ -14650,12 +14684,12 @@ let _projectCriteriaData = JSON.parse(JSON.stringify(_defaultProjectCriteriaData
 // 项目筛选表数据：单一版本（无版本概念），每条标准支持「各阶段共用」备注与按阶段启用，并可配置思考链
 const _defaultProjectScreeningData = {
   items: [
-    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S03', content:'ECOG体力状况评分0或1分', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S04', content:'已知对试验药物成分过敏', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S05', content:'妊娠期或哺乳期女性', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'S06', content:'活动性自身免疫性疾病', type:'多行文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] }
+    { id:'S01', content:'年龄≥18周岁且≤75周岁，男女不限', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S02', content:'经组织学或细胞学确诊的HER2阳性乳腺癌', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S03', content:'ECOG体力状况评分0或1分', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S04', content:'已知对试验药物成分过敏', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S05', content:'妊娠期或哺乳期女性', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'S06', content:'活动性自身免疫性疾病', type:'多行文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] }
   ]
 };
 const SCREENING_TYPE_OPTIONS = ['单行文本','多行文本','日期','时间','日期+时间','表格','时间轴'];
@@ -14665,10 +14699,10 @@ let _projectScreeningData = JSON.parse(JSON.stringify(_defaultProjectScreeningDa
 const EXTRACT_TYPE_OPTIONS = ['表格','时间轴','文本'];
 const _defaultProjectExtractData = {
   items: [
-    { id:'E01', item:'患者基本身份信息', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:true, stageRemarks:{}, thinkingChain:[] },
-    { id:'E02', item:'关键入排指标提取', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:true, stageRemarks:{}, thinkingChain:[] },
-    { id:'E03', item:'既往治疗史要点', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] },
-    { id:'E04', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{ 'ST01':true, 'ST03':true }, required:false, stageRemarks:{}, thinkingChain:[] }
+    { id:'E01', item:'患者基本身份信息', type:'文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:true, stageRemarks:{}, thinkingChain:[] },
+    { id:'E02', item:'关键入排指标提取', type:'文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:true, stageRemarks:{}, thinkingChain:[] },
+    { id:'E03', item:'既往治疗史要点', type:'文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] },
+    { id:'E04', item:'合并用药/禁忌要点', type:'文本', stageEnabled:{ 'ST01':true, '入组阶段':true }, required:false, stageRemarks:{}, thinkingChain:[] }
   ]
 };
 let _projectExtractData = JSON.parse(JSON.stringify(_defaultProjectExtractData));
@@ -16536,7 +16570,7 @@ function renderExtractContent() {
         ${stageTds}
         <td class="action-cell">
           <div class="action-row">
-            <span class="config-action" onclick="openExtractRemarkModal(${idx})" title="配置备注"><i class="fa-regular fa-note-sticky"></i> 备注${remarkCount ? `<em class="think-badge">${remarkCount}</em>` : ''}</span>
+            <span class="config-action" onclick="openExtractRemarkModal(${idx})" title="配置备注"><i class="fa-regular fa-note-sticky"></i> 备注${remarkCount ? `<em class="think-badge">(${remarkCount})</em>` : ''}</span>
           </div>
           ${items.length > 1 ? `
           <div class="action-row">
@@ -16636,29 +16670,34 @@ function importExtractData() {
 const _otherProjectExtractConfigs = [
   { id:'P-A002', name:'ZWTI-胃癌靶向治疗研究', type:'肿瘤研究', domain:'肿瘤', owner:'李研究', count:6,
     items:[
-      { id:'EA1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EA2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取年龄与主要瘤种' },
-      { id:'EA3', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往化疗/靶向方案' },
-      { id:'EA4', item:'靶向药物疗效指标', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'客观缓解率 ORR 数值' },
-      { id:'EA5', item:'合并症', type:'表格', stageEnabled:{'ST03':true}, required:false, remark:'按 CTCAE 分级记录' },
-      { id:'EA6', item:'合并用药', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注禁用地中海贫血相关药物' }
+      { id:'EA1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EA2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true,
+        remark:'AI 辅助判定责任血管事件与随机日期间隔，并识别心源性卒中病因',
+        stageRemarks: {
+          'ST01': 'AI识别符合入组条件的责任血管事件日期及计划/实际随机日期，自动计算间隔天数，判断是否在30～365天内，含两端值。存在多次卒中或TIA时，不直接采用最近一次诊断日期，而应结合责任血管和本次入组事件识别应使用的发病日期。同时提示该间隔是否≤90天，用于随机分层因素核对。\nAI跨病史、诊断、心电图、动态心电图及超声心动图搜索心房颤动、人工心脏瓣膜、有临床意义的二尖瓣狭窄、心房黏液瘤、心内膜炎等心源性卒中病因。对于"阵发性房颤""既往消融""长期抗凝但诊断不明确"等隐性线索进行风险提示，不仅依赖既往病史表中的勾选结果。存在矛盾信息时输出"需研究者判定"'
+        }
+      },
+      { id:'EA3', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:false, remark:'记录既往化疗/靶向方案' },
+      { id:'EA4', item:'靶向药物疗效指标', type:'表格', stageEnabled:{'入组阶段':true}, required:true, remark:'客观缓解率 ORR 数值' },
+      { id:'EA5', item:'合并症', type:'表格', stageEnabled:{'入组阶段':true}, required:false, remark:'按 CTCAE 分级记录' },
+      { id:'EA6', item:'合并用药', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:false, remark:'标注禁用地中海贫血相关药物' }
     ]
   },
   { id:'P-B017', name:'LUNG-非小细胞肺癌免疫研究', type:'免疫研究', domain:'肿瘤', owner:'王医学', count:5,
     items:[
-      { id:'EB1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EB2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取吸烟史与分期' },
-      { id:'EB3', item:'PD-L1 表达水平', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'TPS 百分比数值' },
-      { id:'EB4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往免疫治疗方案' },
-      { id:'EB5', item:'合并用药/禁忌要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'标注免疫相关禁忌' }
+      { id:'EB1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EB2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true, remark:'重点提取吸烟史与分期' },
+      { id:'EB3', item:'PD-L1 表达水平', type:'表格', stageEnabled:{'入组阶段':true}, required:true, remark:'TPS 百分比数值' },
+      { id:'EB4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:false, remark:'记录既往免疫治疗方案' },
+      { id:'EB5', item:'合并用药/禁忌要点', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:false, remark:'标注免疫相关禁忌' }
     ]
   },
   { id:'P-C031', name:'BREAST-乳腺癌内分泌治疗研究', type:'内分泌研究', domain:'非肿瘤', owner:'赵临床', count:4,
     items:[
-      { id:'EC1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
-      { id:'EC2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:true, remark:'重点提取绝经状态' },
-      { id:'EC3', item:'激素受体状态', type:'表格', stageEnabled:{'ST03':true}, required:true, remark:'ER/PR 阳性状态' },
-      { id:'EC4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'ST03':true}, required:false, remark:'记录既往内分泌治疗' }
+      { id:'EC1', item:'患者基本身份信息', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true, remark:'需包含姓名、性别、出生日期及证件号' },
+      { id:'EC2', item:'关键入排指标提取', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:true, remark:'重点提取绝经状态' },
+      { id:'EC3', item:'激素受体状态', type:'表格', stageEnabled:{'入组阶段':true}, required:true, remark:'ER/PR 阳性状态' },
+      { id:'EC4', item:'既往治疗史要点', type:'表格', stageEnabled:{'ST01':true,'入组阶段':true}, required:false, remark:'记录既往内分泌治疗' }
     ]
   }
 ];
@@ -16744,7 +16783,7 @@ function doReferenceProject(pid) {
   let added = 0;
   cfg.items.forEach(src => {
     const newId = 'E' + String(_projectExtractData.items.length + 1).padStart(2,'0');
-    const stageEnabled = JSON.parse(JSON.stringify(src.stageEnabled||{'ST01':true,'ST03':true}));
+    const stageEnabled = JSON.parse(JSON.stringify(src.stageEnabled||{'ST01':true,'入组阶段':true}));
     // 将源备注带入首个已启用阶段的按阶段备注中
     const stageRemarks = {};
     if(src.remark) {
@@ -16794,10 +16833,12 @@ function closeRefExtractModal() {
 function toggleRefExtractSubRemark(idx){
   const body = document.getElementById('refExtractSubRemarkBody-' + idx);
   const toggle = document.getElementById('refExtractSubRemarkToggle-' + idx);
+  const title = document.getElementById('refExtractSubRemarkTitle-' + idx);
   if(!body) return;
-  const open = body.style.display === 'none';
-  body.style.display = open ? 'block' : 'none';
+  const open = !body.classList.contains('expanded');
+  body.classList.toggle('expanded', open);
   if(toggle) toggle.classList.toggle('expanded', open);
+  if(title) title.classList.toggle('expanded', open);
 }
 
 // 查看某项目的提取要点配置明细（项目 / 文本类型 / 备注）
@@ -16817,8 +16858,8 @@ function viewRefExtractDetail(pid) {
       ? '<span style="color:#bbb">未启用</span>'
       : enabledStageIds.map(sid => `<span class="ref-stage-chip">${stageName(sid)}</span>`).join('');
     const inner = enabledStageIds.length === 0
-      ? '<div style="color:#bbb;padding:8px 4px;font-size:12px;">该要点未启用任何阶段</div>'
-      : `<div class="sub-remark-body-wrap" id="refExtractSubRemarkBody-${i}" style="display:none">
+      ? '<div class="sub-remark-empty"><i class="fa-regular fa-circle-xmark" style="font-size:24px;color:#d9d9d9"></i><span>该要点未启用任何阶段</span></div>'
+      : `<div class="sub-remark-body-wrap" id="refExtractSubRemarkBody-${i}">
           <table class="sub-remark-table">
             <thead>
               <tr>
@@ -16845,9 +16886,12 @@ function viewRefExtractDetail(pid) {
     <tr class="sub-remark-row">
       <td colspan="4">
         <div class="sub-remark-inner">
-          <div class="sub-remark-title" onclick="toggleRefExtractSubRemark(${i})">
-            <i class="fa-regular fa-note-sticky"></i> 按阶段备注（${remarkCount}）
-            <i class="fa-solid fa-chevron-right sub-remark-toggle" id="refExtractSubRemarkToggle-${i}"></i>
+          <div class="sub-remark-title" id="refExtractSubRemarkTitle-${i}" onclick="toggleRefExtractSubRemark(${i})">
+            <div class="sub-remark-title-box">
+              <i class="fa-regular fa-note-sticky"></i>
+              <span>按阶段备注（${remarkCount}）</span>
+              <i class="fa-solid fa-chevron-right sub-remark-toggle" id="refExtractSubRemarkToggle-${i}"></i>
+            </div>
           </div>
           ${inner}
         </div>
@@ -17197,14 +17241,14 @@ function addApprovalStep() {
 // ==================== 项目思考链配置（参考 chain_of_thought，支持按阶段配置不同步骤，也可多阶段共用同一套步骤） ====================
 let _defaultProjThinkChains = [
   { id:'ptc_001', name:'ASCVD心血管风险评估', type:'screening', version:'v1.0', link:'S01', enabled:true, updateTime:'2026-06-20 14:30',
-    stages:['ST01','ST03'],
+    stages:['ST01','入组阶段'],
     stageSteps:{
       ST01:[
         { stepId:'s1', content:'预筛阶段：提取患者年龄、性别、吸烟史、血压、血脂、血糖等基础信息' },
         { stepId:'s2', content:'预筛阶段：计算ASCVD 10年发病风险评分，判断是否≥7.5%阈值' },
         { stepId:'s3', content:'预筛阶段：结合合并用药（他汀类）使用情况，给出风险分级结论' }
       ],
-      ST03:[
+      入组阶段:[
         { stepId:'s1', content:'入组阶段：复核入组前心血管风险因素采集的完整性' },
         { stepId:'s2', content:'入组阶段：重新评估ASCVD评分及他汀类药物用药史' },
         { stepId:'s3', content:'入组阶段：确认风险分级与入排标准的一致性' }
@@ -17212,7 +17256,7 @@ let _defaultProjThinkChains = [
     }
   },
   { id:'ptc_002', name:'肝肾功能异常判定', type:'screening', version:'v1.0', link:'S06', enabled:true, updateTime:'2026-05-18 09:12',
-    stages:['ST01','ST02','ST03'],
+    stages:['ST01','ST02','入组阶段'],
     stageSteps:{
       ST01:[
         { stepId:'s1', content:'读取ALT、AST、TBIL、Cr、eGFR指标' },
@@ -17224,7 +17268,7 @@ let _defaultProjThinkChains = [
         { stepId:'s2', content:'依据CTCAE 5.0判定异常分级' },
         { stepId:'s3', content:'判断是否构成排除标准中的肝肾功能不全' }
       ],
-      ST03:[
+      入组阶段:[
         { stepId:'s1', content:'读取ALT、AST、TBIL、Cr、eGFR指标' },
         { stepId:'s2', content:'依据CTCAE 5.0判定异常分级' },
         { stepId:'s3', content:'判断是否构成排除标准中的肝肾功能不全' }
@@ -17232,9 +17276,9 @@ let _defaultProjThinkChains = [
     }
   },
   { id:'ptc_003', name:'既往抗肿瘤治疗洗脱期核查', type:'inclusion', version:'v2.0', link:'I01', enabled:false, updateTime:'2026-04-02 16:45',
-    stages:['ST03'],
+    stages:['入组阶段'],
     stageSteps:{
-      ST03:[
+      入组阶段:[
         { stepId:'s1', content:'梳理患者既往所有抗肿瘤治疗方案及结束时间' },
         { stepId:'s2', content:'比对各方案的洗脱期要求（化疗≥4周、靶向≥2周、免疫治疗≥6周）' }
       ]
@@ -17367,8 +17411,11 @@ function viewProjThinkChain(id) {
     const stepHtml = steps.length ? steps.map(function(s, si){
       return ''
         + '<div class="tc-view-step">'
-        +   '<span class="tc-view-step-idx">第 ' + (si+1) + ' 步</span>'
-        +   '<div class="tc-view-step-content">' + escapeTc(s.content) + '</div>'
+        +   '<div class="tc-view-step-dot"></div>'
+        +   '<div class="tc-view-step-main">'
+        +     '<span class="tc-view-step-idx">第 ' + (si+1) + ' 步</span>'
+        +     '<div class="tc-view-step-content">' + escapeTc(s.content) + '</div>'
+        +   '</div>'
         + '</div>';
     }).join('') : '<div class="tc-view-empty">该阶段暂未配置步骤</div>';
     return ''

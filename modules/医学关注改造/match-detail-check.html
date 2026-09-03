@@ -4165,6 +4165,19 @@
 
       // 初始化"我的批注"角标
       try { updateRemarkBadge(); } catch (e) { console.error('updateRemarkBadge', e); }
+
+      // 提取要点单页模式：URL 带 ?tab=extract 时进入新版「提取要点」并隐藏版本切换导航
+      try {
+        if (urlParams.get('tab') === 'extract') {
+          var vo = document.getElementById('version-old');
+          var vn = document.getElementById('version-new');
+          if (vo) vo.style.display = 'none';
+          if (vn) vn.style.display = 'block';
+          var navEl = document.querySelector('#version-new .tab-navigation');
+          if (navEl) navEl.style.display = 'none';
+          if (typeof switchNewTab === 'function') switchNewTab('extract');
+        }
+      } catch (e) { console.error('extractView', e); }
     });
 
 // ==================== PRD 需求说明面板 ====================

@@ -1,0 +1,1321 @@
+<!--
+  产品原型：匹配日志（高亮版）
+  功能：展示患者项目匹配记录列表，支持多维度筛选、重新匹配、匹配详情查看、重新溯源。
+  布局：左侧产品界面 + 右侧PRD说明面板，SVG连线交互。
+  表格：横向滚动，操作列固定在右侧。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>提取要点日志</title>
+<link href="https://cdn.jsdelivr.net/npm/antd@5.15.0/dist/reset.css" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: #F5F7FA; color: #1a1a1a; overflow: hidden; }
+
+  /* ===== TOP NAV ===== */
+  .top-nav { height: 56px; background: #fff; display: flex; align-items: center; padding: 0 0 0 20px; flex-shrink: 0; box-shadow: 0 1px 0 #e8e8e8, 0 2px 8px rgba(0,0,0,0.06); position: relative; z-index: 100; }
+  .nav-brand { display: flex; align-items: center; gap: 0; padding-right: 24px; border-right: 1px solid #f0f0f0; margin-right: 8px; flex-shrink: 0; }
+  .nav-brand .idy-logo { display: flex; align-items: center; gap: 0; margin-right: 10px; }
+  .nav-brand .idy-letters { font-size: 17px; font-weight: 900; font-style: italic; color: #1a1a1a; letter-spacing: -1px; line-height: 1; }
+  .nav-brand .idy-divider { width: 3px; height: 22px; background: #e53935; border-radius: 2px; margin: 0 8px 0 6px; flex-shrink: 0; }
+  .nav-brand .brand-name { font-size: 14px; font-weight: 600; color: #1a1a1a; letter-spacing: 0.3px; white-space: nowrap; }
+  .nav-menu { display: flex; align-items: center; flex: 1; gap: 2px; }
+  .nav-item { padding: 7px 15px; border-radius: 8px; color: #555; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px; white-space: nowrap; user-select: none; }
+  .nav-item:hover { background: rgba(93,88,220,0.08); color: #5d58dc; }
+  .nav-item.active { background: rgba(93,88,220,0.10); color: #5d58dc; font-weight: 600; }
+  .nav-item .nav-icon { font-size: 13px; }
+  .nav-right { display: flex; align-items: center; gap: 14px; padding: 0 20px; border-left: 1px solid #f0f0f0; flex-shrink: 0; }
+  .nav-avatar { width: 32px; height: 32px; background: linear-gradient(135deg, #5d58dc, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .nav-username { color: #555; font-size: 13px; }
+
+  /* ===== LAYOUT: LEFT + RIGHT ===== */
+  .content-area { display: flex; height: calc(100vh - 56px); overflow: hidden; position: relative; }
+  .left-panel { width: 78%; overflow-y: auto; background: #f5f7fa; padding: 24px; flex-shrink: 0; }
+  .divider-line { width: 1px; background: #d9d9d9; flex-shrink: 0; }
+  .right-panel { flex: 1; overflow-y: auto; background: #fffbeb; border-left: 2px dashed #f59e0b; }
+
+  /* ===== PAGE HEADER ===== */
+  .page-header { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .page-header h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+  .page-header p { font-size: 13px; color: #888; margin-top: 3px; }
+
+  /* ===== FILTER ===== */
+  .filter-card { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 20px; }
+  .filter-field label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; font-weight: 500; }
+  .form-input, .form-select { width: 100%; padding: 8px 12px; border: 1.5px solid #e0e0e0; border-radius: 8px; font-size: 13.5px; color: #1a1a1a; background: #fafafa; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .form-input:focus, .form-select:focus { border-color: #5d58dc; box-shadow: 0 0 0 3px rgba(93,88,220,0.12); background: #fff; }
+  .filter-actions { display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+
+  /* ===== BUTTONS ===== */
+  .btn-filter { padding: 7px 20px; border-radius: 6px; font-size: 13px; cursor: pointer; border: 1.5px solid #e8e8e8; background: white; color: #555; font-weight: 500; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-filter:hover { border-color: #5d58dc; color: #5d58dc; }
+  .btn-filter.primary { background: #5d58dc; color: white; border-color: #5d58dc; }
+  .btn-filter.primary:hover { background: #3f3a9e; color: white; }
+
+  /* ===== TABLE ===== */
+  .table-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .table-scroll { overflow-x: auto; }
+  .table-scroll::-webkit-scrollbar { height: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: #f5f5f5; border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+  .data-table { width: 100%; min-width: 2200px; border-collapse: separate; border-spacing: 0; }
+  .data-table thead tr { background: linear-gradient(180deg, #f7f5ff 0%, #edeafc 100%); }
+  .data-table th { padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #333; border-bottom: 1px solid #e2dcf5; white-space: nowrap; }
+  .data-table th:first-child { border-top-left-radius: 10px; }
+  .data-table th:last-child { border-top-right-radius: 10px; }
+  .data-table td { padding: 12px 16px; font-size: 13px; color: #333; border-bottom: 1px solid #f2f0f7; vertical-align: middle; white-space: nowrap; }
+  .data-table tbody tr:hover { background: rgba(93,88,220,0.03); }
+  .data-table tbody tr:nth-child(even) { background: #faf9fe; }
+  .data-table tbody tr:nth-child(even):hover { background: rgba(93,88,220,0.05); }
+  .data-table tbody tr:last-child td { border-bottom: none; }
+  /* 固定操作列 */
+  .data-table th.col-op, .data-table td.col-op { position: sticky; right: 0; background: white; z-index: 2; }
+  .data-table thead th.col-op { background: transparent; z-index: 3; }
+  .data-table tbody tr:nth-child(even) td.col-op { background: #faf9fe; }
+  .data-table tbody tr:hover td.col-op { background: rgba(93,88,220,0.03); }
+  .data-table tbody tr:nth-child(even):hover td.col-op { background: rgba(93,88,220,0.05); }
+  td.col-op { box-shadow: -2px 0 6px rgba(0,0,0,0.04); }
+  .text-truncate { display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; color: #555; }
+  .proj-id { color: #5d58dc; font-weight: 600; font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; }
+
+  /* ===== TAGS（匹配状态） ===== */
+  .tag { padding: 4px 12px; border-radius: 6px; font-size: 12.5px; display: inline-block; font-weight: 500; border: 1px solid; }
+  .tag-green { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+  .tag-blue { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
+  .tag-red { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .tag-gray { background: #f9fafb; color: #9ca3af; border-color: #e5e7eb; }
+  .tag-orange { background: #fff7ed; color: #ea580c; border-color: #fed7aa; }
+
+  /* ===== STAGE BUTTONS（匹配阶段） ===== */
+  .stage-btn { display: inline-flex; align-items: center; padding: 4px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; white-space: nowrap; }
+  .stage-purple { background: #5d58dc; color: white; }
+  .stage-green { background: #22c55e; color: white; }
+  .seq-wrap { position: relative; display: inline-block; }
+  .pre-submit-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #fff; background: #ff4d4f; border-radius: 8px; padding: 1px 6px; white-space: nowrap; line-height: 1.4; box-shadow: 0 1px 3px rgba(255,77,79,0.35); }
+
+  /* ===== PAGE TIP ===== */
+  .page-tip { background: #fff2f0; border: 1px solid #ffccc7; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #ff4d4f; margin-bottom: 16px; }
+  .page-tip i { color: #ff4d4f; }
+
+
+  /* Action links & buttons */
+  .op-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 14px; border-radius: 14px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; background: #5d58dc; color: white; transition: all 0.15s; white-space: nowrap; }
+  .op-btn:hover { background: #3f3a9e; }
+  .op-link { color: #9ca3af; font-size: 13px; font-weight: 400; cursor: pointer; margin-left: 10px; transition: color 0.15s; white-space: nowrap; }
+  .op-link:hover { color: #5d58dc; }
+  .op-link.active { color: #5d58dc; }
+  .op-link.trace { color: #ea580c; }
+  .op-link.trace:hover { color: #c2410c; }
+  .op-link.disabled { color: #d1d5db; cursor: not-allowed; pointer-events: none; }
+
+  /* Pagination */
+  .table-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid #f0f0f0; }
+  .table-footer .total { font-size: 13px; color: #888; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); z-index: 100001; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-panel { background: #fff; border-radius: 12px; width: 480px; max-width: 95vw; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: modalFadeIn 0.2s ease-out; }
+  .modal-panel.lg { width: 720px; }
+  @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .modal-header { padding: 16px 24px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .modal-title { font-size: 16px; font-weight: 600; color: #333; }
+  .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: transparent; font-size: 18px; color: #999; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .modal-close:hover { background: #f5f5f5; color: #333; }
+  .modal-body { padding: 24px; flex: 1; overflow-y: auto; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #f0f0f0; background: #fafbfc; flex-shrink: 0; }
+  .modal-meta { display: flex; gap: 18px; flex-wrap: wrap; padding: 12px 16px; background: #fafafa; border-radius: 8px; font-size: 12px; color: #666; margin-top: 16px; }
+  .modal-meta b { color: #333; font-weight: 600; }
+  .btn { padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.18s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: #5d58dc; color: white; box-shadow: 0 2px 8px rgba(93,88,220,0.3); }
+  .btn-primary:hover { background: #3f3a9e; }
+  .btn-default { background: white; color: #555; border: 1.5px solid #e0e0e0; }
+  .btn-default:hover { border-color: #5d58dc; color: #5d58dc; }
+  .btn-warning { background: #faad14; color: white; }
+  .btn-warning:hover { background: #d48806; }
+
+  .detail-block { background: #fafafa; border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .detail-block h4 { font-size: 13.5px; font-weight: 600; color: #333; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail-block h4 i { color: #5d58dc; }
+  .detail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .detail-grid .lbl { font-size: 12px; color: #999; margin-bottom: 4px; }
+  .detail-grid .val { font-size: 13.5px; color: #333; font-weight: 500; }
+  .sub-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sub-table th { text-align: left; font-size: 12px; color: #888; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+  .sub-table td { padding: 10px; border-bottom: 1px solid #f5f5f5; color: #555; }
+  .sub-table tbody tr:last-child td { border-bottom: none; }
+  .sub-link { color: #5d58dc; font-size: 12.5px; cursor: pointer; }
+  .sub-link:hover { text-decoration: underline; }
+
+  /* ===== PROTOTYPE HIGHLIGHT ===== */
+  .proto-element { position: relative; transition: all 0.2s ease; border-radius: 6px; }
+  .proto-element:hover { box-shadow: 0 0 0 2px #5d58dc, 0 4px 12px rgba(93,88,220,0.15); background-color: rgba(93,88,220,0.02); }
+  .proto-element.active-highlight { box-shadow: 0 0 0 2px #5d58dc, 0 4px 12px rgba(93,88,220,0.25); background-color: rgba(93,88,220,0.05); }
+  .proto-desc { transition: all 0.2s ease; border-radius: 6px; border: 1px solid #fde68a; background-color: #fffbeb; }
+  .proto-desc:hover { background-color: #fef3c7; border-color: #f59e0b; box-shadow: 0 2px 8px rgba(245,158,11,0.15); }
+  .proto-desc.active-highlight { background-color: #fde68a; border-color: #d97706; box-shadow: 0 2px 8px rgba(245,158,11,0.25); }
+
+  /* ===== SVG CONNECTIONS ===== */
+  #connections { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+  .connection-line { fill: none; stroke: #5d58dc; stroke-width: 2; opacity: 0.6; transition: all 0.2s ease; }
+  .connection-line.active { stroke-width: 3; opacity: 1; }
+  .connection-label { fill: #fff; font-size: 12px; font-weight: bold; text-anchor: middle; dominant-baseline: central; }
+  .connection-label-bg { fill: #5d58dc; }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel .prd-header { padding: 16px; border-bottom: 1px solid #fde68a; }
+  .right-panel .prd-body { padding: 14px; }
+  .right-panel .proto-desc { margin-bottom: 10px; }
+
+  /* ===== MOBILE ===== */
+  .mobile-toggle-btn { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 999; width: 48px; height: 48px; border-radius: 50%; background: #5d58dc; color: white; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(93,88,220,0.3); cursor: pointer; border: none; }
+  @media (max-width: 768px) {
+    .content-area { flex-direction: column; }
+    .left-panel { width: 100% !important; height: 60vh; }
+    .divider-line { display: none; }
+    .right-panel { width: 100% !important; height: 40vh; border-left: none; border-top: 2px dashed #f59e0b; }
+    #connections { display: none; }
+    .mobile-toggle-btn { display: flex !important; }
+    .proto-element:hover, .proto-desc:hover { box-shadow: none; }
+    .proto-element.active-highlight, .proto-desc.active-highlight { box-shadow: none; }
+  }
+  /* ===== 提取要点（从 match-detail-check 迁移，紫色主题对齐） ===== */
+  .btn-sm { padding: 4px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid #e8e8e8; background: #fff; color: #555; transition: all .18s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-sm:hover { border-color: #5d58dc; color: #5d58dc; }
+  .btn-sm.btn-primary { background: #5d58dc; color: #fff; border-color: #5d58dc; }
+  .btn-sm.btn-primary:hover { background: #3f3a9e; }
+  .card { background: #fff; border: 1px solid #f0f0f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .project-info { display: flex; align-items: flex-start; gap: 12px; }
+
+  .prescreen-doc-layout { display: flex; gap: 24px; align-items: flex-start; }
+  .prescreen-doc-layout.nav-right { flex-direction: row-reverse; }
+  .prescreen-nav {
+    width: 220px; flex-shrink: 0; position: sticky; top: 16px;
+    background: #fff; border: 1px solid #f0f0f0; border-radius: 10px;
+    padding: 16px 14px; max-height: calc(100vh - 120px); overflow-y: auto;
+  }
+  .prescreen-nav-title {
+    font-size: 13px; font-weight: 600; color: #595959; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .prescreen-nav-item {
+    position: relative; padding: 9px 10px 9px 14px; font-size: 13.5px; color: #595959;
+    cursor: pointer; border-radius: 6px; line-height: 1.5; margin-bottom: 2px;
+    border-left: 3px solid transparent; transition: all .18s;
+  }
+  .prescreen-nav-item:hover { background: #f5f7fa; color: #5d58dc; }
+  .prescreen-nav-item.active {
+    background: #edeafc; color: #5d58dc; font-weight: 600; border-left-color: #5d58dc;
+  }
+  .prescreen-doc { flex: 1; min-width: 0; background: #fff; border: 1px solid #f0f0f0; border-radius: 10px; padding: 32px 40px; }
+  .not-extracted-box {
+    margin-top: 16px; padding: 12px 16px; border: 1px dashed #f5b73b; border-radius: 8px; background: #fffaf0;
+  }
+  .not-extracted-box .ne-title {
+    font-size: 13px; font-weight: 600; color: #b9650a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .not-extracted-box .ne-list { margin: 0; padding-left: 4px; list-style: none; }
+  .not-extracted-box .ne-list li {
+    position: relative; padding-left: 16px; font-size: 13px; color: #7a5922; line-height: 1.9;
+  }
+  .not-extracted-box .ne-list li::before {
+    content: ''; position: absolute; left: 2px; top: 10px; width: 5px; height: 5px; border-radius: 50%; background: #f5b73b;
+  }
+  .doc-h1 { font-size: 20px; font-weight: 700; color: #1f1f1f; text-align: center; margin: 0 0 6px; }
+  .doc-subtitle { text-align: center; font-size: 13px; color: #8c8c8c; margin-bottom: 28px; }
+  .doc-section { margin-bottom: 34px; scroll-margin-top: 16px; }
+  .doc-section-title {
+    font-size: 16px; font-weight: 700; color: #262626; margin: 0 0 16px;
+    padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; gap: 8px;
+  }
+  .doc-section-title .sec-idx { color: #5d58dc; font-weight: 700; }
+  .sec-title-actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
+  .sec-compare-btn {
+    padding: 4px 14px; font-size: 12px; font-weight: 600;
+    border: 1px solid #5d58dc; background: #fff; color: #5d58dc; border-radius: 14px;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .sec-compare-btn:hover { background: #5d58dc; color: #fff; }
+  .sec-compare-btn i { margin-right: 4px; }
+  .sec-trace-btn {
+    padding: 4px 14px; font-size: 12px; font-weight: 600;
+    border: 1px solid #2bb673; background: #fff; color: #2bb673; border-radius: 14px;
+    cursor: pointer; transition: all .2s; white-space: nowrap;
+  }
+  .sec-trace-btn:hover { background: #2bb673; color: #fff; }
+  .sec-trace-btn i { margin-right: 4px; }
+  /* 通用弹窗面板（比较各阶段） */
+  .pm-panel { background: #fff; border-radius: 14px; width: 440px; max-width: 100%; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.25); overflow: hidden; }
+  .pm-head { padding: 16px 22px; font-size: 15px; font-weight: 700; color: #1f2d3d; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; }
+  .pm-close { cursor: pointer; color: #b0b8c4; font-size: 16px; transition: color .2s; }
+  .pm-close:hover { color: #5d58dc; }
+  .pm-body { padding: 20px 22px; font-size: 13px; color: #595959; line-height: 1.8; overflow: auto; }
+  .pm-foot { padding: 14px 22px; border-top: 1px solid #f0f0f0; text-align: right; background: #fafbfc; }
+  .stage-compare-modal { width: 920px; max-width: 100%; }
+  .stage-compare-body { padding: 22px 24px; }
+  .stage-compare-sub { font-size: 13px; color: #8c8c8c; margin: 0 0 16px; line-height: 1.6; }
+  .stage-compare-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; }
+  .stage-compare-table th, .stage-compare-table td { border-bottom: 1px solid #eef0f3; border-right: 1px solid #eef0f3; padding: 11px 14px; text-align: left; vertical-align: top; line-height: 1.6; }
+  .stage-compare-table th:last-child, .stage-compare-table td:last-child { border-right: none; }
+  .stage-compare-table tr:last-child td { border-bottom: none; }
+  .stage-compare-table thead th { background: linear-gradient(180deg,#f5f7fa,#eef2f7); font-weight: 600; color: #333; position: sticky; top: 0; z-index: 1; }
+  .stage-compare-table thead th:first-child { background: #e6ebf2; }
+  .stage-compare-table tbody tr:hover td { background: #f7faff; }
+  .stage-compare-table .metric-col { background: #fafbfc; font-weight: 600; color: #333; white-space: nowrap; }
+  .cmp-same { color: #00b42a; font-weight: 600; }
+  .cmp-change { color: #f53f3f; font-weight: 600; }
+  .cmp-pending { color: #fa8c16; font-weight: 600; }
+  .cmp-stage-current { background: #edeafc !important; }
+  .stage-view-list { display: flex; flex-direction: column; gap: 22px; }
+  .stage-view-block { border: 1px solid #eef0f3; border-radius: 10px; padding: 14px 16px; background: #fff; }
+  .stage-view-title { font-size: 14px; font-weight: 700; color: #5d58dc; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .stage-view-title i { color: #5d58dc; }
+  .cmp-legend { margin-top: 16px; display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: #8c8c8c; }
+  .cmp-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .cmp-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .cmp-dot.cmp-same { background: #00b42a; }
+  .cmp-dot.cmp-change { background: #f53f3f; }
+  .cmp-dot.cmp-pending { background: #fa8c16; }
+  .cmp-dot.cmp-current { background: #5d58dc; }
+  .doc-section-desc { font-size: 13px; color: #8c8c8c; margin: -8px 0 14px; line-height: 1.6; }
+  .doc-text { font-size: 14px; color: #333; line-height: 1.9; white-space: pre-wrap; }
+  .doc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .doc-table th, .doc-table td { border: 1px solid #e8e8e8; padding: 9px 12px; text-align: left; vertical-align: top; line-height: 1.6; }
+  .doc-table th { background: #fafafa; font-weight: 600; color: #333; white-space: nowrap; }
+  .doc-table tr:nth-child(even) td { background: #fcfcfc; }
+  .doc-table .val-up { color: #f53f3f; font-weight: 600; }
+  .doc-table .val-down { color: #5d58dc; font-weight: 600; }
+  .doc-table .val-pending { color: #fa8c16; font-weight: 600; }
+  .doc-table .doc-act-col { width: 200px; white-space: nowrap; }
+  .doc-table .doc-act-cell { vertical-align: middle; }
+  .doc-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tl-actions { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; }
+  .tl-actions .doc-row-actions { gap: 10px; }
+  .doc-pending-tag {
+    display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 12px;
+    background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; font-weight: 600;
+  }
+  .doc-timeline { position: relative; padding-left: 24px; }
+  .doc-timeline::before { content: ''; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: #e8e8e8; }
+  .tl-item { position: relative; margin-bottom: 18px; }
+  .tl-item::before {
+    content: ''; position: absolute; left: -21px; top: 4px; width: 11px; height: 11px;
+    border-radius: 50%; background: #fff; border: 2px solid #5d58dc;
+  }
+  .tl-item.instable::before { border-color: #fa8c16; background: #fff7e6; }
+  .tl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .tl-drug { font-size: 14px; font-weight: 600; color: #262626; }
+  .tl-date { font-size: 12.5px; color: #8c8c8c; }
+  .tl-badge { font-size: 12px; padding: 1px 8px; border-radius: 4px; background: #f5f7fa; color: #595959; border: 1px solid #e8e8e8; }
+  .tl-badge.warn { background: #fff7e6; color: #fa8c16; border-color: #ffd591; }
+  .tl-badge.ok { background: #e8f7ec; color: #00b42a; border-color: #b7eb8f; }
+  .tl-body { margin-top: 6px; font-size: 13px; color: #595959; line-height: 1.7; }
+  .tl-line { display: flex; gap: 6px; }
+  .tl-line .k { color: #8c8c8c; flex-shrink: 0; }
+  .doc-audit-box {
+    margin-top: 14px; padding: 14px 16px; background: #fafafa; border: 1px dashed #d9d9d9; border-radius: 8px; font-size: 13px; line-height: 1.8; color: #595959;
+  }
+  .doc-audit-box .audit-q { display: flex; gap: 8px; margin-bottom: 4px; }
+  .doc-audit-box .audit-q .num { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #5d58dc; color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+  .doc-audit-box .audit-concl { margin-top: 8px; padding-top: 8px; border-top: 1px solid #e8e8e8; color: #333; }
+  .action-link { color: #5d58dc; cursor: pointer; font-size: 12px; }
+  .action-link:hover { text-decoration: underline; }
+
+  /* ===== 提取要点全屏弹窗 ===== */
+  .extract-modal-panel { background: #f5f7fa; border-radius: 12px; width: 1120px; max-width: 96vw; height: 92vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; }
+  .extract-modal-head { padding: 14px 20px; background: #fff; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .extract-modal-title { font-size: 16px; font-weight: 600; color: #333; }
+  .extract-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+
+  @media (max-width: 900px) {
+    .prescreen-doc-layout { flex-direction: column; }
+    .prescreen-nav { width: 100%; position: static; max-height: none; }
+    .prescreen-doc { padding: 20px; }
+    .extract-modal-panel { width: 100vw; height: 100vh; max-width: 100vw; border-radius: 0; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<div class="top-nav">
+  <div class="nav-brand">
+    <div class="idy-logo">
+      <span class="idy-letters">IDY</span>
+      <span class="idy-divider"></span>
+    </div>
+    <span class="brand-name">AI 智能预筛系统</span>
+  </div>
+ 
+  <div class="nav-right">
+    <div class="nav-avatar">医</div>
+    <span class="nav-username">医学经理</span>
+  </div>
+</div>
+
+<div class="content-area">
+
+  <!-- ===== LEFT PANEL: 产品界面 ===== -->
+  <div class="left-panel" id="leftPanel">
+   
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h2>提取要点日志</h2>
+      </div>
+    </div>
+
+
+    <!-- Filter Card -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <div class="filter-field">
+          <label>患者缩写</label>
+          <input class="form-input" type="text" placeholder="请输入患者缩写"/>
+        </div>
+        <div class="filter-field">
+          <label>匹配状态</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>匹配中</option>
+            <option>匹配成功</option>
+            <option>匹配失败</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>溯源状态</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>未溯源</option>
+            <option>溯源中</option>
+            <option>溯源成功</option>
+            <option>溯源失败</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>匹配人</label>
+          <input class="form-input" type="text" placeholder="请输入匹配人"/>
+        </div>
+        <div class="filter-field">
+          <label>项目编码</label>
+          <input class="form-input" type="text" placeholder="请输入项目编码"/>
+        </div>
+        <div class="filter-field">
+          <label>是否删除</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>是</option>
+            <option>否</option>
+          </select>
+        </div>
+        <div class="filter-field">
+          <label>时间范围</label>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input class="form-input" type="text" placeholder="开始日期时间"/>
+            <span style="color:#ccc;">-</span>
+            <input class="form-input" type="text" placeholder="结束日期时间"/>
+          </div>
+        </div>
+        <div class="filter-field">
+          <label>是否超过10min</label>
+          <select class="form-select">
+            <option>请选择</option>
+            <option>是</option>
+            <option>否</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-filter primary"><i class="fa-solid fa-magnifying-glass"></i> 查询</button>
+        <button class="btn-filter"><i class="fa-solid fa-rotate-right"></i> 重置</button>
+        <button class="btn-filter primary"><i class="fa-solid fa-download"></i> 导出</button>
+      </div>
+    </div>
+
+    <!-- Table Card ★ 连线 1 -->
+    <div class="table-card proto-element" data-proto-id="1">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>项目编码</th>
+              <th>项目名称</th>
+              <th>患者姓名</th>
+              <th>匹配状态</th>
+              <th>匹配阶段</th>
+              <th>匹配人</th>
+              <th>操作时间</th>
+              <th>开始匹配时间</th>
+              <th>结束匹配时间</th>
+              <th>文字解析用时</th>
+              <th>RAG用时</th>
+              <th>LLM用时</th>
+              <th>总用时</th>
+              <th>匹配率</th>
+              <th>是否超过10min</th>
+              <th>是否删除</th>
+              <th>删除人</th>
+              <th>删除时间</th>
+              <th class="col-op">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="seq-wrap">
+                  1
+                </div>
+              </td>
+              <td class="proj-id">高脂血症-1918-302</td>
+              <td><span class="text-truncate" title="评价SHR-1918用于混合型高脂血症患者的疗效和安全性">评价SHR-1918用于混合型高脂血症患者的疗效和安全性</span></td>
+              <td>ZRM1</td>
+              <td><span class="tag tag-blue">识别中</span></td>
+              <td><span class="stage-btn stage-purple">预筛阶段</span></td>
+              <td>郭娇娇</td>
+
+              <td>2026-07-14 18:05:15</td>
+              <td>2026-07-14 18:05:15</td>
+              <td>-</td>
+              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                <span class="op-link" onclick="openExtractModal('ZRM1','SHR-1918-302','安阳市肿瘤医院')">匹配详情</span>
+                <span class="op-link active" onclick="openMatchConfirm('PT-2026-001','ZRM1')">重新匹配</span>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="seq-wrap">
+                  2
+                </div>
+              </td>
+              <td class="proj-id">乳腺癌-8080-305</td>
+              <td><span class="text-truncate" title="HRS-8080（口服SERD）对比标准内分泌治疗在完成至少2年辅助内分泌治疗的ER阳性，HER2阴性高复发风险早期乳腺癌患者中的多中心、随机、开放标签Ⅲ期研究">HRS-8080（口服SERD）对比标准内分泌治疗...</span></td>
+              <td>ZHXI</td>
+              <td><span class="tag tag-green">识别成功</span></td>
+              <td><span class="stage-btn stage-green">入组阶段</span></td>
+              <td>刘琳</td>
+
+              <td>2026-07-14 18:05:05</td>
+              <td>2026-07-14 18:05:05</td>
+              <td>-</td>
+              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                <span class="op-link" onclick="openExtractModal('ZHXI','HRS-8080-305','安阳市肿瘤医院')">匹配详情</span>
+                <span class="op-link active" onclick="openMatchConfirm('PT-2026-002','ZHXI')">重新匹配</span>
+              </td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td class="proj-id">SHR-1918-305</td>
+              <td><span class="text-truncate" title="评价 SHR-1918 在高甘油三酯血症患者中疗效和安全性的多中心、随机、双盲、安慰剂对照 III 期临床研究">评价 SHR-1918 在高甘油三酯血症患者中...</span></td>
+              <td>FGLI</td>
+              <td><span class="tag tag-red">识别失败</span></td>
+              <td><span class="stage-btn stage-purple">预筛阶段</span></td>
+              <td>陈朵</td>
+              <td>2026-07-14 18:04:51</td>
+              <td>2026-07-14 18:04:51</td>
+              <td>-</td>
+              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td><span class="tag tag-gray">否</span></td>
+              <td>-</td><td>-</td>
+              <td class="col-op">
+                <span class="op-link active" onclick="openExtractModal('FGLI','SHR-1918-305','安阳市肿瘤医院')">匹配详情</span>
+                <span class="op-link active" onclick="openMatchConfirm('PT-2026-003','FGLI')">重新匹配</span>
+              </td>
+            </tr>
+            
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="total">共 8 条记录，显示 1-8 条</span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn-filter"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="btn-filter primary">1</button>
+          <button class="btn-filter"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+
+   
+  </div>
+
+
+
+</div>
+
+<!-- SVG 连线层 -->
+<svg id="connections"></svg>
+
+<!-- 移动端切换按钮 -->
+<button class="mobile-toggle-btn" id="mobileToggle" onclick="toggleMobileView()" title="切换视图">
+  <i class="fa-solid fa-info"></i>
+</button>
+
+<!-- ===== MODAL: 项目匹配确认 ===== -->
+<div class="modal-overlay" id="matchConfirmModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">项目匹配确认</span>
+      <button class="modal-close" onclick="closeModal('matchConfirmModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e6f4ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-circle-info" style="color:#5d58dc;font-size:18px;"></i>
+        </div>
+        <p style="font-size:14px;color:#555;line-height:1.7;">您确认要重新匹配吗？</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('matchConfirmModal')">取消</button>
+      <button class="btn btn-primary" onclick="confirmStartMatch()">开始匹配</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 重新溯源确认 ===== -->
+<div class="modal-overlay" id="traceConfirmModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">AI 溯源确认</span>
+      <button class="modal-close" onclick="closeModal('traceConfirmModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fff7e6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-magnifying-glass-location" style="color:#d46b08;font-size:18px;"></i>
+        </div>
+        <p style="font-size:14px;color:#555;line-height:1.7;">您确认要进行溯源吗？</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('traceConfirmModal')">取消</button>
+      <button class="btn" style="background:#d46b08;color:#fff;" onclick="confirmTrace()">确认溯源</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 预提交校验提示 ===== -->
+<div class="modal-overlay" id="preSubmitModal">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <span class="modal-title">存在预提交数据</span>
+      <button class="modal-close" onclick="closeModal('preSubmitModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; align-items:flex-start; gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fffbe6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-triangle-exclamation" style="color:#faad14;font-size:18px;"></i>
+        </div>
+        <div>
+          <p style="font-size:14px;color:#555;line-height:1.7;">该患者已设置预提交，当前数据处于预提交状态。请先点击「预提交」完成匹配，且<span style="color:#d46b08;font-weight:600;">提交人必须为原提交人</span>，不能替换为当前匹配人。</p>
+          <div class="modal-meta">
+            <span>患者：<b id="preSubmitPatient">PT-2026-001</b></span>
+            <span>原提交人：<b id="preSubmitUser">张三</b></span>
+            <span>当前匹配人：<b id="currentMatchUser">李四</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('preSubmitModal')">取消</button>
+      <button class="btn btn-warning" onclick="confirmPreSubmit()">预提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 匹配详情 ===== -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-panel lg">
+    <div class="modal-header">
+      <span class="modal-title">匹配详情 <span style="font-size:13px;font-weight:400;color:#999;" id="detailPatient">PT-2026-007</span></span>
+      <button class="modal-close" onclick="closeModal('detailModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-block">
+        <h4><i class="fa-solid fa-gear"></i> 匹配运行信息</h4>
+        <div class="detail-grid">
+          <div><div class="lbl">开始匹配时间</div><div class="val">2026-07-14 18:02:27</div></div>
+          <div><div class="lbl">结束匹配时间</div><div class="val">2026-07-14 18:03:20</div></div>
+          <div><div class="lbl">RAG用时</div><div class="val">12s</div></div>
+          <div><div class="lbl">LLM用时</div><div class="val">8s</div></div>
+          <div><div class="lbl">OCR用时</div><div class="val">3s</div></div>
+          <div><div class="lbl">总用时</div><div class="val">25s</div></div>
+          <div><div class="lbl">溯源用时</div><div class="val">5s</div></div>
+          <div><div class="lbl">匹配率</div><div class="val">68%</div></div>
+          <div><div class="lbl">AI模型</div><div class="val">GPT-4o</div></div>
+        </div>
+      </div>
+      <div class="detail-block">
+        <h4><i class="fa-solid fa-lightbulb"></i> AI 建议</h4>
+        <div style="padding:12px;background:#fff;border:1px solid #e8e8e8;border-radius:8px;font-size:13.5px;color:#555;">
+          排除标准命中：患者存在活动性心血管疾病，建议 <span style="color:#ff4d4f;font-weight:600;">筛败</span>。
+        </div>
+      </div>
+      <div class="detail-block" style="margin-bottom:0;">
+        <h4><i class="fa-solid fa-list-ol"></i> 匹配详情列表</h4>
+        <table class="sub-table">
+          <thead><tr><th>序号</th><th>标准类型</th><th>纳排内容</th><th>AI判断</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>入选标准</td><td>年龄18-75岁</td><td><span class="tag tag-green">通过</span></td><td><span class="sub-link">病历溯源</span></td></tr>
+            <tr><td>2</td><td>排除标准</td><td>活动性心血管疾病</td><td><span class="tag tag-red">命中</span></td><td><span class="sub-link">病历溯源</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('detailModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 提取要点（从 match-detail-check 迁移） ===== -->
+<div class="modal-overlay" id="extractDetailModal">
+  <div class="extract-modal-panel">
+    <div class="extract-modal-head">
+      <div class="extract-modal-title">提取要点 <span id="extractModalMeta" style="font-size:13px;font-weight:400;color:#999;"></span></div>
+      <button class="modal-close" onclick="closeModal('extractDetailModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="extract-modal-body">
+      <div class="card" id="extractCard">
+        <div class="project-info" style="margin-bottom: 16px; align-items: center;">
+          <div style="display: flex; gap: 8px; margin-left: auto;">
+            <span style="padding: 4px 12px; background: #f6ffed; color: #52c41a; border-radius: 4px; font-size: 12px;">提取成功</span>
+            <button class="btn-sm btn-primary">智能提取</button>
+            <button class="btn-sm btn-primary">下载</button>
+          </div>
+        </div>
+        <div class="prescreen-doc-layout nav-right">
+          <nav class="prescreen-nav" id="extractNav">
+            <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
+            <div id="extractNavList"></div>
+          </nav>
+          <div class="prescreen-doc" id="extractDoc">
+            <h1 class="doc-h1">患者筛选信息采集表</h1>
+            <div class="doc-subtitle" id="extractDocMeta"></div>
+            <div id="extractSections"></div>
+            <div style="margin-top:24px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
+              <i class="fas fa-exclamation-circle"></i><span>内容由AI生成，仅供参考，请谨慎鉴别</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 模态框 =====
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  document.querySelectorAll('.modal-overlay').forEach(ov => {
+    ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+  });
+
+  // ===== 项目匹配确认 =====
+  let currentMatch = { patient: '', matcher: '' };
+  function openMatchConfirm(patient, matcher) {
+    currentMatch = { patient, matcher };
+    openModal('matchConfirmModal');
+  }
+  function confirmStartMatch() {
+    closeModal('matchConfirmModal');
+    if (currentMatch.patient === 'PT-2026-005') {
+      document.getElementById('preSubmitPatient').textContent = currentMatch.patient;
+      document.getElementById('preSubmitUser').textContent = '张三';
+      document.getElementById('currentMatchUser').textContent = currentMatch.matcher;
+      openModal('preSubmitModal');
+    } else {
+      alert('已开始匹配：' + currentMatch.patient);
+    }
+  }
+  function confirmPreSubmit() {
+    closeModal('preSubmitModal');
+    alert('预提交成功，提交人固定为原提交人：张三');
+  }
+
+  // ===== AI 溯源确认 =====
+  let currentTracePatient = '';
+  function openTraceConfirm(patient) {
+    currentTracePatient = patient;
+    openModal('traceConfirmModal');
+  }
+  function confirmTrace() {
+    closeModal('traceConfirmModal');
+    alert('已发起 AI 溯源：' + currentTracePatient);
+  }
+
+  // ===== 匹配详情 =====
+  function openDetail(patient) {
+    document.getElementById('detailPatient').textContent = patient;
+    openModal('detailModal');
+  }
+
+  // ===== SVG 连线 =====
+  let connectionsData = [];
+  const svg = document.getElementById('connections');
+  const contentArea = document.querySelector('.content-area');
+
+  function drawConnections() {
+    svg.innerHTML = '';
+    connectionsData = [];
+    const containerRect = contentArea.getBoundingClientRect();
+    const leftElements = document.querySelectorAll('.proto-element[data-proto-id]');
+    const rightElements = document.querySelectorAll('.proto-desc[data-proto-id]');
+
+    leftElements.forEach(leftEl => {
+      const protoId = leftEl.getAttribute('data-proto-id');
+      const rightEl = document.querySelector('.proto-desc[data-proto-id="' + protoId + '"]');
+      if (!rightEl) return;
+
+      const leftRect = leftEl.getBoundingClientRect();
+      const rightRect = rightEl.getBoundingClientRect();
+      const containerTop = containerRect.top;
+
+      const x1 = leftRect.right - containerRect.left;
+      const y1 = leftRect.top + leftRect.height / 2 - containerTop;
+      const x2 = rightRect.left - containerRect.left;
+      const y2 = rightRect.top + rightRect.height / 2 - containerTop;
+
+      const cp1x = x1 + (x2 - x1) * 0.5;
+      const cp2x = x1 + (x2 - x1) * 0.5;
+
+      // 路径
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', 'M ' + x1 + ' ' + y1 + ' C ' + cp1x + ' ' + y1 + ', ' + cp2x + ' ' + y2 + ', ' + x2 + ' ' + y2);
+      path.setAttribute('class', 'connection-line');
+      path.setAttribute('data-proto-id', protoId);
+      svg.appendChild(path);
+
+      // 编号标签
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      bg.setAttribute('cx', midX);
+      bg.setAttribute('cy', midY);
+      bg.setAttribute('r', 11);
+      bg.setAttribute('class', 'connection-label-bg');
+      svg.appendChild(bg);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', midX);
+      text.setAttribute('y', midY);
+      text.setAttribute('dy', '0.05em');
+      text.setAttribute('class', 'connection-label');
+      text.textContent = protoId;
+      svg.appendChild(text);
+
+      connectionsData.push({ protoId, path, leftEl, rightEl });
+    });
+  }
+
+  function highlightConnection(protoId, active) {
+    const conn = connectionsData.find(c => c.protoId === protoId);
+    if (!conn) return;
+    if (active) {
+      conn.path.classList.add('active');
+      conn.leftEl.classList.add('active-highlight');
+      conn.rightEl.classList.add('active-highlight');
+    } else {
+      conn.path.classList.remove('active');
+      conn.leftEl.classList.remove('active-highlight');
+      conn.rightEl.classList.remove('active-highlight');
+    }
+  }
+
+  // Hover 事件
+  document.querySelectorAll('.proto-element[data-proto-id]').forEach(el => {
+    const id = el.getAttribute('data-proto-id');
+    el.addEventListener('mouseenter', () => highlightConnection(id, true));
+    el.addEventListener('mouseleave', () => highlightConnection(id, false));
+  });
+  document.querySelectorAll('.proto-desc[data-proto-id]').forEach(el => {
+    const id = el.getAttribute('data-proto-id');
+    el.addEventListener('mouseenter', () => highlightConnection(id, true));
+    el.addEventListener('mouseleave', () => highlightConnection(id, false));
+  });
+
+  // 初始化 & 响应 resize
+  window.addEventListener('DOMContentLoaded', () => { drawConnections(); });
+  window.addEventListener('resize', () => { drawConnections(); });
+  // 左右面板滚动时重绘
+  document.getElementById('leftPanel').addEventListener('scroll', () => { drawConnections(); });
+  document.getElementById('rightPanel').addEventListener('scroll', () => { drawConnections(); });
+
+  // ===== 移动端视图切换 =====
+  let mobilePRDVisible = true;
+  function toggleMobileView() {
+    const left = document.getElementById('leftPanel');
+    const right = document.getElementById('rightPanel');
+    const toggle = document.getElementById('mobileToggle');
+    if (window.innerWidth > 768) return;
+    if (mobilePRDVisible) {
+      right.style.display = 'none';
+      left.style.height = '100%';
+      toggle.innerHTML = '<i class="fa-solid fa-file-lines"></i>';
+      mobilePRDVisible = false;
+    } else {
+      right.style.display = 'block';
+      left.style.height = '60vh';
+      toggle.innerHTML = '<i class="fa-solid fa-info"></i>';
+      mobilePRDVisible = true;
+    }
+  }
+  // ===== 提取要点（从 match-detail-check 迁移） =====
+  const STAGE_VIEW_STAGES = [
+    { name: '筛选期', dataIdx: 1 },
+    { name: '随机期', dataIdx: 3 }
+  ];
+  const screeningProjects = [
+    {
+      id: 'p-study-history',
+      title: '既往临床研究参加情况',
+      display: 'table',
+      columns: ['参加时间', '研究项目', '组别', '结局', '出组时间'],
+      rows: [
+        ['2019-03 ~ 2019-07', 'XYZ-301（III期）', '试验组', '筛败', '-'],
+        ['2021-09 ~ 2022-05', 'ABC-118（II期）', '对照组', '导败（疾病进展）', '2022-05-18']
+      ],
+      notExtracted: ['未提及「签署知情同意」的日期与版本', '未提及「研究药物洗脱期」是否满足 ≥4 周要求']
+    },
+    {
+      id: 'p-basic',
+      title: '基础及人口统计学信息',
+      display: 'table',
+      columns: ['项目', '内容'],
+      rows: [
+        ['年龄', '36岁'],
+        ['性别', '女'],
+        ['过敏史', '青霉素过敏（皮疹）'],
+        ['吸烟史', '无'],
+        ['饮酒史', '偶饮酒'],
+        ['月经史', '已绝经（48岁）'],
+        ['手术史', '2020-10 右乳癌根治术']
+      ],
+      notExtracted: ['未提及「身高 / 体重 / BMI」', '未提及「种族 / 民族」', '未提及「教育程度 / 职业」']
+    },
+    {
+      id: 'p-disease',
+      title: '本研究疾病信息',
+      display: 'table',
+      columns: ['项目', '内容'],
+      rows: [
+        ['首次症状日期', '2020-08-12（右乳无痛性肿块）'],
+        ['首次诊断日期', '2020-10-21（浸润性导管癌）'],
+        ['距病情描述', '约5年'],
+        ['疾病相关指标', 'ER（中强+90%）、PR（中强+70%）、HER2（0）、Ki-67（30%）']
+      ],
+      notExtracted: ['未提及「TNM 临床分期（cT/cN/cM）」', '未提及「转移部位 / 转移灶数量」', '未提及「复发 / 转移时间」']
+    },
+    {
+      id: 'p-history-disease',
+      title: '既往病史 & 合并疾病',
+      display: 'table',
+      columns: ['疾病名称', '开始日期', '结束日期', '是否持续', '补充信息', '干预'],
+      rows: [
+        ['高血压病', '2018-05', '至今', '是', '最高160/100mmHg', '氨氯地平 5mg qd'],
+        ['2型糖尿病', '2020-03', '至今', '是', 'HbA1c 7.2%', '二甲双胍 0.5g bid'],
+        ['腰椎间盘突出', '2019-11', '2020-02', '否', '已愈', '理疗']
+      ],
+      notExtracted: ['未提及「精神疾病史 / 抑郁焦虑史」', '未提及「恶性肿瘤家族史」', '未提及「传染病史（乙肝 / 结核）」']
+    },
+    {
+      id: 'p-medication',
+      title: '既往用药 & 合并用药',
+      display: 'table',
+      columns: ['药物名称', '给药方案', '治疗目的', '开始日期', '结束日期', '距筛选日时长'],
+      rows: [
+        ['氨氯地平', '5mg qd 口服', '控制血压', '2018-05-10', '至今', '持续用药'],
+        ['二甲双胍', '0.5g bid 口服', '控制血糖', '2020-03-02', '至今', '持续用药'],
+        ['阿托伐他汀', '20mg qn 口服', '降脂', '2023-01-15', '2024-06-30', '已洗脱约2年']
+      ],
+      notExtracted: ['未提及「中药 / 中成药」使用情况', '未提及「保健品 / 膳食补充剂」使用情况']
+    },
+    {
+      id: 'p-lab',
+      title: '实验室检查',
+      display: 'table',
+      columns: ['检查项目', '结果', '检查时间'],
+      rows: [
+        ['白细胞计数', '3.1×10⁹/L <span class="val-down">↓（降低，正常3.5~9.5）</span>', '2026-03-05'],
+        ['中性粒细胞', '1.6×10⁹/L <span class="val-down">↓（降低，正常1.8~6.3）</span>', '2026-03-05'],
+        ['ALT', '68 U/L <span class="val-up">↑（升高，正常7~40）</span>', '2026-03-05'],
+        ['AST', '55 U/L <span class="val-up">↑（升高，正常13~35）</span>', '2026-03-05'],
+        ['肌酐', '62 μmol/L（正常41~73）', '2026-03-05'],
+        ['总胆红素', '21 μmol/L（正常3.4~20.5）', '2026-03-05']
+      ],
+      notExtracted: ['未提及「血小板计数（PLT）」', '未提及「血红蛋白（Hb）」', '未提及「甲状腺功能（TSH / FT4）」', '未提及「凝血功能（PT / APTT）」']
+    },
+    {
+      id: 'p-imaging',
+      title: '影像学检查',
+      display: 'table',
+      columns: ['检查', '诊断描述', '诊断提示'],
+      rows: [
+        ['胸部CT（2024-05-10）', '双肺纹理增多，右肺上叶见结节影约8mm', '考虑转移可能，建议随访'],
+        ['腹部超声（2024-05-10）', '肝实质回声均匀，未见占位', '未见明显异常']
+      ],
+      notExtracted: ['未提及「骨扫描（ECT）」', '未提及「头颅 MRI」', '未提及「心脏超声 / LVEF」']
+    },
+    {
+      id: 'p-vitals',
+      title: '生命体征 & 体格检查',
+      display: 'table',
+      columns: ['项目', '内容'],
+      rows: [
+        ['体温', '36.5℃'],
+        ['脉搏', '78次/分'],
+        ['呼吸频率', '18次/分'],
+        ['收缩压/舒张压', '128/82 mmHg'],
+        ['体格检查-头颈部', '未见异常'],
+        ['体格检查-胸部', '双肺呼吸音清'],
+        ['体格检查-腹部', '腹软，无压痛'],
+        ['体格检查-脊柱四肢', '活动正常'],
+        ['体格检查-皮肤', '无黄染、无皮损']
+      ],
+      notExtracted: ['未提及「身高 / 体重 / BMI」', '未提及「腰围 / 臀围」']
+    },
+    {
+      id: 'p-lipid-therapy',
+      title: '降脂治疗稳定性 & 审核',
+      display: 'timeline',
+      timeline: [
+        { drug: '阿托伐他汀', dose: '40mg qn', start: '2023-01-15', adjust: '—', stop: '—', stableDays: '稳定≥2周', badge: 'ok', badgeText: '已稳定', concl: '筛选前稳定≥2周，导入期继续稳定≥2周', lines: [
+          ['剂量', '40mg 每晚口服'], ['开始日期', '2023-01-15'], ['调整日期', '无'], ['停药日期', '无'], ['稳定天数', '约2年']
+        ] },
+        { drug: '依折麦布', dose: '10mg qd', start: '2023-03-01', adjust: '2024-02-10（改为5mg）', stop: '—', stableDays: '调整后稳定≥4周', badge: 'warn', badgeText: '剂量调整', concl: '2024-02-10调整剂量，调整后稳定≥4周', lines: [
+          ['剂量', '10mg→5mg 每日口服'], ['开始日期', '2023-03-01'], ['调整日期', '2024-02-10'], ['停药日期', '无'], ['稳定天数', '调整后≥4周']
+        ] },
+        { drug: '非诺贝特', dose: '160mg qd', start: '<span class="doc-pending-tag">待确认</span>', adjust: '—', stop: '2024-06-30', stableDays: '<span class="doc-pending-tag">待确认</span>', badge: 'warn', badgeText: '起始待确认', concl: '缺少起始日期或剂量，标记“待确认”', lines: [
+          ['剂量', '160mg 每日口服'], ['开始日期', '<span class="doc-pending-tag">待确认</span>'], ['调整日期', '无'], ['停药日期', '2024-06-30'], ['稳定天数', '<span class="doc-pending-tag">待确认</span>']
+        ] }
+      ],
+      audit: {
+        questions: [
+          '是否使用阿托伐他汀40/80 mg或瑞舒伐他汀20 mg',
+          '不耐受者是否有最大耐受剂量的医学记录',
+          '筛选前已稳定≥2周者，导入期是否继续稳定≥2周',
+          '筛选前稳定不足2周或进行剂量调整者，调整后是否稳定≥4周',
+          '依折麦布或非诺贝特如继续使用，种类和剂量是否保持稳定'
+        ],
+        conclusion: '阿托伐他汀40mg已稳定≥2周，导入期继续稳定；依折麦布剂量调整后稳定≥4周；非诺贝特缺少起始日期与剂量，标记“待确认”，需补充资料。'
+      },
+      notExtracted: ['未提及「PCSK9 抑制剂使用史」', '未提及「LDL-C 基线目标值 / 达标情况」']
+    }
+  ];
+
+  const stageCompareData = {
+    'p-study-history': {
+      sub: '对比该受试者参与既往临床研究的情况在各阶段是否一致。',
+      rows: [
+        { metric: '近 3 个月内研究参与', values: ['无', '无', '无', '无'], tag: 'same' },
+        { metric: '既往试验组/对照组', values: ['试验组/对照组均有', '试验组/对照组均有', '试验组/对照组均有', '试验组/对照组均有'], tag: 'same' },
+        { metric: '洗脱期是否满足', values: ['待确认', '已确认满足', '已确认满足', '已确认满足'], tag: 'pending' }
+      ]
+    },
+    'p-basic': {
+      sub: '人口统计学与基础信息通常稳定，跨阶段一般保持一致。',
+      rows: [
+        { metric: '年龄', values: ['36岁', '36岁', '36岁', '36岁'], tag: 'same' },
+        { metric: '性别', values: ['女', '女', '女', '女'], tag: 'same' },
+        { metric: '过敏史', values: ['青霉素过敏', '青霉素过敏', '青霉素过敏', '青霉素过敏'], tag: 'same' },
+        { metric: '体重(kg)', values: ['62', '62', '61', '60'], tag: 'change' }
+      ]
+    },
+    'p-disease': {
+      sub: '疾病诊断信息在预筛后通常不再变更，导入/治疗期以基线为准。',
+      rows: [
+        { metric: '首次诊断', values: ['浸润性导管癌', '浸润性导管癌', '浸润性导管癌', '浸润性导管癌'], tag: 'same' },
+        { metric: 'ER/PR/HER2 状态', values: ['ER+90%/PR+70%/HER2-', 'ER+90%/PR+70%/HER2-', 'ER+90%/PR+70%/HER2-', 'ER+90%/PR+70%/HER2-'], tag: 'same' },
+        { metric: '疾病分期', values: ['IIA期', 'IIA期', 'IIA期', 'IIA期'], tag: 'same' }
+      ]
+    },
+    'p-history-disease': {
+      sub: '合并疾病随治疗可能出现新的并发情况，需关注变化项。',
+      rows: [
+        { metric: '高血压', values: ['持续(氨氯地平)', '持续(氨氯地平)', '持续(氨氯地平)', '持续(氨氯地平)'], tag: 'same' },
+        { metric: '2型糖尿病', values: ['持续(二甲双胍)', '持续(二甲双胍)', '持续(二甲双胍)', '持续(二甲双胍)'], tag: 'same' },
+        { metric: '新发并发症', values: ['无', '无', '无', '手足综合征(1级)'], tag: 'change' }
+      ]
+    },
+    'p-medication': {
+      sub: '合并用药在导入期需稳定，治疗期可能因方案调整变化。',
+      rows: [
+        { metric: '氨氯地平', values: ['5mg qd', '5mg qd', '5mg qd', '5mg qd'], tag: 'same' },
+        { metric: '二甲双胍', values: ['0.5g bid', '0.5g bid', '0.5g bid', '0.5g bid'], tag: 'same' },
+        { metric: '研究药物合并', values: ['未使用', '未使用', '导入中', '已联用'], tag: 'change' }
+      ]
+    },
+    'p-lab': {
+      sub: '实验室指标会随治疗动态变化，是跨阶段对比重点。',
+      rows: [
+        { metric: '检查时间', values: ['2026-03-05', '2026-03-20', '2026-04-10', '2026-05-08'], tag: 'same' },
+        { metric: '白细胞计数', values: ['3.1×10⁹/L↓', '3.4×10⁹/L↓', '3.8×10⁹/L', '4.2×10⁹/L'], tag: 'change' },
+        { metric: 'ALT', values: ['68 U/L↑', '55 U/L↑', '42 U/L', '38 U/L'], tag: 'change' },
+        { metric: '肌酐', values: ['62 μmol/L', '62 μmol/L', '64 μmol/L', '63 μmol/L'], tag: 'same' }
+      ]
+    },
+    'p-imaging': {
+      sub: '影像学评估在筛选期与基线后定期复查，关注新发病灶。',
+      rows: [
+        { metric: '右肺结节', values: ['8mm(随访)', '8mm(随访)', '8mm(稳定)', '9mm(略增大)'], tag: 'change' },
+        { metric: '肝占位', values: ['未见', '未见', '未见', '未见'], tag: 'same' }
+      ]
+    },
+    'p-vitals': {
+      sub: '生命体征一般平稳，治疗期可能因不良反应波动。',
+      rows: [
+        { metric: '血压', values: ['128/82', '126/80', '125/78', '130/84'], tag: 'same' },
+        { metric: '体温', values: ['36.5℃', '36.5℃', '36.7℃', '37.2℃'], tag: 'change' }
+      ]
+    },
+    'p-lipid-therapy': {
+      sub: '降脂治疗稳定性是导入期核心审核项，治疗期持续监测。',
+      rows: [
+        { metric: '阿托伐他汀', values: ['40mg 稳定≥2周', '40mg 稳定', '40mg 持续稳定', '40mg 持续稳定'], tag: 'same' },
+        { metric: '依折麦布', values: ['5mg 调整后≥4周', '5mg 稳定', '5mg 稳定', '5mg 稳定'], tag: 'same' },
+        { metric: '非诺贝特', values: ['起始待确认', '已补全(160mg)', '已洗脱', '未使用'], tag: 'pending' }
+      ]
+    }
+  };
+
+  // 通用内联演示弹窗
+  function showPrescreenModal(title, bodyHtml, wide) {
+    let mask = document.getElementById('prescreenModalMask');
+    if (!mask) {
+      mask = document.createElement('div');
+      mask.id = 'prescreenModalMask';
+      mask.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+      mask.innerHTML = `
+        <div class="pm-panel">
+          <div class="pm-head">
+            <span id="prescreenModalTitle"></span>
+            <i class="fa-solid fa-xmark pm-close" onclick="closePrescreenModal()"></i>
+          </div>
+          <div id="prescreenModalBody" class="pm-body"></div>
+          <div class="pm-foot">
+            <button class="btn-sm btn-primary" onclick="closePrescreenModal()">关闭</button>
+          </div>
+        </div>`;
+      document.body.appendChild(mask);
+      mask.addEventListener('click', function (e) { if (e.target === mask) closePrescreenModal(); });
+    }
+    const panel = mask.querySelector('.pm-panel');
+    panel.className = 'pm-panel' + (wide ? ' stage-compare-modal' : '');
+    const bodyEl = document.getElementById('prescreenModalBody');
+    bodyEl.className = 'pm-body' + (wide ? ' stage-compare-body' : '');
+    document.getElementById('prescreenModalTitle').textContent = title;
+    bodyEl.innerHTML = bodyHtml;
+    mask.style.display = 'flex';
+  }
+  function closePrescreenModal() {
+    const mask = document.getElementById('prescreenModalMask');
+    if (mask) mask.style.display = 'none';
+  }
+
+  // 跨阶段比较弹窗
+  function openStageCompare(projectId) {
+    const proj = screeningProjects.find(p => p.id === projectId);
+    if (!proj) return;
+    const conf = stageCompareData[projectId];
+    function buildStageRows(dataIdx) {
+      if (!proj.rows) return null;
+      return proj.rows.map(r => {
+        const cells = r.slice();
+        if (conf && conf.rows) {
+          conf.rows.forEach(cr => {
+            if (r[0] === cr.metric && cr.values[dataIdx] != null) cells[1] = cr.values[dataIdx];
+          });
+        }
+        return cells;
+      });
+    }
+    const blocks = STAGE_VIEW_STAGES.map(st => {
+      let inner;
+      if (proj.display === 'timeline') {
+        inner = `<div class="doc-timeline">${proj.timeline.map(t => `
+          <div class="tl-item ${t.badge === 'warn' ? 'instable' : ''}">
+            <div class="tl-head">
+              <span class="tl-drug">${t.drug}</span>
+              <span class="tl-date">${t.dose}</span>
+              <span class="tl-badge ${t.badge === 'ok' ? 'ok' : 'warn'}">${t.badgeText}</span>
+              <span class="tl-date">${t.stableDays}</span>
+            </div>
+            <div class="tl-body">
+              ${t.lines.map(l => `<div class="tl-line"><span class="k">${l[0]}：</span><span>${l[1]}</span></div>`).join('')}
+              <div class="tl-line"><span class="k">结论：</span><span>${t.concl}</span></div>
+            </div>
+          </div>`).join('')}</div>`;
+      } else {
+        const rows = buildStageRows(st.dataIdx) || proj.rows;
+        inner = `<table class="doc-table">
+          <thead><tr>${proj.columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(rc => `<tr>${rc.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>`;
+      }
+      return `<div class="stage-view-block">
+        <div class="stage-view-title"><i class="fa-solid fa-layer-group"></i> ${st.name}</div>
+        ${inner}
+      </div>`;
+    }).join('');
+    showPrescreenModal('阶段视图 · ' + proj.title, `<div class="stage-view-list">${blocks}</div>`, true);
+  }
+
+  function openTraceDrawer(images) {
+    showPrescreenModal('病历溯源', '<div style="color:#8c8c8c;">（演示）展示该患者相关病历图片与溯源信息，点击可定位至原始病历段落。</div>');
+  }
+
+  // 渲染页面导航
+  function renderPrescreenNav(prefix) {
+    const list = document.getElementById(prefix + 'NavList');
+    if (!list) return;
+    list.innerHTML = screeningProjects.map((p, i) => `
+      <div class="prescreen-nav-item" data-target="sec-${prefix}-${p.id}" onclick="scrollToPrescreen('sec-${prefix}-${p.id}', '${prefix}')">
+        ${i + 1}. ${p.title}
+      </div>
+    `).join('');
+  }
+
+  // 渲染文档章节
+  function renderPrescreenSections(prefix) {
+    const box = document.getElementById(prefix + 'Sections');
+    if (!box) return;
+    box.innerHTML = screeningProjects.map((p, i) => `
+      <div class="doc-section" id="sec-${prefix}-${p.id}">
+        <h2 class="doc-section-title"><span class="sec-idx">${i + 1}.</span> ${p.title}
+          <span class="sec-title-actions">
+            ${prefix === 'extract' ? `<button type="button" class="sec-trace-btn" onclick="openTraceDrawer(['image.png'])"><i class="fa-solid fa-file-medical"></i>病历溯源</button>` : ''}
+            <button type="button" class="sec-compare-btn" onclick="openStageCompare('${p.id}')"><i class="fa-solid fa-code-compare"></i>比较各阶段</button>
+          </span>
+        </h2>
+        ${p.desc ? `<div class="doc-section-desc">${p.desc}</div>` : ''}
+        ${renderScreeningBody(p, prefix)}
+        ${renderNotExtracted(p, prefix)}
+      </div>
+    `).join('');
+  }
+
+  function prescreenRowActions(itemKey, prefix) {
+    const isExtract = prefix === 'extract';
+    return `<div class="doc-row-actions">
+      <span class="action-link" onclick="openTraceDrawer(['image.png'])">病历溯源</span>
+      ${isExtract ? '' : `<span class="action-link" onclick="openCaseCorrection('${itemKey}')">病例修正</span>
+      <span class="action-link" onclick="openCorrectionRecord('${itemKey}')">修正记录</span>
+      <span class="action-link" onclick="clearCorrection('${itemKey}', this)">清空修正</span>`}
+    </div>`;
+  }
+
+  function renderScreeningBody(p, prefix) {
+    const isExtract = prefix === 'extract';
+    if (p.display === 'table') {
+      return `<table class="doc-table">
+        <thead><tr>${p.columns.map(c => `<th>${c}</th>`).join('')}${isExtract ? '' : '<th class="doc-act-col">操作</th>'}</tr></thead>
+        <tbody>${p.rows.map((r, ri) => `
+          <tr>
+            ${r.map(c => `<td>${c}</td>`).join('')}
+            ${isExtract ? '' : `<td class="doc-act-cell">${prescreenRowActions(p.id + '-row-' + ri, prefix)}</td>`}
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    }
+    if (p.display === 'timeline') {
+      const tl = `<div class="doc-timeline">${p.timeline.map((t, ti) => `
+        <div class="tl-item ${t.badge === 'warn' ? 'instable' : ''}">
+          <div class="tl-head">
+            <span class="tl-drug">${t.drug}</span>
+            <span class="tl-date">${t.dose}</span>
+            <span class="tl-badge ${t.badge === 'ok' ? 'ok' : 'warn'}">${t.badgeText}</span>
+            <span class="tl-date">${t.stableDays}</span>
+          </div>
+          <div class="tl-body">
+            ${t.lines.map(l => `<div class="tl-line"><span class="k">${l[0]}：</span><span>${l[1]}</span></div>`).join('')}
+            <div class="tl-line"><span class="k">结论：</span><span>${t.concl}</span></div>
+          </div>
+          ${isExtract ? '' : `<div class="tl-actions">${prescreenRowActions(p.id + '-tl-' + ti, prefix)}</div>`}
+        </div>`).join('')}</div>`;
+      const audit = p.audit ? `<div class="doc-audit-box">
+        <div style="font-weight:600;color:#333;margin-bottom:8px;">审核要点</div>
+        ${p.audit.questions.map((q, idx) => `<div class="audit-q"><span class="num">${idx + 1}</span><span>${q}</span></div>`).join('')}
+        <div class="audit-concl"><strong>审核结论：</strong>${p.audit.conclusion}</div>
+      </div>` : '';
+      return tl;
+    }
+    return `<div class="doc-text">${p.text || ''}</div>`;
+  }
+
+  function renderNotExtracted(p, prefix) {
+    if (prefix !== 'extract' && prefix !== 'newExtract') return '';
+    const list = p.notExtracted;
+    if (!list || !list.length) return '';
+    return `<div class="not-extracted-box">
+      <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+      <ul class="ne-list">${list.map(t => `<li>${t}</li>`).join('')}</ul>
+    </div>`;
+  }
+
+  function scrollToPrescreen(id, prefix) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!window._psScope) return;
+    window._psScope.forEach(pf => {
+      document.querySelectorAll('#' + pf + 'NavList .prescreen-nav-item').forEach(n => n.classList.remove('active'));
+    });
+    const nav = document.querySelector('#' + prefix + 'NavList .prescreen-nav-item[data-target="' + id + '"]');
+    if (nav) nav.classList.add('active');
+  }
+
+  function initPrescreenObserver(prefix) {
+    const sections = document.querySelectorAll('#' + prefix + 'Sections .doc-section');
+    if (sections.length === 0) return;
+    if (window._psObserver) window._psObserver.disconnect();
+    window._psObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          window._psScope.forEach(pf => {
+            document.querySelectorAll('#' + pf + 'NavList .prescreen-nav-item').forEach(n => n.classList.remove('active'));
+          });
+          const nav = document.querySelector('#' + prefix + 'NavList .prescreen-nav-item[data-target="' + id + '"]');
+          if (nav) nav.classList.add('active');
+        }
+      });
+    });
+    sections.forEach(s => window._psObserver.observe(s));
+  }
+
+  function initPrescreenDoc(prefix) {
+    if (typeof prefix !== 'string') prefix = 'prescreen';
+    window._psScope = window._psScope || [];
+    if (window._psScope.indexOf(prefix) === -1) window._psScope.push(prefix);
+    try { renderPrescreenNav(prefix); } catch (e) { console.error('renderPrescreenNav', e); }
+    try { renderPrescreenSections(prefix); } catch (e) { console.error('renderPrescreenSections', e); }
+    setTimeout(function () { initPrescreenObserver(prefix); }, 200);
+  }
+
+  // 打开提取要点弹窗
+  function openExtractModal(patientNo, schemeNo, center) {
+    document.getElementById('extractModalMeta').textContent = '｜ 方案编号：' + schemeNo + ' ｜ 患者：' + patientNo + ' ｜ 中心：' + center;
+    document.getElementById('extractDocMeta').textContent = '患者编号：' + patientNo + ' ｜ 方案编号：' + schemeNo + ' ｜ 中心：' + center;
+    openModal('extractDetailModal');
+    initPrescreenDoc('extract');
+  }
+
+</script>
+</body>
+</html>

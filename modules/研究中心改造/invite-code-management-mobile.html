@@ -1,0 +1,634 @@
+<!--
+  邀请码管理 - 手机端产品原型
+  功能：邀请码列表展示与管理，已邀请成员查看与启用/停用操作
+  主题色：#1872a7
+  Tab页：邀请码列表 | 已邀请成员
+  移动端适配：卡片式布局、底部固定操作栏
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>项目中心邀请码</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #F5F7FA;
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* 顶部导航 */
+    .mobile-header {
+      background: #fff;
+      border-bottom: 1px solid #eee;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    .mobile-header .title { font-size: 16px; font-weight: 600; color: #333; }
+    .mobile-header .back-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: #333; }
+    .mobile-header .user-area { display: flex; align-items: center; gap: 6px; }
+
+    /* 项目切换（上层Tab） */
+    .proj-tabs-m {
+      background: #fff;
+      padding: 10px 16px 0;
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .proj-tab-m {
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      color: #666;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .proj-tab-m.active {
+      color: #1872a7;
+      font-weight: 500;
+    }
+    .proj-tab-m.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 20%;
+      right: 20%;
+      height: 3px;
+      background: #1872a7;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* 功能Tab切换（下层） */
+    .func-tabs-m {
+      background: #fff;
+      padding: 10px 16px 0;
+      display: flex;
+      gap: 24px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .func-tab-m {
+      padding: 8px 4px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #999;
+      position: relative;
+      transition: color 0.15s;
+    }
+    .func-tab-m.active {
+      color: #1872a7;
+      font-weight: 500;
+    }
+    .func-tab-m.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1872a7;
+      border-radius: 1px;
+    }
+
+    /* 搜索栏 */
+    .search-bar-m {
+      background: #fff;
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .search-input-m {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-input-m:focus { border-color: #1872a7; }
+
+    /* 新建按钮 */
+    .new-btn-bar {
+      background: #fff;
+      padding: 8px 16px 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .btn-new-m {
+      background: #1872a7;
+      color: #fff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* 表格头部（移动端） */
+    .table-head-m {
+      background: #fff;
+      padding: 10px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1.5fr auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* 卡片列表 */
+    .card-list-m { padding: 8px 12px; }
+
+    .ic-card-m {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .ic-card-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .ic-card-left { flex: 1; min-width: 0; }
+    .ic-card-project {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+    .ic-card-center {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .ic-card-creator {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+    .ic-card-ops {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+    .icon-btn-m {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .icon-btn-blue { background: rgba(24,114,167,0.08); color: #1872a7; }
+    .icon-btn-blue:active { background: rgba(24,114,167,0.2); transform: scale(0.92); }
+    .icon-btn-red { background: rgba(245,63,63,0.06); color: #F53F3F; }
+    .icon-btn-red:active { background: rgba(245,63,63,0.15); transform: scale(0.92); }
+
+    /* 成员卡片 */
+    .member-card-m {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .member-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .member-name-m { font-size: 15px; font-weight: 600; color: #333; }
+    .member-status-m {
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+    .status-active-m { background: #e8ffea; color: #00B42A; }
+    .status-inactive-m { background: #f2f3f5; color: #86909c; }
+    .member-info-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+    }
+    .member-info-item { display: flex; align-items: center; gap: 4px; }
+    .member-centers-m {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+    .center-tag-m {
+      display: inline-block;
+      background: rgba(24,114,167,0.05);
+      color: #1872a7;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 4px;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .member-time-m {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #bbb;
+    }
+    .member-op-m {
+      margin-top: 10px;
+      text-align: right;
+    }
+    .btn-toggle-m {
+      background: #1872a7;
+      color: #fff;
+      border: none;
+      padding: 6px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-toggle-m:active { opacity: 0.85; transform: scale(0.97); }
+
+    /* 分页 */
+    .pagination-m {
+      background: #fff;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #999;
+      border-top: 1px solid #f0f0f0;
+    }
+    .page-nums-m { display: flex; gap: 4px; }
+    .page-dot-m {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #666;
+      border: 1px solid #eee;
+    }
+    .page-dot-m.active { background: #1872a7; color: #fff; border-color: #1872a7; }
+
+    /* Toast */
+    .toast-m {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      z-index: 9999;
+      animation: toastInM 0.25s ease;
+      max-width: 80%;
+      text-align: center;
+    }
+    @keyframes toastInM { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    .toast-success-m { background: #e8ffea; color: #00B42A; }
+    .toast-error-m { background: #ffece8; color: #F53F3F; }
+    .toast-warn-m { background: #fff7e8; color: #FF7D00; }
+
+    /* 筛选下拉面板 */
+    .filter-panel-m {
+      background: #fff;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      display: none;
+    }
+    .filter-panel-m.show { display: block; }
+    .filter-row-m { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .filter-label-m { font-size: 13px; color: #666; white-space: nowrap; min-width: 52px; }
+    .filter-select-m {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 13px;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header class="mobile-header">
+    <div class="back-btn"><i class="fas fa-chevron-left"></i></div>
+    <div class="title">项目中心邀请码（...）</div>
+    <div class="user-area">
+      <div style="width:28px;height:28px;border-radius:50%;background:#1872a7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">张</div>
+      <span style="font-size:13px;color:#333">张琳</span>
+      <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+    </div>
+  </header>
+
+  <!-- 项目切换 -->
+  <div class="proj-tabs-m">
+    <div id="pTab0" class="proj-tab-m active" onclick="switchProjectM(0)">恒瑞医药</div>
+    <div id="pTab1" class="proj-tab-m" onclick="switchProjectM(1)">江苏科信</div>
+    <div id="pTab2" class="proj-tab-m" onclick="switchProjectM(2)">运营二部</div>
+  </div>
+
+  <!-- 功能Tab -->
+  <div class="func-tabs-m">
+    <div id="fTabIc" class="func-tab-m active" onclick="switchFuncTabM('ic')">邀请码列表</div>
+    <div id="fTabIm" class="func-tab-m" onclick="switchFuncTabM('im')">已邀请成员</div>
+  </div>
+
+  <!-- ========== 邀请码列表 ========== -->
+  <div id="panelIcM">
+    <!-- 搜索栏 -->
+    <div class="search-bar-m">
+      <input id="mIcSearch" type="text" placeholder="搜索方案编号 / 中心名称" class="search-input-m" oninput="renderIcCards()">
+    </div>
+    <!-- 筛选面板 -->
+    <div id="filterPanelIc" class="filter-panel-m">
+      <div class="filter-row-m">
+        <span class="filter-label-m">编号</span>
+        <input id="mIcCode" type="text" placeholder="请输入" class="search-input-m" oninput="renderIcCards()">
+      </div>
+      <div class="filter-row-m">
+        <span class="filter-label-m">中心</span>
+        <input id="mIcCenter" type="text" placeholder="请输入" class="search-input-m" oninput="renderIcCards()">
+      </div>
+    </div>
+    <!-- 新建按钮 -->
+    <div class="new-btn-bar">
+      <button class="btn-new-m" onclick="showToastM('新建邀请码','success')"><i class="fas fa-plus"></i> 新建</button>
+    </div>
+    <!-- 表头 -->
+    <div class="table-head-m">
+      <span>方案编号</span>
+      <span>中心名称</span>
+      <span style="text-align:right">操作</span>
+    </div>
+    <!-- 卡片列表 -->
+    <div id="icCardList" class="card-list-m"></div>
+    <!-- 分页 -->
+    <div class="pagination-m">
+      <span id="mIcTotal">共 0 条</span>
+      <div class="page-nums-m" id="mIcPages"></div>
+    </div>
+  </div>
+
+  <!-- ========== 已邀请成员 ========== -->
+  <div id="panelImM" style="display:none">
+    <!-- 搜索栏 -->
+    <div class="search-bar-m">
+      <input id="mImSearch" type="text" placeholder="搜索姓名 / 手机号" class="search-input-m" oninput="renderImCards()">
+    </div>
+    <!-- 筛选面板 -->
+    <div id="filterPanelIm" class="filter-panel-m">
+      <div class="filter-row-m">
+        <span class="filter-label-m">状态</span>
+        <select id="mImStatus" class="filter-select-m" onchange="renderImCards()">
+          <option value="">全部</option><option>启用</option><option>停用</option>
+        </select>
+      </div>
+    </div>
+    <!-- 成员卡片列表 -->
+    <div id="imCardList" style="padding:0 12px 8px;display:flex;flex-direction:column;gap:10px"></div>
+    <!-- 分页 -->
+    <div class="pagination-m">
+      <span id="mImTotal">共 0 条</span>
+      <div class="page-nums-m" id="mImPages"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== 数据 ====================
+    var icData = [
+      { projectNo: 'HRS-1918-302', centerName: 'CN043·宜昌市中心人民医院·曾XX', creator: '胡X' },
+      { projectNo: 'HRS9531-310', centerName: 'CN111·惠州市第三人民医院·张X', creator: '江小X' },
+      { projectNo: 'HRS9531-310', centerName: 'CN140·昆明市延安医院·詹X', creator: '凌X' },
+      { projectNo: '2102-102', centerName: 'CN054·天津市肿瘤医院空港医院·王X', creator: '蔡XX' },
+      { projectNo: 'SHR-A1811-317', centerName: 'CN004·首都医科大学附属北京友谊医院·邓X', creator: '庞XX' },
+      { projectNo: 'HRS1904-301', centerName: 'CN061·哈尔滨医科大学附属第二医院·杨X', creator: '史XX' },
+      { projectNo: 'HRS9531-310', centerName: 'CN086·广西壮族自治区人民医院·卢X', creator: '方XX' },
+      { projectNo: 'SHR-1316-309', centerName: 'CN005·常让人民医院·郭XX', creator: '曾XX' },
+      { projectNo: 'HRS-1918-302', centerName: 'CN046·天津市胸科医院·丛XX', creator: '崔X' },
+      { projectNo: 'SHR-A1811-317', centerName: 'CN025·湖州市人民医院·任XX', creator: '朱XX' },
+    ];
+    for (var i = icData.length; i < 60; i++) {
+      var b = icData[i % icData.length];
+      icData.push({ projectNo: b.projectNo, centerName: b.centerName, creator: b.creator });
+    }
+
+    var imData = [
+      { name: '王慧柳', phone: '138****0001', role: '医学经理', projectNo: 'SHR-1918-302', centers: ['CN015·唐镇市中心医院','CN029·郫都区人民医院'], createTime: '2026-06-01 09:30', status: '启用' },
+      { name: '刘雪红', phone: '139****2342', role: 'CRA专员', projectNo: 'HRS9531-310', centers: ['CN001·首都医科大学附属北京友谊医院'], createTime: '2026-05-12 14:05', status: '启用' },
+      { name: '陈CRA', phone: '137****8888', role: 'CRA专员', projectNo: '2102-102', centers: ['CN420·无此医院'], createTime: '2026-08-15 08:30', status: '停用' },
+      { name: '周CRC', phone: '133****2233', role: 'CRC', projectNo: 'SHR-A1811-317', centers: ['CN031·上海瑞金医院'], createTime: '2026-07-20 11:48', status: '启用' },
+      { name: '李协调员', phone: '136****5566', role: '临床协调员', projectNo: 'SHR-1904-301', centers: ['CN043·宜昌市中心人民医院'], createTime: '2026-08-01 16:20', status: '停用' },
+      { name: '张研究员', phone: '135****7799', role: '研究员', projectNo: 'HRS9531-310', centers: ['CN054·天津肿瘤医院空港医院'], createTime: '2026-03-10 10:00', status: '启用' },
+      { name: '赵主管', phone: '158****1122', role: '项目经理', projectNo: 'SHR-1316-309', centers: ['CN111·温州市第三人民医院'], createTime: '2026-02-28 09:15', status: '启用' },
+      { name: '孙助理', phone: '159****3344', role: '项目助理', projectNo: 'SHR-1918-302', centers: ['CN140·昆山市超医院'], createTime: '2026-04-15 14:30', status: '停用' },
+    ];
+
+    // ==================== Tab 切换 ====================
+    function switchProjectM(idx) {
+      for (var i = 0; i < 3; i++) document.getElementById('pTab'+i).classList.toggle('active', i === idx);
+      showToastM('已切换到 '+['恒瑞医药','江苏科信','运营二部'][idx], 'success');
+    }
+
+    var currentFuncTab = 'ic';
+    function switchFuncTabM(tab) {
+      currentFuncTab = tab;
+      document.getElementById('fTabIc').classList.toggle('active', tab === 'ic');
+      document.getElementById('fTabIm').classList.toggle('active', tab === 'im');
+      document.getElementById('panelIcM').style.display = tab === 'ic' ? '' : 'none';
+      document.getElementById('panelImM').style.display = tab === 'im' ? '' : 'none';
+      if (tab === 'ic') renderIcCards(); else renderImCards();
+    }
+
+    // ==================== Toast ====================
+    function showToastM(msg, type) {
+      var el = document.createElement('div');
+      el.className = 'toast-m toast-' + (type||'success') + '-m';
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(function(){ el.remove(); }, 2000);
+    }
+
+    // ==================== 筛选面板 ====================
+    function toggleFilter(which) {
+      var panel = document.getElementById('filterPanel' + which.charAt(0).toUpperCase() + which.slice(1));
+      panel.classList.toggle('show');
+    }
+
+    // ==================== 邀请码卡片渲染 ====================
+    var mIcPage = 1, mIcSize = 8;
+
+    function getFilteredIc() {
+      var s = (document.getElementById('mIcSearch').value || '').trim().toLowerCase();
+      var c = (document.getElementById('mIcCode').value || '').trim().toLowerCase();
+      var cn = (document.getElementById('mIcCenter').value || '').trim().toLowerCase();
+      return icData.filter(function(r) {
+        if (s && (r.projectNo.toLowerCase().indexOf(s)===-1 && r.centerName.toLowerCase().indexOf(s)===-1)) return false;
+        if (c && r.projectNo.toLowerCase().indexOf(c)===-1) return false;
+        if (cn && r.centerName.toLowerCase().indexOf(cn)===-1) return false;
+        return true;
+      });
+    }
+
+    function renderIcCards() {
+      var data = getFilteredIc();
+      var total = data.length;
+      mIcSize = 8;
+      var tp = Math.max(1, Math.ceil(total / mIcSize));
+      if (mIcPage > tp) mIcPage = tp;
+      var start = (mIcPage - 1) * mIcSize;
+      var pageData = data.slice(start, start + mIcSize);
+
+      var list = document.getElementById('icCardList');
+      list.innerHTML = '';
+      pageData.forEach(function(row) {
+        var card = document.createElement('div');
+        card.className = 'ic-card-m';
+        card.innerHTML =
+          '<div class="ic-card-row">' +
+            '<div class="ic-card-left">' +
+              '<div class="ic-card-project">' + row.projectNo + '</div>' +
+              '<div class="ic-card-center">' + row.centerName + '</div>' +
+            '</div>' +
+            '<div class="ic-card-ops">' +
+              '<button class="icon-btn-m icon-btn-blue" onclick="showToastM(\'甄选\',\'success\')"><i class="fas fa-edit"></i></button>' +
+              '<button class="icon-btn-m icon-btn-blue" onclick="showToastM(\'查看\',\'success\')"><i class="fas fa-eye"></i></button>' +
+              '<button class="icon-btn-m icon-btn-red" onclick="showToastM(\'删除\',\'warn\')"><i class="fas fa-trash-alt"></i></button>' +
+            '</div>' +
+          '</div>';
+        list.appendChild(card);
+      });
+
+      document.getElementById('mIcTotal').textContent = '共 ' + total + ' 条';
+      renderMPages('mIcPages', tp, mIcPage, changeIcPageM);
+    }
+
+    function changeIcPageM(p) {
+      var total = getFilteredIc().length;
+      var tp = Math.max(1, Math.ceil(total / mIcSize));
+      if (p<1||p>tp) return;
+      mIcPage = p;
+      renderIcCards();
+    }
+
+    // ==================== 成员卡片渲染 ====================
+    var mImPage = 1, mImSize = 8;
+
+    function getFilteredIm() {
+      var s = (document.getElementById('mImSearch').value || '').trim().toLowerCase();
+      var st = document.getElementById('mImStatus').value;
+      return imData.filter(function(r) {
+        if (s && (r.name.toLowerCase().indexOf(s)===-1 && r.phone.indexOf(s)===-1)) return false;
+        if (st && r.status !== st) return false;
+        return true;
+      });
+    }
+
+    function renderImCards() {
+      var data = getFilteredIm();
+      var total = data.length;
+      mImSize = 8;
+      var tp = Math.max(1, Math.ceil(total / mImSize));
+      if (mImPage > tp) mImPage = tp;
+      var start = (mImPage - 1) * mImSize;
+      var pageData = data.slice(start, start + mImSize);
+
+      var list = document.getElementById('imCardList');
+      list.innerHTML = '';
+      pageData.forEach(function(row, i) {
+        var isEn = row.status === '启用';
+        var centerHtml = row.centers.map(function(c){ return '<span class="center-tag-m">'+c+'</span>'; }).join('');
+        var card = document.createElement('div');
+        card.style.cssText = 'background:#fff;border:1px solid #f0f0f0;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.03)';
+        var statusTag = '<span class="'+(isEn?'status-active-m':'status-inactive-m')+'" style="font-size:11px;padding:1px 8px;border-radius:8px;margin-right:6px;'+(isEn?'background:#e8ffea;color:#00B42A':'background:#f2f3f5;color:#86909c')+'">' + row.status + '</span>';
+        card.innerHTML =
+          '<div class="im-card-head-m" style="display:flex;align-items:center;justify-content:space-between">' +
+            '<div class="im-card-name-m" style="font-size:15px;font-weight:600;color:#333">' + statusTag + row.name + ' <span style="font-size:13px;font-weight:400;color:#888;margin-left:8px">' + row.phone + '</span></div>' +
+            '<button class="btn-toggle-m" onclick="toggleMemberM(this,\''+row.name+'\','+(isEn?'"停用"':'"启用"')+')">' + (isEn ? '停用' : '启用') + '</button>' +
+          '</div>' +
+          '<div style="margin-top:8px;font-size:12px;color:#666">方案编号：' + row.projectNo + '</div>' +
+          '<div style="margin-top:8px;font-size:12px;color:#666;line-height:1.6">负责中心：' + centerHtml + '</div>';
+        list.appendChild(card);
+      });
+
+      document.getElementById('mImTotal').textContent = '共 ' + total + ' 条';
+      renderMPages('mImPages', tp, mImPage, changeImPageM);
+    }
+
+    function changeImPageM(p) {
+      var total = getFilteredIm().length;
+      var tp = Math.max(1, Math.ceil(total / mImSize));
+      if (p<1||p>tp) return;
+      mImPage = p;
+      renderImCards();
+    }
+
+    function toggleMemberM(btn, name, newStatus) {
+      var card = btn.closest('.im-card-head-m').parentElement;
+      var nameDiv = card.querySelector('.im-card-name-m');
+      var isEn = newStatus === '启用';
+
+      var tag = '<span class="'+(isEn?'status-active-m':'status-inactive-m')+'" style="font-size:11px;padding:1px 8px;border-radius:8px;margin-right:6px;'+(isEn?'background:#e8ffea;color:#00B42A':'background:#f2f3f5;color:#86909c')+'">' + newStatus + '</span>';
+      var nameText = nameDiv.textContent.replace(/^启用|停用/, '').trim();
+      nameDiv.innerHTML = tag + nameText;
+      btn.textContent = isEn ? '停用' : '启用';
+
+      showToastM(name + ' 已' + newStatus, isEn ? 'success' : 'warn');
+
+      var m = imData.find(function(x){ return x.name === name; });
+      if (m) m.status = newStatus;
+    }
+
+    // ==================== 分页组件 ====================
+    function renderMPages(containerId, totalPages, currentPage, onChangeFn) {
+      var container = document.getElementById(containerId);
+      var html = '';
+      for (var i = 1; i <= totalPages && i <= 7; i++) {
+        if (i === currentPage) {
+          html += '<div class="page-dot-m active">' + i + '</div>';
+        } else {
+          html += '<div class="page-dot-m" onclick="'+onChangeFn.name+'('+i+')">'+i+'</div>';
+        }
+      }
+      container.innerHTML = html;
+    }
+
+    // ==================== 初始化 ====================
+    window.addEventListener('DOMContentLoaded', function() {
+      renderIcCards();
+    });
+  </script>
+</body>
+</html>
