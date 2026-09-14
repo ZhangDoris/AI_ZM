@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>测试222-病史与资料</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #e8eaed;
+      color: #333;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 手机容器（PC 端预览时居中，模拟手机壳） */
+    .phone {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #f5f5f5;
+      position: relative;
+      padding-bottom: 96px;
+      box-shadow: 0 0 24px rgba(0,0,0,0.06);
+    }
+
+    /* 顶部导航栏 */
+    .top-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid #ececec;
+    }
+    .top-header .back {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      color: #333; font-size: 18px; cursor: pointer;
+    }
+    .top-header .title {
+      flex: 1;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f1f1f;
+      margin-right: 32px; /* 居中补偿左侧返回按钮 */
+    }
+
+    /* 工具栏：全选 + 按钮组 */
+    .toolbar {
+      position: sticky;
+      top: 44px;
+      z-index: 9;
+      background: #fff;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .check-all {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #333; cursor: pointer;
+      user-select: none;
+      margin-right: 4px;
+    }
+    .check-all input { width: 16px; height: 16px; accent-color: #409eff; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity .15s, transform .08s;
+      line-height: 1;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: #409eff; color: #fff; }
+    .btn-primary:active { background: #337ecc; }
+    .btn-success { background: #52c41a; color: #fff; }
+    .btn-success:active { background: #389e0d; }
+    .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+    /* 阶段 Tab */
+    .stage-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .stage-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      font-size: 14px;
+      color: #595959;
+      cursor: pointer;
+      position: relative;
+      transition: color .2s;
+    }
+    .stage-tab.active {
+      color: #1677ff;
+      font-weight: 500;
+    }
+    .stage-tab.active::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 2px;
+      background: #1677ff;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* 版本切换 */
+    .version-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .version-label {
+      font-size: 13px;
+      color: #8c8c8c;
+      margin-right: 4px;
+    }
+    .version-btn {
+      padding: 4px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      background: #fff;
+      color: #595959;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .version-btn.active {
+      background: #1677ff;
+      color: #fff;
+      border-color: #1677ff;
+    }
+
+    /* 内容 Tab */
+    .content-tabs {
+      display: flex;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .content-tab {
+      flex: 1;
+      text-align: center;
+      padding: 11px 0;
+      font-size: 14px;
+      color: #595959;
+      cursor: pointer;
+      position: relative;
+      transition: color .2s;
+    }
+    .content-tab.active {
+      color: #1677ff;
+      font-weight: 500;
+    }
+    .content-tab.active::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 2px;
+      background: #1677ff;
+      border-radius: 2px 2px 0 0;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* 阶段提示条 */
+    .stage-hint-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff7e6;
+      border-bottom: 1px solid #ffd591;
+      color: #ad4e00;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .stage-hint-banner i { color: #fa8c16; font-size: 14px; }
+
+    /* 文件夹 */
+    .folder {
+      margin: 10px 10px 0;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .folder-header {
+      display: flex; align-items: center;
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .folder-header .fa-folder {
+      color: #fad57a;
+      font-size: 16px;
+      margin-right: 6px;
+    }
+    .folder-header .fname {
+      font-size: 14px; font-weight: 600; color: #1f1f1f;
+    }
+    .folder-header .count {
+      color: #999; font-size: 13px; font-weight: 400; margin-left: 4px;
+    }
+    .folder-header .info-icon {
+      color: #409eff; font-size: 14px; margin-left: 6px; cursor: help;
+    }
+    .folder-header .caret {
+      margin-left: auto;
+      color: #999;
+      font-size: 12px;
+      transition: transform .2s;
+    }
+    .folder.collapsed .caret { transform: rotate(-90deg); }
+    .folder.collapsed .folder-content { display: none; }
+
+    /* 子文件夹缩进 */
+    .folder.sub {
+      margin: 0 10px 10px;
+      background: #f7f9fc;
+      border: 1px solid #eef1f5;
+    }
+    .folder.sub .folder-header { padding: 10px 12px; }
+
+    /* 文件操作按钮（子文件夹内） */
+    .file-actions {
+      display: flex; gap: 8px;
+      padding: 0 12px 10px;
+    }
+
+    /* 文件列表 */
+    .file-list { background: #fff; }
+    .file-row {
+      padding: 10px 12px;
+      border-top: 1px solid #f2f3f5;
+    }
+    .file-item {
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .file-item input[type="checkbox"] {
+      width: 16px; height: 16px;
+      margin-top: 2px;
+      accent-color: #409eff;
+      flex-shrink: 0;
+    }
+    .file-icon {
+      width: 34px; height: 34px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .file-icon.pdf { background: #f56c6c; }
+    .file-icon.img { background: #fa8c16; }
+    .file-main { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 14px; color: #1f1f1f; font-weight: 500;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    .file-meta {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+      margin-top: 6px;
+    }
+    .file-info {
+      display: flex; align-items: center; gap: 8px;
+      color: #999; font-size: 12px;
+      margin-top: 6px;
+    }
+    .file-info .sep { color: #ddd; }
+
+    /* 标签 */
+    .tag {
+      display: inline-block;
+      padding: 1px 6px;
+      font-size: 11px;
+      border-radius: 3px;
+      border: 1px solid;
+      line-height: 1.5;
+    }
+    .tag-pdf { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+    .tag-img { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+    .tag-desensitized { color: #52c41a; background: #f6ffed; border-color: #b7eb8f; }
+    .tag-editing { color: #fa8c16; background: #fff7e6; border-color: #ffd591; }
+
+    /* 文件操作行（下载/编辑/删除） */
+    .file-op-row {
+      display: flex; justify-content: flex-end; gap: 18px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .file-op-row a {
+      color: #409eff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .file-op-row a.danger { color: #ff4d4f; }
+    .file-op-row a:active { opacity: 0.6; }
+
+    /* vConsole 悬浮按钮 */
+    .vconsole-btn {
+      position: fixed;
+      right: max(12px, calc(50vw - 215px + 12px));
+      bottom: 60px;
+      z-index: 50;
+      background: #07c160;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(7,193,96,0.35);
+      cursor: pointer;
+    }
+    .vconsole-btn:active { background: #06ad56; }
+
+    /* 底部隐私提示 */
+    .privacy-tip {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      background: transparent;
+      color: #ff4d4f;
+      font-size: 12px;
+      padding: 10px 14px 14px;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    /* 信息小气泡 */
+    .info-pop {
+      display: none;
+      position: absolute;
+      background: #1f1f1f;
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      max-width: 220px;
+      line-height: 1.5;
+      z-index: 20;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .info-pop.show { display: block; }
+    .info-pop::after {
+      content: '';
+      position: absolute;
+      top: -5px;
+      left: 24px;
+      width: 0; height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid #1f1f1f;
+    }
+
+    /* 通用模态弹窗（提交审核等） */
+    .h5-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .h5-modal.show { display: flex; }
+    .h5-modal-card {
+      width: 84vw;
+      max-width: 360px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      animation: h5ModalIn .18s ease-out;
+    }
+    @keyframes h5ModalIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .h5-modal-body {
+      padding: 22px 20px 20px;
+    }
+    .h5-modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f1f1f;
+      margin: 0 0 12px;
+    }
+    .h5-modal-text {
+      font-size: 14px;
+      color: #595959;
+      line-height: 1.7;
+      margin: 0;
+    }
+    .h5-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 20px 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .h5-modal-btn {
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      padding: 6px 4px;
+      cursor: pointer;
+      color: #8c8c8c;
+    }
+    .h5-modal-btn.primary {
+      background: #409eff;
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+    .h5-modal-btn.primary:active { background: #337ecc; }
+    .h5-modal-btn:active { opacity: 0.7; }
+
+    /* 项目匹配确认弹窗 */
+    .match-confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 210;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.45);
+    }
+    .match-confirm-modal.show { display: flex; }
+    .match-confirm-card {
+      width: 86vw;
+      max-width: 360px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.18);
+      animation: h5ModalIn .18s ease-out;
+    }
+    .match-confirm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 0;
+    }
+    .match-confirm-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f1f1f;
+    }
+    .match-confirm-close {
+      color: #bfbfbf;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .match-confirm-close:active { opacity: .6; }
+    .match-confirm-body {
+      padding: 12px 18px 20px;
+    }
+    .match-confirm-label {
+      font-size: 13px;
+      color: #595959;
+      margin-bottom: 12px;
+    }
+    .match-confirm-radio-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .match-confirm-radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: 1px solid #d9d9d9;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #595959;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .match-confirm-radio.active {
+      border-color: #409eff;
+      color: #1677ff;
+      background: #e6f4ff;
+    }
+    .match-confirm-radio input { display: none; }
+    .match-confirm-radio .radio-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 1px solid #d9d9d9;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .match-confirm-radio.active .radio-dot { border-color: #1677ff; }
+    .match-confirm-radio .radio-dot::after {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: transparent;
+    }
+    .match-confirm-radio.active .radio-dot::after { background: #1677ff; }
+    .match-confirm-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 0 0 16px;
+    }
+    .match-confirm-model { margin-bottom: 16px; }
+    .match-confirm-model.hidden { display: none; }
+    .match-confirm-model-label {
+      font-size: 14px;
+      color: #262626;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .match-confirm-model-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #1677ff;
+      background: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239C9C9C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    .match-confirm-select-label {
+      font-size: 14px;
+      color: #262626;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .match-confirm-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      color: #262626;
+      background: #fff;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239C9C9C' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    .match-confirm-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .match-confirm-btn {
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      padding: 8px 16px;
+      cursor: pointer;
+      color: #595959;
+      border-radius: 6px;
+    }
+    .match-confirm-btn.primary {
+      background: #1677ff;
+      color: #fff;
+    }
+    .match-confirm-btn.primary:active { background: #0958d9; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <!-- 顶部导航 -->
+    <div class="top-header">
+      <div class="back" onclick="history.back()"><i class="fa fa-chevron-left"></i></div>
+      <div class="title">入组阶段</div>
+    </div>
+
+
+
+    <!-- 内容 Tab -->
+    <div class="content-tabs" id="contentTabs">
+      <div class="content-tab active" data-content="match" onclick="switchContentTab(this)">病史与资料</div>
+    </div>
+
+   
+
+    <!-- Tab 内容区 -->
+    <div class="tab-panel active" id="panel-match">
+ <!-- 工具栏 -->
+    <div class="toolbar">
+      <label class="check-all">
+        <input type="checkbox" id="checkAll" onclick="toggleSelectAll(this)" />
+        <span>全选</span>
+      </label>
+      <button class="btn btn-primary btn-sm" onclick="onDownload()">下载</button>
+      <button class="btn btn-primary btn-sm" onclick="onRematch()">项目匹配</button>
+    </div>
+     <div class="stage-hint-banner">
+      <i class="fa fa-info-circle"></i>
+      <span><strong>入组阶段</strong> 未参与匹配，故没有匹配结果</span>
+    </div>
+    <!-- 文件夹：预筛阶段 -->
+    <div class="folder" id="folderPrescreen">
+      <div class="folder-header" onclick="toggleFolder('folderPrescreen')">
+        <i class="fa fa-folder"></i>
+        <span class="fname">预筛阶段</span>
+        <span class="count">(9)</span>
+        <i class="fa fa-chevron-down caret"></i>
+      </div>
+      <div class="folder-content">
+        <!-- 子文件夹：原始资料 -->
+        <div class="folder sub" id="folderOriginal">
+          <div class="folder-header" onclick="toggleFolder('folderOriginal')">
+            <i class="fa fa-folder"></i>
+            <span class="fname">原始资料</span>
+            <i class="fa fa-info-circle info-icon" id="originalInfo" onclick="toggleInfoPop(event)"></i>
+            <span class="count">(3)</span>
+            <i class="fa fa-chevron-down caret"></i>
+            <div class="info-pop" id="originalInfoPop">原始病历资料，请确认已脱敏后再外发，避免患者隐私泄露</div>
+          </div>
+          <div class="folder-content">
+            <div class="file-actions">
+              <button class="btn btn-primary btn-sm" onclick="onUpload()">上传</button>
+              <button class="btn btn-primary btn-sm" onclick="onUploadDesensitized()">已脱敏上传</button>
+            </div>
+            <div class="file-list" id="fileList">
+              <!-- 文件 1 -->
+              <div class="file-row" data-id="1">
+                <div class="file-item">
+                  <input type="checkbox" class="file-cb" />
+                  <div class="file-icon pdf"><i class="fa fa-file-pdf-o"></i></div>
+                  <div class="file-main">
+                    <div class="file-name">5.pdf</div>
+                    <div class="file-meta">
+                      <span class="tag tag-pdf">PDF</span>
+                      <span class="tag-desensitized tag">已脱敏</span>
+                      <span class="size" style="color:#999;font-size:12px;">1.33 MB</span>
+                    </div>
+                    <div class="file-info">
+                      <span>操作人 <b style="color:#666;font-weight:500;">-</b></span>
+                      <span class="sep">|</span>
+                      <span>时间 2026-07-22 14:01</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-op-row">
+                  <a onclick="onFileOp('download', 1)">下载</a>
+                  <a onclick="onFileOp('edit', 1)">编辑</a>
+                  <a class="danger" onclick="onFileOp('delete', 1)">删除</a>
+                </div>
+              </div>
+
+              <!-- 文件 2 -->
+              <div class="file-row" data-id="2">
+                <div class="file-item">
+                  <input type="checkbox" class="file-cb" />
+                  <div class="file-icon img"><i class="fa fa-file-image-o"></i></div>
+                  <div class="file-main">
+                    <div class="file-name">a1eb77569f6b728f0d6b248ea7e63ff9.png</div>
+                    <div class="file-meta">
+                      <span class="tag tag-img">图片</span>
+                      <span class="tag-editing tag">编辑中</span>
+                      <span class="size" style="color:#999;font-size:12px;">238.39 KB</span>
+                    </div>
+                    <div class="file-info">
+                      <span>操作人 <b style="color:#666;font-weight:500;">王海艳</b></span>
+                      <span class="sep">|</span>
+                      <span>时间 2026-07-09 18:32</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-op-row">
+                  <a onclick="onFileOp('download', 2)">下载</a>
+                  <a onclick="onFileOp('edit', 2)">编辑</a>
+                  <a class="danger" onclick="onFileOp('delete', 2)">删除</a>
+                </div>
+              </div>
+
+              <!-- 文件 3 -->
+              <div class="file-row" data-id="3">
+                <div class="file-item">
+                  <input type="checkbox" class="file-cb" />
+                  <div class="file-icon img"><i class="fa fa-file-image-o"></i></div>
+                  <div class="file-main">
+                    <div class="file-name">2.jpg</div>
+                    <div class="file-meta">
+                      <span class="tag tag-img">图片</span>
+                      <span class="tag-desensitized tag">已脱敏</span>
+                      <span class="size" style="color:#999;font-size:12px;">396.00 KB</span>
+                    </div>
+                    <div class="file-info">
+                      <span>操作人 <b style="color:#666;font-weight:500;">CRA专员1881</b></span>
+                      <span class="sep">|</span>
+                      <span>时间 2026-07-09 18:32</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="file-op-row">
+                  <a onclick="onFileOp('download', 3)">下载</a>
+                  <a onclick="onFileOp('edit', 3)">编辑</a>
+                  <a class="danger" onclick="onFileOp('delete', 3)">删除</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div class="tab-panel" id="panel-screen">
+      <div style="padding:40px 16px;text-align:center;color:#999;font-size:14px;">筛选表内容</div>
+    </div>
+
+    <div class="tab-panel" id="panel-think">
+      <div style="padding:40px 16px;text-align:center;color:#999;font-size:14px;">思考链内容</div>
+    </div>
+
+    <!-- 底部隐私提示 -->
+    <div class="privacy-tip">【重要提示】请严格遵守患者隐私保护规范，确保病历信息脱敏处理</div>
+  </div>
+
+  <!-- vConsole 按钮 -->
+  <button class="vconsole-btn" onclick="loadVConsole()">vConsole</button>
+
+  <!-- 通用模态弹窗 -->
+  <div class="h5-modal" id="h5Modal" onclick="if(event.target===this)closeH5Modal()">
+    <div class="h5-modal-card">
+      <div class="h5-modal-body">
+        <h3 class="h5-modal-title" id="h5ModalTitle">温馨提示</h3>
+        <p class="h5-modal-text" id="h5ModalText"></p>
+      </div>
+      <div class="h5-modal-footer">
+        <button class="h5-modal-btn" id="h5ModalCancel" onclick="closeH5Modal()">取消</button>
+        <button class="h5-modal-btn primary" id="h5ModalOk" onclick="h5ModalConfirm()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 项目匹配确认弹窗 -->
+  <div class="match-confirm-modal" id="matchConfirmModal" onclick="if(event.target===this)closeMatchConfirmModal()">
+    <div class="match-confirm-card">
+      <div class="match-confirm-header">
+        <h3 class="match-confirm-title">项目匹配确认</h3>
+        <i class="fa fa-times match-confirm-close" onclick="closeMatchConfirmModal()"></i>
+      </div>
+      <div class="match-confirm-body">
+        <div class="match-confirm-label">选择解析方式后开始重新匹配：</div>
+        <div class="match-confirm-radio-group">
+          <label class="match-confirm-radio active" onclick="selectParseMode(this, 'huaweiOcr')">
+            <span class="radio-dot"></span>
+            <input type="radio" name="parseMode" value="huaweiOcr" checked>
+            <span>华为OCR</span>
+          </label>
+          <label class="match-confirm-radio" onclick="selectParseMode(this, 'multimodal')">
+            <span class="radio-dot"></span>
+            <input type="radio" name="parseMode" value="multimodal">
+            <span>多模态</span>
+          </label>
+        </div>
+        <div class="match-confirm-model hidden" id="matchConfirmModel">
+          <label class="match-confirm-model-label">选择模型</label>
+          <select class="match-confirm-model-select" id="matchModelSelect">
+            <option value="qwen3-vl-32b-instruct">qwen3-vl-32b-instruct</option>
+          </select>
+        </div>
+        <div class="match-confirm-divider"></div>
+        <label class="match-confirm-select-label">入排版本选择</label>
+        <select class="match-confirm-select" id="matchConfirmVersion">
+          <option value="1.0">版本 1.0</option>
+          <option value="2.0">版本 2.0</option>
+        </select>
+      </div>
+      <div class="match-confirm-footer">
+        <button class="match-confirm-btn" onclick="closeMatchConfirmModal()">取消</button>
+        <button class="match-confirm-btn primary" onclick="confirmMatch()">开始匹配</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== Tab 切换 ==========
+    function switchStageTab(el) {
+      document.querySelectorAll('.stage-tab').forEach(function (tab) { tab.classList.remove('active'); });
+      el.classList.add('active');
+      showToast('切换阶段：' + el.textContent);
+    }
+    function switchVersion(el) {
+      document.querySelectorAll('.version-btn').forEach(function (btn) { btn.classList.remove('active'); });
+      el.classList.add('active');
+      showToast('切换版本：' + el.textContent);
+    }
+    function switchContentTab(el) {
+      document.querySelectorAll('.content-tab').forEach(function (tab) { tab.classList.remove('active'); });
+      el.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(function (panel) { panel.classList.remove('active'); });
+      document.getElementById('panel-' + el.dataset.content).classList.add('active');
+    }
+
+    // ========== 文件夹展开/收起 ==========
+    function toggleFolder(id) {
+      // info icon 触发展开时阻止冒泡
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('collapsed');
+    }
+    function toggleInfoPop(e) {
+      e.stopPropagation();
+      const pop = document.getElementById('originalInfoPop');
+      if (!pop) return;
+      pop.classList.toggle('show');
+    }
+    // 点击其它位置关闭气泡
+    document.addEventListener('click', function () {
+      const pop = document.getElementById('originalInfoPop');
+      if (pop) pop.classList.remove('show');
+    });
+
+    // ========== 全选 ==========
+    function toggleSelectAll(cb) {
+      document.querySelectorAll('.file-cb').forEach(function (el) { el.checked = cb.checked; });
+    }
+    // 任意子项变更时同步全选
+    document.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('file-cb')) return;
+      const all = document.querySelectorAll('.file-cb');
+      const checked = document.querySelectorAll('.file-cb:checked');
+      const ca = document.getElementById('checkAll');
+      if (ca) ca.checked = all.length > 0 && all.length === checked.length;
+    });
+
+    // ========== 工具栏按钮 ==========
+    function onDownload() {
+      const checked = document.querySelectorAll('.file-cb:checked');
+      if (checked.length === 0) {
+        showToast('请先选择要下载的文件');
+        return;
+      }
+      showToast('已提交下载，共 ' + checked.length + ' 个文件');
+    }
+    function onRematch() {
+      document.getElementById('matchConfirmModal').classList.add('show');
+    }
+    function closeMatchConfirmModal() {
+      document.getElementById('matchConfirmModal').classList.remove('show');
+    }
+    function selectParseMode(el, mode) {
+      document.querySelectorAll('.match-confirm-radio').forEach(function (radio) {
+        radio.classList.remove('active');
+        radio.querySelector('input').checked = false;
+      });
+      el.classList.add('active');
+      el.querySelector('input').checked = true;
+      var modelBox = document.getElementById('matchConfirmModel');
+      if (modelBox) modelBox.classList.toggle('hidden', mode !== 'multimodal');
+    }
+    function confirmMatch() {
+      var mode = document.querySelector('input[name="parseMode"]:checked').value;
+      var version = document.getElementById('matchConfirmVersion').value;
+      var model = '';
+      if (mode === 'multimodal') {
+        model = document.getElementById('matchModelSelect').value;
+      }
+      closeMatchConfirmModal();
+      var msg = '开始匹配：' + (mode === 'huaweiOcr' ? '华为OCR' : '多模态 / ' + model) + ' / 版本 ' + version;
+      showToast(msg);
+    }
+    function onMatchDetail() {
+      showToast('跳转到匹配详情');
+    }
+    function onSubmitReview() {
+      openH5Modal({
+        title: '温馨提示',
+        text: '本次提交不执行 AI 项目匹配，不影响审核流程，是否确认提交？如需匹配后提交，请点【取消】，再操作【项目匹配】。',
+        okText: '确认',
+        onOk: function () { showToast('已提交审核'); }
+      });
+    }
+
+    // ========== 通用模态 ==========
+    var __h5ModalCallback = null;
+    function openH5Modal(opts) {
+      document.getElementById('h5ModalTitle').textContent = opts.title || '温馨提示';
+      document.getElementById('h5ModalText').textContent = opts.text || '';
+      document.getElementById('h5ModalOk').textContent = opts.okText || '确认';
+      document.getElementById('h5ModalCancel').style.display = opts.hideCancel ? 'none' : '';
+      __h5ModalCallback = opts.onOk || null;
+      document.getElementById('h5Modal').classList.add('show');
+    }
+    function closeH5Modal() {
+      document.getElementById('h5Modal').classList.remove('show');
+      __h5ModalCallback = null;
+    }
+    function h5ModalConfirm() {
+      var cb = __h5ModalCallback;
+      closeH5Modal();
+      if (typeof cb === 'function') cb();
+    }
+    function onUpload() { showToast('打开上传'); }
+    function onUploadDesensitized() { showToast('打开已脱敏上传'); }
+
+    // ========== 文件操作 ==========
+    function onFileOp(op, id) {
+      const row = document.querySelector('.file-row[data-id="' + id + '"]');
+      const name = row ? row.querySelector('.file-name').textContent : '';
+      if (op === 'delete') {
+        if (confirm('确定删除「' + name + '」吗？')) {
+          row && row.remove();
+          showToast('已删除：' + name);
+        }
+      } else if (op === 'edit') {
+        showToast('编辑：' + name);
+      } else if (op === 'download') {
+        showToast('下载：' + name);
+      }
+    }
+
+    // ========== 轻提示 ==========
+    function showToast(text) {
+      let t = document.getElementById('__h5toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = '__h5toast';
+        t.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.78);color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:9999;pointer-events:none;opacity:0;transition:opacity .2s;max-width:80vw;text-align:center;';
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.style.opacity = '1';
+      clearTimeout(t.__timer);
+      t.__timer = setTimeout(function () { t.style.opacity = '0'; }, 1600);
+    }
+
+    // ========== vConsole 懒加载 ==========
+    function loadVConsole() {
+      if (window.VConsole) {
+        if (!window.__vc) {
+          window.__vc = new window.VConsole();
+          showToast('vConsole 已开启');
+        } else {
+          window.__vc.destroy();
+          window.__vc = null;
+          showToast('vConsole 已关闭');
+        }
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/vconsole@latest/dist/vconsole.min.js';
+      s.onload = function () {
+        window.__vc = new window.VConsole();
+        showToast('vConsole 已开启');
+      };
+      document.head.appendChild(s);
+    }
+  </script>
+</body>
+</html>

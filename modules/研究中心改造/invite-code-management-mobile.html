@@ -10,7 +10,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>项目中心邀请码</title>
+  <title>成员管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -338,6 +338,106 @@
       font-size: 13px;
       outline: none;
     }
+    .filter-label-m.wide { min-width: 64px; }
+    .filter-toggle-btn-m {
+      width: 38px; height: 34px; flex-shrink: 0;
+      border: 1px solid #e0e0e0; border-radius: 6px; background: #fff;
+      color: #1872a7; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; cursor: pointer;
+    }
+    .filter-toggle-btn-m:active { background: rgba(24,114,167,0.08); }
+
+    /* 邀请关系筛选（我邀请的CRC：全选 / 是 / 否） */
+    .im-scope-bar-m { display: flex; align-items: center; gap: 10px; padding: 0 16px 10px; background: #fff; }
+    .im-scope-label-m { font-size: 13px; color: #666; white-space: nowrap; }
+
+    /* 启用 / 停用原因弹窗 */
+    .tm-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .tm-mask.show { display: flex; }
+    .tm-box { width: 86%; max-width: 360px; background: #fff; border-radius: 12px; overflow: hidden; }
+    .tm-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 15px; font-weight: 600; color: #333; }
+    .tm-head i { color: #999; cursor: pointer; }
+    .tm-body { padding: 16px; }
+    .tm-label { font-size: 13px; color: #666; margin-bottom: 8px; }
+    .tm-textarea { width: 100%; height: 88px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; font-size: 13px; outline: none; resize: none; font-family: inherit; }
+    .tm-textarea:focus { border-color: #1872a7; }
+    .tm-hint { margin-top: 6px; font-size: 12px; color: #F53F3F; }
+    .tm-info { font-size: 12px; color: #1872a7; background: rgba(24,114,167,0.08); border: 1px solid #cfe3eb; border-radius: 4px; padding: 8px 10px; line-height: 1.6; margin-bottom: 10px; }
+    .tm-info i { margin-right: 4px; }
+    .tm-foot { display: flex; border-top: 1px solid #f0f0f0; }
+    .tm-btn { flex: 1; padding: 12px 0; font-size: 14px; border: none; background: #fff; cursor: pointer; }
+    .tm-btn-cancel { color: #666; border-right: 1px solid #f0f0f0; }
+    .tm-btn-ok { color: #1872a7; font-weight: 500; }
+
+    /* 批量管理入口按钮 */
+    .btn-batch-enter-m {
+      flex-shrink: 0;
+      border: 1px solid #1872a7;
+      color: #1872a7;
+      background: #fff;
+      border-radius: 6px;
+      padding: 0 14px;
+      font-size: 13px;
+      height: 34px;
+      cursor: pointer;
+    }
+    .btn-batch-enter-m:active { background: rgba(24,114,167,0.08); }
+
+    /* 卡片左侧勾选圆圈 */
+    .im-check-m {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 2px solid #d0d0d0;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px;
+      margin-right: 10px;
+      transition: all .15s;
+    }
+    .im-check-m.checked { background: #1872a7; border-color: #1872a7; }
+
+    /* 勾选模式：右侧操作提示（"轻触选择" / "已选"） */
+    .im-hint-m { font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+
+    /* 选中态卡片（蓝边 + 浅蓝底） */
+    .im-card-m { transition: border-color .15s, background-color .15s; }
+    .im-card-m.selected { border-color: #1872a7 !important; background: #f0f7ff !important; box-shadow: 0 0 0 1px #1872a7; }
+
+    /* 底部批量操作栏（悬浮样式：左右底留边距 + 圆角 + 阴影） */
+    .im-batch-bar-m {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      max-width: 456px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 14px 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .im-batch-info { font-size: 13px; color: #333; display: flex; align-items: center; gap: 14px; }
+    .im-batch-link { color: #1872a7; }
+    .im-batch-actions { display: flex; gap: 10px; }
+    .im-batch-btn { flex: 1; border: none; border-radius: 6px; padding: 10px 16px; font-size: 14px; color: #fff; cursor: pointer; }
+    .im-batch-btn.enable { background: #1872a7; }
+    .im-batch-btn.disable { background: #F53F3F; }
+
+    /* 选中模式：底部留白，避免被悬浮栏遮挡（栏高 ~88px + 底距 12px + 安全留白） */
+    body.select-mode-m { padding-bottom: 112px; }
+
+    /* 居中提醒弹窗（强提示） */
+    .am-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: none; align-items: center; justify-content: center; }
+    .am-mask.show { display: flex; }
+    .am-box { width: 80%; max-width: 320px; background: #fff; border-radius: 12px; padding: 22px 18px 0; text-align: center; overflow: hidden; }
+    .am-icon { color: #FF7D00; font-size: 30px; }
+    .am-title { margin-top: 10px; font-size: 15px; font-weight: 600; color: #333; }
+    .am-msg { margin-top: 8px; font-size: 13px; color: #666; line-height: 1.6; }
+    .am-ok { margin-top: 18px; width: 100%; border: none; border-top: 1px solid #f0f0f0; background: #fff; color: #1872a7; font-size: 15px; font-weight: 500; padding: 13px 0; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -345,13 +445,14 @@
   <!-- 顶部导航 -->
   <header class="mobile-header">
     <div class="back-btn"><i class="fas fa-chevron-left"></i></div>
-    <div class="title">项目中心邀请码（...）</div>
+    <div class="title">成员管理（恒瑞医药）</div>
     <div class="user-area">
       <div style="width:28px;height:28px;border-radius:50%;background:#1872a7;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">张</div>
       <span style="font-size:13px;color:#333">张琳</span>
       <i class="fas fa-chevron-down text-xs text-gray-400"></i>
     </div>
   </header>
+
 
   <!-- 项目切换 -->
   <div class="proj-tabs-m">
@@ -363,7 +464,7 @@
   <!-- 功能Tab -->
   <div class="func-tabs-m">
     <div id="fTabIc" class="func-tab-m active" onclick="switchFuncTabM('ic')">邀请码列表</div>
-    <div id="fTabIm" class="func-tab-m" onclick="switchFuncTabM('im')">已邀请成员</div>
+    <div id="fTabIm" class="func-tab-m" onclick="switchFuncTabM('im')">成员管理</div>
   </div>
 
   <!-- ========== 邀请码列表 ========== -->
@@ -407,6 +508,7 @@
     <!-- 搜索栏 -->
     <div class="search-bar-m">
       <input id="mImSearch" type="text" placeholder="搜索姓名 / 手机号" class="search-input-m" oninput="renderImCards()">
+      <button id="mImBatchEnter" class="btn-batch-enter-m" onclick="enterSelectModeM()">批量管理</button>
     </div>
     <!-- 筛选面板 -->
     <div id="filterPanelIm" class="filter-panel-m">
@@ -416,6 +518,15 @@
           <option value="">全部</option><option>启用</option><option>停用</option>
         </select>
       </div>
+      <div class="filter-row-m">
+        <span class="filter-label-m">中心名称</span>
+        <input id="mImCenterName" type="text" placeholder="请输入中心名称" class="search-input-m" oninput="renderImCards()">
+      </div>
+      <div class="filter-row-m">
+        <span class="filter-label-m">中心号</span>
+        <input id="mImCenterNo" type="text" placeholder="如 CN001" class="search-input-m" oninput="renderImCards()">
+      </div>
+
     </div>
     <!-- 成员卡片列表 -->
     <div id="imCardList" style="padding:0 12px 8px;display:flex;flex-direction:column;gap:10px"></div>
@@ -423,6 +534,47 @@
     <div class="pagination-m">
       <span id="mImTotal">共 0 条</span>
       <div class="page-nums-m" id="mImPages"></div>
+    </div>
+  </div>
+
+  <!-- ========== 启用 / 停用原因弹窗 ========== -->
+  <div id="toggleReasonModal" class="tm-mask" onclick="if(event.target===this)closeToggleModal()">
+    <div class="tm-box">
+      <div class="tm-head">
+        <span id="tmTitle">停用原因</span>
+        <i class="fas fa-times" onclick="closeToggleModal()"></i>
+      </div>
+      <div class="tm-body">
+        <div class="tm-info"><i class="fas fa-info-circle"></i><span id="tmInfoText"></span></div>
+        <div class="tm-label"><span id="tmReasonLabel">停用原因</span> </div>
+        <textarea id="tmReason" class="tm-textarea" placeholder="请输入原因"></textarea>
+      </div>
+      <div class="tm-foot">
+        <button class="tm-btn tm-btn-cancel" onclick="closeToggleModal()">取消</button>
+        <button class="tm-btn tm-btn-ok" id="tmOkBtn" onclick="confirmToggleM()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 底部批量操作栏 ========== -->
+  <div id="imBatchBar" class="im-batch-bar-m" style="display:none">
+    <div class="im-batch-info">
+      <span id="imSelCount">已选 0 个</span>
+      <span class="im-batch-link" onclick="selectAllM()">全选</span>
+    </div>
+    <div class="im-batch-actions">
+      <button class="im-batch-btn enable" onclick="openBatchToggleM('启用')">批量启用</button>
+      <button class="im-batch-btn disable" onclick="openBatchToggleM('停用')">批量停用</button>
+    </div>
+  </div>
+
+  <!-- ========== 居中提醒弹窗（混选 / 异常） ========== -->
+  <div id="alertDialogM" class="am-mask" onclick="if(event.target===this)closeAlertM()">
+    <div class="am-box">
+      <i class="fas fa-exclamation-triangle am-icon"></i>
+      <div class="am-title" id="amTitle"></div>
+      <div class="am-msg" id="amMsg"></div>
+      <button class="am-ok" onclick="closeAlertM()">知道了</button>
     </div>
   </div>
 
@@ -445,15 +597,22 @@
       icData.push({ projectNo: b.projectNo, centerName: b.centerName, creator: b.creator });
     }
 
+    // 当前登录用户
+    var CURRENT_USER_M = '张琳';
+
+    // 一条数据 = 一个项目编码 + 一个中心 + 一个人员；同一人在多个中心按多条数据展示
+    // 一条数据 = 一个项目编码 + 一个中心 + 一个人员；同一人在多个中心按多条数据展示
+    // 沿用原列表数据：王慧柳 负责 2 个中心 → 2 条，其余每人 1 条
     var imData = [
-      { name: '王慧柳', phone: '138****0001', role: '医学经理', projectNo: 'SHR-1918-302', centers: ['CN015·唐镇市中心医院','CN029·郫都区人民医院'], createTime: '2026-06-01 09:30', status: '启用' },
-      { name: '刘雪红', phone: '139****2342', role: 'CRA专员', projectNo: 'HRS9531-310', centers: ['CN001·首都医科大学附属北京友谊医院'], createTime: '2026-05-12 14:05', status: '启用' },
-      { name: '陈CRA', phone: '137****8888', role: 'CRA专员', projectNo: '2102-102', centers: ['CN420·无此医院'], createTime: '2026-08-15 08:30', status: '停用' },
-      { name: '周CRC', phone: '133****2233', role: 'CRC', projectNo: 'SHR-A1811-317', centers: ['CN031·上海瑞金医院'], createTime: '2026-07-20 11:48', status: '启用' },
-      { name: '李协调员', phone: '136****5566', role: '临床协调员', projectNo: 'SHR-1904-301', centers: ['CN043·宜昌市中心人民医院'], createTime: '2026-08-01 16:20', status: '停用' },
-      { name: '张研究员', phone: '135****7799', role: '研究员', projectNo: 'HRS9531-310', centers: ['CN054·天津肿瘤医院空港医院'], createTime: '2026-03-10 10:00', status: '启用' },
-      { name: '赵主管', phone: '158****1122', role: '项目经理', projectNo: 'SHR-1316-309', centers: ['CN111·温州市第三人民医院'], createTime: '2026-02-28 09:15', status: '启用' },
-      { name: '孙助理', phone: '159****3344', role: '项目助理', projectNo: 'SHR-1918-302', centers: ['CN140·昆山市超医院'], createTime: '2026-04-15 14:30', status: '停用' },
+      { id: 'IM-001', name: '王CRC', phone: '138****0001', role: '医学经理', projectNo: 'SHR-1918-302', center: 'CN015·唐镇市中心医院', createTime: '2026-06-01 09:30', status: '启用', inviter: '张琳', selfCenter: true, toggleBy: '张琳', toggleTime: '2026-06-01 09:30', toggleReason: '邀请加入项目，开通中心权限' },
+      { id: 'IM-002', name: '王CRC', phone: '138****0001', role: '医学经理', projectNo: 'SHR-1918-302', center: 'CN029·郫都区人民医院', createTime: '2026-06-01 09:30', status: '启用', inviter: '张琳', selfCenter: true, toggleBy: '张琳', toggleTime: '2026-06-01 09:30', toggleReason: '新增负责中心，同步开通权限' },
+      { id: 'IM-003', name: '刘CRC', phone: '139****2342', role: 'CRA专员', projectNo: 'HRS9531-310', center: 'CN001·首都医科大学附属北京友谊医院', createTime: '2026-05-12 14:05', status: '启用', inviter: '李运营', selfCenter: true, toggleBy: '李运营', toggleTime: '2026-05-12 14:05', toggleReason: '邀请加入项目，开通中心权限' },
+      { id: 'IM-004', name: '陈CRC', phone: '137****8888', role: 'CRA专员', projectNo: '2102-102', center: 'CN420·无此医院', createTime: '2026-08-15 08:30', status: '停用', inviter: '张琳', selfCenter: false, toggleBy: '系统管理员', toggleTime: '2026-08-15 08:30', toggleReason: '中心暂停入组，暂时停用账号' },
+      { id: 'IM-005', name: '周CRC', phone: '133****2233', role: 'CRC', projectNo: 'SHR-A1811-317', center: 'CN031·上海瑞金医院', createTime: '2026-07-20 11:48', status: '启用', inviter: '张琳', selfCenter: true, toggleBy: '张琳', toggleTime: '2026-07-20 11:48', toggleReason: '邀请加入项目，开通中心权限' },
+      { id: 'IM-006', name: '李CRC', phone: '136****5566', role: '临床协调员', projectNo: 'SHR-1904-301', center: 'CN043·宜昌市中心人民医院', createTime: '2026-08-01 16:20', status: '停用', inviter: '李运营', selfCenter: true, toggleBy: '系统管理员', toggleTime: '2026-08-01 16:20', toggleReason: '人员离职，账号停用并交接患者' },
+      { id: 'IM-007', name: '张CRC', phone: '135****7799', role: '研究员', projectNo: 'HRS9531-310', center: 'CN054·天津肿瘤医院空港医院', createTime: '2026-03-10 10:00', status: '启用', inviter: '李运营', selfCenter: false, toggleBy: '李运营', toggleTime: '2026-03-10 10:00', toggleReason: '邀请加入项目，开通中心权限' },
+      { id: 'IM-008', name: '赵CRC', phone: '158****1122', role: '项目经理', projectNo: 'SHR-1316-309', center: 'CN111·温州市第三人民医院', createTime: '2026-02-28 09:15', status: '启用', inviter: '张琳', selfCenter: true, toggleBy: '张琳', toggleTime: '2026-02-28 09:15', toggleReason: '邀请加入项目，开通中心权限' },
+      { id: 'IM-009', name: '孙CRC', phone: '159****3344', role: '项目助理', projectNo: 'SHR-1918-302', center: 'CN140·昆山市超医院', createTime: '2026-04-15 14:30', status: '停用', inviter: '李运营', selfCenter: false, toggleBy: '系统管理员', toggleTime: '2026-04-15 14:30', toggleReason: '项目阶段结束，暂停账号' },
     ];
 
     // ==================== Tab 切换 ====================
@@ -462,14 +621,19 @@
       showToastM('已切换到 '+['恒瑞医药','江苏科信','运营二部'][idx], 'success');
     }
 
-    var currentFuncTab = 'ic';
+    var currentFuncTab = 'im';
     function switchFuncTabM(tab) {
       currentFuncTab = tab;
-      document.getElementById('fTabIc').classList.toggle('active', tab === 'ic');
-      document.getElementById('fTabIm').classList.toggle('active', tab === 'im');
-      document.getElementById('panelIcM').style.display = tab === 'ic' ? '' : 'none';
-      document.getElementById('panelImM').style.display = tab === 'im' ? '' : 'none';
-      if (tab === 'ic') renderIcCards(); else renderImCards();
+      // 邀请码列表的 Tab / 面板若已移除则跳过，避免报错
+      var icTab = document.getElementById('fTabIc');
+      var imTab = document.getElementById('fTabIm');
+      var icPanel = document.getElementById('panelIcM');
+      var imPanel = document.getElementById('panelImM');
+      if (icTab) icTab.classList.toggle('active', tab === 'ic');
+      if (imTab) imTab.classList.toggle('active', tab === 'im');
+      if (icPanel) icPanel.style.display = tab === 'ic' ? '' : 'none';
+      if (imPanel) imPanel.style.display = tab === 'im' ? '' : 'none';
+      if (tab === 'ic' && icPanel) renderIcCards(); else renderImCards();
     }
 
     // ==================== Toast ====================
@@ -549,9 +713,18 @@
     function getFilteredIm() {
       var s = (document.getElementById('mImSearch').value || '').trim().toLowerCase();
       var st = document.getElementById('mImStatus').value;
+      var cn = (document.getElementById('mImCenterName').value || '').trim().toLowerCase();
+      var cno = (document.getElementById('mImCenterNo').value || '').trim().toLowerCase();
       return imData.filter(function(r) {
         if (s && (r.name.toLowerCase().indexOf(s)===-1 && r.phone.indexOf(s)===-1)) return false;
         if (st && r.status !== st) return false;
+        // 中心名称：匹配「CN015·唐镇市中心医院」中「·」后的名称部分
+        if (cn) {
+          var cName = r.center.split('·').slice(1).join('·').toLowerCase();
+          if (cName.indexOf(cn) === -1) return false;
+        }
+        // 中心号：匹配「CN015·唐镇市中心医院」中「·」前的编号部分
+        if (cno && r.center.split('·')[0].toLowerCase().indexOf(cno) === -1) return false;
         return true;
       });
     }
@@ -569,17 +742,39 @@
       list.innerHTML = '';
       pageData.forEach(function(row, i) {
         var isEn = row.status === '启用';
-        var centerHtml = row.centers.map(function(c){ return '<span class="center-tag-m">'+c+'</span>'; }).join('');
+        var centerHtml = '<span class="center-tag-m">' + row.center + '</span>';
         var card = document.createElement('div');
         card.style.cssText = 'background:#fff;border:1px solid #f0f0f0;border-radius:10px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.03)';
         var statusTag = '<span class="'+(isEn?'status-active-m':'status-inactive-m')+'" style="font-size:11px;padding:1px 8px;border-radius:8px;margin-right:6px;'+(isEn?'background:#e8ffea;color:#00B42A':'background:#f2f3f5;color:#86909c')+'">' + row.status + '</span>';
+        var actWord = isEn ? '启用' : '停用';
+        var checked = selectModeM && selectedIdsM[row.id];
+        var checkboxHtml = selectModeM
+          ? '<div class="im-check-m '+(checked?'checked':'')+'"><i class="fas fa-check" style="font-size:11px;'+(checked?'':'opacity:0')+'"></i></div>'
+          : '';
+        var rightHtml = selectModeM
+          ? '<span class="im-hint-m" style="color:' + (checked ? '#1872a7' : '#bbb') + '">' + (checked ? '已选' : '轻触选择') + '</span>'
+          : '<button class="btn-toggle-m" onclick="openToggleModal(\''+row.id+'\',\''+(isEn?'停用':'启用')+'\')">' + (isEn ? '停用' : '启用') + '</button>';
+        card.className = 'im-card-m' + (checked ? ' selected' : '');
         card.innerHTML =
           '<div class="im-card-head-m" style="display:flex;align-items:center;justify-content:space-between">' +
-            '<div class="im-card-name-m" style="font-size:15px;font-weight:600;color:#333">' + statusTag + row.name + ' <span style="font-size:13px;font-weight:400;color:#888;margin-left:8px">' + row.phone + '</span></div>' +
-            '<button class="btn-toggle-m" onclick="toggleMemberM(this,\''+row.name+'\','+(isEn?'"停用"':'"启用"')+')">' + (isEn ? '停用' : '启用') + '</button>' +
+            '<div style="display:flex;align-items:center;flex:1;min-width:0">' +
+              checkboxHtml +
+              '<div class="im-card-name-m" style="font-size:15px;font-weight:600;color:#333;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + statusTag + row.name + ' <span style="font-size:13px;font-weight:400;color:#888;margin-left:8px">' + row.phone + '</span></div>' +
+            '</div>' +
+            rightHtml +
           '</div>' +
           '<div style="margin-top:8px;font-size:12px;color:#666">方案编号：' + row.projectNo + '</div>' +
-          '<div style="margin-top:8px;font-size:12px;color:#666;line-height:1.6">负责中心：' + centerHtml + '</div>';
+          '<div style="margin-top:8px;font-size:12px;color:#666;line-height:1.6">中心：' + centerHtml + '</div>' +
+          '<div style="margin-top:4px;font-size:12px;color:#888;line-height:1.6">邀请人：' + (row.inviter || '-') + '</div>' +
+          '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #eee;font-size:12px;color:#666;line-height:1.7">' +
+            '<div>' + actWord + '人：' + (row.toggleBy || '-') + '</div>' +
+            '<div>' + actWord + '时间：' + (row.toggleTime || '-') + '</div>' +
+            '<div>' + actWord + '原因：' + (row.toggleReason || '-') + '</div>' +
+          '</div>';
+        if (selectModeM) {
+          card.style.cursor = 'pointer';
+          card.setAttribute('onclick', "toggleCardSelectM('" + row.id + "')");
+        }
         list.appendChild(card);
       });
 
@@ -595,20 +790,156 @@
       renderImCards();
     }
 
-    function toggleMemberM(btn, name, newStatus) {
-      var card = btn.closest('.im-card-head-m').parentElement;
-      var nameDiv = card.querySelector('.im-card-name-m');
-      var isEn = newStatus === '启用';
+    // ==================== 启用 / 停用（填写原因） ====================
+    var toggleTarget = null; // 单条：{ id, name, center, newStatus }；批量：{ name:'批量', newStatus }
+    var selectModeM = false;
+    var selectedIdsM = {};
+    var batchIdsM = null;
 
-      var tag = '<span class="'+(isEn?'status-active-m':'status-inactive-m')+'" style="font-size:11px;padding:1px 8px;border-radius:8px;margin-right:6px;'+(isEn?'background:#e8ffea;color:#00B42A':'background:#f2f3f5;color:#86909c')+'">' + newStatus + '</span>';
-      var nameText = nameDiv.textContent.replace(/^启用|停用/, '').trim();
-      nameDiv.innerHTML = tag + nameText;
-      btn.textContent = isEn ? '停用' : '启用';
+    function openToggleModal(id, newStatus) {
+      var row = imData.find(function(x){ return x.id === id; });
+      if (!row) return;
+      toggleTarget = { id: id, name: row.name, center: row.center, newStatus: newStatus };
+      document.getElementById('tmTitle').textContent = newStatus + '原因';
+      document.getElementById('tmReasonLabel').textContent = newStatus + '原因';
+      document.getElementById('tmInfoText').innerHTML = '启用 / 停用 仅变更该成员在「' + row.center + '」的状态，不影响其他中心的授权与可见范围。';
+      document.getElementById('tmOkBtn').textContent = '确定' + newStatus;
+      document.getElementById('tmReason').value = '';
+      var hint = document.getElementById('tmHint');
+      if (hint) hint.style.display = 'none';
+      document.getElementById('toggleReasonModal').classList.add('show');
+    }
 
-      showToastM(name + ' 已' + newStatus, isEn ? 'success' : 'warn');
+    function closeToggleModal() {
+      document.getElementById('toggleReasonModal').classList.remove('show');
+      toggleTarget = null;
+    }
 
-      var m = imData.find(function(x){ return x.name === name; });
-      if (m) m.status = newStatus;
+    // ---- 批量：进入 / 退出勾选模式 ----
+    function enterSelectModeM() {
+      selectModeM = true;
+      selectedIdsM = {};
+      var btn = document.getElementById('mImBatchEnter');
+      btn.textContent = '完成';
+      btn.onclick = exitSelectModeM;
+      var bar = document.getElementById('imBatchBar');
+      bar.style.display = 'flex';
+      document.body.classList.add('select-mode-m');
+      alignBatchBarToBody();
+      updateSelCountM();
+      renderImCards();
+    }
+    function exitSelectModeM() {
+      selectModeM = false;
+      selectedIdsM = {};
+      batchIdsM = null;
+      var btn = document.getElementById('mImBatchEnter');
+      btn.textContent = '批量管理';
+      btn.onclick = enterSelectModeM;
+      document.getElementById('imBatchBar').style.display = 'none';
+      document.body.classList.remove('select-mode-m');
+      renderImCards();
+    }
+    function toggleCardSelectM(id) {
+      if (selectedIdsM[id]) delete selectedIdsM[id]; else selectedIdsM[id] = true;
+      updateSelCountM();
+      renderImCards();
+    }
+    function selectAllM() {
+      getFilteredIm().forEach(function(r){ selectedIdsM[r.id] = true; });
+      updateSelCountM();
+      renderImCards();
+    }
+    function updateSelCountM() {
+      var n = Object.keys(selectedIdsM).filter(function(k){ return selectedIdsM[k]; }).length;
+      document.getElementById('imSelCount').textContent = '已选 ' + n + ' 个';
+    }
+
+    // ---- 让悬浮栏跟随 body（移动端 480px 容器）的实际位置 ----
+    function alignBatchBarToBody() {
+      var bar = document.getElementById('imBatchBar');
+      if (!bar) return;
+      var rect = document.body.getBoundingClientRect();
+      var sideMargin = 12;
+      bar.style.left = (rect.left + sideMargin) + 'px';
+      bar.style.right = (window.innerWidth - rect.right + sideMargin) + 'px';
+      bar.style.maxWidth = (rect.width - sideMargin * 2) + 'px';
+    }
+    window.addEventListener('resize', alignBatchBarToBody);
+
+    // ---- 批量：校验 + 弹原因 ----
+    function openBatchToggleM(newStatus) {
+      var selIds = Object.keys(selectedIdsM).filter(function(k){ return selectedIdsM[k]; });
+      if (!selIds.length) { showToastM('请先勾选要操作的成员', 'warn'); return; }
+      var selRows = imData.filter(function(r){ return selIds.indexOf(r.id) > -1; });
+      var hasEnable = selRows.some(function(r){ return r.status === '启用'; });
+      var hasDisable = selRows.some(function(r){ return r.status === '停用'; });
+      if (hasEnable && hasDisable) {
+        showAlertM('所选成员同时包含「启用」和「停用」两种状态，请重新勾选同一状态的成员后再操作。', '提醒');
+        return;
+      }
+      var applicable = selRows.filter(function(r){ return r.status !== newStatus; });
+      if (applicable.length === 0) {
+        showAlertM('所选 ' + selRows.length + ' 个成员均已处于「' + newStatus + '」状态，无需重复' + newStatus + '。', '提醒');
+        return;
+      }
+      batchIdsM = applicable.map(function(r){ return r.id; });
+      toggleTarget = { name: '批量', newStatus: newStatus };
+      document.getElementById('tmTitle').textContent = newStatus + '原因';
+      document.getElementById('tmReasonLabel').textContent = newStatus + '原因';
+      document.getElementById('tmInfoText').innerHTML = '本次' + newStatus + '将变更所选 ' + applicable.length + ' 个成员的「启用 / 停用」状态，不影响其他中心的授权与可见范围。';
+      document.getElementById('tmOkBtn').textContent = '确定' + newStatus;
+      document.getElementById('tmReason').value = '';
+      var hint = document.getElementById('tmHint');
+      if (hint) hint.style.display = 'none';
+      document.getElementById('toggleReasonModal').classList.add('show');
+    }
+
+    function confirmToggleM() {
+      if (!toggleTarget) return;
+      var reason = (document.getElementById('tmReason').value || '').trim();
+      var tStatus = toggleTarget.newStatus;
+      if (batchIdsM && batchIdsM.length) {
+        var cnt = 0;
+        batchIdsM.forEach(function(id){
+          var m = imData.find(function(x){ return x.id === id; });
+          if (m) { m.status = tStatus; m.toggleBy = CURRENT_USER_M; m.toggleTime = formatNowM(); m.toggleReason = reason; cnt++; }
+        });
+        closeToggleModal();
+        exitSelectModeM();
+        renderImCards();
+        showToastM('已批量' + tStatus + ' ' + cnt + ' 个成员', tStatus === '启用' ? 'success' : 'warn');
+        batchIdsM = null;
+        toggleTarget = null;
+        return;
+      }
+      var tName = toggleTarget.name, tCenter = toggleTarget.center;
+      var m = imData.find(function(x){ return x.id === toggleTarget.id; });
+      if (m) {
+        m.status = tStatus;
+        m.toggleBy = CURRENT_USER_M;
+        m.toggleTime = formatNowM();
+        m.toggleReason = reason;
+      }
+      closeToggleModal();
+      renderImCards();
+      showToastM(tName + '（' + tCenter + '）已' + tStatus, tStatus === '启用' ? 'success' : 'warn');
+    }
+
+    // ---- 居中提醒弹窗 ----
+    function showAlertM(msg, title) {
+      document.getElementById('amTitle').textContent = title || '提醒';
+      document.getElementById('amMsg').textContent = msg;
+      document.getElementById('alertDialogM').classList.add('show');
+    }
+    function closeAlertM() {
+      document.getElementById('alertDialogM').classList.remove('show');
+    }
+
+    function formatNowM() {
+      var d = new Date();
+      var p = function(n){ return (n < 10 ? '0' : '') + n; };
+      return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
     }
 
     // ==================== 分页组件 ====================
@@ -627,7 +958,8 @@
 
     // ==================== 初始化 ====================
     window.addEventListener('DOMContentLoaded', function() {
-      renderIcCards();
+      // 默认显示「邀请码列表」；switchFuncTabM 内部会按 active 状态切换面板并渲染
+      switchFuncTabM('ic');
     });
   </script>
 </body>

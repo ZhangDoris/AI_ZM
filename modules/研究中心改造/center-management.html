@@ -254,6 +254,19 @@
               <span id="importErrorCount" class="text-[12px] text-gray-400"></span>
             </div>
             <p class="text-[12px] text-gray-500 mb-2">以下为导入失败的具体数据及其问题字段，请按提示修正后重新上传：</p>
+
+            <!-- 人员未匹配系统用户（中心/其他数据已保存，需手动授权） -->
+            <div id="importUserMissingBox" class="hidden mb-3">
+              <div class="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
+                <div class="flex items-center gap-2 px-3 py-2 bg-amber-100/70 border-b border-amber-200">
+                  <i class="fas fa-user-slash text-amber-600 text-[12px]"></i>
+                  <span class="text-[12px] font-medium text-amber-800">人员未匹配系统用户（需手动授权）</span>
+                  <span id="importUserMissingCount" class="text-[12px] text-amber-600"></span>
+                </div>
+                <div id="importUserMissingList" class="divide-y divide-amber-100"></div>
+              </div>
+            </div>
+
             <div id="importErrorList" class="rounded-xl border border-red-100 bg-white overflow-hidden"></div>
           </div>
         </div>
@@ -436,6 +449,34 @@
         <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0">
           <button onclick="closeHandover()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
           <button onclick="confirmHandover()" class="px-4 py-2 bg-[#5d58dc] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">确认交接并停用</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 成员启用 / 停用：填写原因 ===== -->
+    <div id="memberStatusModal" class="modal-overlay modal-hidden fixed inset-0 z-[116] flex items-center justify-center" onclick="if(event.target===this)closeStatusReason()">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 flex flex-col" style="max-height:88vh">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+          <h3 class="text-lg font-semibold text-gray-800" id="msTitle">停用成员</h3>
+          <button onclick="closeStatusReason()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+        </div>
+        <div class="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
+          <p class="text-sm text-gray-600">成员 <b id="msMemberName">--</b></p>
+
+          <!-- 作用范围提示：仅影响本中心 -->
+          <div class="flex items-start gap-2 px-3 py-2 rounded bg-blue-50 border border-blue-100 text-[#5d58dc] text-[12px] leading-relaxed">
+            <i class="fas fa-info-circle mt-0.5"></i>
+            <span>启用 / 停用仅变更该成员在「<b id="msCenterName">--</b>」的状态，不影响其在其他中心的授权与可见范围。</span>
+          </div>
+
+          <div>
+            <label class="text-sm text-gray-700 font-medium"><span id="msReasonLabel">停用原因</span> </label>
+            <textarea id="msReason" rows="4" placeholder="请输入原因" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-[#5d58dc] outline-none"></textarea>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 shrink-0">
+          <button onclick="closeStatusReason()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
+          <button onclick="confirmStatusReason()" class="px-4 py-2 bg-[#5d58dc] text-white text-sm rounded-lg hover:bg-blue-600 font-medium" id="msConfirmBtn">确认停用</button>
         </div>
       </div>
     </div>
@@ -1021,6 +1062,55 @@
     </div>
   </div>
 
+  <!-- ===== 批量删除中心确认 ===== -->
+  <div id="batchDeleteCenterModal" class="modal-overlay modal-hidden fixed inset-0 z-[78] flex items-center justify-center" onclick="if(event.target===this)closeBatchDeleteConfirm()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>批量删除中心确认</h3>
+        <button onclick="closeBatchDeleteConfirm()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-lg"></i></button>
+      </div>
+      <div class="px-6 py-5 space-y-4">
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p class="text-sm text-red-600">即将批量删除 <b id="batchDelCount">0</b> 个中心：</p>
+          <p id="batchDelList" class="text-xs text-red-500 mt-1.5 leading-relaxed whitespace-pre-line"></p>
+        </div>
+        <div>
+          <label class="text-sm text-gray-700 font-medium">删除原因 <span class="text-red-500">*</span></label>
+          <select id="batchDelReason" onchange="onDeleteReasonChange('batchDelReason','batchDelNoteRow','batchDelNote')" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-red-400 outline-none">
+            <option value="">请选择删除原因</option>
+            <option value="同一中心多条重复记录，清理冗余数据">同一中心多条重复记录，清理冗余数据</option>
+            <option value="错误加入">错误加入</option>
+            <option value="其它">其它</option>
+          </select>
+        </div>
+        <div id="batchDelNoteRow" class="hidden">
+          <label class="text-sm text-gray-700 font-medium">备注 <span class="text-red-500">*</span></label>
+          <textarea id="batchDelNote" rows="2" placeholder="请填写备注（选择「其它」时必填）" class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none focus:border-red-400 outline-none"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeBatchDeleteConfirm()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50">取消</button>
+        <button onclick="confirmBatchDelete()" class="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 font-medium">
+          <i class="fas fa-trash-alt mr-1"></i>确认批量删除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 通用页面提示对话框（替代 alert） ===== -->
+  <div id="pageAlertModal" class="modal-overlay modal-hidden fixed inset-0 z-[200] flex items-center justify-center" onclick="if(event.target===this)closePageAlert()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <h3 class="text-base font-semibold text-gray-800" id="pageAlertTitle">提示</h3>
+        <button onclick="closePageAlert()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-base"></i></button>
+      </div>
+      <div class="px-6 py-5 text-[14px] text-gray-700 leading-relaxed whitespace-pre-line" id="pageAlertMsg">--</div>
+      <div class="flex items-center justify-end gap-3 px-6 py-3 border-t border-gray-200 bg-gray-50">
+        <button onclick="closePageAlert()" class="px-4 py-1.5 bg-[#5d58dc] text-white text-sm rounded-lg hover:bg-[#3f3a9e] font-medium">确定</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== n≠0 患者管理（整页视图，替换当前页） ===== -->
   <div id="patientListPage" class="page-view hidden bg-gray-100 min-h-screen">
     <!-- 头部：左上角返回 + 标题 -->
@@ -1418,6 +1508,20 @@
             <option>CRC</option>
           </select>
         </div>
+           <!-- 状态 -->
+        <div class="flex items-center gap-4">
+          <label class="w-[90px] shrink-0 text-sm text-gray-700 text-right"><span class="text-red-500 mr-0.5">*</span>状态：</label>
+          <div class="flex-1 flex items-center gap-6">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="radio" name="mfStatus" value="启用" checked class="mf-status-radio">
+              <span class="text-sm text-gray-700">启用</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="radio" name="mfStatus" value="停用" class="mf-status-radio">
+              <span class="text-sm text-gray-700">停用</span>
+            </label>
+          </div>
+        </div>
         <!-- 负责中心 -->
         <div class="flex items-center gap-4">
           <label class="w-[90px] shrink-0 text-sm text-gray-700 text-right">负责中心：</label>
@@ -1425,7 +1529,6 @@
             <select id="mfResponsibleCenter" class="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#5d58dc] appearance-none bg-white">
               <option value="">请选择中心</option>
             </select>
-            <button onclick="selectAllCenters('mfResponsibleCenter')" class="px-3 py-1.5 bg-[#5d58dc] text-white rounded-md text-sm whitespace-nowrap hover:bg-blue-600">全选</button>
           </div>
         </div>
         <!-- 仅查看权限中心 -->
@@ -1435,9 +1538,9 @@
             <select id="mfViewCenter" class="flex-1 border border-gray-300 rounded-md px-3 py-1.5 text-sm outline-none focus:border-[#5d58dc] appearance-none bg-white">
               <option value="">请选择中心</option>
             </select>
-            <button onclick="selectAllCenters('mfViewCenter')" class="px-3 py-1.5 bg-[#5d58dc] text-white rounded-md text-sm whitespace-nowrap hover:bg-blue-600">全选</button>
           </div>
         </div>
+     
       </div>
       <!-- 底部按钮 -->
       <div class="flex items-center justify-center gap-4 px-6 pb-6 pt-2">
@@ -1568,26 +1671,29 @@
       btn.disabled = (n === 0);
     }
 
-    // 点击「删除选中」：演示删除勾选的中心
+    // 点击「删除选中」：先校验所选中心的「患者数 + 参研人员数」必须都为 0，否则阻断并提示
     function deleteSelectedCenters() {
       if (selectedCenters.length === 0) return;
-      if (!confirm('确认删除选中的 ' + selectedCenters.length + ' 个中心？\n' + selectedCenters.join('、'))) return;
+      // 1) 校验：所有被选中心的「患者 + 参研人员」总数都必须为 0
+      var blocked = [];
       for (var i = 0; i < selectedCenters.length; i++) {
-        var name = selectedCenters[i];
-        var ci = allCenters.indexOf(name);
-        if (ci !== -1) allCenters.splice(ci, 1);
-        delete patientData[name];
-        delete staffData[name];
-        delete memberData[name];
-        delete centerStatus[name];
+        var n = selectedCenters[i];
+        var pCount = (patientData[n] || []).length;
+        var sCount = (staffData[n] || []).length;
+        if (pCount + sCount > 0) {
+          blocked.push({ name: n, p: pCount, s: sCount });
+        }
       }
-      selectedCenters = [];
-      // 取消所有中心复选框的勾选
-      var cbs = document.querySelectorAll('.center-table-wrap tbody input[type="checkbox"]');
-      for (var c = 0; c < cbs.length; c++) cbs[c].checked = false;
-      refreshCenterTable();
-      updateDelSelBtn();
-      showToast('已删除所勾选的中心');
+      if (blocked.length > 0) {
+        var lines = ['以下中心下存在未转移的患者，不支持批量删除：'];
+        for (var j = 0; j < blocked.length; j++) {
+          lines.push('· ' + blocked[j].name + '（患者 ' + blocked[j].p + ' 名）');
+        }
+        showPageAlert('提示', lines.join('\n'));
+        return;
+      }
+      // 2) 全部为 0：打开批量删除确认弹窗
+      openBatchDeleteConfirm();
     }
 
     // 中心状态：'started'=已启动，'notstarted'=未启动，'paused'=已暂停，'closed'=已关闭
@@ -1782,6 +1888,77 @@
       closeDeleteSimple();
       showToast('中心「' + name + '」已成功删除。');
       removeCenterData(name);
+    }
+
+    // ========== 批量删除中心：校验 + 弹窗 ==========
+    function openBatchDeleteConfirm() {
+      var cnt = selectedCenters.length;
+      document.getElementById('batchDelCount').textContent = cnt;
+      document.getElementById('batchDelList').textContent = selectedCenters.map(function (n) { return '· ' + n; }).join('\n');
+      var sel = document.getElementById('batchDelReason'); if (sel) sel.value = '';
+      var noteRow = document.getElementById('batchDelNoteRow'); if (noteRow) noteRow.classList.add('hidden');
+      var note = document.getElementById('batchDelNote'); if (note) note.value = '';
+      var modal = document.getElementById('batchDeleteCenterModal');
+      if (modal) modal.classList.remove('modal-hidden');
+    }
+
+    function closeBatchDeleteConfirm() {
+      var modal = document.getElementById('batchDeleteCenterModal');
+      if (modal) modal.classList.add('modal-hidden');
+    }
+
+    function confirmBatchDelete() {
+      var reasonEl = document.getElementById('batchDelReason');
+      var reason = reasonEl ? reasonEl.value : '';
+      if (!reason) { alert('请选择删除原因'); return; }
+      var noteEl = document.getElementById('batchDelNote');
+      var note = noteEl ? (noteEl.value || '').trim() : '';
+      if (reason === '其它' && !note) { alert('选择「其它」时备注为必填项，请填写备注'); return; }
+
+      var time = new Date().toLocaleString('zh-CN');
+      var deleted = [];
+      for (var i = 0; i < selectedCenters.length; i++) {
+        var name = selectedCenters[i];
+        var meta = getCenterMeta(name);
+        deleteLog.unshift({
+          time: time, center: name,
+          code: meta.code, dept: meta.dept, pi: meta.pi,
+          province: meta.province, city: meta.city, leader: meta.leader,
+          reason: reason, note: note, operator: currentOperator, batch: true
+        });
+        var ci = allCenters.indexOf(name);
+        if (ci !== -1) allCenters.splice(ci, 1);
+        delete patientData[name];
+        delete staffData[name];
+        delete memberData[name];
+        delete centerStatus[name];
+        deleted.push(name);
+      }
+      selectedCenters = [];
+      var cbs = document.querySelectorAll('.center-table-wrap tbody input[type="checkbox"]');
+      for (var c = 0; c < cbs.length; c++) cbs[c].checked = false;
+      refreshCenterTable();
+      updateDelSelBtn();
+      closeBatchDeleteConfirm();
+      showToast('已批量删除 ' + deleted.length + ' 个中心');
+    }
+
+    // ========== 通用页面提示对话框（替代 alert） ==========
+    var pageAlertCallback = null;
+    function showPageAlert(title, msg, cb) {
+      var t = document.getElementById('pageAlertTitle');
+      if (t) t.textContent = title || '提示';
+      var m = document.getElementById('pageAlertMsg');
+      if (m) m.textContent = msg || '';
+      pageAlertCallback = cb || null;
+      var modal = document.getElementById('pageAlertModal');
+      if (modal) modal.classList.remove('modal-hidden');
+    }
+    function closePageAlert() {
+      var modal = document.getElementById('pageAlertModal');
+      if (modal) modal.classList.add('modal-hidden');
+      var cb = pageAlertCallback; pageAlertCallback = null;
+      if (typeof cb === 'function') cb();
     }
 
     // ========== 患者管理（整页视图） ==========
@@ -2240,13 +2417,13 @@
           if (patCount > 0) {
             html += '<a class="text-gray-300 text-[13px] ml-2 select-none cursor-not-allowed" title="该成员名下仍有 ' + patCount + ' 名患者，请先「患者交接」后再停用">停用' + (roleNoCount ? '' : '（' + patCount + '）') + '</a>';
           } else {
-            html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openHandover(\'' + m.id + '\')">停用' + (roleNoCount ? '' : '（0）') + '</a>';
+            html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="openStatusReason(\'' + m.id + '\',\'停用\')">停用' + (roleNoCount ? '' : '（0）') + '</a>';
                    html += '<a class="text-red-500 text-[13px] cursor-pointer ml-2" onclick="deleteMember(\'' + m.id + '\')">删除</a>';
 
           }
         } else {
           // 已停用：提供「启用」按钮，可直接恢复
-          html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="enableMember(\'' + m.id + '\')">启用</a>';
+          html += '<a class="text-green-600 text-[13px] cursor-pointer ml-2" onclick="openStatusReason(\'' + m.id + '\',\'启用\')">启用</a>';
         }
        
         // 有患者时提供「患者交接」入口（此时删除按钮隐藏）
@@ -2327,6 +2504,7 @@
           document.getElementById('mfRole').value = m.role;
           document.getElementById('mfResponsibleCenter').value = m.responsibleCenter || '';
           document.getElementById('mfViewCenter').value = m.viewCenter || '';
+          setMemberStatus(m.status || '启用');
         }
       } else {
         document.getElementById('mfName').value = '';
@@ -2335,8 +2513,24 @@
         document.getElementById('mfRole').value = '';
         document.getElementById('mfResponsibleCenter').value = currentCenterName;
         document.getElementById('mfViewCenter').value = '';
+        setMemberStatus('启用');
       }
       document.getElementById('memberFormModal').classList.remove('modal-hidden');
+    }
+
+    // 设置/读取 状态 单选按钮
+    function setMemberStatus(st) {
+      var radios = document.querySelectorAll('input[name="mfStatus"]');
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].checked = (radios[i].value === st);
+      }
+    }
+    function getMemberStatus() {
+      var radios = document.querySelectorAll('input[name="mfStatus"]');
+      for (var i = 0; i < radios.length; i++) {
+        if (radios[i].checked) return radios[i].value;
+      }
+      return '启用';
     }
 
     function closeMemberForm() {
@@ -2418,6 +2612,17 @@
     }
 
     // ========== 导入中心数据 ==========
+    // 重置「人员未匹配系统用户」提示区
+    function resetImportUserMissing() {
+      importMissingUsers = [];
+      var box = document.getElementById('importUserMissingBox');
+      var list = document.getElementById('importUserMissingList');
+      var errList = document.getElementById('importErrorList');
+      if (box) box.classList.add('hidden');
+      if (list) list.innerHTML = '';
+      if (errList) errList.classList.remove('hidden');
+    }
+
     function openImportModal() {
       document.getElementById('importFile').value = '';
       document.getElementById('importFileName').textContent = '';
@@ -2425,6 +2630,7 @@
       document.getElementById('importStatus').classList.add('hidden');
       document.getElementById('importErrorBox').classList.add('hidden');
       document.getElementById('importErrorList').innerHTML = '';
+      resetImportUserMissing();
       hideImportProgress();
       resetDropZone();
       document.getElementById('importModal').classList.remove('modal-hidden');
@@ -2493,22 +2699,97 @@
       document.getElementById('importFileChip').classList.add('hidden');
       document.getElementById('importStatus').classList.add('hidden');
       document.getElementById('importErrorBox').classList.add('hidden');
+      resetImportUserMissing();
       hideImportProgress();
       importParsedRows = [];
       resetDropZone();
     }
 
+    // 「系统用户未找到该人」错误原因常量：命中后走「人员未匹配」专属提示
+    var ERR_USER_NOT_FOUND = '系统用户未找到该人';
+
     // 解析选中文件（模拟上传至服务器后返回的结果）
+    // 行上若带 craName / craPhone，表示该行需要把人员匹配到系统用户
     function parseImportFile() {
       // 模拟解析结果：演示成功行与失败行，失败行标注具体字段问题
       return [
-        { name: '测试中心A', code: 'CN101', dept: '呼吸科', pi: '王医生', province: '江苏省', city: '南京市', leader: '是', status: '启用', startDate: '2024-01-15', errors: {} },
-        { name: '测试中心B', code: 'CN102', dept: '肿瘤内科', pi: '李医生', province: '浙江省', city: '杭州市', leader: '否', status: '启用', startDate: '2024-03-20', errors: {} },
-        { name: '', code: 'CN103', dept: '血液科', pi: '赵医生', province: '广东省', city: '广州市', leader: '否', status: '启用', startDate: '2024-05-10', errors: { '中心名称': '姓名不能为空' } },
-        { name: '测试中心C', code: '11010119900307', dept: '心内科', pi: '孙医生', province: '山东省', city: '济南市', leader: '否', status: '启用', startDate: '2024-02-18', errors: { '中心号': '中心号格式不正确，应为18位' } },
-        { name: '测试中心D', code: 'CN104', dept: '放疗科', pi: '周医生', province: '河南省', city: '郑州市', leader: '否', status: '停用', startDate: '2024/13/01', errors: { '启用日期': '日期格式无效，月份不能大于12' } },
-        { name: '测试中心E', code: 'CN105', dept: '', pi: '', province: '福建省', city: '厦门市', leader: '非法值', status: '启用', startDate: '', errors: { '科室': '未填写', 'PI': '未填写', '是否组长单位': '仅允许「是 / 否」' } }
-      ];
+        { name: '测试中心A', code: 'CN101', dept: '呼吸科', pi: '王医生', province: '江苏省', city: '南京市', leader: '是', status: '启用', startDate: '2024-01-15', craName: '陈CRA', craPhone: '13812345678', errors: {} },
+        { name: '测试中心B', code: 'CN102', dept: '肿瘤内科', pi: '李医生', province: '浙江省', city: '杭州市', leader: '否', status: '启用', startDate: '2024-03-20', craName: '周CRC', craPhone: '13998765432', errors: {} },
+        // ▼ 人员未匹配：中心等字段均合法，仅 CRA 在系统中查无此人（中心数据可保存）
+        { name: '测试中心F', code: 'CN106', dept: '消化内科', pi: '吴医生', province: '四川省', city: '成都市', leader: '否', status: '启用', startDate: '2024-06-11', craName: '张三', craPhone: '132****1234', errors: { 'CRA姓名': ERR_USER_NOT_FOUND } },
+        // ▼ 人员未匹配 + 中心名称校验不通过：人员待授权，且中心数据无法保存
+        { name: '', code: 'CN107', dept: '神经内科', pi: '郑医生', province: '湖南省', city: '长沙市', leader: '否', status: '启用', startDate: '2024-07-08', craName: '李四', craPhone: '132****1224', errors: { 'CRA姓名': ERR_USER_NOT_FOUND, '中心名称': '不能为空' } },
+        { name: '', code: 'CN103', dept: '血液科', pi: '赵医生', province: '广东省', city: '广州市', leader: '否', status: '启用', startDate: '2024-05-10', errors: { '中心名称': '不能为空' } },
+           ];
+    }
+
+    // 判断错误原因是否为「系统用户未找到该人」
+    function isUserNotFoundError(reason) {
+      return String(reason).indexOf(ERR_USER_NOT_FOUND) !== -1;
+    }
+
+    // 待手动授权的人员缓存（供「去新增用户」按钮按索引取用）
+    var importMissingUsers = [];
+
+    // 该行是否「仅」人员未匹配：是则中心数据已保存，否则中心数据校验不通过未入库
+    function isRowOnlyUserMissing(r) {
+      var ek = Object.keys(r.errors);
+      if (ek.length === 0) return false;
+      for (var i = 0; i < ek.length; i++) {
+        if (!isUserNotFoundError(r.errors[ek[i]])) return false;
+      }
+      return true;
+    }
+
+    // 展示「系统用户未找到该人」：逐条给出 第几条数据 / CRA姓名 / 手机号码 / 处理引导
+    function renderImportUserMissing(rows) {
+      var box = document.getElementById('importUserMissingBox');
+      var list = document.getElementById('importUserMissingList');
+      var countEl = document.getElementById('importUserMissingCount');
+      if (!box || !list) return [];
+
+      importMissingUsers = [];
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var errKeys = Object.keys(r.errors);
+        for (var k = 0; k < errKeys.length; k++) {
+          if (isUserNotFoundError(r.errors[errKeys[k]])) {
+            importMissingUsers.push({
+              rowIdx: i + 1, excelRow: i + 2,
+              name: r.craName || '', phone: r.craPhone || '', center: r.name || '',
+              centerSaved: isRowOnlyUserMissing(r)
+            });
+            break; // 同一行只提示一次
+          }
+        }
+      }
+
+      if (importMissingUsers.length === 0) {
+        box.classList.add('hidden');
+        list.innerHTML = '';
+        return [];
+      }
+
+      var html = '';
+      for (var j = 0; j < importMissingUsers.length; j++) {
+        var u = importMissingUsers[j];
+        var nameTxt = u.name || '（空）';
+        var phoneTxt = u.phone || '（空）';
+        html += '<div class="px-3 py-2.5 text-[12px] text-gray-700 leading-relaxed">';
+        html += '<b class="text-[#F53F3F]">第 ' + u.rowIdx + ' 条数据</b>，CRA姓名：<b>' + escapeHtml(nameTxt) + '</b>，手机号码：<b class="font-mono">' + escapeHtml(phoneTxt) + '</b> ';
+        html += '<span class="text-[#F53F3F]">' + ERR_USER_NOT_FOUND + '</span>，请新增用户后，手动授权，';
+        // 该行若还有其他字段错误，中心数据校验不通过、未导入
+        if (u.centerSaved) {
+          html += '<span class="text-[#00B42A]">中心的数据已保存。</span>';
+        } else {
+          html += '<span class="text-[#F53F3F]">该条数据校验不通过，未导入（详见下方错误明细）。</span>';
+        }
+        html += '</div>';
+      }
+      list.innerHTML = html;
+      if (countEl) countEl.textContent = '（' + importMissingUsers.length + ' 人）';
+      box.classList.remove('hidden');
+      return importMissingUsers;
     }
 
     // 展示失败原因：表格形式列出「序号 / Excel行号 / 字段 / 原始值 / 错误原因」
@@ -2519,6 +2800,9 @@
         document.getElementById('importErrorBox').classList.add('hidden');
         return;
       }
+      // 先渲染「系统用户未找到该人」的人员清单（此类行的中心数据已保存）
+      var missingUsers = renderImportUserMissing(rows);
+
       var errLines = [];
       for (var i = 0; i < rows.length; i++) {
         var r = rows[i];
@@ -2526,15 +2810,25 @@
         if (errKeys.length === 0) continue;
         for (var k = 0; k < errKeys.length; k++) {
           var f = errKeys[k];
+          // 「系统用户未找到该人」已在人员区块单独提示，此处不重复
+          if (isUserNotFoundError(r.errors[f])) continue;
           var rawVal = r[f];
           if (rawVal === undefined || rawVal === null || rawVal === '') rawVal = '（空）';
           errLines.push({ rowIdx: i + 1, excelRow: i + 2, field: f, raw: rawVal, reason: r.errors[f] });
         }
       }
+      // 全部失败均属人员未匹配时，隐藏空的字段表格
+      if (errLines.length === 0) {
+        errList.innerHTML = '';
+        errList.classList.add('hidden');
+        document.getElementById('importErrorCount').textContent = '（' + missingUsers.length + ' 条待手动授权）';
+        document.getElementById('importErrorBox').classList.remove('hidden');
+        return;
+      }
+      errList.classList.remove('hidden');
       var errHtml = '<table class="w-full text-[12px] border-collapse border border-red-100 rounded-md overflow-hidden">';
       errHtml += '<thead><tr class="bg-red-50 text-gray-600">';
       errHtml += '<th class="text-left font-medium px-3 py-2 w-14">序号</th>';
-      errHtml += '<th class="text-left font-medium px-3 py-2 w-24">Excel行号</th>';
       errHtml += '<th class="text-left font-medium px-3 py-2 w-28">字段</th>';
       errHtml += '<th class="text-left font-medium px-3 py-2">原始值</th>';
       errHtml += '<th class="text-left font-medium px-3 py-2">错误原因</th>';
@@ -2542,8 +2836,7 @@
       for (var j = 0; j < errLines.length; j++) {
         var e = errLines[j];
         errHtml += '<tr class="border-t border-red-50 bg-white">';
-        errHtml += '<td class="px-3 py-2 text-gray-700">' + (j + 1) + '</td>';
-        errHtml += '<td class="px-3 py-2 text-gray-700">' + e.excelRow + '</td>';
+        errHtml += '<td class="px-3 py-2 text-gray-700">' + e.rowIdx + '</td>';
         errHtml += '<td class="px-3 py-2 text-gray-700">' + escapeHtml(e.field) + '</td>';
         errHtml += '<td class="px-3 py-2 text-[#F53F3F]">' + escapeHtml(e.raw) + '</td>';
         errHtml += '<td class="px-3 py-2 text-[#F53F3F]">' + escapeHtml(e.reason) + '</td>';
@@ -2551,7 +2844,8 @@
       }
       errHtml += '</tbody></table>';
       errList.innerHTML = errHtml;
-      document.getElementById('importErrorCount').textContent = '（失败 ' + failRows.length + ' 条）';
+      document.getElementById('importErrorCount').textContent = '（失败 ' + failRows.length + ' 条'
+        + (missingUsers.length ? '，其中 ' + missingUsers.length + ' 条待手动授权' : '') + '）';
       document.getElementById('importErrorBox').classList.remove('hidden');
     }
 
@@ -2580,10 +2874,15 @@
           if (Object.keys(importParsedRows[i].errors).length === 0) successCount++; else failCount++;
         }
 
-        // 落地成功数据到中心列表
+        // 落地数据到中心列表：
+        // - 完全无误 → 保存
+        // - 仅「系统用户未找到该人」→ 中心数据同样保存，仅该人员待手动授权
         for (var k = 0; k < importParsedRows.length; k++) {
           var r = importParsedRows[k];
-          if (Object.keys(r.errors).length === 0 && r.name && allCenters.indexOf(r.name) === -1) {
+          var errKeys = Object.keys(r.errors);
+          // 有错误且并非「仅人员未匹配」→ 该行中心数据不入库
+          if (errKeys.length > 0 && !isRowOnlyUserMissing(r)) continue;
+          if (r.name && allCenters.indexOf(r.name) === -1) {
             allCenters.push(r.name);
             centerStatus[r.name] = 'notstarted';
           }
@@ -2842,11 +3141,11 @@
         handoverLog.unshift({
           time: new Date().toLocaleString('zh-CN'),
           fromCenter: currentCenterName,
-          fromCode: (centerInfo[currentCenterName]||{}).code,
+          fromCode: (centerMeta[currentCenterName]||{}).code,
           fromMember: m.name,
           fromRole: m.role,
           toCenter: t.center || currentCenterName,
-          toCode: (centerInfo[t.center || currentCenterName]||{}).code,
+          toCode: (centerMeta[t.center || currentCenterName]||{}).code,
           toMember: t.name,
           toRole: t.role,
           patientCount: moved,
@@ -2860,7 +3159,7 @@
         handoverLog.unshift({
           time: new Date().toLocaleString('zh-CN'),
           fromCenter: currentCenterName,
-          fromCode: (centerInfo[currentCenterName]||{}).code,
+          fromCode: (centerMeta[currentCenterName]||{}).code,
           fromMember: m.name,
           fromRole: m.role,
           toCenter: '—',
@@ -2880,6 +3179,20 @@
 
     // ========== 图3：新增/编辑成员 → 待审核人同步 ==========
     // 重写 saveMember：CRA/医学自动加入待审核人；离职交接逻辑见 confirmHandover
+    // 项目内是否已存在该成员（按姓名或用户ID匹配，遍历所有中心）；excludeId 用于编辑时排除自身
+    function findMemberInProject(name, userId, excludeId) {
+      for (var c in memberData) {
+        var list = memberData[c] || [];
+        for (var i = 0; i < list.length; i++) {
+          var m = list[i];
+          if (excludeId && m.id === excludeId) continue;
+          if (name && m.name === name) return m;
+          if (userId && m.userId && m.userId === userId) return m;
+        }
+      }
+      return null;
+    }
+
     function saveMember() {
       var name = document.getElementById('mfName').value.trim();
       var userId = document.getElementById('mfUserId').value.trim();
@@ -2887,8 +3200,15 @@
       var role = document.getElementById('mfRole').value;
       var responsibleCenter = document.getElementById('mfResponsibleCenter').value;
       var viewCenter = document.getElementById('mfViewCenter').value;
+      var status = getMemberStatus();
       if (!name) { alert('请选择人员'); return; }
       if (!role) { alert('请选择角色'); return; }
+      // 校验：项目内同一个人不允许承担多个角色（编辑时排除自身）
+      var dup = findMemberInProject(name, userId, currentMemberEditId);
+      if (dup) {
+        showPageAlert('提示', '该成员已在项目中承担了' + (dup.role || '--') + '角色，暂不支持项目内一人承担多角色');
+        return;
+      }
 
       var list = memberData[currentCenterName] || [];
       if (currentMemberEditId) {
@@ -2896,14 +3216,17 @@
           if (list[i].id === currentMemberEditId) {
             var oldRole = list[i].role;
             var oldName = list[i].name;
+            var oldStatus = list[i].status || '启用';
             list[i].name = name; list[i].userId = userId; list[i].phone = phone; list[i].role = role;
             list[i].responsibleCenter = responsibleCenter; list[i].viewCenter = viewCenter;
+            list[i].status = status;
             // 角色变化导致待审核人增减
             syncPendingReviewer(currentCenterName, list[i], oldRole, role);
             addMemberLog(currentCenterName, '编辑', name, role, '角色变更：' + oldRole + ' → ' + role, { oldName: name, newRole: role });
-            if (oldName !== name) addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 姓名: oldName }, { 姓名: name });
-            if (oldRole !== role) addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 角色: oldRole }, { 角色: role });
-            addModifyLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, '修改', '当前用户', { 负责中心: list[i].responsibleCenter }, { 负责中心: responsibleCenter });
+            if (oldName !== name) addModifyLog(currentCenterName, (centerMeta[currentCenterName]||{}).code, '修改', '当前用户', { 姓名: oldName }, { 姓名: name });
+            if (oldRole !== role) addModifyLog(currentCenterName, (centerMeta[currentCenterName]||{}).code, '修改', '当前用户', { 角色: oldRole }, { 角色: role });
+            addModifyLog(currentCenterName, (centerMeta[currentCenterName]||{}).code, '修改', '当前用户', { 负责中心: list[i].responsibleCenter }, { 负责中心: responsibleCenter });
+            if (oldStatus !== status) addModifyLog(currentCenterName, (centerMeta[currentCenterName]||{}).code, '修改', '当前用户', { 状态: oldStatus }, { 状态: status });
             break;
           }
         }
@@ -2914,14 +3237,14 @@
         for (var j = 0; j < systemUsers.length; j++) {
           if (systemUsers[j].userId === userId) { matchedPhone = systemUsers[j].phone || ('138****' + userId.slice(-4)); break; }
         }
-        var newMember = { id: newId, userId: userId, name: name, role: role, phone: matchedPhone, responsibleCenter: responsibleCenter, viewCenter: viewCenter, status: '启用' };
+        var newMember = { id: newId, userId: userId, name: name, role: role, phone: matchedPhone, responsibleCenter: responsibleCenter, viewCenter: viewCenter, status: status };
         list.push(newMember);
         // CRA/医学自动加入待审核人
         if (isAuditRole(role)) {
           if (!pendingReviewers[currentCenterName]) pendingReviewers[currentCenterName] = [];
           if (pendingReviewers[currentCenterName].indexOf(name) === -1) pendingReviewers[currentCenterName].push(name);
         }
-        addMemberLog(currentCenterName, '新增', name, role, '新增成员' + (isAuditRole(role) ? '（已加入待审核人）' : ''), { newName: name, newPhone: phone, newRole: role });
+        addMemberLog(currentCenterName, '新增', name, role, '新增成员' + (isAuditRole(role) ? '（已加入待审核人）' : '') + '，状态：' + status, { newName: name, newPhone: phone, newRole: role, newStatus: status });
         showToast('成员已添加' + (isAuditRole(role) ? '，已同步至待审核人' : ''));
       }
       closeMemberForm();
@@ -2981,6 +3304,64 @@
       showToast('成员「' + m.name + '」已启用');
     }
 
+    // ========== 成员启用 / 停用：填写原因（textarea，必填） ==========
+    var statusReasonMemberId = null;
+    var statusReasonAction = '停用';
+
+    // 打开原因填写弹窗：action = '停用' | '启用'
+    function openStatusReason(memberId, action) {
+      var list = memberData[currentCenterName] || [];
+      var m = null;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === memberId) { m = list[i]; break; } }
+      if (!m) return;
+      statusReasonMemberId = memberId;
+      statusReasonAction = action;
+      var isDisable = (action === '停用');
+      var t = document.getElementById('msTitle');
+      if (t) t.textContent = isDisable ? '停用成员' : '启用成员';
+      var nm = document.getElementById('msMemberName');
+      if (nm) nm.textContent = m.name + '（' + m.role + '）';
+      // 提示中的中心名：表明仅变更本中心状态
+      var cn = document.getElementById('msCenterName');
+      if (cn) cn.textContent = currentCenterName || '--';
+      var at = document.getElementById('msActionText');
+      if (at) at.textContent = isDisable ? '停用' : '启用';
+      var rl = document.getElementById('msReasonLabel');
+      if (rl) rl.textContent = isDisable ? '停用原因' : '启用原因';
+      var cb = document.getElementById('msConfirmBtn');
+      if (cb) cb.textContent = isDisable ? '确认停用' : '确认启用';
+      var ta = document.getElementById('msReason');
+      if (ta) ta.value = '';
+      var modal = document.getElementById('memberStatusModal');
+      if (modal) modal.classList.remove('modal-hidden');
+    }
+
+    function closeStatusReason() {
+      var modal = document.getElementById('memberStatusModal');
+      if (modal) modal.classList.add('modal-hidden');
+      statusReasonMemberId = null;
+    }
+
+    function confirmStatusReason() {
+      var ta = document.getElementById('msReason');
+      var reason = ta ? (ta.value || '').trim() : '';
+      if (!reason) { alert('请填写' + statusReasonAction + '原因'); return; }
+      var list = memberData[currentCenterName] || [];
+      var m = null;
+      for (var i = 0; i < list.length; i++) { if (list[i].id === statusReasonMemberId) { m = list[i]; break; } }
+      if (!m) { closeStatusReason(); return; }
+
+      var action = statusReasonAction;
+      var oldStatus = m.status || '启用';
+      m.status = action;
+      addMemberLog(currentCenterName, action, m.name, m.role,
+        '状态由「' + oldStatus + '」变更为「' + action + '」，原因：' + reason,
+        { oldName: m.name, oldPhone: m.phone, newName: m.name, newPhone: m.phone, newRole: m.role, reason: reason });
+      closeStatusReason();
+      renderMemberList(currentCenterName);
+      showToast('成员「' + m.name + '」已' + action);
+    }
+
     // ========== 图2：患者转移 → 审核人员随目标中心变动 ==========
     function fillAuditPersons(elemId, targetCenter) {
       var sel = document.getElementById(elemId);
@@ -2994,7 +3375,7 @@
     // 在单条/批量转移确认时记录日志
     function logTransfer(patientName, target) {
       var auditors = getDefaultAuditors(target);
-      addTransferLog(currentCenterName, (centerInfo[currentCenterName]||{}).code, patientName, target, (centerInfo[target]||{}).code, auditors.join('、'), '当前用户');
+      addTransferLog(currentCenterName, (centerMeta[currentCenterName]||{}).code, patientName, target, (centerMeta[target]||{}).code, auditors.join('、'), '当前用户');
     }
 
     // ========== 图2：重写 confirmSingleTransfer / confirmBatchTransfer 写日志 ==========

@@ -17,7 +17,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>多模态文字解析设置</title>
+  <title>AI匹配设置</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -116,41 +116,39 @@
     <div id="leftPane" class="p-6">
       <div class="max-w-3xl mx-auto">
 
-        <!-- 标题区 -->
-        <div class="mb-7">
-          <h1 class="text-[19px] font-bold text-gray-800 mb-1">解析引擎配置</h1>
-        </div>
+    
 
-        <!-- 解析方式选择（药丸 chip） -->
-        <div class="cfg-block" id="el-mode-box">
-          <div class="field-label mb-3" id="el-mode"><i class="far fa-check-circle"></i>解析方式</div>
-          <div class="parse-mode-row">
-            <label class="pm-chip active" data-val="ocr" onclick="switchParseMode(this)">
-              <input type="radio" name="parseMode" value="ocr" checked hidden>
-              <span class="pm-dot"></span>华为OCR解析
-            </label>
-            <label class="pm-chip" data-val="multimodal" onclick="switchParseMode(this)">
-              <input type="radio" name="parseMode" value="multimodal" hidden>
-              <span class="pm-dot"></span>多模态解析
-            </label>
+        <!-- 筛选号格式 -->
+        <div class="mb-8" id="el-screen-no-fmt">
+          <div class="flex items-center gap-4">
+            <div class="field-label mb-0 whitespace-nowrap">筛选号格式 <span class="text-red-500">*</span></div>
+            <div class="max-w-xs">
+              <select id="screenNoFormat">
+                <option value="manual" selected>手动填写</option>
+                <option value="auto">中心号+3位</option>
+                <option value="template">中心号+4位</option>
+                <option value="custom">中心号+5位</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- 多模态：模型选择（单行按钮） -->
-        <div class="cfg-block hidden" id="el-mm-model-box">
-          <div class="field-label mb-2" id="el-mm-model">选择模型</div>
-          <div class="model-btn-row">
-            <button type="button" class="mbtn active" data-model="qwen3-vl-32b-instruct">qwen3-vl-32b-instruct</button>
-           
+        <!-- 提交审核前是否必须参与匹配 -->
+        <div class="mb-8" id="el-must-match">
+          <div class="flex items-center gap-6">
+            <div class="field-label mb-0">必须参与 AI 匹配</div>
+            <label class="flex items-center gap-2 text-[14px] text-gray-700 cursor-pointer">
+              <input type="radio" name="mustMatch" value="yes" checked class="w-4 h-4 accent-[#5d58dc]"> 否
+            </label>
+            <label class="flex items-center gap-2 text-[14px] text-gray-700 cursor-pointer">
+              <input type="radio" name="mustMatch" value="no" class="w-4 h-4 accent-[#5d58dc]"> 是
+            </label>
           </div>
+          <div class="hint"><b>是</b>：提交审核前必须先完成匹配任务，否则不允许进入审核环节；<b>否</b>：可不参与匹配直接提交审核。</div>
         </div>
-
-       
-
         <!-- 操作按钮 -->
         <div class="flex items-center gap-3 pt-1">
-          <span class="text-[12px] text-gray-400 mr-auto"><i class="fas fa-info-circle mr-1"></i>修改将于下次匹配任务生效</span>
-          <button class="btn-primary"><i class="fas fa-save mr-1"></i>保存设置</button>
+          <button class="btn-primary">保存</button>
         </div>
 
       </div>
@@ -193,6 +191,7 @@
       document.getElementById('el-ocr-box').classList.toggle('hidden', isMM);
       drawLinks();
     }
+
 
     // 模型按钮点击
     let selectedModel = 'qwen3-vl-32b-instruct';

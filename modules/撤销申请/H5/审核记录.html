@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>测试提交审核-审核记录</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f5f7fa;
+    }
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 48px;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 0 16px;
+    }
+    .page-header .back {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #262626;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .page-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: #f5f7fa;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .section-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #1677ff;
+      cursor: pointer;
+    }
+    .section-toggle i {
+      font-size: 12px;
+      transform: rotate(180deg);
+    }
+    .download-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 16px 10px;
+      background: #f5f7fa;
+    }
+    .download-btn {
+      padding: 6px 14px;
+      background: #409eff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .download-btn:active { background: #1677ff; }
+    .timeline {
+      position: relative;
+      padding: 4px 16px 20px;
+      background: #f5f7fa;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 12px;
+      bottom: 40px;
+      width: 1px;
+      background: #d9d9d9;
+    }
+    .timeline-item {
+      position: relative;
+      padding-left: 32px;
+      margin-bottom: 16px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      background: #d9d9d9;
+      border: 2px solid #f5f7fa;
+      border-radius: 50%;
+      z-index: 1;
+    }
+    .timeline-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .operator-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-tag.blue {
+      color: #1677ff;
+      background: #e6f4ff;
+    }
+    .status-tag.gray {
+      color: #595959;
+      background: #f5f5f5;
+    }
+    .status-tag.red {
+      color: #ff4d4f;
+      background: #fff1f0;
+    }
+    .card-row {
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.8;
+    }
+    .card-row .label {
+      color: #8c8c8c;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <i class="fa fa-angle-left back" onclick="goBack()"></i>
+    <div class="page-title">测试提交审核-审核记录</div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">预筛审批</div>
+    <div class="section-toggle" onclick="toggleSection(this)">
+      <i class="fa fa-angle-up"></i>
+      <span>收起</span>
+    </div>
+  </div>
+
+  <div class="download-bar">
+    <button class="download-btn" onclick="onDownload()">下载</button>
+     <button class="download-btn" style="margin-left: 5px;" onclick="onDownload()">预筛审核沟通</button>
+  </div>
+
+  <div class="timeline" id="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪红&lt;CRA专员&gt;</span>
+          <span class="status-tag blue">发起</span>
+        </div>
+        <div class="card-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+        <div class="card-row"><span class="label">批注：</span></div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪红&lt;CRA专员&gt;</span>
+          <span class="status-tag gray">待审核（已撤回）</span>
+        </div>
+        <div class="card-row"><span class="label">批注：</span></div>
+        <div class="card-row"><span class="label">操作时间：</span>2026-08-15 03:06:53</div>
+        <div class="card-row"><span class="label">操作耗时：</span></div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪雪&lt;CRC&gt;</span>
+          <span class="status-tag red">已撤销申请</span>
+        </div>
+        <div class="card-row"><span class="label">批注：</span>撤销原因：12121</div>
+        <div class="card-row"><span class="label">操作时间：</span>2026-09-02 11:02:04</div>
+        <div class="card-row"><span class="label">操作耗时：</span></div>
+      </div>
+    </div>
+     <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪红&lt;CRA专员&gt;</span>
+          <span class="status-tag blue">发起</span>
+        </div>
+        <div class="card-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+        <div class="card-row"><span class="label">批注：</span></div>
+      </div>
+    </div>
+     <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪红&lt;CRA专员&gt;</span>
+          <span class="status-tag red">驳回</span>
+        </div>
+        <div class="card-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+        <div class="card-row"><span class="label">批注：驳回原因：测试驳回</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function goBack() {
+      showToast('返回上一级');
+    }
+    function toggleSection(el) {
+      var timeline = document.getElementById('timeline');
+      var icon = el.querySelector('i');
+      var text = el.querySelector('span');
+      if (timeline.style.display === 'none') {
+        timeline.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+        text.textContent = '收起';
+      } else {
+        timeline.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        text.textContent = '展开';
+      }
+    }
+    function onDownload() {
+      showToast('开始下载');
+    }
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+  </script>
+</body>
+</html>

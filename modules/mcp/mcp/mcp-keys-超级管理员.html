@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP SERVER Keys 管理</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background-color: #ffffff; color: #333333; margin: 0; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ===== 公司 Tab（恒瑞医药 / 江苏科信 / 运营二部） ===== */
+    .company-tabs { display: inline-flex; align-items: stretch; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; background: #fff; margin: 0 0 16px; width: fit-content; }
+    .company-tab { padding: 6px 20px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #4b5563; background: #fff; border-right: 1px solid #d1d5db; transition: all .15s; user-select: none; }
+    .company-tab:last-child { border-right: none; }
+    .company-tab:hover { color: #1872a7; }
+    .company-tab.active { background: #1872a7; color: #fff; }
+
+    /* ===== 顶部标题 + 操作栏（截图风格：右上角刷新/重置/新增） ===== */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; }
+    .section-title { font-size: 20px; font-weight: 600; color: #1f2937; margin: 0; }
+    .section-desc { font-size: 13px; line-height: 1.7; color: #666; margin: 0 0 20px; }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 6px 0 18px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+    .btn-primary { background-color: #1872a7; color: #fff; border-color: #1872a7; }
+    .btn-primary:hover { background-color: #125a85; border-color: #125a85; }
+    .btn-default { background-color: #fff; color: #1872a7; border: 1px solid #1872a7; }
+    .btn-default:hover { background-color: #e8f3f6; }
+
+    /* ===== 筛选栏（行内布局） ===== */
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; background: #f5f7fa; padding: 16px 18px; border-radius: 6px; margin-bottom: 16px; }
+    .filter-item { display: flex; flex-direction: column; gap: 6px; }
+    .filter-item:nth-child(1) { flex: 0 0 200px; }
+    .filter-item:nth-child(2) { flex: 0 0 340px; }
+    .filter-label { font-size: 13px; color: #666; font-weight: 500; }
+    .filter-actions { display: flex; gap: 12px; margin-left: auto; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #333; outline: none; background: #fff; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+
+    /* ===== 表格（蓝色表头 + 斑马纹） ===== */
+    .table-card { border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .api-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+    .api-table thead th { text-align: left; padding: 12px 16px; background: #1872a7; color: #fff; font-weight: 500; white-space: nowrap; }
+    .api-table tbody td { padding: 12px 16px; border-bottom: 1px solid #eef0f3; color: #4b5563; vertical-align: middle; }
+    .api-table tbody tr:nth-child(even) td { background: #f3f8fa; }
+    .api-table tbody tr:hover td { background: #e8f3f6; }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table td.center { text-align: center; }
+    .key-mask { font-family: monospace; background: #f5f7fa; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: #555; }
+
+    /* 行内操作按钮（蓝边框） */
+    .row-actions { display: inline-flex; gap: 6px; }
+    .op-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 26px; padding: 0 8px; border: 1px solid #1872a7; border-radius: 3px; color: #1872a7; background: #fff; cursor: pointer; transition: all .15s; }
+    .op-btn:hover { background: #1872a7; color: #fff; }
+    .op-btn.danger { border-color: #f56565; color: #f56565; }
+    .op-btn.danger:hover { background: #f56565; color: #fff; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+
+    /* ===== 分页 ===== */
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 16px 0; font-size: 13px; color: #6b7280; flex-wrap: wrap; }
+    .pager .total { color: #4b5563; }
+    .pager .total em { font-style: normal; color: #1872a7; }
+    .pager select { height: 28px; padding: 0 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; color: #4b5563; cursor: pointer; }
+    .pager .pages { display: inline-flex; gap: 4px; }
+    .pg { min-width: 30px; height: 30px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #fff; color: #4b5563; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .pg:hover { border-color: #1872a7; color: #1872a7; }
+    .pg.active { background: #1872a7; border-color: #1872a7; color: #fff; cursor: default; }
+    .pg.disabled { color: #c0c4cc; cursor: not-allowed; background: #fafafa; border-color: #e5e7eb; }
+
+    /* ===== 弹窗 ===== */
+    .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-mask.show { display: flex; }
+    .modal-content { background: #fff; border-radius: 8px; width: 560px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.18); }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+    .modal-close { font-size: 18px; color: #999; cursor: pointer; background: none; border: none; }
+    .modal-close:hover { color: #1872a7; }
+    .modal-body { padding: 24px; }
+    .form-row { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; color: #333; margin-bottom: 8px; font-weight: 500; }
+    .form-label .required { color: #F53F3F; margin-left: 4px; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+    .form-hint { font-size: 12px; color: #999; margin-top: 6px; }
+    /* searchable select */
+    .search-select { position: relative; }
+    .search-select .search-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 34px 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; background: #fff; cursor: pointer; }
+    .search-select .search-input:focus { border-color: #1872a7; }
+    .search-select .search-input:disabled { background: #f5f7fa; color: #c0c4cc; cursor: not-allowed; border-color: #e5e7eb; }
+    .search-select.is-disabled .search-arrow { color: #d1d5db; }
+    .search-select .search-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; font-size: 12px; }
+    .search-select .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.1); z-index: 10; display: none; }
+    .search-select .search-dropdown.show { display: block; }
+    .search-select .search-option { padding: 9px 12px; font-size: 14px; color: #333; cursor: pointer; transition: background .15s; }
+    .search-select .search-option:hover, .search-select .search-option.active { background: #f3f8fa; color: #1872a7; }
+    .search-select .search-empty { padding: 12px; font-size: 13px; color: #999; text-align: center; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; cursor: pointer; }
+    .checkbox-item input { width: 16px; height: 16px; accent-color: #1872a7; cursor: pointer; }
+    .modal-footer { padding: 14px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
+    .btn-cancel { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 18px; font-size: 14px; color: #4b5563; cursor: pointer; }
+    .btn-cancel:hover { border-color: #1872a7; color: #1872a7; }
+    .btn-confirm { background: #1872a7; color: #fff; border: none; border-radius: 4px; padding: 8px 18px; font-size: 14px; cursor: pointer; }
+    .btn-confirm:hover { background: #125a85; }
+    .btn-confirm:disabled { background: #b3c6ff; cursor: not-allowed; }
+    .form-input:disabled { background: #f5f7fa; color: #4b5563; cursor: not-allowed; border-color: #e5e7eb; }
+    /* 顶部当前登录用户徽标 */
+    .user-chip { display: inline-flex; align-items: center; gap: 10px; background: #f3f8fa; border: 1px solid #cfe3eb; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #333; }
+    .user-chip i { color: #1872a7; font-size: 16px; }
+    .user-chip b { color: #1872a7; }
+    .chip-role { background: #1872a7; color: #fff; font-size: 12px; padding: 1px 10px; border-radius: 10px; }
+    .chip-tag { color: #999; font-size: 12px; border: 1px solid #d1d5db; padding: 1px 8px; border-radius: 10px; }
+    /* created key display */
+    .created-box { background: #f3f8fa; border: 1px solid #cfe3eb; border-radius: 4px; padding: 16px; margin-top: 16px; }
+    .created-config { position: relative; background: #fff; border: 1px dashed #9cc6d4; border-radius: 4px; padding: 14px 96px 14px 14px; }
+    .created-config pre { margin: 0; font-family: monospace; font-size: 13px; line-height: 1.7; word-break: break-all; white-space: pre-wrap; color: #1872a7; }
+    .created-config .btn-default { position: absolute; top: 12px; right: 12px; }
+    .copy-tip { font-size: 12px; color: #F53F3F; margin-top: 8px; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0,0,0,.75); color: #fff; padding: 10px 24px; border-radius: 6px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 2000; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 768px) {
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-item { flex: none !important; }
+      .filter-actions { margin-left: 0; }
+      .pager { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 顶部：标题 -->
+    <div class="top-bar">
+      <div>
+        <h1 class="section-title">MCP 接入配置</h1>
+      </div>
+      
+    </div>
+    <!-- 公司 Tab -->
+    <div class="company-tabs" id="companyTabs">
+      <div class="company-tab active" data-company="hengrui" onclick="switchCompany(this)">恒瑞医药</div>
+      <div class="company-tab" data-company="jiangsu-kexin" onclick="switchCompany(this)">江苏科信</div>
+      <div class="company-tab" data-company="ops-dept2" onclick="switchCompany(this)">运营二部</div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-item">
+        <label class="filter-label">项目编码</label>
+        <div class="search-select" id="filterProjectWrap">
+          <input type="text" class="search-input" id="filterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
+          <i class="fas fa-chevron-down search-arrow"></i>
+          <div class="search-dropdown" id="filterProjectDropdown"></div>
+          <input type="hidden" id="filterProjectValue" />
+        </div>
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">创建时间</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="date" class="form-input" id="filterDateStart" style="flex:1;" onchange="filterChanged()" />
+          <span style="color:#999;">至</span>
+          <input type="date" class="form-input" id="filterDateEnd" style="flex:1;" onchange="filterChanged()" />
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" onclick="queryKeys()">查询</button>
+        <button class="btn btn-default" onclick="resetFilters()">重置</button>
+        <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> 新增</button>
+        <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-download"></i> 操作手册</button>
+
+      </div>
+    </div>
+  <div class="section-desc">
+以下为你的全部 MCP 接入配置。配置中的授权凭证仅在创建时显示一次，请及时复制保存。请勿与他人共享凭证信息，或将其暴露在浏览器等客户端代码中。
+    </div>
+    <div class="table-card">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th>项目编码</th>
+            <th>所属人员</th>
+            <th>Key</th>
+            <th>创建日期</th>
+            <th style="width:120px;text-align:center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="keyTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pager">
+      <span class="total">共 <em id="totalCount">0</em> 条</span>
+      <span>
+        <select id="pageSize" onchange="onPageSizeChange()">
+          <option>10条/页</option>
+          <option>20条/页</option>
+          <option>50条/页</option>
+        </select>
+      </span>
+      <span class="pages" id="pagerPages"></span>
+      <span>前往 <input id="jumpInput" type="number" min="1" style="width:46px;height:28px;padding:0 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;" /> 页</span>
+    </div>
+  </div>
+
+  <!-- 创建 API key 弹窗 -->
+  <div class="modal-mask" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">新增</div>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="createFormBody">
+        <!-- 所属人员：默认当前登录用户，不可修改 -->
+        <div class="form-row">
+          <label class="form-label">所属人员 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="createMemberInput" value="张华　138****1234　医学经理" disabled />
+        </div>
+       
+        <!-- 项目编码：默认带入本人所在的项目，可模糊搜索切换 -->
+        <div class="form-row">
+          <label class="form-label">项目编码 <span class="required">*</span></label>
+          <div class="search-select" id="createProjectWrap">
+            <input type="text" class="search-input" id="createProjectInput" placeholder="请选择或搜索项目编码" autocomplete="off" />
+            <i class="fas fa-chevron-down search-arrow"></i>
+            <div class="search-dropdown" id="createProjectDropdown"></div>
+            <input type="hidden" id="createProjectValue" />
+          </div>
+        </div>
+         <!-- 用户角色：随当前登录账号带出，不可修改 -->
+        <div class="form-row">
+          <label class="form-label">用户角色</label>
+          <input type="text" class="form-input" id="createRoleInput" value="医学经理" disabled />
+        </div>
+        <div class="created-box" id="createdBox" style="display:none">
+          <div class="form-label">MCP 配置参数</div>
+          <div class="created-config">
+            <pre id="createdConfigText"></pre>
+            <button class="btn-default" id="copyBtn" onclick="copyCreatedKey()">复制</button>
+          </div>
+          <div class="copy-tip">* 配置参数仅在本次弹窗内可复制。关闭后将无法再次查看，如需使用请重新创建。</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancel" onclick="closeCreateModal()">取消</button>
+        <button class="btn-confirm" id="confirmBtn" onclick="confirmCreate()" disabled>立即创建</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 当前登录用户（普通角色） =====
+    // 普通角色只能为「本人」创建 API key：
+    // 所属人员默认当前登录用户、不可修改；
+    // 项目编码默认带入本人所在的项目，可在本人参与的项目内模糊搜索切换。
+    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234-医学经理' };
+
+    // 查询栏 / 创建弹窗：项目编码可选项 = 当前登录用户本人所在的项目
+    const PROJECT_OPTIONS = ['PRJ-2023-0918', 'PRJ-2025-1107'];
+    const DEFAULT_PROJECT = 'PRJ-2023-0918'; // 创建时默认带入本人所在的项目
+
+    // 列表数据：仅展示当前登录用户本人名下的 keys
+    const KEYS = [
+      { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { project: 'PRJ-2025-1107', member: '张华-138****1234-医学经理', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
+    ];
+
+    let createdKeyOnce = false; // 标识本次弹窗是否已复制过/关闭后不可再看
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function maskKey(key) {
+      if (!key || key.length < 12) return key;
+      return key.slice(0, 8) + '******' + key.slice(-4);
+    }
+
+    function getFiltered() {
+      const fp = document.getElementById('filterProjectValue').value.trim().toLowerCase();
+      const ds = document.getElementById('filterDateStart').value;
+      const de = document.getElementById('filterDateEnd').value;
+      return KEYS.filter(k => {
+        if (fp && !k.project.toLowerCase().includes(fp)) return false;
+        // 创建时间范围过滤（YYYY-MM-DD 字符串直接比较）
+        if (ds && k.createdAt < ds) return false;
+        if (de && k.createdAt > de) return false;
+        return true;
+      });
+    }
+
+    function renderTable() {
+      const list = getFiltered();
+      const start = (currentPage - 1) * pageSize;
+      const pageList = list.slice(start, start + pageSize);
+      const tbody = document.getElementById('keyTableBody');
+      if (pageList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+      } else {
+        tbody.innerHTML = pageList.map(k => `
+          <tr>
+            <td>${k.project}</td>
+            <td>${k.member}</td>
+            <td><span class="key-mask">${maskKey(k.fullKey)}</span></td>
+            <td>${k.createdAt}</td>
+            <td class="center">
+              <div class="row-actions">
+                <button class="op-btn danger" title="删除" onclick="deleteKey('${k.fullKey}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+      document.getElementById('totalCount').textContent = list.length;
+      renderPager(list.length);
+    }
+
+    function renderPager(total) {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const el = document.getElementById('pagerPages');
+      const items = [];
+      items.push(`<button class="pg ${currentPage===1?'disabled':''}" onclick="goPage(${currentPage-1})"><i class="fas fa-chevron-left"></i></button>`);
+      const arr = pageArr(currentPage, totalPages);
+      arr.forEach(p => {
+        if (p === '...') items.push('<span class="pg" style="border:none;background:transparent;cursor:default;">…</span>');
+        else items.push(`<button class="pg ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`);
+      });
+      items.push(`<button class="pg ${currentPage===totalPages?'disabled':''}" onclick="goPage(${currentPage+1})"><i class="fas fa-chevron-right"></i></button>`);
+      el.innerHTML = items.join('');
+    }
+    function pageArr(cur, total) {
+      if (total <= 7) return Array.from({length:total},(_,i)=>i+1);
+      if (cur <= 4) return [1,2,3,4,5,'...',total];
+      if (cur >= total-3) return [1,'...',total-4,total-3,total-2,total-1,total];
+      return [1,'...',cur-1,cur,cur+1,'...',total];
+    }
+    function goPage(p) {
+      const totalPages = Math.max(1, Math.ceil(getFiltered().length / pageSize));
+      if (p < 1 || p > totalPages || p === currentPage) return;
+      currentPage = p;
+      renderTable();
+    }
+    function onPageSizeChange() {
+      pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
+      currentPage = 1;
+      renderTable();
+    }
+
+    function queryKeys() { renderTable(); }
+
+    function resetFilters() {
+      setFilterProject('');
+      document.getElementById('filterDateStart').value = '';
+      document.getElementById('filterDateEnd').value = '';
+      currentPage = 1;
+      renderTable();
+    }
+
+    // 创建时间筛选条件变化
+    function filterChanged() {
+      currentPage = 1;
+      renderTable();
+    }
+
+    function onRefresh() { renderTable(); }
+
+    // 公司 Tab 切换
+    function switchCompany(el) {
+      document.querySelectorAll('#companyTabs .company-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      // 切换后重置筛选并刷新（按公司过滤数据可在后端实现）
+      currentPage = 1;
+      const name = el.textContent.trim();
+      showToast('已切换到：' + name);
+      renderTable();
+    }
+
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('show');
+      resetCreateForm();
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('show');
+    }
+
+    // 创建成功后锁定表单参数（key 已生成，归属信息不可再改动）；重新打开弹窗时解锁
+    function lockCreateForm(locked) {
+      const input = document.getElementById('createProjectInput');
+      const wrap = document.getElementById('createProjectWrap');
+      input.disabled = locked;
+      wrap.classList.toggle('is-disabled', locked);
+      if (locked) input.blur();
+    }
+
+    function resetCreateForm() {
+      lockCreateForm(false);
+      // 项目编码：默认带入本人所在的项目（可下拉模糊搜索切换）
+      setCreateProject(DEFAULT_PROJECT);
+      document.getElementById('createdBox').style.display = 'none';
+      document.getElementById('createdConfigText').textContent = '';
+      document.getElementById('copyBtn').textContent = '复制';
+      document.getElementById('confirmBtn').textContent = '立即创建';
+      document.getElementById('btnCancel').style.display = '';
+      createdKeyOnce = false;
+      validateCreate();
+    }
+
+    function validateCreate() {
+      const project = document.getElementById('createProjectValue').value.trim();
+      // 所属人员/用户角色固定为当前登录用户，无需校验；
+      // key 与具体接口解耦（项目级 key），选中项目编码即可创建
+      const valid = !!project;
+      document.getElementById('confirmBtn').disabled = !valid;
+    }
+
+    function confirmCreate() {
+      // 已经在展示生成结果：再次点击「关闭」按钮直接关闭弹窗
+      if (document.getElementById('createdBox').style.display !== 'none') {
+        closeCreateModal();
+        return;
+      }
+      const project = document.getElementById('createProjectValue').value.trim();
+      const member = CURRENT_USER.label; // 所属人员固定为当前登录用户
+      if (!project) { showToast('请选择项目编码'); return; }
+      const newKey = 'sk-' + Array.from({ length: 48 }, () => 'abcdef0123456789'[Math.floor(Math.random() * 16)]).join('');
+      const today = new Date().toISOString().slice(0, 10);
+
+      KEYS.unshift({ project, member, fullKey: newKey, createdAt: today });
+
+      // 生成 MCP 配置参数（Authorization 自动带入本次生成的 key）
+      const mcpConfig = JSON.stringify({
+        mcpServers: {
+          'remote-server': {
+            url: 'https://example.com/sse',
+            type: 'sse',
+            headers: { key:  newKey }
+          }
+        }
+      }, null, 2);
+      document.getElementById('createdConfigText').textContent = mcpConfig;
+      document.getElementById('createdBox').style.display = 'block';
+      // 生成后：按钮文字改为"关闭"，并隐藏"取消"按钮
+      document.getElementById('confirmBtn').textContent = '关闭';
+      document.getElementById('btnCancel').style.display = 'none';
+      // 生成后：项目编码一并置灰锁定（与所属人员、用户角色一致）
+      lockCreateForm(true);
+      currentPage = 1;
+      renderTable();
+    }
+
+    function copyCreatedKey() {
+      const config = document.getElementById('createdConfigText').textContent;
+      if (!config) return;
+      if (createdKeyOnce) {
+        showToast('配置参数仅可复制一次，如需使用请重新创建');
+        return;
+      }
+      navigator.clipboard.writeText(config).then(() => {
+        createdKeyOnce = true;
+        document.getElementById('copyBtn').textContent = '已复制';
+        showToast('MCP 配置参数已复制到剪贴板');
+      }).catch(() => {
+        showToast('复制失败，请手动复制');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function deleteKey(fullKey) {
+      if (!confirm('确定要删除该 API key 吗？删除后将无法恢复。')) return;
+      const idx = KEYS.findIndex(k => k.fullKey === fullKey);
+      if (idx >= 0) {
+        KEYS.splice(idx, 1);
+        renderTable();
+      }
+    }
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    // 点击遮罩关闭弹窗
+    document.getElementById('createModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeCreateModal();
+    });
+
+    // 回车跳转
+    document.getElementById('jumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const p = parseInt(e.target.value, 10);
+        if (p) goPage(p);
+      }
+    });
+
+    /* ===== 查询栏：项目编码搜索下拉（单选） ===== */
+    const filterProjectInput = document.getElementById('filterProject');
+    const filterProjectDropdown = document.getElementById('filterProjectDropdown');
+    const filterProjectWrap = document.getElementById('filterProjectWrap');
+
+    function renderFilterProjectOptions(keyword) {
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = PROJECT_OPTIONS.filter(p => p.toLowerCase().includes(kw));
+      if (list.length === 0) {
+        filterProjectDropdown.innerHTML = '<div class="search-empty">无匹配项目编码</div>';
+      } else {
+        filterProjectDropdown.innerHTML = list.map(p =>
+          `<div class="search-option" data-value="${p}">${p}</div>`
+        ).join('');
+      }
+    }
+
+    function setFilterProject(value) {
+      document.getElementById('filterProjectValue').value = value;
+      filterProjectInput.value = value;
+      filterProjectDropdown.classList.remove('show');
+      currentPage = 1;
+      renderTable();
+    }
+
+    filterProjectInput.addEventListener('focus', () => {
+      renderFilterProjectOptions(filterProjectInput.value);
+      filterProjectDropdown.classList.add('show');
+    });
+    filterProjectInput.addEventListener('input', () => renderFilterProjectOptions(filterProjectInput.value));
+    filterProjectInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        const val = filterProjectInput.value.trim();
+        if (PROJECT_OPTIONS.includes(val)) setFilterProject(val);
+        else if (!document.getElementById('filterProjectValue').value) setFilterProject('');
+        else filterProjectInput.value = document.getElementById('filterProjectValue').value;
+        filterProjectDropdown.classList.remove('show');
+      }, 180);
+    });
+    filterProjectDropdown.addEventListener('mousedown', e => {
+      const option = e.target.closest('.search-option');
+      if (!option) return;
+      setFilterProject(option.dataset.value);
+    });
+    document.addEventListener('click', e => {
+      if (!filterProjectWrap.contains(e.target)) filterProjectDropdown.classList.remove('show');
+    });
+
+    /* ===== 创建弹窗：项目编码（可模糊搜索下拉，选项=本人所在项目） ===== */
+    const createProjectInput = document.getElementById('createProjectInput');
+    const createProjectDropdown = document.getElementById('createProjectDropdown');
+    const createProjectWrap = document.getElementById('createProjectWrap');
+
+    function renderCreateProjectOptions(keyword) {
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = PROJECT_OPTIONS.filter(p => p.toLowerCase().includes(kw));
+      createProjectDropdown.innerHTML = list.length
+        ? list.map(p => `<div class="search-option" data-value="${p}">${p}</div>`).join('')
+        : '<div class="search-empty">无匹配项目编码</div>';
+    }
+
+    function setCreateProject(value) {
+      document.getElementById('createProjectValue').value = value || '';
+      createProjectInput.value = value || '';
+      createProjectDropdown.classList.remove('show');
+      validateCreate();
+    }
+
+    createProjectInput.addEventListener('focus', () => {
+      renderCreateProjectOptions(createProjectInput.value);
+      createProjectDropdown.classList.add('show');
+    });
+    createProjectInput.addEventListener('input', () => renderCreateProjectOptions(createProjectInput.value));
+    createProjectInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        const val = createProjectInput.value.trim();
+        const cur = document.getElementById('createProjectValue').value;
+        if (PROJECT_OPTIONS.includes(val)) setCreateProject(val);
+        else if (cur) createProjectInput.value = cur;
+        else setCreateProject('');
+        createProjectDropdown.classList.remove('show');
+      }, 180);
+    });
+    createProjectDropdown.addEventListener('mousedown', e => {
+      const opt = e.target.closest('.search-option');
+      if (!opt) return;
+      setCreateProject(opt.dataset.value);
+    });
+    document.addEventListener('click', e => {
+      if (!createProjectWrap.contains(e.target)) createProjectDropdown.classList.remove('show');
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>撤销审核提交</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .action-sheet {
+      width: 100%;
+      max-width: 560px;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+      animation: sheetIn .22s ease-out;
+      padding: 0 20px 24px;
+    }
+    @keyframes sheetIn {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .drag-handle {
+      width: 40px;
+      height: 4px;
+      background: #d9d9d9;
+      border-radius: 2px;
+      margin: 12px auto 0;
+    }
+    .sheet-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+      text-align: center;
+      margin-top: 16px;
+    }
+    .sheet-subtitle {
+      font-size: 13px;
+      color: #8c8c8c;
+      text-align: center;
+      margin-top: 6px;
+    }
+    .sheet-tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #e6f4ff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 20px;
+    }
+    .sheet-tip i {
+      color: #1677ff;
+      font-size: 16px;
+      margin-top: 1px;
+    }
+    .sheet-tip-text {
+      font-size: 13px;
+      color: #262626;
+      line-height: 1.6;
+    }
+    .sheet-tip-text strong {
+      color: #1677ff;
+      font-weight: 600;
+    }
+    .form-item {
+      margin-top: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #262626;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .form-label .optional {
+      color: #8c8c8c;
+      font-size: 12px;
+      margin-left: 6px;
+      font-weight: 400;
+    }
+    .form-textarea {
+      width: 100%;
+      min-height: 88px;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #262626;
+      resize: vertical;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-textarea:focus {
+      border-color: #1677ff;
+      box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
+    }
+    .form-textarea::placeholder { color: #bfbfbf; }
+    .sheet-actions {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sheet-btn {
+      width: 100%;
+      height: 48px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      border: 1px solid transparent;
+    }
+    .sheet-btn.primary {
+      background: #409eff;
+      color: #fff;
+    }
+    .sheet-btn.primary:active { background: #1677ff; }
+    .sheet-btn.default {
+      background: #fff;
+      color: #262626;
+      border-color: #d9d9d9;
+    }
+    .sheet-btn.default:active {
+      background: #f5f5f5;
+      border-color: #bfbfbf;
+    }
+    .sheet-cancel {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+      color: #595959;
+      cursor: pointer;
+      padding: 6px 0;
+    }
+    .sheet-cancel:active { color: #262626; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+    <div class="action-sheet">
+      <div class="drag-handle"></div>
+      <div class="sheet-title">撤销提交</div>
+      <div class="sheet-subtitle">请选择对当前记录的处理方式</div>
+
+      <div class="sheet-tip">
+        <i class="fa fa-exclamation-circle"></i>
+        <div class="sheet-tip-text">请确认后选择操作：<strong>撤销</strong> 将撤回本次审核提交。</div>
+      </div>
+
+      <div class="form-item">
+        <label class="form-label">
+          撤销原因
+        </label>
+        <textarea class="form-textarea" id="reason" placeholder="请输入撤销原因"></textarea>
+      </div>
+
+      <div class="sheet-actions">
+        <button class="sheet-btn primary" onclick="onRevoke()">撤销申请</button>
+        <button class="sheet-btn default" onclick="onScreenFail()">确认筛败</button>
+      </div>
+      <div class="sheet-cancel" onclick="closeModal()">取消</div>
+    </div>
+  </div>
+
+  <script>
+    function closeModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+    function onRevoke() {
+      var reason = document.getElementById('reason').value.trim();
+      closeModal();
+      showToast('已提交撤销申请' + (reason ? '：' + reason : ''));
+    }
+    function onScreenFail() {
+      var reason = document.getElementById('reason').value.trim();
+      closeModal();
+      showToast('已确认筛败' + (reason ? '：' + reason : ''));
+    }
+  </script>
+</body>
+</html>

@@ -34,9 +34,9 @@
 
   /* ===== LAYOUT: LEFT + RIGHT ===== */
   .content-area { display: flex; height: calc(100vh - 56px); overflow: hidden; position: relative; }
-  .left-panel { width: 78%; overflow-y: auto; background: #f5f7fa; padding: 24px; flex-shrink: 0; }
-  .divider-line { width: 1px; background: #d9d9d9; flex-shrink: 0; }
-  .right-panel { flex: 1; overflow-y: auto; background: #fffbeb; border-left: 2px dashed #f59e0b; }
+  .left-panel { width: 100%; overflow-y: auto; background: #f5f7fa; padding: 24px; flex-shrink: 0; }
+  .divider-line { display: none; }
+  .right-panel { display: none; }
 
   /* ===== PAGE HEADER ===== */
   .page-header { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
@@ -76,11 +76,11 @@
   .data-table tbody tr:last-child td { border-bottom: none; }
   /* 固定操作列 */
   .data-table th.col-op, .data-table td.col-op { position: sticky; right: 0; background: white; z-index: 2; }
-  .data-table thead th.col-op { background: transparent; z-index: 3; }
+  .data-table thead th.col-op { background: linear-gradient(180deg, #edeafc 0%, #e2dcf5 100%); z-index: 3; }
   .data-table tbody tr:nth-child(even) td.col-op { background: #faf9fe; }
   .data-table tbody tr:hover td.col-op { background: rgba(93,88,220,0.03); }
   .data-table tbody tr:nth-child(even):hover td.col-op { background: rgba(93,88,220,0.05); }
-  td.col-op { box-shadow: -2px 0 6px rgba(0,0,0,0.04); }
+  td.col-op { box-shadow: -3px 0 8px rgba(0,0,0,0.08); }
   .text-truncate { display: inline-block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; color: #555; }
   .proj-id { color: #5d58dc; font-weight: 600; font-family: 'SF Mono', Consolas, monospace; font-size: 12.5px; }
 
@@ -333,6 +333,13 @@
   .extract-modal-title { font-size: 16px; font-weight: 600; color: #333; }
   .extract-modal-body { flex: 1; overflow-y: auto; padding: 20px; }
 
+  /* ===== 提取要点：替换当前页面版 ===== */
+  .extract-page { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #f5f7fa; z-index: 100000; overflow: auto; display: none; padding: 24px; }
+  .extract-page.open { display: block; }
+  .extract-page-head { max-width: 1160px; margin: 0 auto 16px; display: flex; align-items: center; gap: 12px; }
+  .extract-page .extract-modal-title { flex: 1; }
+  .extract-page .extract-modal-body { max-width: 1160px; margin: 0 auto; overflow: visible; flex: none; }
+
   @media (max-width: 900px) {
     .prescreen-doc-layout { flex-direction: column; }
     .prescreen-nav { width: 100%; position: static; max-height: none; }
@@ -345,7 +352,7 @@
 <body>
 
 <!-- ===== TOP NAV ===== -->
-<div class="top-nav">
+<div class="top-nav" id="topNav">
   <div class="nav-brand">
     <div class="idy-logo">
       <span class="idy-letters">IDY</span>
@@ -360,7 +367,7 @@
   </div>
 </div>
 
-<div class="content-area">
+<div class="content-area" id="contentArea">
 
   <!-- ===== LEFT PANEL: 产品界面 ===== -->
   <div class="left-panel" id="leftPanel">
@@ -389,16 +396,7 @@
             <option>匹配失败</option>
           </select>
         </div>
-        <div class="filter-field">
-          <label>溯源状态</label>
-          <select class="form-select">
-            <option>请选择</option>
-            <option>未溯源</option>
-            <option>溯源中</option>
-            <option>溯源成功</option>
-            <option>溯源失败</option>
-          </select>
-        </div>
+       
         <div class="filter-field">
           <label>匹配人</label>
           <input class="form-input" type="text" placeholder="请输入匹配人"/>
@@ -411,26 +409,20 @@
           <label>是否删除</label>
           <select class="form-select">
             <option>请选择</option>
-            <option>是</option>
-            <option>否</option>
+            <option>未删除</option>
+            <option>已删除</option>
           </select>
         </div>
+
         <div class="filter-field">
-          <label>时间范围</label>
+          <label>查询时间</label>
           <div style="display:flex; gap:6px; align-items:center;">
-            <input class="form-input" type="text" placeholder="开始日期时间"/>
+            <input class="form-input" id="filterStartTime" type="text" placeholder="开始日期时间"/>
             <span style="color:#ccc;">-</span>
-            <input class="form-input" type="text" placeholder="结束日期时间"/>
+            <input class="form-input" id="filterEndTime" type="text" placeholder="结束日期时间"/>
           </div>
         </div>
-        <div class="filter-field">
-          <label>是否超过10min</label>
-          <select class="form-select">
-            <option>请选择</option>
-            <option>是</option>
-            <option>否</option>
-          </select>
-        </div>
+
       </div>
       <div class="filter-actions">
         <button class="btn-filter primary"><i class="fa-solid fa-magnifying-glass"></i> 查询</button>
@@ -438,6 +430,19 @@
         <button class="btn-filter primary"><i class="fa-solid fa-download"></i> 导出</button>
       </div>
     </div>
+
+    <script>
+      (function () {
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+        var end = new Date();
+        var start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
+        var s = document.getElementById('filterStartTime');
+        var e = document.getElementById('filterEndTime');
+        if (s) s.value = fmt(start);
+        if (e) e.value = fmt(end);
+      })();
+    </script>
 
     <!-- Table Card ★ 连线 1 -->
     <div class="table-card proto-element" data-proto-id="1">
@@ -455,12 +460,7 @@
               <th>操作时间</th>
               <th>开始匹配时间</th>
               <th>结束匹配时间</th>
-              <th>文字解析用时</th>
-              <th>RAG用时</th>
-              <th>LLM用时</th>
               <th>总用时</th>
-              <th>匹配率</th>
-              <th>是否超过10min</th>
               <th>是否删除</th>
               <th>删除人</th>
               <th>删除时间</th>
@@ -484,10 +484,10 @@
               <td>2026-07-14 18:05:15</td>
               <td>2026-07-14 18:05:15</td>
               <td>-</td>
-              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td>-</td><td>-</td>
+              <td>-</td>
+              <td><span class="tag tag-green">未删除</span></td>
+              <td>-</td>
+              <td>-</td>
               <td class="col-op">
                 <span class="op-link" onclick="openExtractModal('ZRM1','SHR-1918-302','安阳市肿瘤医院')">匹配详情</span>
                 <span class="op-link active" onclick="openMatchConfirm('PT-2026-001','ZRM1')">重新匹配</span>
@@ -509,10 +509,10 @@
               <td>2026-07-14 18:05:05</td>
               <td>2026-07-14 18:05:05</td>
               <td>-</td>
-              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td>-</td><td>-</td>
+              <td>-</td>
+              <td><span class="tag tag-green">未删除</span></td>
+              <td>-</td>
+              <td>-</td>
               <td class="col-op">
                 <span class="op-link" onclick="openExtractModal('ZHXI','HRS-8080-305','安阳市肿瘤医院')">匹配详情</span>
                 <span class="op-link active" onclick="openMatchConfirm('PT-2026-002','ZHXI')">重新匹配</span>
@@ -529,10 +529,10 @@
               <td>2026-07-14 18:04:51</td>
               <td>2026-07-14 18:04:51</td>
               <td>-</td>
-              <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td><span class="tag tag-gray">否</span></td>
-              <td>-</td><td>-</td>
+              <td>-</td>
+              <td><span class="tag tag-green">未删除</span></td>
+              <td>-</td>
+              <td>-</td>
               <td class="col-op">
                 <span class="op-link active" onclick="openExtractModal('FGLI','SHR-1918-305','安阳市肿瘤医院')">匹配详情</span>
                 <span class="op-link active" onclick="openMatchConfirm('PT-2026-003','FGLI')">重新匹配</span>
@@ -685,31 +685,297 @@
   </div>
 </div>
 
-<!-- ===== MODAL: 提取要点（从 match-detail-check 迁移） ===== -->
-<div class="modal-overlay" id="extractDetailModal">
-  <div class="extract-modal-panel">
-    <div class="extract-modal-head">
-      <div class="extract-modal-title">提取要点 <span id="extractModalMeta" style="font-size:13px;font-weight:400;color:#999;"></span></div>
-      <button class="modal-close" onclick="closeModal('extractDetailModal')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="extract-modal-body">
+<!-- ===== 提取要点（替换当前页面版） ===== -->
+<div class="extract-page" id="extractPage">
+ 
+  <div class="extract-modal-body">
+    
       <div class="card" id="extractCard">
+         <div class="extract-page-head">
+    <button class="btn-sm btn-default" onclick="closeExtractPage()"><i class="fa-solid fa-arrow-left"></i> </button>
+    <div class="extract-modal-title">ZXQU|提取要点</div>
+  </div>
         <div class="project-info" style="margin-bottom: 16px; align-items: center;">
-          <div style="display: flex; gap: 8px; margin-left: auto;">
-            <span style="padding: 4px 12px; background: #f6ffed; color: #52c41a; border-radius: 4px; font-size: 12px;">提取成功</span>
-            <button class="btn-sm btn-primary">智能提取</button>
-            <button class="btn-sm btn-primary">下载</button>
-          </div>
+          
         </div>
         <div class="prescreen-doc-layout nav-right">
           <nav class="prescreen-nav" id="extractNav">
             <div class="prescreen-nav-title"><i class="fas fa-list-ul"></i> 页面导航</div>
-            <div id="extractNavList"></div>
+            <div id="extractNavList">
+              <div class="prescreen-nav-item" data-target="sec-extract-p-study-history" onclick="scrollToPrescreen('sec-extract-p-study-history','extract')">1. 既往临床研究参加情况</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-basic" onclick="scrollToPrescreen('sec-extract-p-basic','extract')">2. 基础及人口统计学信息</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-disease" onclick="scrollToPrescreen('sec-extract-p-disease','extract')">3. 本研究疾病信息</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-history-disease" onclick="scrollToPrescreen('sec-extract-p-history-disease','extract')">4. 既往病史 &amp; 合并疾病</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-medication" onclick="scrollToPrescreen('sec-extract-p-medication','extract')">5. 既往用药 &amp; 合并用药</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-lab" onclick="scrollToPrescreen('sec-extract-p-lab','extract')">6. 实验室检查</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-imaging" onclick="scrollToPrescreen('sec-extract-p-imaging','extract')">7. 影像学检查</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-vitals" onclick="scrollToPrescreen('sec-extract-p-vitals','extract')">8. 生命体征 &amp; 体格检查</div>
+              <div class="prescreen-nav-item" data-target="sec-extract-p-lipid-therapy" onclick="scrollToPrescreen('sec-extract-p-lipid-therapy','extract')">9. 降脂治疗稳定性 &amp; 审核</div>
+            </div>
           </nav>
           <div class="prescreen-doc" id="extractDoc">
             <h1 class="doc-h1">患者筛选信息采集表</h1>
             <div class="doc-subtitle" id="extractDocMeta"></div>
-            <div id="extractSections"></div>
+            <div id="extractSections">
+              <!-- 1. 既往临床研究参加情况 -->
+              <div class="doc-section" id="sec-extract-p-study-history">
+                <h2 class="doc-section-title"><span class="sec-idx">1.</span> 既往临床研究参加情况
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>参加时间</th><th>研究项目</th><th>组别</th><th>结局</th><th>出组时间</th></tr></thead>
+                  <tbody>
+                    <tr><td>2019-03 ~ 2019-07</td><td>XYZ-301（III期）</td><td>试验组</td><td>筛败</td><td>-</td></tr>
+                    <tr><td>2021-09 ~ 2022-05</td><td>ABC-118（II期）</td><td>对照组</td><td>导败（疾病进展）</td><td>2022-05-18</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「签署知情同意」的日期与版本</li>
+                    <li>未提及「研究药物洗脱期」是否满足 ≥4 周要求</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 2. 基础及人口统计学信息 -->
+              <div class="doc-section" id="sec-extract-p-basic">
+                <h2 class="doc-section-title"><span class="sec-idx">2.</span> 基础及人口统计学信息
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>项目</th><th>内容</th></tr></thead>
+                  <tbody>
+                    <tr><td>年龄</td><td>36岁</td></tr>
+                    <tr><td>性别</td><td>女</td></tr>
+                    <tr><td>过敏史</td><td>青霉素过敏（皮疹）</td></tr>
+                    <tr><td>吸烟史</td><td>无</td></tr>
+                    <tr><td>饮酒史</td><td>偶饮酒</td></tr>
+                    <tr><td>月经史</td><td>已绝经（48岁）</td></tr>
+                    <tr><td>手术史</td><td>2020-10 右乳癌根治术</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「身高 / 体重 / BMI」</li>
+                    <li>未提及「种族 / 民族」</li>
+                    <li>未提及「教育程度 / 职业」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 3. 本研究疾病信息 -->
+              <div class="doc-section" id="sec-extract-p-disease">
+                <h2 class="doc-section-title"><span class="sec-idx">3.</span> 本研究疾病信息
+                
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>项目</th><th>内容</th></tr></thead>
+                  <tbody>
+                    <tr><td>首次症状日期</td><td>2020-08-12（右乳无痛性肿块）</td></tr>
+                    <tr><td>首次诊断日期</td><td>2020-10-21（浸润性导管癌）</td></tr>
+                    <tr><td>距病情描述</td><td>约5年</td></tr>
+                    <tr><td>疾病相关指标</td><td>ER（中强+90%）、PR（中强+70%）、HER2（0）、Ki-67（30%）</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「TNM 临床分期（cT/cN/cM）」</li>
+                    <li>未提及「转移部位 / 转移灶数量」</li>
+                    <li>未提及「复发 / 转移时间」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 4. 既往病史 & 合并疾病 -->
+              <div class="doc-section" id="sec-extract-p-history-disease">
+                <h2 class="doc-section-title"><span class="sec-idx">4.</span> 既往病史 &amp; 合并疾病
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>疾病名称</th><th>开始日期</th><th>结束日期</th><th>是否持续</th><th>补充信息</th><th>干预</th></tr></thead>
+                  <tbody>
+                    <tr><td>高血压病</td><td>2018-05</td><td>至今</td><td>是</td><td>最高160/100mmHg</td><td>氨氯地平 5mg qd</td></tr>
+                    <tr><td>2型糖尿病</td><td>2020-03</td><td>至今</td><td>是</td><td>HbA1c 7.2%</td><td>二甲双胍 0.5g bid</td></tr>
+                    <tr><td>腰椎间盘突出</td><td>2019-11</td><td>2020-02</td><td>否</td><td>已愈</td><td>理疗</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「精神疾病史 / 抑郁焦虑史」</li>
+                    <li>未提及「恶性肿瘤家族史」</li>
+                    <li>未提及「传染病史（乙肝 / 结核）」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 5. 既往用药 & 合并用药 -->
+              <div class="doc-section" id="sec-extract-p-medication">
+                <h2 class="doc-section-title"><span class="sec-idx">5.</span> 既往用药 &amp; 合并用药
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>药物名称</th><th>给药方案</th><th>治疗目的</th><th>开始日期</th><th>结束日期</th><th>距筛选日时长</th></tr></thead>
+                  <tbody>
+                    <tr><td>氨氯地平</td><td>5mg qd 口服</td><td>控制血压</td><td>2018-05-10</td><td>至今</td><td>持续用药</td></tr>
+                    <tr><td>二甲双胍</td><td>0.5g bid 口服</td><td>控制血糖</td><td>2020-03-02</td><td>至今</td><td>持续用药</td></tr>
+                    <tr><td>阿托伐他汀</td><td>20mg qn 口服</td><td>降脂</td><td>2023-01-15</td><td>2024-06-30</td><td>已洗脱约2年</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「中药 / 中成药」使用情况</li>
+                    <li>未提及「保健品 / 膳食补充剂」使用情况</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 6. 实验室检查 -->
+              <div class="doc-section" id="sec-extract-p-lab">
+                <h2 class="doc-section-title"><span class="sec-idx">6.</span> 实验室检查
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>检查项目</th><th>结果</th><th>检查时间</th></tr></thead>
+                  <tbody>
+                    <tr><td>白细胞计数</td><td>3.1×10⁹/L <span class="val-down">↓（降低，正常3.5~9.5）</span></td><td>2026-03-05</td></tr>
+                    <tr><td>中性粒细胞</td><td>1.6×10⁹/L <span class="val-down">↓（降低，正常1.8~6.3）</span></td><td>2026-03-05</td></tr>
+                    <tr><td>ALT</td><td>68 U/L <span class="val-up">↑（升高，正常7~40）</span></td><td>2026-03-05</td></tr>
+                    <tr><td>AST</td><td>55 U/L <span class="val-up">↑（升高，正常13~35）</span></td><td>2026-03-05</td></tr>
+                    <tr><td>肌酐</td><td>62 μmol/L（正常41~73）</td><td>2026-03-05</td></tr>
+                    <tr><td>总胆红素</td><td>21 μmol/L（正常3.4~20.5）</td><td>2026-03-05</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「血小板计数（PLT）」</li>
+                    <li>未提及「血红蛋白（Hb）」</li>
+                    <li>未提及「甲状腺功能（TSH / FT4）」</li>
+                    <li>未提及「凝血功能（PT / APTT）」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 7. 影像学检查 -->
+              <div class="doc-section" id="sec-extract-p-imaging">
+                <h2 class="doc-section-title"><span class="sec-idx">7.</span> 影像学检查
+                 
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>检查</th><th>诊断描述</th><th>诊断提示</th></tr></thead>
+                  <tbody>
+                    <tr><td>胸部CT（2024-05-10）</td><td>双肺纹理增多，右肺上叶见结节影约8mm</td><td>考虑转移可能，建议随访</td></tr>
+                    <tr><td>腹部超声（2024-05-10）</td><td>肝实质回声均匀，未见占位</td><td>未见明显异常</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「骨扫描（ECT）」</li>
+                    <li>未提及「头颅 MRI」</li>
+                    <li>未提及「心脏超声 / LVEF」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 8. 生命体征 & 体格检查 -->
+              <div class="doc-section" id="sec-extract-p-vitals">
+                <h2 class="doc-section-title"><span class="sec-idx">8.</span> 生命体征 &amp; 体格检查
+               
+                </h2>
+                <table class="doc-table">
+                  <thead><tr><th>项目</th><th>内容</th></tr></thead>
+                  <tbody>
+                    <tr><td>体温</td><td>36.5℃</td></tr>
+                    <tr><td>脉搏</td><td>78次/分</td></tr>
+                    <tr><td>呼吸频率</td><td>18次/分</td></tr>
+                    <tr><td>收缩压/舒张压</td><td>128/82 mmHg</td></tr>
+                    <tr><td>体格检查-头颈部</td><td>未见异常</td></tr>
+                    <tr><td>体格检查-胸部</td><td>双肺呼吸音清</td></tr>
+                    <tr><td>体格检查-腹部</td><td>腹软，无压痛</td></tr>
+                    <tr><td>体格检查-脊柱四肢</td><td>活动正常</td></tr>
+                    <tr><td>体格检查-皮肤</td><td>无黄染、无皮损</td></tr>
+                  </tbody>
+                </table>
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「身高 / 体重 / BMI」</li>
+                    <li>未提及「腰围 / 臀围」</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- 9. 降脂治疗稳定性 & 审核 -->
+              <div class="doc-section" id="sec-extract-p-lipid-therapy">
+                <h2 class="doc-section-title"><span class="sec-idx">9.</span> 降脂治疗稳定性 &amp; 审核
+                 
+                </h2>
+                <div class="doc-timeline">
+                  <div class="tl-item">
+                    <div class="tl-head">
+                      <span class="tl-drug">阿托伐他汀</span>
+                      <span class="tl-date">40mg qn</span>
+                      <span class="tl-badge ok">已稳定</span>
+                      <span class="tl-date">稳定≥2周</span>
+                    </div>
+                    <div class="tl-body">
+                      <div class="tl-line"><span class="k">剂量：</span><span>40mg 每晚口服</span></div>
+                      <div class="tl-line"><span class="k">开始日期：</span><span>2023-01-15</span></div>
+                      <div class="tl-line"><span class="k">调整日期：</span><span>无</span></div>
+                      <div class="tl-line"><span class="k">停药日期：</span><span>无</span></div>
+                      <div class="tl-line"><span class="k">稳定天数：</span><span>约2年</span></div>
+                      <div class="tl-line"><span class="k">结论：</span><span>筛选前稳定≥2周，导入期继续稳定≥2周</span></div>
+                    </div>
+                  </div>
+                  <div class="tl-item instable">
+                    <div class="tl-head">
+                      <span class="tl-drug">依折麦布</span>
+                      <span class="tl-date">10mg qd</span>
+                      <span class="tl-badge warn">剂量调整</span>
+                      <span class="tl-date">调整后稳定≥4周</span>
+                    </div>
+                    <div class="tl-body">
+                      <div class="tl-line"><span class="k">剂量：</span><span>10mg→5mg 每日口服</span></div>
+                      <div class="tl-line"><span class="k">开始日期：</span><span>2023-03-01</span></div>
+                      <div class="tl-line"><span class="k">调整日期：</span><span>2024-02-10</span></div>
+                      <div class="tl-line"><span class="k">停药日期：</span><span>无</span></div>
+                      <div class="tl-line"><span class="k">稳定天数：</span><span>调整后≥4周</span></div>
+                      <div class="tl-line"><span class="k">结论：</span><span>2024-02-10调整剂量，调整后稳定≥4周</span></div>
+                    </div>
+                  </div>
+                  <div class="tl-item instable">
+                    <div class="tl-head">
+                      <span class="tl-drug">非诺贝特</span>
+                      <span class="tl-date">160mg qd</span>
+                      <span class="tl-badge warn">起始待确认</span>
+                      <span class="tl-date"><span class="doc-pending-tag">待确认</span></span>
+                    </div>
+                    <div class="tl-body">
+                      <div class="tl-line"><span class="k">剂量：</span><span>160mg 每日口服</span></div>
+                      <div class="tl-line"><span class="k">开始日期：</span><span><span class="doc-pending-tag">待确认</span></span></div>
+                      <div class="tl-line"><span class="k">调整日期：</span><span>无</span></div>
+                      <div class="tl-line"><span class="k">停药日期：</span><span>2024-06-30</span></div>
+                      <div class="tl-line"><span class="k">稳定天数：</span><span><span class="doc-pending-tag">待确认</span></span></div>
+                      <div class="tl-line"><span class="k">结论：</span><span>缺少起始日期或剂量，标记"待确认"</span></div>
+                    </div>
+                  </div>
+                </div>
+              
+                <div class="not-extracted-box">
+                  <div class="ne-title"><i class="fa-solid fa-triangle-exclamation"></i> 已配置但未提取出</div>
+                  <ul class="ne-list">
+                    <li>未提及「PCSK9 抑制剂使用史」</li>
+                    <li>未提及「LDL-C 基线目标值 / 达标情况」</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
             <div style="margin-top:24px;padding:12px;background:#fff7e6;border-radius:4px;display:flex;align-items:center;gap:8px;color:#fa8c16;font-size:13px;">
               <i class="fas fa-exclamation-circle"></i><span>内容由AI生成，仅供参考，请谨慎鉴别</span>
             </div>
@@ -717,7 +983,6 @@
         </div>
       </div>
     </div>
-  </div>
 </div>
 
 <script>
@@ -1101,7 +1366,7 @@
     if (!mask) {
       mask = document.createElement('div');
       mask.id = 'prescreenModalMask';
-      mask.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;';
+      mask.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:100003;padding:20px;';
       mask.innerHTML = `
         <div class="pm-panel">
           <div class="pm-head">
@@ -1303,17 +1568,23 @@
     if (typeof prefix !== 'string') prefix = 'prescreen';
     window._psScope = window._psScope || [];
     if (window._psScope.indexOf(prefix) === -1) window._psScope.push(prefix);
-    try { renderPrescreenNav(prefix); } catch (e) { console.error('renderPrescreenNav', e); }
-    try { renderPrescreenSections(prefix); } catch (e) { console.error('renderPrescreenSections', e); }
     setTimeout(function () { initPrescreenObserver(prefix); }, 200);
   }
 
-  // 打开提取要点弹窗
+  // 打开提取要点（替换当前页面）
   function openExtractModal(patientNo, schemeNo, center) {
-    document.getElementById('extractModalMeta').textContent = '｜ 方案编号：' + schemeNo + ' ｜ 患者：' + patientNo + ' ｜ 中心：' + center;
     document.getElementById('extractDocMeta').textContent = '患者编号：' + patientNo + ' ｜ 方案编号：' + schemeNo + ' ｜ 中心：' + center;
-    openModal('extractDetailModal');
+    document.getElementById('topNav').style.display = 'none';
+    document.getElementById('contentArea').style.display = 'none';
+    document.getElementById('extractPage').classList.add('open');
+    document.body.style.overflow = 'hidden';
     initPrescreenDoc('extract');
+  }
+  function closeExtractPage() {
+    document.getElementById('extractPage').classList.remove('open');
+    document.getElementById('topNav').style.display = '';
+    document.getElementById('contentArea').style.display = '';
+    document.body.style.overflow = '';
   }
 
 </script>

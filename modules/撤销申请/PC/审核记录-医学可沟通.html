@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>审核记录</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-card {
+      width: 760px;
+      max-width: 92vw;
+      max-height: 86vh;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalIn .18s ease-out;
+    }
+    @keyframes modalIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .modal-close {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #bfbfbf;
+      font-size: 18px;
+      cursor: pointer;
+      transition: color .15s;
+    }
+    .modal-close:hover { color: #8c8c8c; }
+    .modal-body {
+      padding: 16px 20px 20px;
+      overflow: auto;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #262626;
+    }
+    .section-toggle {
+      font-size: 13px;
+      color: #1872a7;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section-toggle:hover { color: #2a9ed4; }
+    .section-toggle i {
+      font-size: 12px;
+      margin-right: 4px;
+      transition: transform .2s;
+    }
+    .section-toggle.collapsed i { transform: rotate(-90deg); }
+    .action-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 16px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #1872a7;
+      color: #fff;
+      border-color: #1872a7;
+    }
+    .btn-primary:hover { background: #2a9ed4; border-color: #2a9ed4; }
+    .btn-primary:active { background: #115a82; border-color: #115a82; }
+    .btn-default {
+      background: #fff;
+      color: #595959;
+      border-color: #d9d9d9;
+    }
+    .btn-default:hover {
+      color: #1872a7;
+      border-color: #1872a7;
+    }
+    .btn-default:active {
+      color: #115a82;
+      border-color: #115a82;
+    }
+    .record-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .record-table th,
+    .record-table td {
+      padding: 11px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .record-table th {
+      background: #1872a7;
+      color: #fff;
+      font-weight: 500;
+      border-bottom: none;
+    }
+    .record-table th:first-child { width: 50px; text-align: center; }
+    .record-table td:first-child { text-align: center; color: #1872a7; cursor: pointer; }
+    .record-table td:first-child:hover { color: #2a9ed4; }
+    .record-table tbody tr:nth-child(even) { background: #f6f8fb; }
+    .record-table tbody tr:last-child td { border-bottom: none; }
+    .operator-name {
+      color: #1872a7;
+      cursor: pointer;
+    }
+    .operator-name:hover { color: #2a9ed4; }
+    .status-submitted { color: #fa8c16; }
+    .status-pending { color: #595959; }
+    .status-revoked { color: #ff4d4f; }
+    .collapse-content {
+      background: #fafafa;
+      padding: 12px;
+      font-size: 13px;
+      color: #595959;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .collapse-content p { margin: 0 0 6px; }
+    .collapse-content p:last-child { margin-bottom: 0; }
+    .comment-label {
+      font-size: 13px;
+      color: #262626;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .comment-box {
+      background: #f6f8fb;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.6;
+      text-align: left;
+    }
+    .hidden { display: none; }
+
+    /* 入组审核沟通弹窗 */
+    .comm-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
+    }
+    .comm-modal-overlay.show { display: flex; }
+    .comm-modal-card {
+      width: 560px;
+      max-width: 92vw;
+      max-height: 86vh;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalIn .18s ease-out;
+    }
+    .comm-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      position: relative;
+    }
+    .comm-modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .comm-modal-close {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #bfbfbf;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .comm-modal-close:hover { color: #8c8c8c; }
+    .comm-modal-body {
+      padding: 20px;
+      overflow: auto;
+    }
+    .comm-form-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .comm-form-label {
+      font-size: 14px;
+      color: #262626;
+      line-height: 32px;
+      white-space: nowrap;
+    }
+    .comm-select-box {
+      flex: 1;
+      min-height: 32px;
+      padding: 5px 10px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      cursor: text;
+    }
+    .comm-select-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #1872a7;
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .comm-select-tag .remove {
+      cursor: pointer;
+      font-size: 11px;
+      margin-left: 2px;
+    }
+    .comm-default-roles {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #262626;
+    }
+    .comm-default-roles .label {
+      white-space: nowrap;
+    }
+    .comm-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #595959;
+      font-size: 14px;
+    }
+    .comm-checkbox input {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      margin: 0;
+      accent-color: #1872a7;
+    }
+   .comm-hint {
+      position: relative;
+      background: #fffbe6;
+      border: 1px solid #ffe58f;
+      border-radius: 4px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .comm-hint i {
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      color: #faad14;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+    .comm-hint-body {
+      padding-left: 26px;
+      color: #8c8c8c;
+    }
+    .comm-hint-body > div:first-child {
+      color: #595959;
+    }
+ 
+    .comm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .comm-table th,
+    .comm-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .comm-table th {
+      background: #1872a7;
+      color: #fff;
+      font-weight: 500;
+    }
+    .comm-table tbody tr:last-child td { border-bottom: none; }
+    .comm-table .op-delete {
+      color: #1872a7;
+      cursor: pointer;
+    }
+    .comm-table .op-delete:hover { color: #ff4d4f; }
+    .comm-textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #262626;
+      resize: vertical;
+      outline: none;
+      margin-bottom: 16px;
+    }
+    .comm-textarea:focus { border-color: #1872a7; }
+    .comm-textarea::placeholder { color: #bfbfbf; }
+    .comm-attachment {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .comm-attachment-label {
+      font-size: 14px;
+      color: #262626;
+    }
+    .comm-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 20px 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">测试文件上传失败-审核记录</div>
+        <i class="fa fa-times modal-close" onclick="closeModal()"></i>
+      </div>
+      <div class="modal-body">
+        <div class="section-header">
+          <div class="section-title">入组审核</div>
+          <div class="section-toggle" id="sectionToggle" onclick="toggleSection()">
+            <i class="fa fa-chevron-up"></i>
+            <span>收起</span>
+          </div>
+        </div>
+
+        <div id="sectionContent">
+          <div class="action-bar">
+            <button class="btn btn-default" onclick="onDownload()">下载</button>
+            <button class="btn btn-primary" onclick="onAuditComm()">入组审核沟通</button>
+          </div>
+
+          <table class="record-table">
+            <thead>
+              <tr>
+                <th>折叠</th>
+                <th>操作人</th>
+                <th>操作状态</th>
+                <th>操作时间</th>
+                <th>操作耗时</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-submitted">已提交</td>
+                <td>2026-08-11 15:19:24</td>
+                <td>—</td>
+              </tr>
+              <tr class="collapse-row hidden">
+                <td colspan="5">
+                  <div class="collapse-content"></div>
+                </td>
+              </tr>
+              <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-pending">待审核（已撤回）</td>
+                <td>2026-08-11 15:19:25</td>
+                <td>—</td>
+              </tr>
+              <tr class="collapse-row hidden">
+                <td colspan="5">
+                  <div class="collapse-content"></div>
+                </td>
+              </tr>
+              <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-revoked">已撤销申请</td>
+                <td>2026-09-04 18:28:31</td>
+                <td>—</td>
+              </tr>
+              <tr class="collapse-row hidden">
+                <td colspan="5">
+                  <div class="collapse-content">
+                    <div class="comment-label">批注：</div>
+                    <div class="comment-box">撤销原因：12121</div>
+                  </div>
+                </td>
+              </tr>
+               <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-submitted">已提交</td>
+                <td>2026-08-11 15:19:24</td>
+                <td>—</td>
+              </tr>
+                <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-revoked">驳回</td>
+              <td>2026-08-12 14:23:23</td>
+              <td>2026-09-11 13:59:14</td>
+              <td></td>
+            </tr>
+            <tr class="collapse-row hidden">
+              <td colspan="6"> <div class="collapse-content">
+                  <div class="comment-label">批注：</div>
+                  <div class="comment-box">驳回原因：12121</div>
+                </div></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 入组审核沟通弹窗 -->
+  <div class="comm-modal-overlay" id="commModalOverlay" onclick="if(event.target===this) closeCommModal()">
+    <div class="comm-modal-card">
+      <div class="comm-modal-header">
+        <div class="comm-modal-title">入组审核沟通</div>
+        <i class="fa fa-times comm-modal-close" onclick="closeCommModal()"></i>
+      </div>
+      <div class="comm-modal-body">
+        <div class="comm-form-row">
+          <label class="comm-form-label">请选择提醒人员：</label>
+          <div class="comm-select-box" onclick="showToast('打开人员选择')">
+            <span class="comm-select-tag">
+              临床协调员2 - 临床协调员
+              <i class="fa fa-times remove" onclick="event.stopPropagation(); this.parentElement.remove()"></i>
+            </span>
+          </div>
+        </div>
+        <div class="comm-default-roles">
+          <span class="label">默认通知：</span>
+          <label class="comm-checkbox">
+            <input type="checkbox" checked />
+            <span>CRA</span>
+          </label>
+          <label class="comm-checkbox">
+            <input type="checkbox" checked />
+            <span>CRC</span>
+          </label>
+        </div>
+        <div class="comm-hint">
+          <i class="fa fa-info-circle"></i>
+          <div class="comm-hint-body">
+            <div>默认选中：CRC,CRA；若需修改默认，可自行修改默认通知。</div>
+            <div>提示：若需更改，可直接删除已选人员后重新添加。</div>
+          </div>
+        </div>
+        <table class="comm-table">
+          <thead>
+            <tr>
+              <th>序号</th>
+              <th>用户姓名</th>
+              <th>角色</th>
+              <th>手机号</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>张三</td>
+              <td>CRA</td>
+              <td>188****0005</td>
+              <td><span class="op-delete" onclick="this.closest('tr').remove()">删除</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>李四</td>
+              <td>CRC</td>
+              <td>182****0005</td>
+              <td><span class="op-delete" onclick="this.closest('tr').remove()">删除</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <textarea class="comm-textarea" placeholder="添加批注"></textarea>
+        <div class="comm-attachment">
+          <span class="comm-attachment-label">附件：</span>
+          <button class="btn btn-primary" onclick="showToast('打开文件上传')">点击上传</button>
+        </div>
+      </div>
+      <div class="comm-modal-footer">
+        <button class="btn btn-default" onclick="closeCommModal()">取消</button>
+        <button class="btn btn-primary" onclick="onSendComm()">发送</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function closeModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+    function toggleSection() {
+      var content = document.getElementById('sectionContent');
+      var toggle = document.getElementById('sectionToggle');
+      content.classList.toggle('hidden');
+      toggle.classList.toggle('collapsed');
+      var label = toggle.querySelector('span');
+      var icon = toggle.querySelector('i');
+      if (content.classList.contains('hidden')) {
+        label.textContent = '展开';
+        icon.className = 'fa fa-chevron-down';
+      } else {
+        label.textContent = '收起';
+        icon.className = 'fa fa-chevron-up';
+      }
+    }
+    function toggleRow(el) {
+      var row = el.closest('tr');
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('collapse-row')) {
+        next.classList.toggle('hidden');
+        var icon = el.querySelector('i');
+        icon.className = next.classList.contains('hidden') ? 'fa fa-chevron-down' : 'fa fa-chevron-up';
+      }
+    }
+    function onDownload() { showToast('开始下载审核记录'); }
+    function onAuditComm() {
+      document.getElementById('commModalOverlay').classList.add('show');
+    }
+    function closeCommModal() {
+      document.getElementById('commModalOverlay').classList.remove('show');
+    }
+    function onSendComm() {
+      closeCommModal();
+      showToast('沟通消息已发送');
+    }
+  </script>
+</body>
+</html>

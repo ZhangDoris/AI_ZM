@@ -59,7 +59,7 @@
 
     /* 返回内容弹窗 */
     .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .modal { background: #fff; border-radius: 8px; width: 520px; max-width: 92vw; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(93,88,220,.25); }
+    .modal { background: #fff; border-radius: 8px; width: 760px; max-width: 92vw; max-height: 84vh; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(93,88,220,.25); }
     .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #ecebf8; font-size: 15px; font-weight: 600; color: #1d2129; }
     .modal-close { cursor: pointer; color: #86909c; font-size: 16px; }
     .modal-close:hover { color: #5d58dc; }
@@ -71,6 +71,26 @@
     .detail-section { margin-bottom: 16px; }
     .detail-title { font-size: 13px; font-weight: 600; color: #5d58dc; margin-bottom: 8px; }
     .modal-code { background: #f7f8fc; border: 1px solid #e3e1f5; border-radius: 4px; padding: 14px; font-family: 'SFMono-Regular', Consolas, Menlo, monospace; font-size: 13px; color: #2c3e50; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+
+    /* MCP 问答：问题为一段文字，答案为 HTML 内容直接渲染 */
+    .qa-question { background: #f7f8fc; border: 1px solid #e3e1f5; border-left: 3px solid #5d58dc; border-radius: 4px; padding: 12px 14px; font-size: 13px; line-height: 1.8; color: #1d2129; }
+    .qa-answer { border: 1px solid #e3e1f5; border-radius: 4px; padding: 14px 16px; font-size: 13px; line-height: 1.8; color: #1d2129; }
+    .qa-answer > :first-child { margin-top: 0; }
+    .qa-answer > :last-child { margin-bottom: 0; }
+    .qa-answer h4 { font-size: 13px; font-weight: 600; color: #5d58dc; margin: 14px 0 6px; }
+    .qa-answer h5 { font-size: 13px; font-weight: 600; color: #1d2129; margin: 10px 0 4px; }
+    .qa-answer p { margin: 0 0 8px; }
+    .qa-answer ul, .qa-answer ol { margin: 0 0 8px; padding-left: 20px; }
+    .qa-answer ul { list-style: disc; }
+    .qa-answer ol { list-style: decimal; }
+    .qa-answer li { margin-bottom: 4px; }
+    .qa-answer strong { font-weight: 600; }
+    .qa-answer a { color: #5d58dc; }
+    .qa-answer table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 12px; }
+    .qa-answer th, .qa-answer td { border: 1px solid #e3e1f5; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .qa-answer th { background: #f2f1fb; font-weight: 600; white-space: nowrap; }
+    .qa-answer .qa-error { color: #c93636; }
+    .qa-answer .qa-tip { color: #86909c; font-size: 12px; }
     .modal-footer { display: flex; justify-content: flex-end; padding: 12px 18px; border-top: 1px solid #ecebf8; }
   </style>
 </head>
@@ -79,7 +99,7 @@
     <div class="page-header">
       <div>
         <div class="page-title">接口调用日志</div>
-        <div class="page-sub">记录每一次 API 调用的项目、调用人、时间、IP、参数与返回结果</div>
+        <div class="page-sub">记录每一次 MCP 调用的角色、调用人、项目、时间、IP 与问答内容</div>
       </div>
     </div>
 
@@ -87,15 +107,18 @@
       <!-- 查询栏 -->
       <div class="filter-bar">
         <div class="filter-item">
-          <label class="filter-label">项目编码</label>
-          <input class="filter-input" id="fProject" placeholder="如 PRJ-2023-0918" />
+          <label class="filter-label">角色</label>
+          <select class="filter-select" id="fRole">
+            <option value="">全部</option>
+            <option value="超级管理员">超级管理员</option>
+            <option value="管理员角色">管理员角色</option>
+            <option value="CRA">CRA</option>
+            <option value="CRA">CRC</option>
+          </select>
         </div>
         <div class="filter-item">
-          <label class="filter-label">接口名称</label>
-          <select class="filter-select" id="fApi">
-            <option value="">全部</option>
-            <option value="patient-history">获取患者病史信息</option>
-          </select>
+          <label class="filter-label">项目编码</label>
+          <input class="filter-input" id="fProject" placeholder="如 PRJ-2023-0918" />
         </div>
         <div class="filter-item">
           <label class="filter-label">调用人</label>
@@ -127,14 +150,13 @@
       <table>
         <thead>
           <tr>
-            <th style="width:60px">序号</th>
-            <th class="col-left" style="width:140px">项目编码</th>
-            <th class="col-left" style="width:160px">接口名称</th>
+            <th class="col-left" style="width:110px">角色</th>
             <th class="col-left" style="width:180px">调用人</th>
+            <th class="col-left" style="width:140px">项目编码</th>
             <th style="width:170px">调用时间</th>
             <th style="width:140px">IP 地址</th>
-            <th style="width:90px">调用状态</th>
-            <th style="width:120px">操作</th>
+            <th style="width:90px">状态</th>
+            <th style="width:120px">详情</th>
           </tr>
         </thead>
         <tbody id="logBody"></tbody>
@@ -155,12 +177,12 @@
       <div class="modal-body">
         <div class="detail-info" id="detailInfo"></div>
         <div class="detail-section">
-          <div class="detail-title">请求参数</div>
-          <pre class="modal-code" id="reqText"></pre>
+          <div class="detail-title">问题</div>
+          <div class="qa-question" id="qaQuestion"></div>
         </div>
         <div class="detail-section">
-          <div class="detail-title">返回结果</div>
-          <pre class="modal-code" id="respText"></pre>
+          <div class="detail-title">答案</div>
+          <div class="qa-answer" id="qaAnswer"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -170,40 +192,125 @@
   </div>
 
   <script>
-    const API_NAME_MAP = {
-      'patient-history': '获取患者病史信息'
-    };
-
+    // 角色：超级管理员 / 管理员角色 / 项目角色
     const LOGS = [
       {
+        role: '医学经理',
+        caller: '张华-138****1234',
         project: 'PRJ-2023-0918',
-        api: 'patient-history',
-        caller: '张华-138****1234-医学经理',
         time: '2026-08-25 10:12:33',
         ip: '192.168.10.23',
-        request: '{\n  "patientId": "P10086",\n  "visitRange": "2024-01~2024-12"\n}',
-        response: '{\n  "code": 0,\n  "data": { "history": [ { "date": "2024-03-12", "diagnosis": "高血压" } ] }\n}',
+        question: '请帮我梳理 PRJ-2023-0918 项目中 2024 年入组、既往病史包含高血压的患者，给出患者编号、确诊时间与当前用药，并标注是否存在排除项风险。',
+        answer: `<p>共检索到 <strong>3 例</strong>符合「2024 年入组 + 既往病史包含高血压」的受试者，其中 1 例命中方案排除标准，建议优先复核。</p>
+<h4>患者明细</h4>
+<table>
+  <thead>
+    <tr><th>患者编号</th><th>入组日期</th><th>确诊时间</th><th>当前用药</th><th>排除项风险</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>P10086</td><td>2024-03-05</td><td>2024-03-12</td><td>苯磺酸氨氯地平 5mg qd</td><td>无</td></tr>
+    <tr><td>P10124</td><td>2024-05-18</td><td>2024-05-26</td><td>缬沙坦 80mg qd</td><td>合并用药命中排除列表</td></tr>
+    <tr><td>P10237</td><td>2024-09-02</td><td>2024-09-10</td><td>暂无规律用药</td><td>无</td></tr>
+  </tbody>
+</table>
+<h4>建议动作</h4>
+<ul>
+  <li>P10124 的合并用药命中方案排除标准 4.2 条，建议由医学经理复核是否继续入组。</li>
+  <li>P10237 未见规律用药记录，建议补充随访记录后再评估。</li>
+</ul>
+<p class="qa-tip">数据来源：项目病历库（截至 2026-08-25 10:12）</p>`,
         status: 'success'
       },
       {
+        role: '超级管理员',
+        caller: '李敏-139****5678',
+        project: 'PRJ-2023-0918',
+        time: '2026-08-25 11:02:10',
+        ip: '192.168.10.23',
+        question: '统计本项目近 7 天 MCP 接口的调用情况，按接口维度给出调用次数、成功率与主要失败原因。',
+        answer: `<p>近 7 天（08-19 ~ 08-25）累计调用 <strong>1,286 次</strong>，整体成功率 <strong>96.7%</strong>，失败集中在「获取患者病史信息」接口。</p>
+<table>
+  <thead>
+    <tr><th>接口</th><th>调用次数</th><th>成功率</th><th>主要失败原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>获取患者病史信息</td><td>902</td><td>95.3%</td><td>网关超时（500）</td></tr>
+    <tr><td>匹配详情核对</td><td>268</td><td>99.6%</td><td>参数缺失</td></tr>
+    <tr><td>调用审计日志</td><td>116</td><td>100%</td><td>—</td></tr>
+  </tbody>
+</table>
+<h4>处理建议</h4>
+<ul>
+  <li>为「获取患者病史信息」增加超时重试与结果缓存，预计可挽回约 3% 失败调用。</li>
+  <li>单次查询时间跨度建议控制在 12 个月以内，可显著降低超时概率。</li>
+</ul>`,
+        status: 'success'
+      },
+      {
+        role: 'CRA',
+        caller: '王强-137****9012',
         project: 'PRJ-2025-1107',
-        api: 'patient-history',
-        caller: '王强-137****9012-CRC',
+        time: '2026-08-24 16:42:51',
+        ip: '10.20.5.118',
+        question: '受试者 S203 与研究方案 PRJ-2023-0918 的匹配情况如何？请说明命中的入排标准与未满足项。',
+        answer: `<p>受试者 S203 与方案 PRJ-2023-0918 的综合匹配评分 <strong>0.87</strong>，命中 4 条入选标准，存在 1 项待补充材料。</p>
+<h4>命中的入选标准</h4>
+<ol>
+  <li>年龄 52 岁，落在 18~65 岁区间内。</li>
+  <li>性别与方案队列要求一致。</li>
+  <li>既往病史包含高血压，符合目标人群定义。</li>
+  <li>近 3 个月未参与其他干预性临床研究。</li>
+</ol>
+<h4>未满足 / 待补充</h4>
+<ul>
+  <li>缺少近 6 个月的实验室检查报告，无法核验排除标准 5.1 条。</li>
+</ul>
+<p class="qa-tip">结论：暂判定为「待补充材料」，补齐实验室检查后可再次评估。</p>`,
+        status: 'success'
+      },
+      {
+        role: '系统管理员',
+        caller: '赵敏-136****3344',
+        project: 'PRJ-2024-0312',
+        time: '2026-08-24 17:03:20',
+        ip: '10.20.5.118',
+        question: '排查 PRJ-2024-0312 项目近 24 小时内 API key 失效的调用记录，给出影响范围和处理建议。',
+        answer: `<p>近 24 小时内共捕获 <strong>17 次</strong>因 API key 失效（40101）导致的调用失败，涉及 3 名调用人、2 个来源 IP。</p>
+<h4>影响范围</h4>
+<ul>
+  <li>涉及项目：PRJ-2024-0312（仅此一个项目）。</li>
+  <li>涉及调用人：李敏、王强、陈静。</li>
+  <li>涉及 IP：10.20.5.118、172.16.8.40。</li>
+  <li>失败集中在 08-24 09:00 之后，与 key 轮换时间点一致。</li>
+</ul>
+<h4>处理建议</h4>
+<ul>
+  <li>由项目管理员在「MCP 接入配置」中重新生成 key，并同步更新到各调用方的本地配置。</li>
+  <li>建议开启 key 到期前 7 天提醒，避免轮换窗口期内的批量失败。</li>
+</ul>`,
+        status: 'success'
+      },
+      {
+        role: 'CRC',
+        caller: '王强-137****9012',
+        project: 'PRJ-2025-1107',
         time: '2026-08-23 09:31:47',
         ip: '172.16.8.40',
-        request: '{\n  "patientId": "P20994"\n}',
-        response: '{\n  "code": 500,\n  "msg": "网关超时，请稍后重试"\n}',
+        question: '调取患者 P20994 在 2025 年的全部就诊记录与既往病史摘要。',
+        answer: `<p class="qa-error">调用失败（500 网关超时），未生成答案。</p>
+<p>建议稍后重试，或把时间范围拆分为季度分段拉取后再合并查看。</p>`,
         status: 'fail'
       },
       {
-        project: 'PRJ-2025-1107',
-        api: 'patient-history',
-        caller: '王强-137****9012-CRC',
+        role: '系统管理员',
+        caller: '李敏-139****5678',
+        project: 'PRJ-2024-0312',
         time: '2026-08-23 09:35:12',
         ip: '172.16.8.40',
-        request: '{\n  "patientId": "P20994"\n}',
-        response: '{\n  "code": 0,\n  "data": { "history": [ { "date": "2025-02-09", "diagnosis": "糖尿病" } ] }\n}',
-        status: 'success'
+        question: '导出 PRJ-2024-0312 项目本月的调用审计流水，用于合规归档。',
+        answer: `<p class="qa-error">调用失败（40101 API key 已失效），未生成答案。</p>
+<p>请由项目管理员在「MCP 接入配置」中重新生成 key 后再次发起导出。</p>`,
+        status: 'fail'
       }
     ];
 
@@ -221,8 +328,8 @@
     let pageSize = 10;
 
     function getFiltered() {
+      const fr = document.getElementById('fRole').value;
       const fp = document.getElementById('fProject').value.trim().toLowerCase();
-      const fa = document.getElementById('fApi').value;
       const fc = document.getElementById('fCaller').value.trim().toLowerCase();
       const fStart = document.getElementById('fStart').value; // yyyy-MM-ddTHH:mm
       const fEnd = document.getElementById('fEnd').value;
@@ -230,8 +337,8 @@
       // 将日志时间 "2026-08-25 10:12:33" 转为 "2026-08-25T10:12:33" 以便比较
       const norm = t => t.replace(' ', 'T');
       return LOGS.filter(l => {
+        if (fr && l.role !== fr) return false;
         if (fp && !l.project.toLowerCase().includes(fp)) return false;
-        if (fa && l.api !== fa) return false;
         if (fc && !l.caller.toLowerCase().includes(fc)) return false;
         const lt = norm(l.time);
         if (fStart && lt < fStart) return false;
@@ -251,18 +358,17 @@
       const list = all.slice(start, start + pageSize);
       const body = document.getElementById('logBody');
       if (list.length === 0) {
-        body.innerHTML = '<tr><td colspan="8" class="empty"><i class="fas fa-inbox"></i> 暂无调用日志</td></tr>';
+        body.innerHTML = '<tr><td colspan="7" class="empty"><i class="fas fa-inbox"></i> 暂无调用日志</td></tr>';
       } else {
         body.innerHTML = list.map((l, i) => `
           <tr>
-            <td>${start + i + 1}</td>
-            <td class="mono col-left">${escapeHtml(l.project)}</td>
-            <td class="col-left">${escapeHtml(API_NAME_MAP[l.api] || '-')}</td>
+            <td class="col-left">${escapeHtml(l.role)}</td>
             <td class="col-left">${escapeHtml(l.caller)}</td>
+            <td class="col-left mono">${escapeHtml(l.project)}</td>
             <td class="mono">${escapeHtml(l.time)}</td>
             <td class="mono">${escapeHtml(l.ip)}</td>
             <td>${statusTag(l.status)}</td>
-            <td><button class="btn btn-link" onclick="viewResp(${start + i})">调用详情</button></td>
+            <td><button class="btn btn-link" onclick="viewResp(${start + i})">查看详情</button></td>
           </tr>
         `).join('');
       }
@@ -326,14 +432,17 @@
       const l = getFiltered()[idx];
       if (!l) return;
       document.getElementById('detailInfo').innerHTML = `
-        <div class="info-row"><span class="info-label">项目编码</span><span class="info-value mono">${escapeHtml(l.project)}</span></div>
-        <div class="info-row"><span class="info-label">接口名称</span><span class="info-value">${escapeHtml(API_NAME_MAP[l.api] || '-')}</span></div>
+        <div class="info-row"><span class="info-label">角色</span><span class="info-value">${escapeHtml(l.role)}</span></div>
         <div class="info-row"><span class="info-label">调用人</span><span class="info-value">${escapeHtml(l.caller)}</span></div>
+        <div class="info-row"><span class="info-label">项目编码</span><span class="info-value mono">${escapeHtml(l.project)}</span></div>
         <div class="info-row"><span class="info-label">调用时间</span><span class="info-value mono">${escapeHtml(l.time)}</span></div>
         <div class="info-row"><span class="info-label">IP 地址</span><span class="info-value mono">${escapeHtml(l.ip)}</span></div>
+        <div class="info-row"><span class="info-label">状态</span><span class="info-value">${statusTag(l.status)}</span></div>
       `;
-      document.getElementById('reqText').textContent = l.request;
-      document.getElementById('respText').textContent = l.response;
+      // 问题：一段纯文本
+      document.getElementById('qaQuestion').textContent = l.question;
+      // 答案：HTML 内容，直接渲染
+      document.getElementById('qaAnswer').innerHTML = l.answer;
       document.getElementById('respModal').style.display = 'flex';
     }
 
@@ -346,8 +455,8 @@
     });
 
     function resetFilters() {
+      document.getElementById('fRole').value = '';
       document.getElementById('fProject').value = '';
-      document.getElementById('fApi').value = '';
       document.getElementById('fCaller').value = '';
       document.getElementById('fStart').value = '';
       document.getElementById('fEnd').value = '';

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>审核</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .audit-sheet {
+      width: 100%;
+      max-width: 560px;
+      height: 92vh;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+      animation: sheetIn .22s ease-out;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    @keyframes sheetIn {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .sheet-head {
+      position: relative;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .sheet-close {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #262626;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .sheet-close:active { color: #8c8c8c; }
+    .sheet-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      color: #262626;
+    }
+    .status-value {
+      color: #fa8c16;
+      font-weight: 600;
+    }
+    /* 驳回原因表单（平铺在当前状态下方） */
+    .fail-form {
+      margin-top: 24px;
+      animation: fadeUp .18s ease-out;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      color: #262626;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .req { color: #ff4d4f; margin-left: 2px; }
+    .form-textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #262626;
+      resize: vertical;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-textarea:focus {
+      border-color: #409eff;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.12);
+    }
+    .form-textarea::placeholder { color: #bfbfbf; }
+    .fail-hint {
+      display: none;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #ff4d4f;
+    }
+    .fail-hint.show { display: block; }
+    /* 底部操作栏 */
+    .sheet-footer {
+      flex-shrink: 0;
+      display: flex;
+      gap: 12px;
+      padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+      border-top: 1px solid #f0f0f0;
+      background: #fff;
+    }
+    .bar-btn {
+      flex: 1;
+      height: 46px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      background: #409eff;
+      color: #fff;
+    }
+    .bar-btn:active { background: #1677ff; }
+    .bar-btn.ghost {
+      background: #fff;
+      color: #262626;
+      border-color: #d9d9d9;
+    }
+    .bar-btn.ghost:active { background: #f5f5f5; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
+    <div class="audit-sheet">
+      <div class="sheet-head">
+        <span class="sheet-title">审核</span>
+        <i class="fa fa-times sheet-close" onclick="closeModal()"></i>
+      </div>
+
+      <div class="sheet-body">
+        <div class="status-row">
+          当前状态：<span class="status-value">预筛审核 - 审核中</span>
+        </div>
+
+        <!-- 驳回原因表单（点击"驳回"后平铺到本页面下方，不弹窗） -->
+        <div class="fail-form" id="failForm" style="display:none">
+          <label class="form-label">驳回原因</label>
+          <textarea class="form-textarea" id="failReason" placeholder="请输入驳回原因"></textarea>
+        </div>
+      </div>
+
+      <!-- 默认底部操作栏：沟通 / 驳回 / 通过 -->
+      <div class="sheet-footer" id="defaultFooter">
+        <button class="bar-btn" onclick="showToast('沟通（原型）')">沟通</button>
+        <button class="bar-btn" onclick="onScreenFail()">驳回</button>
+        <button class="bar-btn" onclick="showToast('通过（原型）')">通过</button>
+      </div>
+
+      <!-- 驳回状态底部操作栏：取消 / 确认驳回 -->
+      <div class="sheet-footer" id="failFooter" style="display:none">
+        <button class="bar-btn ghost" onclick="closeFailForm()">取消</button>
+        <button class="bar-btn" onclick="confirmScreenFail()">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function closeModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+    }
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+
+    // 驳回：在当前页面平铺驳回原因表单，底部按钮变为 取消 / 确认驳回
+    function onScreenFail() {
+      document.getElementById('failForm').style.display = 'block';
+      document.getElementById('failFooter').style.display = 'flex';
+      document.getElementById('defaultFooter').style.display = 'none';
+      document.getElementById('failReason').value = '';
+      document.getElementById('failHint').classList.remove('show');
+      document.getElementById('failReason').focus();
+    }
+    function closeFailForm() {
+      document.getElementById('failForm').style.display = 'none';
+      document.getElementById('failFooter').style.display = 'none';
+      document.getElementById('defaultFooter').style.display = 'flex';
+    }
+    function confirmScreenFail() {
+      var reason = document.getElementById('failReason').value.trim();
+      if (!reason) {
+        document.getElementById('failHint').classList.add('show');
+        return;
+      }
+      document.getElementById('failHint').classList.remove('show');
+      closeFailForm();
+      closeModal();
+      showToast('已确认驳回：' + reason);
+    }
+  </script>
+</body>
+</html>

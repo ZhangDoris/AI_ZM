@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP SERVER Keys 管理</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background-color: #ffffff; color: #333333; margin: 0; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ===== 公司 Tab（恒瑞医药 / 江苏科信 / 运营二部） ===== */
+    .company-tabs { display: inline-flex; align-items: stretch; border: 1px solid #d1d5db; border-radius: 6px; overflow: hidden; background: #fff; margin: 0 0 16px; width: fit-content; }
+    .company-tab { padding: 6px 20px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: #4b5563; background: #fff; border-right: 1px solid #d1d5db; transition: all .15s; user-select: none; }
+    .company-tab:last-child { border-right: none; }
+    .company-tab:hover { color: #1872a7; }
+    .company-tab.active { background: #1872a7; color: #fff; }
+
+    /* ===== 角色 Tab（管理员角色 / 项目角色），仅「恒瑞医药」下展示 ===== */
+    .role-tabs { display: flex; align-items: center; gap: 28px; border-bottom: 1px solid #e5e7eb; margin: 0 0 16px; }
+    .role-tab { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 6px 2px 12px; font-size: 14px; font-weight: 500; color: #6b7280; cursor: pointer; user-select: none; transition: color .15s; }
+    .role-tab:hover { color: #1872a7; }
+    .role-tab.active { color: #1872a7; }
+    .role-tab.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: #1872a7; border-radius: 2px; }
+    .role-tag { font-size: 12px; font-weight: 400; color: #999; border: 1px solid #d1d5db; border-radius: 10px; padding: 0 8px; line-height: 18px; }
+    .role-tab.active .role-tag { color: #1872a7; border-color: #a9d3e4; background: #f3f8fa; }
+    .role-panel { display: block; }
+
+    /* ===== 顶部标题 + 操作栏（截图风格：右上角刷新/重置/新增） ===== */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16px; }
+    .section-title { font-size: 20px; font-weight: 600; color: #1f2937; margin: 0; }
+    .section-desc { font-size: 13px; line-height: 1.7; color: #666; margin: 0 0 20px; }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 6px 0 18px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: all .15s; }
+    .btn-primary { background-color: #1872a7; color: #fff; border-color: #1872a7; }
+    .btn-primary:hover { background-color: #125a85; border-color: #125a85; }
+    .btn-default { background-color: #fff; color: #1872a7; border: 1px solid #1872a7; }
+    .btn-default:hover { background-color: #e8f3f6; }
+
+    /* ===== 筛选栏（行内布局） ===== */
+    .filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; background: #f5f7fa; padding: 16px 18px; border-radius: 6px; margin-bottom: 16px; }
+    .filter-item { display: flex; flex-direction: column; gap: 6px; }
+    .filter-item:nth-child(1) { flex: 0 0 340px; }
+    .filter-label { font-size: 13px; color: #666; font-weight: 500; }
+    /* 项目角色面板：项目编码 + 创建时间 */
+    #panelProject .filter-item:nth-child(1) { flex: 0 0 240px; }
+    #panelProject .filter-item:nth-child(2) { flex: 0 0 340px; }
+    /* 调用明细面板：角色 / 项目编码 / 调用人 / 调用时间 / 状态 */
+    #panelLogs .filter-item:nth-child(1) { flex: 0 0 140px; }
+    #panelLogs .filter-item:nth-child(2) { flex: 0 0 200px; }
+    #panelLogs .filter-item:nth-child(3) { flex: 0 0 200px; }
+    #panelLogs .filter-item:nth-child(4) { flex: 0 0 340px; }
+    #panelLogs .filter-item:nth-child(5) { flex: 0 0 120px; }
+    .filter-actions { display: flex; gap: 12px; margin-left: auto; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #333; outline: none; background: #fff; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+
+    /* ===== 表格（蓝色表头 + 斑马纹） ===== */
+    .table-card { border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+    .api-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+    .api-table thead th { text-align: left; padding: 12px 16px; background: #1872a7; color: #fff; font-weight: 500; white-space: nowrap; }
+    .api-table tbody td { padding: 12px 16px; border-bottom: 1px solid #eef0f3; color: #4b5563; vertical-align: middle; }
+    .api-table tbody tr:nth-child(even) td { background: #f3f8fa; }
+    .api-table tbody tr:hover td { background: #e8f3f6; }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table td.center { text-align: center; }
+    .key-mask { font-family: monospace; background: #f5f7fa; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: #555; }
+
+    /* 行内操作按钮（蓝边框） */
+    .row-actions { display: inline-flex; gap: 6px; }
+    .op-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 26px; padding: 0 8px; border: 1px solid #1872a7; border-radius: 3px; color: #1872a7; background: #fff; cursor: pointer; transition: all .15s; }
+    .op-btn:hover { background: #1872a7; color: #fff; }
+    .op-btn.danger { border-color: #f56565; color: #f56565; }
+    .op-btn.danger:hover { background: #f56565; color: #fff; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+
+    /* ===== 分页 ===== */
+    .pager { display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 16px 0; font-size: 13px; color: #6b7280; flex-wrap: wrap; }
+    .pager .total { color: #4b5563; }
+    .pager .total em { font-style: normal; color: #1872a7; }
+    .pager select { height: 28px; padding: 0 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; color: #4b5563; cursor: pointer; }
+    .pager .pages { display: inline-flex; gap: 4px; }
+    .pg { min-width: 30px; height: 30px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d1d5db; background: #fff; color: #4b5563; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .pg:hover { border-color: #1872a7; color: #1872a7; }
+    .pg.active { background: #1872a7; border-color: #1872a7; color: #fff; cursor: default; }
+    .pg.disabled { color: #c0c4cc; cursor: not-allowed; background: #fafafa; border-color: #e5e7eb; }
+
+    /* ===== 弹窗 ===== */
+    .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-mask.show { display: flex; }
+    .modal-content { background: #fff; border-radius: 8px; width: 560px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.18); }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 16px; font-weight: 600; color: #1f2937; }
+    .modal-close { font-size: 18px; color: #999; cursor: pointer; background: none; border: none; }
+    .modal-close:hover { color: #1872a7; }
+    .modal-body { padding: 24px; }
+    .form-row { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; color: #333; margin-bottom: 8px; font-weight: 500; }
+    .form-label .required { color: #F53F3F; margin-left: 4px; }
+    .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; }
+    .form-input:focus, .form-select:focus { border-color: #1872a7; }
+    .form-hint { font-size: 12px; color: #999; margin-top: 6px; }
+    /* searchable select */
+    .search-select { position: relative; }
+    .search-select .search-input { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 9px 34px 9px 12px; font-size: 14px; color: #333; outline: none; transition: border-color .2s; background: #fff; cursor: pointer; }
+    .search-select .search-input:focus { border-color: #1872a7; }
+    .search-select .search-input:disabled { background: #f5f7fa; color: #c0c4cc; cursor: not-allowed; border-color: #e5e7eb; }
+    .search-select.is-disabled .search-arrow { color: #d1d5db; }
+    .search-select .search-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #999; pointer-events: none; font-size: 12px; }
+    .search-select .search-dropdown { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #e8e8e8; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,.1); z-index: 10; display: none; }
+    .search-select .search-dropdown.show { display: block; }
+    .search-select .search-option { padding: 9px 12px; font-size: 14px; color: #333; cursor: pointer; transition: background .15s; }
+    .search-select .search-option:hover, .search-select .search-option.active { background: #f3f8fa; color: #1872a7; }
+    .search-select .search-empty { padding: 12px; font-size: 13px; color: #999; text-align: center; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; cursor: pointer; }
+    .checkbox-item input { width: 16px; height: 16px; accent-color: #1872a7; cursor: pointer; }
+    .modal-footer { padding: 14px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
+    .btn-cancel { background: #fff; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 18px; font-size: 14px; color: #4b5563; cursor: pointer; }
+    .btn-cancel:hover { border-color: #1872a7; color: #1872a7; }
+    .btn-confirm { background: #1872a7; color: #fff; border: none; border-radius: 4px; padding: 8px 18px; font-size: 14px; cursor: pointer; }
+    .btn-confirm:hover { background: #125a85; }
+    .btn-confirm:disabled { background: #b3c6ff; cursor: not-allowed; }
+    .form-input:disabled { background: #f5f7fa; color: #4b5563; cursor: not-allowed; border-color: #e5e7eb; }
+    /* 顶部当前登录用户徽标 */
+    .user-chip { display: inline-flex; align-items: center; gap: 10px; background: #f3f8fa; border: 1px solid #cfe3eb; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #333; }
+    .user-chip i { color: #1872a7; font-size: 16px; }
+    .user-chip b { color: #1872a7; }
+    .chip-role { background: #1872a7; color: #fff; font-size: 12px; padding: 1px 10px; border-radius: 10px; }
+    .chip-tag { color: #999; font-size: 12px; border: 1px solid #d1d5db; padding: 1px 8px; border-radius: 10px; }
+    /* created key display */
+    .created-box { background: #f3f8fa; border: 1px solid #cfe3eb; border-radius: 4px; padding: 16px; margin-top: 16px; }
+    .created-config { position: relative; background: #fff; border: 1px dashed #9cc6d4; border-radius: 4px; padding: 14px 96px 14px 14px; }
+    .created-config pre { margin: 0; font-family: monospace; font-size: 13px; line-height: 1.7; word-break: break-all; white-space: pre-wrap; color: #1872a7; }
+    .created-config .btn-default { position: absolute; top: 12px; right: 12px; }
+    .copy-tip { font-size: 12px; color: #F53F3F; margin-top: 8px; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(0,0,0,.75); color: #fff; padding: 10px 24px; border-radius: 6px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 2000; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== 调用明细 ===== */
+    .api-table td.mono { font-family: monospace; font-size: 13px; }
+    .status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .status-tag.success { background: #e8f5ec; color: #00B42A; }
+    .status-tag.fail { background: #fdecec; color: #F53F3F; }
+    .detail-info { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f0f0f0; }
+    .info-row { display: flex; align-items: baseline; gap: 12px; font-size: 13px; }
+    .info-label { width: 72px; flex-shrink: 0; color: #999; }
+    .info-value { color: #333; }
+    .detail-section { margin-bottom: 16px; }
+    .detail-title { font-size: 14px; font-weight: 600; color: #1872a7; margin-bottom: 8px; }
+    #logModal .modal-content { width: 760px; }
+    /* MCP 问答：问题为一段文字，答案为 HTML 内容直接渲染 */
+    .qa-question { background: #f5f7fa; border: 1px solid #e5e7eb; border-left: 3px solid #1872a7; border-radius: 4px; padding: 12px 14px; font-size: 13px; line-height: 1.8; color: #333; }
+    .qa-answer { border: 1px solid #e5e7eb; border-radius: 4px; padding: 14px 16px; font-size: 13px; line-height: 1.8; color: #333; }
+    .qa-answer > :first-child { margin-top: 0; }
+    .qa-answer > :last-child { margin-bottom: 0; }
+    .qa-answer h4 { font-size: 13px; font-weight: 600; color: #1872a7; margin: 14px 0 6px; }
+    .qa-answer p { margin: 0 0 8px; }
+    .qa-answer ul, .qa-answer ol { margin: 0 0 8px; padding-left: 20px; }
+    .qa-answer ul { list-style: disc; }
+    .qa-answer ol { list-style: decimal; }
+    .qa-answer li { margin-bottom: 4px; }
+    .qa-answer strong { font-weight: 600; }
+    .qa-answer table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 12px; }
+    .qa-answer th, .qa-answer td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .qa-answer th { background: #f5f7fa; font-weight: 600; white-space: nowrap; }
+    .qa-answer .qa-error { color: #F53F3F; }
+    .qa-answer .qa-tip { color: #999; font-size: 12px; }
+
+    @media (max-width: 768px) {
+      .top-bar { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-item { flex: none !important; }
+      .filter-actions { margin-left: 0; }
+      .pager { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- 顶部：标题 -->
+    <div class="top-bar">
+      <div>
+        <h1 class="section-title">MCP 接入配置</h1>
+      </div>
+      
+    </div>
+    <!-- 公司 Tab -->
+    <div class="company-tabs" id="companyTabs">
+      <div class="company-tab active" data-company="hengrui" onclick="switchCompany(this)">恒瑞医药</div>
+      <div class="company-tab" data-company="jiangsu-kexin" onclick="switchCompany(this)">江苏科信</div>
+      <div class="company-tab" data-company="ops-dept2" onclick="switchCompany(this)">运营二部</div>
+    </div>
+
+    <!-- 角色 Tab：仅「恒瑞医药」公司下展示 -->
+    <div class="role-tabs" id="roleTabs">
+      <div class="role-tab active" data-role="admin" onclick="switchRole(this)">管理员角色</div>
+      <div class="role-tab" data-role="project" onclick="switchRole(this)">项目角色</div>
+      <div class="role-tab" data-role="logs" onclick="switchRole(this)">调用明细</div>
+    </div>
+
+    <!-- ===== 面板一：管理员角色 ===== -->
+    <div class="role-panel" id="panelAdmin">
+    <div class="filter-bar">
+      <div class="filter-item">
+        <label class="filter-label">创建时间</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="date" class="form-input" id="filterDateStart" style="flex:1;" onchange="filterChanged()" />
+          <span style="color:#999;">至</span>
+          <input type="date" class="form-input" id="filterDateEnd" style="flex:1;" onchange="filterChanged()" />
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" onclick="queryKeys()">查询</button>
+        <button class="btn btn-default" onclick="resetFilters()">重置</button>
+        <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> 新增</button>
+        <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-download"></i> 操作手册</button>
+
+      </div>
+    </div>
+  <div class="section-desc">
+以下为管理员角色名下的全部 MCP 接入配置。配置中的授权凭证仅在创建时显示一次，请及时复制保存。请勿与他人共享凭证信息，或将其暴露在浏览器等客户端代码中。
+    </div>
+    <div class="table-card">
+      <table class="api-table">
+        <thead>
+          <tr>
+            <th style="width:60px">序号</th>
+            <th>所属人员</th>
+            <th style="width:110px">角色</th>
+            <th>创建日期</th>
+            <th style="width:120px;text-align:center">操作</th>
+          </tr>
+        </thead>
+        <tbody id="keyTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pager">
+      <span class="total">共 <em id="totalCount">0</em> 条</span>
+      <span>
+        <select id="pageSize" onchange="onPageSizeChange()">
+          <option>10条/页</option>
+          <option>20条/页</option>
+          <option>50条/页</option>
+        </select>
+      </span>
+      <span class="pages" id="pagerPages"></span>
+      <span>前往 <input id="jumpInput" type="number" min="1" style="width:46px;height:28px;padding:0 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;" /> 页</span>
+    </div>
+    </div>
+
+    <!-- ===== 面板二：项目角色（只读：不支持新增 / 删除） ===== -->
+    <div class="role-panel" id="panelProject" style="display:none">
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label class="filter-label">项目编码</label>
+          <div class="search-select" id="pjFilterProjectWrap">
+            <input type="text" class="search-input" id="pjFilterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
+            <i class="fas fa-chevron-down search-arrow"></i>
+            <div class="search-dropdown" id="pjFilterProjectDropdown"></div>
+            <input type="hidden" id="pjFilterProjectValue" />
+          </div>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">创建时间</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" class="form-input" id="pjFilterDateStart" style="flex:1;" onchange="pjFilterChanged()" />
+            <span style="color:#999;">至</span>
+            <input type="date" class="form-input" id="pjFilterDateEnd" style="flex:1;" onchange="pjFilterChanged()" />
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="pjQueryKeys()">查询</button>
+          <button class="btn btn-default" onclick="pjResetFilters()">重置</button>
+        </div>
+      </div>
+      <div class="section-desc">
+以下为项目角色名下的全部 MCP 接入配置，为只读视图：不支持新增与删除。配置中的授权凭证仅在创建时显示一次，如需使用请联系对应人员重新创建。请勿与他人共享凭证信息，或将其暴露在浏览器等客户端代码中。
+      </div>
+      <div class="table-card">
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th style="width:64px;text-align:center">序号</th>
+              <th>项目编码</th>
+              <th>所属人员</th>
+              <th style="width:110px">角色</th>
+              <th>创建日期</th>
+            </tr>
+          </thead>
+          <tbody id="pjKeyTableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="pager">
+        <span class="total">共 <em id="pjTotalCount">0</em> 条</span>
+        <span>
+          <select id="pjPageSize" onchange="pjOnPageSizeChange()">
+            <option>10条/页</option>
+            <option>20条/页</option>
+            <option>50条/页</option>
+          </select>
+        </span>
+        <span class="pages" id="pjPagerPages"></span>
+        <span>前往 <input id="pjJumpInput" type="number" min="1" style="width:46px;height:28px;padding:0 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;" /> 页</span>
+      </div>
+    </div>
+
+    <!-- ===== 面板三：调用明细（查看全部人员的 MCP 问答调用记录） ===== -->
+    <div class="role-panel" id="panelLogs" style="display:none">
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label class="filter-label">角色</label>
+          <select class="form-select" id="lgFilterRole">
+            <option value="">全部</option>
+            <option value="超级管理员">超级管理员</option>
+            <option value="管理员角色">管理员角色</option>
+            <option value="项目角色">项目角色</option>
+          </select>
+        </div>
+       <div class="filter-item">
+        <label class="filter-label">项目编码</label>
+        <div class="search-select" id="filterProjectWrap">
+          <input type="text" class="search-input" id="filterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
+          <i class="fas fa-chevron-down search-arrow"></i>
+          <div class="search-dropdown" id="filterProjectDropdown"></div>
+          <input type="hidden" id="filterProjectValue" />
+        </div>
+      </div>
+        <div class="filter-item">
+          <label class="filter-label">调用人</label>
+          <input type="text" class="form-input" id="lgFilterCaller" placeholder="姓名 / 手机号" />
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">调用时间</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" class="form-input" id="lgFilterDateStart" style="flex:1;" onchange="lgFilterChanged()" />
+            <span style="color:#999;">至</span>
+            <input type="date" class="form-input" id="lgFilterDateEnd" style="flex:1;" onchange="lgFilterChanged()" />
+          </div>
+        </div>
+        <div class="filter-item">
+          <label class="filter-label">状态</label>
+          <select class="form-select" id="lgFilterStatus">
+            <option value="">全部</option>
+            <option value="success">成功</option>
+            <option value="fail">失败</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-primary" onclick="lgQueryLogs()">查询</button>
+          <button class="btn btn-default" onclick="lgResetFilters()">重置</button>
+        </div>
+      </div>
+      <div class="section-desc">
+以下为全部人员的 MCP 调用明细，记录每次调用的角色、调用人、项目、时间、来源 IP、状态与问答内容，点击「查看详情」可查看完整问答。
+      </div>
+      <div class="table-card">
+        <table class="api-table">
+          <thead>
+            <tr>
+              <th style="width:200px">调用人</th>
+              <th style="width:110px">角色</th>
+              <th style="width:150px">项目编码</th>
+              <th style="width:170px;text-align:center">调用时间</th>
+              <th style="width:140px;text-align:center">IP 地址</th>
+              <th style="width:90px;text-align:center">状态</th>
+              <th style="width:110px;text-align:center">详情</th>
+            </tr>
+          </thead>
+          <tbody id="lgTableBody"></tbody>
+        </table>
+      </div>
+      <!-- 分页 -->
+      <div class="pager">
+        <span class="total">共 <em id="lgTotalCount">0</em> 条</span>
+        <span>
+          <select id="lgPageSize" onchange="lgOnPageSizeChange()">
+            <option>10条/页</option>
+            <option>20条/页</option>
+            <option>50条/页</option>
+          </select>
+        </span>
+        <span class="pages" id="lgPagerPages"></span>
+        <span>前往 <input id="lgJumpInput" type="number" min="1" style="width:46px;height:28px;padding:0 6px;border:1px solid #d1d5db;border-radius:4px;text-align:center;" /> 页</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 创建 API key 弹窗 -->
+  <div class="modal-mask" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">新增</div>
+        <button class="modal-close" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="createFormBody">
+        <!-- 所属人员：默认当前登录用户，不可修改 -->
+        <div class="form-row">
+          <label class="form-label">所属人员 <span class="required">*</span></label>
+          <input type="text" class="form-input" id="createMemberInput" value="张华　138****1234　医学经理" disabled />
+        </div>
+        <!-- 用户角色：随当前登录账号带出，不可修改 -->
+        <div class="form-row">
+          <label class="form-label">用户角色</label>
+          <input type="text" class="form-input" id="createRoleInput" value="医学经理" disabled />
+        </div>
+        <div class="created-box" id="createdBox" style="display:none">
+          <div class="form-label">MCP 配置参数</div>
+          <div class="created-config">
+            <pre id="createdConfigText"></pre>
+            <button class="btn-default" id="copyBtn" onclick="copyCreatedKey()">复制</button>
+          </div>
+          <div class="copy-tip">* 配置参数仅在本次弹窗内可复制。关闭后将无法再次查看，如需使用请重新创建。</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancel" onclick="closeCreateModal()">取消</button>
+        <button class="btn-confirm" id="confirmBtn" onclick="confirmCreate()">立即创建</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 调用明细：MCP 问答详情弹窗 -->
+  <div class="modal-mask" id="logModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">调用明细</div>
+        <button class="modal-close" onclick="closeLogModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-info" id="lgDetailInfo"></div>
+        <div class="detail-section">
+          <div class="detail-title">问题</div>
+          <div class="qa-question" id="lgQuestion"></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-title">答案</div>
+          <div class="qa-answer" id="lgAnswer"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeLogModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 当前登录用户（普通角色） =====
+    // 普通角色只能为「本人」创建 API key：所属人员默认当前登录用户、不可修改。
+    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234-医学经理' };
+
+    // 列表数据：仅展示当前登录用户本人名下的 keys
+    const KEYS = [
+      { member: '张华-138****1234-医学经理', role: '管理员角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { member: '张华-138****1234-医学经理', role: '管理员角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
+    ];
+
+    let createdKeyOnce = false; // 标识本次弹窗是否已复制过/关闭后不可再看
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function getFiltered() {
+      const ds = document.getElementById('filterDateStart').value;
+      const de = document.getElementById('filterDateEnd').value;
+      return KEYS.filter(k => {
+        // 创建时间范围过滤（YYYY-MM-DD 字符串直接比较）
+        if (ds && k.createdAt < ds) return false;
+        if (de && k.createdAt > de) return false;
+        return true;
+      });
+    }
+
+    function renderTable() {
+      const list = getFiltered();
+      const start = (currentPage - 1) * pageSize;
+      const pageList = list.slice(start, start + pageSize);
+      const tbody = document.getElementById('keyTableBody');
+      if (pageList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+      } else {
+        tbody.innerHTML = pageList.map((k, i) => `
+          <tr>
+            <td>${start + i + 1}</td>
+            <td>${k.member}</td>
+            <td>${k.role}</td>
+            <td>${k.createdAt}</td>
+            <td class="center">
+              <div class="row-actions">
+                <button class="op-btn danger" title="删除" onclick="deleteKey('${k.fullKey}')"><i class="fas fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      }
+      document.getElementById('totalCount').textContent = list.length;
+      renderPager(list.length);
+    }
+
+    function renderPager(total) {
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const el = document.getElementById('pagerPages');
+      const items = [];
+      items.push(`<button class="pg ${currentPage===1?'disabled':''}" onclick="goPage(${currentPage-1})"><i class="fas fa-chevron-left"></i></button>`);
+      const arr = pageArr(currentPage, totalPages);
+      arr.forEach(p => {
+        if (p === '...') items.push('<span class="pg" style="border:none;background:transparent;cursor:default;">…</span>');
+        else items.push(`<button class="pg ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`);
+      });
+      items.push(`<button class="pg ${currentPage===totalPages?'disabled':''}" onclick="goPage(${currentPage+1})"><i class="fas fa-chevron-right"></i></button>`);
+      el.innerHTML = items.join('');
+    }
+    function pageArr(cur, total) {
+      if (total <= 7) return Array.from({length:total},(_,i)=>i+1);
+      if (cur <= 4) return [1,2,3,4,5,'...',total];
+      if (cur >= total-3) return [1,'...',total-4,total-3,total-2,total-1,total];
+      return [1,'...',cur-1,cur,cur+1,'...',total];
+    }
+    function goPage(p) {
+      const totalPages = Math.max(1, Math.ceil(getFiltered().length / pageSize));
+      if (p < 1 || p > totalPages || p === currentPage) return;
+      currentPage = p;
+      renderTable();
+    }
+    function onPageSizeChange() {
+      pageSize = parseInt(document.getElementById('pageSize').value, 10) || 10;
+      currentPage = 1;
+      renderTable();
+    }
+
+    function queryKeys() { renderTable(); }
+
+    function resetFilters() {
+      document.getElementById('filterDateStart').value = '';
+      document.getElementById('filterDateEnd').value = '';
+      currentPage = 1;
+      renderTable();
+    }
+
+    // 创建时间筛选条件变化
+    function filterChanged() {
+      currentPage = 1;
+      renderTable();
+    }
+
+    function onRefresh() { renderTable(); }
+
+    // 公司 Tab 切换（角色 Tab 仅在「恒瑞医药」下展示）
+    function switchCompany(el) {
+      document.querySelectorAll('#companyTabs .company-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      currentPage = 1;
+      pjCurrentPage = 1;
+      lgCurrentPage = 1;
+      const isHengrui = el.dataset.company === 'hengrui';
+      document.getElementById('roleTabs').style.display = isHengrui ? '' : 'none';
+      if (isHengrui) {
+        // 恒瑞医药：按当前选中的角色 Tab 展示
+        const activeRole = document.querySelector('#roleTabs .role-tab.active').dataset.role;
+        showRolePanel(activeRole);
+      } else {
+        // 其他公司：不区分角色，统一展示管理员视图
+        document.querySelectorAll('#roleTabs .role-tab').forEach(t => t.classList.toggle('active', t.dataset.role === 'admin'));
+        showRolePanel('admin');
+        renderTable();
+      }
+      showToast('已切换到：' + el.textContent.trim());
+    }
+
+    // 角色 Tab 切换（管理员角色 / 项目角色 / 调用明细）
+    function switchRole(el) {
+      document.querySelectorAll('#roleTabs .role-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      const role = el.dataset.role;
+      showRolePanel(role);
+      if (role === 'admin') { currentPage = 1; renderTable(); }
+      else if (role === 'project') { pjCurrentPage = 1; pjRenderTable(); }
+      else { lgCurrentPage = 1; lgRenderTable(); }
+    }
+
+    // 按角色展示对应面板（不负责数据刷新）
+    function showRolePanel(role) {
+      document.getElementById('panelAdmin').style.display = role === 'admin' ? '' : 'none';
+      document.getElementById('panelProject').style.display = role === 'project' ? '' : 'none';
+      document.getElementById('panelLogs').style.display = role === 'logs' ? '' : 'none';
+    }
+
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('show');
+      resetCreateForm();
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('show');
+    }
+
+    function resetCreateForm() {
+      document.getElementById('createdBox').style.display = 'none';
+      document.getElementById('createdConfigText').textContent = '';
+      document.getElementById('copyBtn').textContent = '复制';
+      document.getElementById('confirmBtn').textContent = '立即创建';
+      document.getElementById('btnCancel').style.display = '';
+      createdKeyOnce = false;
+      // 无可填项（所属人员/用户角色固定），始终可创建
+      document.getElementById('confirmBtn').disabled = false;
+    }
+
+    function confirmCreate() {
+      // 已经在展示生成结果：再次点击「关闭」按钮直接关闭弹窗
+      if (document.getElementById('createdBox').style.display !== 'none') {
+        closeCreateModal();
+        return;
+      }
+      const member = CURRENT_USER.label; // 所属人员固定为当前登录用户
+      const newKey = 'sk-' + Array.from({ length: 48 }, () => 'abcdef0123456789'[Math.floor(Math.random() * 16)]).join('');
+      const today = new Date().toISOString().slice(0, 10);
+
+      KEYS.unshift({ member, role: '管理员角色', fullKey: newKey, createdAt: today });
+
+      // 生成 MCP 配置参数（Authorization 自动带入本次生成的 key）
+      const mcpConfig = JSON.stringify({
+        mcpServers: {
+          'remote-server': {
+            url: 'https://example.com/sse',
+            type: 'sse',
+            headers: { key:  newKey }
+          }
+        }
+      }, null, 2);
+      document.getElementById('createdConfigText').textContent = mcpConfig;
+      document.getElementById('createdBox').style.display = 'block';
+      // 生成后：按钮文字改为"关闭"，并隐藏"取消"按钮
+      document.getElementById('confirmBtn').textContent = '关闭';
+      document.getElementById('btnCancel').style.display = 'none';
+      currentPage = 1;
+      renderTable();
+    }
+
+    function copyCreatedKey() {
+      const config = document.getElementById('createdConfigText').textContent;
+      if (!config) return;
+      if (createdKeyOnce) {
+        showToast('配置参数仅可复制一次，如需使用请重新创建');
+        return;
+      }
+      navigator.clipboard.writeText(config).then(() => {
+        createdKeyOnce = true;
+        document.getElementById('copyBtn').textContent = '已复制';
+        showToast('MCP 配置参数已复制到剪贴板');
+      }).catch(() => {
+        showToast('复制失败，请手动复制');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function deleteKey(fullKey) {
+      if (!confirm('确定要删除该 API key 吗？删除后将无法恢复。')) return;
+      const idx = KEYS.findIndex(k => k.fullKey === fullKey);
+      if (idx >= 0) {
+        KEYS.splice(idx, 1);
+        renderTable();
+      }
+    }
+
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    // 点击遮罩关闭弹窗
+    document.getElementById('createModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeCreateModal();
+    });
+
+    // 回车跳转
+    document.getElementById('jumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const p = parseInt(e.target.value, 10);
+        if (p) goPage(p);
+      }
+    });
+
+    /* ==========================================================
+       项目角色视图（只读）：项目编码 + 所属人员 + Key + 创建日期
+       独立的一套数据与 DOM，不复用管理员角色的表格与状态
+       ========================================================== */
+    const PJ_PROJECT_OPTIONS = ['PRJ-2023-0918', 'PRJ-2025-1107', 'PRJ-2026-0331'];
+    const PJ_KEYS = [
+      { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', role: '项目角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { project: 'PRJ-2023-0918', member: '李娜-139****5566-项目经理', role: '项目角色', fullKey: 'sk-2f9c4b7d1e8a3c5b6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f1122', createdAt: '2026-07-28' },
+      { project: 'PRJ-2025-1107', member: '王强-137****8899-数据管理员', role: '项目角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' },
+      { project: 'PRJ-2025-1107', member: '赵敏-136****3344-医学 writer', role: '项目角色', fullKey: 'sk-5b1e2c3d4a5f6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9901', createdAt: '2026-05-11' },
+      { project: 'PRJ-2026-0331', member: '陈静-158****7722-项目经理', role: '项目角色', fullKey: 'sk-9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d', createdAt: '2026-04-02' }
+    ];
+
+    let pjCurrentPage = 1;
+    let pjPageSize = 10;
+
+    function pjGetFiltered() {
+      const fp = document.getElementById('pjFilterProjectValue').value.trim().toLowerCase();
+      const ds = document.getElementById('pjFilterDateStart').value;
+      const de = document.getElementById('pjFilterDateEnd').value;
+      return PJ_KEYS.filter(k => {
+        if (fp && !k.project.toLowerCase().includes(fp)) return false;
+        if (ds && k.createdAt < ds) return false;
+        if (de && k.createdAt > de) return false;
+        return true;
+      });
+    }
+
+    function pjRenderTable() {
+      const list = pjGetFiltered();
+      const start = (pjCurrentPage - 1) * pjPageSize;
+      const pageList = list.slice(start, start + pjPageSize);
+      const tbody = document.getElementById('pjKeyTableBody');
+      if (pageList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+      } else {
+        tbody.innerHTML = pageList.map((k, i) => `
+          <tr>
+            <td class="center">${start + i + 1}</td>
+            <td>${k.project}</td>
+            <td>${k.member}</td>
+            <td>${k.role}</td>
+            <td>${k.createdAt}</td>
+          </tr>
+        `).join('');
+      }
+      document.getElementById('pjTotalCount').textContent = list.length;
+      pjRenderPager(list.length);
+    }
+
+    function pjRenderPager(total) {
+      const totalPages = Math.max(1, Math.ceil(total / pjPageSize));
+      if (pjCurrentPage > totalPages) pjCurrentPage = totalPages;
+      const el = document.getElementById('pjPagerPages');
+      const items = [];
+      items.push(`<button class="pg ${pjCurrentPage===1?'disabled':''}" onclick="pjGoPage(${pjCurrentPage-1})"><i class="fas fa-chevron-left"></i></button>`);
+      pageArr(pjCurrentPage, totalPages).forEach(p => {
+        if (p === '...') items.push('<span class="pg" style="border:none;background:transparent;cursor:default;">…</span>');
+        else items.push(`<button class="pg ${p===pjCurrentPage?'active':''}" onclick="pjGoPage(${p})">${p}</button>`);
+      });
+      items.push(`<button class="pg ${pjCurrentPage===totalPages?'disabled':''}" onclick="pjGoPage(${pjCurrentPage+1})"><i class="fas fa-chevron-right"></i></button>`);
+      el.innerHTML = items.join('');
+    }
+
+    function pjGoPage(p) {
+      const totalPages = Math.max(1, Math.ceil(pjGetFiltered().length / pjPageSize));
+      if (p < 1 || p > totalPages || p === pjCurrentPage) return;
+      pjCurrentPage = p;
+      pjRenderTable();
+    }
+
+    function pjOnPageSizeChange() {
+      pjPageSize = parseInt(document.getElementById('pjPageSize').value, 10) || 10;
+      pjCurrentPage = 1;
+      pjRenderTable();
+    }
+
+    function pjQueryKeys() { pjRenderTable(); }
+
+    function pjResetFilters() {
+      document.getElementById('pjFilterProjectValue').value = '';
+      document.getElementById('pjFilterProject').value = '';
+      document.getElementById('pjFilterDateStart').value = '';
+      document.getElementById('pjFilterDateEnd').value = '';
+      pjCurrentPage = 1;
+      pjRenderTable();
+    }
+
+    function pjFilterChanged() {
+      pjCurrentPage = 1;
+      pjRenderTable();
+    }
+
+    /* ===== 项目角色：查询栏「项目编码」搜索下拉（单选） ===== */
+    const pjFilterProjectInput = document.getElementById('pjFilterProject');
+    const pjFilterProjectDropdown = document.getElementById('pjFilterProjectDropdown');
+    const pjFilterProjectWrap = document.getElementById('pjFilterProjectWrap');
+
+    function pjRenderProjectOptions(keyword) {
+      const kw = (keyword || '').trim().toLowerCase();
+      const list = PJ_PROJECT_OPTIONS.filter(p => p.toLowerCase().includes(kw));
+      pjFilterProjectDropdown.innerHTML = list.length
+        ? list.map(p => `<div class="search-option" data-value="${p}">${p}</div>`).join('')
+        : '<div class="search-empty">无匹配项目编码</div>';
+    }
+
+    function pjSetFilterProject(value) {
+      document.getElementById('pjFilterProjectValue').value = value;
+      pjFilterProjectInput.value = value;
+      pjFilterProjectDropdown.classList.remove('show');
+      pjCurrentPage = 1;
+      pjRenderTable();
+    }
+
+    pjFilterProjectInput.addEventListener('focus', () => {
+      pjRenderProjectOptions(pjFilterProjectInput.value);
+      pjFilterProjectDropdown.classList.add('show');
+    });
+    pjFilterProjectInput.addEventListener('input', () => pjRenderProjectOptions(pjFilterProjectInput.value));
+    pjFilterProjectInput.addEventListener('blur', () => {
+      setTimeout(() => {
+        const val = pjFilterProjectInput.value.trim();
+        if (PJ_PROJECT_OPTIONS.includes(val)) pjSetFilterProject(val);
+        else if (!document.getElementById('pjFilterProjectValue').value) pjSetFilterProject('');
+        else pjFilterProjectInput.value = document.getElementById('pjFilterProjectValue').value;
+        pjFilterProjectDropdown.classList.remove('show');
+      }, 180);
+    });
+    pjFilterProjectDropdown.addEventListener('mousedown', e => {
+      const option = e.target.closest('.search-option');
+      if (!option) return;
+      pjSetFilterProject(option.dataset.value);
+    });
+    document.addEventListener('click', e => {
+      if (!pjFilterProjectWrap.contains(e.target)) pjFilterProjectDropdown.classList.remove('show');
+    });
+
+    // 项目角色分页跳转
+    document.getElementById('pjJumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const p = parseInt(e.target.value, 10);
+        if (p) pjGoPage(p);
+      }
+    });
+
+    /* ==========================================================
+       调用明细：查看全部人员的 MCP 问答调用记录
+       独立数据与 DOM，不复用管理员 / 项目角色视图
+       ========================================================== */
+    const LG_LOGS = [
+      {
+        role: '项目角色',
+        caller: '张华-138****1234-医学经理',
+        project: 'PRJ-2023-0918',
+        time: '2026-08-25 10:12:33',
+        ip: '192.168.10.23',
+        question: '请帮我梳理 PRJ-2023-0918 项目中 2024 年入组、既往病史包含高血压的患者，给出患者编号、确诊时间与当前用药，并标注是否存在排除项风险。',
+        answer: `<p>共检索到 <strong>3 例</strong>符合「2024 年入组 + 既往病史包含高血压」的受试者，其中 1 例命中方案排除标准，建议优先复核。</p>
+<h4>患者明细</h4>
+<table>
+  <thead>
+    <tr><th>患者编号</th><th>入组日期</th><th>确诊时间</th><th>当前用药</th><th>排除项风险</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>P10086</td><td>2024-03-05</td><td>2024-03-12</td><td>苯磺酸氨氯地平 5mg qd</td><td>无</td></tr>
+    <tr><td>P10124</td><td>2024-05-18</td><td>2024-05-26</td><td>缬沙坦 80mg qd</td><td>合并用药命中排除列表</td></tr>
+    <tr><td>P10237</td><td>2024-09-02</td><td>2024-09-10</td><td>暂无规律用药</td><td>无</td></tr>
+  </tbody>
+</table>
+<h4>建议动作</h4>
+<ul>
+  <li>P10124 的合并用药命中方案排除标准 4.2 条，建议由医学经理复核是否继续入组。</li>
+  <li>P10237 未见规律用药记录，建议补充随访记录后再评估。</li>
+</ul>
+<p class="qa-tip">数据来源：项目病历库（截至 2026-08-25 10:12）</p>`,
+        status: 'success'
+      },
+      {
+        role: '管理员角色',
+        caller: '李敏-139****5678-数据管理员',
+        project: 'PRJ-2023-0918',
+        time: '2026-08-25 11:02:10',
+        ip: '192.168.10.23',
+        question: '统计本项目近 7 天 MCP 接口的调用情况，按接口维度给出调用次数、成功率与主要失败原因。',
+        answer: `<p>近 7 天（08-19 ~ 08-25）累计调用 <strong>1,286 次</strong>，整体成功率 <strong>96.7%</strong>，失败集中在「获取患者病史信息」接口。</p>
+<table>
+  <thead>
+    <tr><th>接口</th><th>调用次数</th><th>成功率</th><th>主要失败原因</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>获取患者病史信息</td><td>902</td><td>95.3%</td><td>网关超时（500）</td></tr>
+    <tr><td>匹配详情核对</td><td>268</td><td>99.6%</td><td>参数缺失</td></tr>
+    <tr><td>调用审计日志</td><td>116</td><td>100%</td><td>—</td></tr>
+  </tbody>
+</table>
+<h4>处理建议</h4>
+<ul>
+  <li>为「获取患者病史信息」增加超时重试与结果缓存，预计可挽回约 3% 失败调用。</li>
+  <li>单次查询时间跨度建议控制在 12 个月以内，可显著降低超时概率。</li>
+</ul>`,
+        status: 'success'
+      },
+      {
+        role: '项目角色',
+        caller: '王强-137****9012-CRC',
+        project: 'PRJ-2025-1107',
+        time: '2026-08-24 16:42:51',
+        ip: '10.20.5.118',
+        question: '受试者 S203 与研究方案 PRJ-2023-0918 的匹配情况如何？请说明命中的入排标准与未满足项。',
+        answer: `<p>受试者 S203 与方案 PRJ-2023-0918 的综合匹配评分 <strong>0.87</strong>，命中 4 条入选标准，存在 1 项待补充材料。</p>
+<h4>命中的入选标准</h4>
+<ol>
+  <li>年龄 52 岁，落在 18~65 岁区间内。</li>
+  <li>性别与方案队列要求一致。</li>
+  <li>既往病史包含高血压，符合目标人群定义。</li>
+  <li>近 3 个月未参与其他干预性临床研究。</li>
+</ol>
+<h4>未满足 / 待补充</h4>
+<ul>
+  <li>缺少近 6 个月的实验室检查报告，无法核验排除标准 5.1 条。</li>
+</ul>
+<p class="qa-tip">结论：暂判定为「待补充材料」，补齐实验室检查后可再次评估。</p>`,
+        status: 'success'
+      },
+      {
+        role: '超级管理员',
+        caller: '赵敏-136****3344-系统管理员',
+        project: 'PRJ-2024-0312',
+        time: '2026-08-24 17:03:20',
+        ip: '10.20.5.118',
+        question: '排查 PRJ-2024-0312 项目近 24 小时内 API key 失效的调用记录，给出影响范围和处理建议。',
+        answer: `<p>近 24 小时内共捕获 <strong>17 次</strong>因 API key 失效（40101）导致的调用失败，涉及 3 名调用人、2 个来源 IP。</p>
+<h4>影响范围</h4>
+<ul>
+  <li>涉及项目：PRJ-2024-0312（仅此一个项目）。</li>
+  <li>涉及调用人：李敏、王强、陈静。</li>
+  <li>涉及 IP：10.20.5.118、172.16.8.40。</li>
+  <li>失败集中在 08-24 09:00 之后，与 key 轮换时间点一致。</li>
+</ul>
+<h4>处理建议</h4>
+<ul>
+  <li>由项目管理员在「MCP 接入配置」中重新生成 key，并同步更新到各调用方的本地配置。</li>
+  <li>建议开启 key 到期前 7 天提醒，避免轮换窗口期内的批量失败。</li>
+</ul>`,
+        status: 'success'
+      },
+      {
+        role: '项目角色',
+        caller: '王强-137****9012-CRC',
+        project: 'PRJ-2025-1107',
+        time: '2026-08-23 09:31:47',
+        ip: '172.16.8.40',
+        question: '调取患者 P20994 在 2025 年的全部就诊记录与既往病史摘要。',
+        answer: `<p class="qa-error">调用失败（500 网关超时），未生成答案。</p>
+<p>建议稍后重试，或把时间范围拆分为季度分段拉取后再合并查看。</p>`,
+        status: 'fail'
+      },
+      {
+        role: '管理员角色',
+        caller: '李敏-139****5678-数据管理员',
+        project: 'PRJ-2024-0312',
+        time: '2026-08-23 09:35:12',
+        ip: '172.16.8.40',
+        question: '导出 PRJ-2024-0312 项目本月的调用审计流水，用于合规归档。',
+        answer: `<p class="qa-error">调用失败（40101 API key 已失效），未生成答案。</p>
+<p>请由项目管理员在「MCP 接入配置」中重新生成 key 后再次发起导出。</p>`,
+        status: 'fail'
+      }
+    ];
+
+    let lgCurrentPage = 1;
+    let lgPageSize = 10;
+
+    function lgEscapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function lgStatusTag(s) {
+      return s === 'success'
+        ? '<span class="status-tag success"><i class="fas fa-check-circle"></i> 成功</span>'
+        : '<span class="status-tag fail"><i class="fas fa-times-circle"></i> 失败</span>';
+    }
+
+    function lgGetFiltered() {
+      const fr = document.getElementById('lgFilterRole').value;
+      // 项目编码：兼容 lgFilterProject / filterProject 两种元素命名
+      const projEl = document.getElementById('lgFilterProjectValue') || document.getElementById('filterProjectValue')
+                  || document.getElementById('lgFilterProject') || document.getElementById('filterProject');
+      const fp = (projEl ? projEl.value : '').trim().toLowerCase();
+      const fc = document.getElementById('lgFilterCaller').value.trim().toLowerCase();
+      const ds = document.getElementById('lgFilterDateStart').value;
+      const de = document.getElementById('lgFilterDateEnd').value;
+      const fs = document.getElementById('lgFilterStatus').value;
+      return LG_LOGS.filter(l => {
+        if (fr && l.role !== fr) return false;
+        if (fp && !l.project.toLowerCase().includes(fp)) return false;
+        if (fc && !l.caller.toLowerCase().includes(fc)) return false;
+        // 日期比较：取调用时间的日期部分 YYYY-MM-DD
+        const day = l.time.slice(0, 10);
+        if (ds && day < ds) return false;
+        if (de && day > de) return false;
+        if (fs && l.status !== fs) return false;
+        return true;
+      });
+    }
+
+    function lgRenderTable() {
+      const list = lgGetFiltered();
+      const start = (lgCurrentPage - 1) * lgPageSize;
+      const pageList = list.slice(start, start + lgPageSize);
+      const tbody = document.getElementById('lgTableBody');
+      if (pageList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无符合条件的调用记录</td></tr>';
+      } else {
+        tbody.innerHTML = pageList.map((l, i) => `
+          <tr>
+            <td>${lgEscapeHtml(l.caller)}</td>
+            <td>${lgEscapeHtml(l.role)}</td>
+            <td class="mono">${lgEscapeHtml(l.project)}</td>
+            <td class="center mono">${lgEscapeHtml(l.time)}</td>
+            <td class="center mono">${lgEscapeHtml(l.ip)}</td>
+            <td class="center">${lgStatusTag(l.status)}</td>
+            <td class="center"><button class="btn btn-default" style="padding:2px 10px;height:24px;line-height:20px;font-size:12px;" onclick="lgViewDetail(${start + i})">查看详情</button></td>
+          </tr>
+        `).join('');
+      }
+      document.getElementById('lgTotalCount').textContent = list.length;
+      lgRenderPager(list.length);
+    }
+
+    function lgRenderPager(total) {
+      const totalPages = Math.max(1, Math.ceil(total / lgPageSize));
+      if (lgCurrentPage > totalPages) lgCurrentPage = totalPages;
+      const el = document.getElementById('lgPagerPages');
+      const items = [];
+      items.push(`<button class="pg ${lgCurrentPage===1?'disabled':''}" onclick="lgGoPage(${lgCurrentPage-1})"><i class="fas fa-chevron-left"></i></button>`);
+      pageArr(lgCurrentPage, totalPages).forEach(p => {
+        if (p === '...') items.push('<span class="pg" style="border:none;background:transparent;cursor:default;">…</span>');
+        else items.push(`<button class="pg ${p===lgCurrentPage?'active':''}" onclick="lgGoPage(${p})">${p}</button>`);
+      });
+      items.push(`<button class="pg ${lgCurrentPage===totalPages?'disabled':''}" onclick="lgGoPage(${lgCurrentPage+1})"><i class="fas fa-chevron-right"></i></button>`);
+      el.innerHTML = items.join('');
+    }
+
+    function lgGoPage(p) {
+      const totalPages = Math.max(1, Math.ceil(lgGetFiltered().length / lgPageSize));
+      if (p < 1 || p > totalPages || p === lgCurrentPage) return;
+      lgCurrentPage = p;
+      lgRenderTable();
+    }
+
+    function lgOnPageSizeChange() {
+      lgPageSize = parseInt(document.getElementById('lgPageSize').value, 10) || 10;
+      lgCurrentPage = 1;
+      lgRenderTable();
+    }
+
+    function lgQueryLogs() { lgCurrentPage = 1; lgRenderTable(); }
+
+    function lgFilterChanged() {
+      lgCurrentPage = 1;
+      lgRenderTable();
+    }
+
+    function lgResetFilters() {
+      document.getElementById('lgFilterRole').value = '';
+      // 项目编码：兼容 lgFilterProject / filterProject 两种元素命名
+      ['lgFilterProjectValue', 'filterProjectValue', 'lgFilterProject', 'filterProject'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('lgFilterCaller').value = '';
+      document.getElementById('lgFilterDateStart').value = '';
+      document.getElementById('lgFilterDateEnd').value = '';
+      document.getElementById('lgFilterStatus').value = '';
+      lgCurrentPage = 1;
+      lgRenderTable();
+    }
+
+    function lgViewDetail(idx) {
+      const l = lgGetFiltered()[idx];
+      if (!l) return;
+      document.getElementById('lgDetailInfo').innerHTML = `
+        <div class="info-row"><span class="info-label">角色</span><span class="info-value">${lgEscapeHtml(l.role)}</span></div>
+        <div class="info-row"><span class="info-label">调用人</span><span class="info-value">${lgEscapeHtml(l.caller)}</span></div>
+        <div class="info-row"><span class="info-label">项目编码</span><span class="info-value mono">${lgEscapeHtml(l.project)}</span></div>
+        <div class="info-row"><span class="info-label">调用时间</span><span class="info-value mono">${lgEscapeHtml(l.time)}</span></div>
+        <div class="info-row"><span class="info-label">IP 地址</span><span class="info-value mono">${lgEscapeHtml(l.ip)}</span></div>
+        <div class="info-row"><span class="info-label">状态</span><span class="info-value">${lgStatusTag(l.status)}</span></div>
+      `;
+      // 问题：一段纯文本
+      document.getElementById('lgQuestion').textContent = l.question;
+      // 答案：HTML 内容，直接渲染
+      document.getElementById('lgAnswer').innerHTML = l.answer;
+      document.getElementById('logModal').classList.add('show');
+    }
+
+    function closeLogModal() {
+      document.getElementById('logModal').classList.remove('show');
+    }
+
+    // 点击遮罩关闭调用明细弹窗
+    document.getElementById('logModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeLogModal();
+    });
+
+    // 调用明细分页跳转
+    document.getElementById('lgJumpInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const p = parseInt(e.target.value, 10);
+        if (p) lgGoPage(p);
+      }
+    });
+
+    // 调用明细：查询栏「项目编码」搜索下拉（绑定面板内已有的搜索选择框元素，不改动其结构）
+    (function bindLgProjectSelect() {
+      const wrap = document.getElementById('filterProjectWrap');
+      const input = document.getElementById('filterProject');
+      const dropdown = document.getElementById('filterProjectDropdown');
+      const hidden = document.getElementById('filterProjectValue');
+      if (!wrap || !input || !dropdown || !hidden) return;
+      const OPTIONS = Array.from(new Set(LG_LOGS.map(l => l.project)));
+      function renderOptions(keyword) {
+        const kw = (keyword || '').trim().toLowerCase();
+        const list = OPTIONS.filter(p => p.toLowerCase().includes(kw));
+        dropdown.innerHTML = list.length
+          ? list.map(p => `<div class="search-option" data-value="${p}">${p}</div>`).join('')
+          : '<div class="search-empty">无匹配项目编码</div>';
+      }
+      function setProject(value) {
+        hidden.value = value;
+        input.value = value;
+        dropdown.classList.remove('show');
+        lgCurrentPage = 1;
+        lgRenderTable();
+      }
+      input.addEventListener('focus', () => {
+        renderOptions(input.value);
+        dropdown.classList.add('show');
+      });
+      input.addEventListener('input', () => renderOptions(input.value));
+      input.addEventListener('blur', () => {
+        setTimeout(() => {
+          const val = input.value.trim();
+          if (OPTIONS.includes(val)) setProject(val);
+          else if (!hidden.value) setProject('');
+          else input.value = hidden.value;
+          dropdown.classList.remove('show');
+        }, 180);
+      });
+      dropdown.addEventListener('mousedown', e => {
+        const option = e.target.closest('.search-option');
+        if (!option) return;
+        setProject(option.dataset.value);
+      });
+      document.addEventListener('click', e => {
+        if (!wrap.contains(e.target)) dropdown.classList.remove('show');
+      });
+    })();
+
+    renderTable();
+    pjRenderTable();
+    lgRenderTable();
+  </script>
+</body>
+</html>

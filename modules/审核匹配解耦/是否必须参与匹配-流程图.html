@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>是否必须参与匹配 · 流程图</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0; padding: 32px; background: #f5f7fa; color: #333;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; color: #1f1f1f; }
+    .subtitle { color: #888; font-size: 13px; margin-bottom: 24px; }
+    .card {
+      background: #fff; border-radius: 12px; padding: 28px 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow-x: auto;
+    }
+    .legend { margin-top: 22px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 12.5px; color: #666; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .note { margin-top: 20px; font-size: 12.5px; color: #888; line-height: 1.7; }
+    .note b { color: #444; }
+  </style>
+</head>
+<body>
+  <h1>是否必须参与匹配 · 流程图</h1>
+  <div class="subtitle">项目层面「是否必须参与匹配」配置 → 提交审核逻辑分支</div>
+
+  <div class="card">
+    <div class="mermaid">
+flowchart LR
+    Start([项目层面配置：是否必须参与匹配？]) --> Q1{是否必须参与匹配？}
+
+    Q1 -->|是| A1[提交审核时<br/>必须参与匹配]
+    A1 --> A2[(现状，无需修改)]
+
+    Q1 -->|否| S1{当前匹配状态}
+
+    S1 -->|匹配失败 / 未匹配 / 匹配成功| B2[点击「提交审核」]
+    B2 --> Q2{用户选择提交方式？}
+
+    Q2 -->|匹配后再提交| C1[跟现状一致<br/>含入排 / 筛选表校验]
+    C1 --> C2[匹配完成 → 提交审核]
+
+    Q2 -->|直接提交| D1[跳过入排 / 筛选表校验]
+    D1 --> D2[提交成功]
+    D2 --> D3[CRA-医学 自行选择<br/>是否匹配]
+
+    S1 -->|匹配中| E1[可点击「预提交」]
+    E1 --> E2[匹配成功]
+    E2 --> E3[系统自动提交]
+
+    style Start fill:#e6f4ff,stroke:#1677ff,color:#0958d9,font-weight:bold
+    style Q1 fill:#e6f4ff,stroke:#1677ff,color:#0958d9
+    style S1 fill:#e6f4ff,stroke:#1677ff,color:#0958d9
+    style Q2 fill:#e6f4ff,stroke:#1677ff,color:#0958d9
+    style A2 fill:#f6ffed,stroke:#52c41a,color:#389e0d
+    style C2 fill:#f6ffed,stroke:#52c41a,color:#389e0d
+    style E3 fill:#f6ffed,stroke:#52c41a,color:#389e0d
+    style D1 fill:#fff1f0,stroke:#ff4d4f,color:#cf1322
+    style D3 fill:#fff7e6,stroke:#fa8c16,color:#d46b08
+    style E1 fill:#fff7e6,stroke:#fa8c16,color:#d46b08
+    </div>
+
+    <div class="legend">
+      <span><i class="dot" style="background:#e6f4ff;border:1px solid #1677ff"></i> 判断节点</span>
+      <span><i class="dot" style="background:#f6ffed;border:1px solid #52c41a"></i> 现状/保持一致</span>
+      <span><i class="dot" style="background:#fff1f0;border:1px solid #ff4d4f"></i> 跳过校验</span>
+      <span><i class="dot" style="background:#fff7e6;border:1px solid #fa8c16"></i> 后置可选</span>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>说明：</b><br>
+    1. 配置项「是否必须参与匹配」= <b>是</b>：提交审核时，必须参与匹配，沿用现状，无需改动。<br>
+    2. 配置项 = <b>否</b>，按当前匹配状态分两条路径：<br>
+    &nbsp;&nbsp;· <b>匹配失败 / 未匹配 / 匹配成功</b> → 可点击「<b>提交审核</b>」：<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;用户选择「匹配后再提交」（跟现状一致，保留入排/筛选表校验）或「直接提交」（跳过入排与筛选表的全部校验）；<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;直接提交成功后，<b>CRA-医学</b> 自行选择是否匹配。<br>
+    &nbsp;&nbsp;· <b>匹配中</b> → 可点击「<b>预提交</b>」，匹配成功后由<b>系统自动提交</b>审核。
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { useMaxWidth: true, htmlLabels: true } });
+  </script>
+</body>
+</html>
