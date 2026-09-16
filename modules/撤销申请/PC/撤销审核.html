@@ -101,6 +101,29 @@
       box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.1);
     }
     .form-textarea::placeholder { color: #bfbfbf; }
+    .reason-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reason-card {
+      padding: 7px 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 16px;
+      font-size: 14px;
+      color: #262626;
+      background: #fff;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+    .reason-card:hover { border-color: #1872a7; color: #1872a7; }
+    .reason-card.selected {
+      border-color: #1872a7;
+      color: #1872a7;
+      background: #e6f4ff;
+      font-weight: 500;
+    }
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -166,10 +189,21 @@
       </div>
       <div class="modal-body">
         <div class="form-item">
-          <label class="form-label">
-            撤销原因
-          </label>
-          <textarea class="form-textarea" id="reason" placeholder="请输入撤销原因"></textarea>
+          <label class="form-label">撤销原因<span class="required" style="color:#f5222d;">*</span></label>
+          <div class="reason-cards" id="reasonCards">
+            <div class="reason-card" data-value="不符合入排标准" onclick="selectReason(this)">不符合入排标准</div>
+            <div class="reason-card" data-value="既往治疗或合并用药不符" onclick="selectReason(this)">既往治疗或合并用药不符</div>
+            <div class="reason-card" data-value="资料缺失" onclick="selectReason(this)">资料缺失</div>
+            <div class="reason-card" data-value="无法评估" onclick="selectReason(this)">无法评估</div>
+            <div class="reason-card" data-value="受试者意愿或依从性差" onclick="selectReason(this)">受试者意愿或依从性差</div>
+            <div class="reason-card" data-value="试验执行原因" onclick="selectReason(this)">试验执行原因</div>
+            <div class="reason-card" data-value="重复提交" onclick="selectReason(this)">重复提交</div>
+            <div class="reason-card" data-value="其他" onclick="selectReason(this)">其他</div>
+          </div>
+        </div>
+        <div class="form-item" style="margin-top:16px;">
+          <label class="form-label">备注<span class="optional">（非必填）</span></label>
+          <textarea class="form-textarea" id="remark" placeholder="请输入备注"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -196,15 +230,34 @@
       t.classList.add('show');
       setTimeout(function () { t.classList.remove('show'); }, 1600);
     }
+    function selectReason(el) {
+      var cards = el.parentNode.querySelectorAll('.reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+    }
+    function getSelectedReason() {
+      var sel = document.querySelector('#reasonCards .reason-card.selected');
+      return sel ? sel.getAttribute('data-value') : '';
+    }
     function onRevoke() {
-      var reason = document.getElementById('reason').value.trim();
+      var reason = getSelectedReason();
+      if (!reason) {
+        showToast('请选择撤销原因');
+        return;
+      }
+      var remark = document.getElementById('remark').value.trim();
       closeModal();
-      showToast('已提交撤销申请' + (reason ? '：' + reason : ''));
+      showToast('已提交撤销申请：' + reason + (remark ? '（备注：' + remark + '）' : ''));
     }
     function onScreenFail() {
-      var reason = document.getElementById('reason').value.trim();
+      var reason = getSelectedReason();
+      if (!reason) {
+        showToast('请选择撤销原因');
+        return;
+      }
+      var remark = document.getElementById('remark').value.trim();
       closeModal();
-      showToast('已确认筛败' + (reason ? '：' + reason : ''));
+      showToast('已确认筛败：' + reason + (remark ? '（备注：' + remark + '）' : ''));
     }
   </script>
 </body>

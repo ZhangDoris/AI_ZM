@@ -170,6 +170,129 @@
       transition: opacity .2s;
     }
     .toast.show { opacity: 1; }
+
+    /* 附件列表（与 PC 审核记录一致） */
+    .attach-label {
+      font-size: 13px;
+      color: #262626;
+      margin: 10px 0 8px;
+      font-weight: 500;
+      text-align: left;
+    }
+    .attach-list {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .attach-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+    .attach-name {
+      color: #1677ff;
+      cursor: pointer;
+    }
+    .attach-name:hover { text-decoration: underline; }
+    .attach-act {
+      font-size: 12px;
+      color: #1677ff;
+      cursor: pointer;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-act:hover { border-color: #1677ff; background: #f0f7ff; }
+    .attach-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .attach-tag.deleted {
+      color: #ff4d4f;
+      background: #fff1f0;
+      border: 1px solid #ffccc7;
+    }
+    .attach-tag.source {
+      color: #8c8c8c;
+      background: #f5f5f5;
+      border: 1px solid #f0f0f0;
+    }
+    .attach-item.deleted .attach-name {
+      color: #bfbfbf;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+    .attach-item.deleted .attach-act { color: #d9d9d9; border-color: #f0f0f0; background: #fafafa; cursor: not-allowed; }
+    .attach-delete {
+      font-size: 12px;
+      color: #ff4d4f;
+      cursor: pointer;
+      border: 1px solid #ffccc7;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-delete:hover { color: #cf1322; border-color: #ffa39e; background: #fff1f0; }
+
+    /* 删除确认弹窗 */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+    }
+    .confirm-overlay.show { display: flex; }
+    .confirm-card {
+      width: 300px;
+      max-width: 86vw;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .confirm-body {
+      padding: 24px 20px 20px;
+      font-size: 15px;
+      color: #262626;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .confirm-footer {
+      display: flex;
+      border-top: 1px solid #f0f0f0;
+    }
+    .confirm-footer button {
+      flex: 1;
+      height: 48px;
+      border: none;
+      background: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .confirm-footer .cancel {
+      color: #595959;
+      border-right: 1px solid #f0f0f0;
+    }
+    .confirm-footer .cancel:active { background: #f5f5f5; }
+    .confirm-footer .danger {
+      color: #ff4d4f;
+      font-weight: 500;
+    }
+    .confirm-footer .danger:active { background: #fff1f0; }
   </style>
 </head>
 <body>
@@ -251,6 +374,37 @@
         <div class="card-row"><span class="label">批注：驳回原因：测试驳回</span></div>
       </div>
     </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="timeline-card">
+        <div class="card-header">
+          <span class="operator-name">刘雪红&lt;CRA专员&gt;</span>
+          <span class="status-tag blue">审核沟通</span>
+        </div>
+        <div class="card-row"><span class="label">批注：</span>附件已上传</div>
+        <div class="card-row"><span class="label">操作时间：</span>2026-08-11 15:19:24</div>
+        <div class="attach-label">附件：</div>
+        <div class="attach-list">
+          <div class="attach-item deleted">
+            <span class="attach-name">检验报告单_20260724100623.jpg</span>
+            <span class="attach-act" onclick="showToast('该附件已删除，无法下载')">下载</span>
+            <span class="attach-tag deleted">已删除</span>
+          </div>
+          <div class="attach-item">
+            <span class="attach-name" onclick="showToast('下载附件')">病例拍照图片_20260724101059.png</span>
+            <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+            <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+            <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+          </div>
+          <div class="attach-item">
+            <span class="attach-name" onclick="showToast('下载附件')">知情同意书_20260724102011.pdf</span>
+            <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+            <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -282,6 +436,37 @@
       t.classList.add('show');
       setTimeout(function () { t.classList.remove('show'); }, 1600);
     }
+    var pendingAttachItem = null;
+    function confirmDeleteAttach(btn) {
+      pendingAttachItem = btn.closest('.attach-item');
+      document.getElementById('confirmOverlay').classList.add('show');
+    }
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+      pendingAttachItem = null;
+    }
+    function doDeleteAttach() {
+      if (pendingAttachItem) {
+        var name = pendingAttachItem.querySelector('.attach-name').textContent;
+        pendingAttachItem.className = 'attach-item deleted';
+        pendingAttachItem.innerHTML =
+          '<span class="attach-name">' + name + '</span>' +
+          '<span class="attach-act" onclick="showToast(\'该附件已删除，无法下载\')">下载</span>' +
+          '<span class="attach-tag deleted">已删除</span>';
+      }
+      closeConfirm();
+    }
   </script>
+
+  <!-- 删除附件确认弹窗 -->
+  <div class="confirm-overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirm()">
+    <div class="confirm-card">
+      <div class="confirm-body">确认删除该附件吗？</div>
+      <div class="confirm-footer">
+        <button class="cancel" onclick="closeConfirm()">取消</button>
+        <button class="danger" onclick="doDeleteAttach()">删除</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

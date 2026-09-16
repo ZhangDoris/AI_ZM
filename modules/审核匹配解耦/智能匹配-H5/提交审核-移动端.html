@@ -229,6 +229,55 @@
     .m-btn.primary { background: #1677ff; color: #fff; }
     .m-btn.primary:hover { background: #0958d9; }
 
+    /* 是否参与匹配 - 单选标签 */
+    .match-choice-body { padding: 18px 20px 4px; }
+    .match-choice-tip {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 4px 10px;
+      background: #FFF7E6;
+      border: 1px solid #FFE7BA;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #D46B08;
+      line-height: 1.5;
+    }
+    .match-choice-q { font-size: 14px; color: #262626; margin-bottom: 18px; line-height: 1.6; }
+    .match-choice-required { color: var(--required); margin-right: 4px; }
+    .match-choice-group { display: flex; gap: 12px; }
+    .match-tag {
+      flex: 1;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--label);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .match-tag:hover { border-color: var(--primary); color: var(--primary); }
+    .match-tag.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #E6F4FF;
+      font-weight: 500;
+    }
+    .match-choice-note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: #FAFAFA;
+      border: 1px solid #F0F0F0;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.9;
+    }
+    .match-choice-note b { color: #262626; }
+
     /* Toast */
     .proto-toast {
       position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-16px);
@@ -353,6 +402,32 @@
       <div class="custom-modal-footer" id="customModalFooter">
         <button class="m-btn default" onclick="closeCustomModal()">取消</button>
         <button class="m-btn primary" id="customModalOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 是否参与匹配 弹窗 -->
+  <div class="custom-modal-mask" id="matchChoiceModal">
+    <div class="custom-modal">
+      <div class="custom-modal-header">
+        <div class="custom-modal-title">提交审核</div>
+        <div class="custom-modal-close" onclick="closeMatchChoice()"><i class="fa-solid fa-xmark"></i></div>
+      </div>
+      <div class="match-choice-body">
+        <div class="match-choice-tip">该审核阶段未参与项目匹配</div>
+        <div class="match-choice-q"><span class="match-choice-required">*</span>是否参与匹配</div>
+        <div class="match-choice-group" id="matchChoiceGroup">
+          <span class="match-tag" data-value="yes" onclick="selectMatchTag(this)">是</span>
+          <span class="match-tag" data-value="no" onclick="selectMatchTag(this)">否</span>
+        </div>
+        <div class="match-choice-note">
+          <div><b>是：</b>在提交审核时，也会参与 AI 匹配。</div>
+          <div><b>否：</b>不参与 AI 匹配，直接提交审核。</div>
+        </div>
+      </div>
+      <div class="custom-modal-footer" id="matchChoiceFooter">
+        <button class="m-btn default" onclick="closeMatchChoice()">取消</button>
+        <button class="m-btn primary" onclick="confirmMatchChoice()">确定</button>
       </div>
     </div>
   </div>
@@ -511,6 +586,61 @@
 
     function closeCustomModal() {
       document.getElementById('customModal').classList.remove('show');
+    }
+
+    // ===== 是否参与匹配 弹窗（单选标签） =====
+    function openMatchChoice() {
+      const modal = document.getElementById('matchChoiceModal');
+      // 不默认选中
+      modal.querySelectorAll('.match-tag').forEach(t => t.classList.remove('active'));
+      // 重置底部按钮为默认（确定）
+      document.getElementById('matchChoiceFooter').innerHTML =
+        '<button class="m-btn default" onclick="closeMatchChoice()">取消</button>' +
+        '<button class="m-btn primary" onclick="confirmMatchChoice()">确定</button>';
+      modal.classList.add('show');
+    }
+    function closeMatchChoice() {
+      document.getElementById('matchChoiceModal').classList.remove('show');
+    }
+    function selectMatchTag(el) {
+      document.querySelectorAll('#matchChoiceGroup .match-tag').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+
+      // 根据选择动态切换底部按钮
+      const footer = document.getElementById('matchChoiceFooter');
+      if (el.getAttribute('data-value') === 'yes') {
+        footer.innerHTML =
+          '<button class="m-btn default" onclick="closeMatchChoice()">取消</button>' +
+          '<button class="m-btn primary" onclick="onClickMatchAndPreSubmit()">匹配并预提交</button>';
+      } else {
+        footer.innerHTML =
+          '<button class="m-btn default" onclick="closeMatchChoice()">取消</button>' +
+          '<button class="m-btn primary" onclick="onClickSubmitAuditNoMatch()">提交审核</button>';
+      }
+    }
+    function confirmMatchChoice() {
+      const sel = document.querySelector('#matchChoiceGroup .match-tag.active');
+      if (!sel) { showToast('请选择是否参与匹配', 'info'); return; }
+      if (sel.getAttribute('data-value') === 'yes') {
+        onClickMatchAndPreSubmit();
+      } else {
+        onClickSubmitAuditNoMatch();
+      }
+    }
+    // 是 → 仅项目匹配（只做匹配，不预提交）
+    function onClickMatchOnly() {
+      closeMatchChoice();
+      showToast('正在进行项目匹配…', 'info');
+    }
+    // 是 → 匹配并预提交
+    function onClickMatchAndPreSubmit() {
+      closeMatchChoice();
+      doMatchPreSubmit();
+    }
+    // 否 → 不参与 AI 匹配，直接提交审核
+    function onClickSubmitAuditNoMatch() {
+      closeMatchChoice();
+      showToast('提交审核成功（未参与 AI 匹配）', 'success');
     }
 
     // 弹窗内容构建
@@ -687,8 +817,16 @@
     });
 
     document.getElementById('btnSubmit').addEventListener('click', () => {
-      const fn = ACTION_MAP[currentAction];
-      if (fn) fn();
+      if (currentAction === 'failedSubmit') {
+        if (!validateUpdateScreenNo()) {
+          document.getElementById('fieldUpdateScreenNo').focus();
+          return;
+        }
+      } else if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      openMatchChoice();
     });
 
     const screenInput = document.getElementById('fieldScreenNo');

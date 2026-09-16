@@ -19,19 +19,93 @@
       align-items: center;
       justify-content: center;
     }
+     .attach-label {
+      font-size: 13px;
+      color: #262626;
+      margin: 10px 0 8px;
+      font-weight: 500;
+      text-align: left;
+    }
+    .attach-list {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .attach-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .attach-name {
+      color: #1872a7;
+      cursor: pointer;
+    }
+    .attach-name:hover { text-decoration: underline; }
+    .attach-act {
+      font-size: 12px;
+      color: #1872a7;
+      cursor: pointer;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-act:hover { border-color: #1872a7; background: #f2f9fb; }
+    .attach-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .attach-tag.deleted {
+      color: #ff4d4f;
+      background: #fff1f0;
+      border: 1px solid #ffccc7;
+    }
+    .attach-tag.source {
+      color: #8c8c8c;
+      background: #f5f5f5;
+      border: 1px solid #f0f0f0;
+    }
+    .attach-item.deleted .attach-name {
+      color: #bfbfbf;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+    .attach-item.deleted .attach-act { color: #d9d9d9; border-color: #f0f0f0; background: #fafafa; cursor: not-allowed; }
+    .attach-delete {
+      font-size: 12px;
+      color: #ff4d4f;
+      cursor: pointer;
+      border: 1px solid #ffccc7;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-delete:hover { color: #cf1322; border-color: #ffa39e; background: #fff1f0; }
     .modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.45);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 3vh;
+      overflow: auto;
       z-index: 1000;
     }
     .modal-card {
       width: 780px;
       max-width: 94vw;
-      max-height: 88vh;
+      max-height: 94vh;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -288,6 +362,32 @@
     .reject-hint { display: none; margin-top: 8px; font-size: 12px; color: #f53f3f; }
     .reject-hint.show { display: block; }
 
+    /* 原因标签单选（与撤销原因一致） */
+    .reason-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reason-card {
+      padding: 7px 18px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #262626;
+      background: #fff;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+      line-height: 1.4;
+    }
+    .reason-card:hover { border-color: #1872a7; color: #1872a7; background: #f2f9fb; }
+    .reason-card.selected {
+      border-color: #1872a7;
+      color: #fff;
+      background: #1872a7;
+      font-weight: 500;
+    }
+
      .action-bar {
       display: flex;
       justify-content: flex-end;
@@ -310,6 +410,57 @@
       transition: opacity .2s;
     }
     .toast.show { opacity: 1; }
+
+    /* 删除确认弹窗（参考 审核记录-医学可沟通.html） */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+    }
+    .confirm-overlay.show { display: flex; }
+    .confirm-card {
+      width: 320px;
+      max-width: 86vw;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      animation: modalIn .18s ease-out;
+    }
+    .confirm-body {
+      padding: 24px 20px 20px;
+      font-size: 15px;
+      color: #262626;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .confirm-footer {
+      display: flex;
+      border-top: 1px solid #f0f0f0;
+    }
+    .confirm-footer button {
+      flex: 1;
+      height: 48px;
+      border: none;
+      background: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .confirm-footer .cancel {
+      color: #595959;
+      border-right: 1px solid #f0f0f0;
+    }
+    .confirm-footer .cancel:hover { background: #f5f5f5; }
+    .confirm-footer .danger {
+      color: #ff4d4f;
+      font-weight: 500;
+    }
+    .confirm-footer .danger:hover { background: #fff1f0; }
   </style>
 </head>
 <body>
@@ -349,17 +500,41 @@
             <tr class="collapse-row hidden">
               <td colspan="6"><div class="collapse-content"></div></td>
             </tr>
-            <tr>
-              <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
-              <td class="status-communicate">审核沟通</td>
-              <td>2026-08-27 11:11:37</td>
-              <td>2026-08-27 11:11:37</td>
-              <td></td>
-            </tr>
-            <tr class="collapse-row hidden">
-              <td colspan="6"><div class="collapse-content"></div></td>
-            </tr>
+             <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-submitted">审核沟通</td>
+                <td>2026-08-11 15:19:24</td>
+                <td>—</td>
+              </tr>
+              <tr class="collapse-row hidden">
+                <td colspan="5">
+                  <div class="collapse-content">
+                    <div class="comment-label">批注：</div>
+                    <div class="comment-box">附件已上传</div>
+                    <div class="attach-label">附件：</div>
+                    <div class="attach-list">
+                      <div class="attach-item deleted">
+                        <span class="attach-name">检验报告单_20260724100623.jpg</span>
+                        <span class="attach-act" onclick="showToast('该附件已删除，无法下载')">下载</span>
+                        <span class="attach-tag deleted">已删除</span>
+                      </div>
+                      <div class="attach-item">
+                        <span class="attach-name" onclick="showToast('下载附件')">病例拍照图片_20260724101059.png</span>
+                        <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+                        <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+
+                        <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+                      </div>
+                      <div class="attach-item">
+                        <span class="attach-name" onclick="showToast('下载附件')">知情同意书_20260724102011.pdf</span>
+                        <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+                        <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
            
             
             <tr>
@@ -453,7 +628,7 @@
               <td>王CRA</td>
               <td><span class="comm-role-badge">CRA</span></td>
               <td>181****0085</td>
-              <td style="text-align:center;"><a class="comm-link" onclick="this.closest('tr').remove()">删除</a></td>
+              <td style="text-align:center;"><a class="comm-link" onclick="deleteCommRow(this)">删除</a></td>
             </tr>
           </tbody>
         </table>
@@ -474,10 +649,22 @@
       <!-- 驳回表单（点击"驳回"后展开，在弹窗内填写驳回原因） -->
       <div class="reject-form-section" id="rejectFormSection">
         <div class="comm-form-title">驳回</div>
-        <div class="reject-field-label">驳回原因：</div>
-        <div class="comm-textarea-box">
-          <textarea id="rejectReasonInput" placeholder="请输入驳回原因"></textarea>
+        <div class="reject-field-label"><span class="req-star">*</span>驳回原因：</div>
+        <div class="reason-cards" id="rejectReasonCards">
+          <div class="reason-card" data-value="不符合入排标准" onclick="selectReason(this)">不符合入排标准</div>
+          <div class="reason-card" data-value="既往治疗或合并用药不符" onclick="selectReason(this)">既往治疗或合并用药不符</div>
+          <div class="reason-card" data-value="资料缺失" onclick="selectReason(this)">资料缺失</div>
+          <div class="reason-card" data-value="无法评估" onclick="selectReason(this)">无法评估</div>
+          <div class="reason-card" data-value="受试者意愿或依从性差" onclick="selectReason(this)">受试者意愿或依从性差</div>
+          <div class="reason-card" data-value="试验执行原因" onclick="selectReason(this)">试验执行原因</div>
+          <div class="reason-card" data-value="重复提交" onclick="selectReason(this)">重复提交</div>
+          <div class="reason-card" data-value="其他" onclick="selectReason(this)">其他</div>
         </div>
+        <div class="reject-field-label" style="margin-top:16px;">备注（非必填）：</div>
+        <div class="comm-textarea-box">
+          <textarea id="rejectRemark" placeholder="请输入备注"></textarea>
+        </div>
+        <div class="reject-hint" id="rejectHint"></div>
         <div class="comm-form-actions">
           <button class="btn btn-default" onclick="closeRejectForm()">取消</button>
           <button class="btn btn-primary" onclick="confirmReject()">确认驳回</button>
@@ -527,10 +714,22 @@
       closeCommForm();
       showToast('已发送沟通');
     }
+    function selectReason(el) {
+      var cards = el.parentNode.querySelectorAll('.reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+    }
+    function getSelectedRejectReason() {
+      var sel = document.querySelector('#rejectReasonCards .reason-card.selected');
+      return sel ? sel.getAttribute('data-value') : '';
+    }
     // 驳回：在审核弹窗内展开驳回表单，填写驳回原因（不弹框）
     function onReject() {
       document.getElementById('rejectFormSection').style.display = 'block';
       document.getElementById('modalFooter').style.display = 'none';
+      var cards = document.querySelectorAll('#rejectReasonCards .reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      document.getElementById('rejectRemark').value = '';
       document.getElementById('rejectHint').classList.remove('show');
     }
     function closeRejectForm() {
@@ -538,16 +737,67 @@
       document.getElementById('modalFooter').style.display = '';
     }
     function confirmReject() {
-      var reason = document.getElementById('rejectReasonInput').value.trim();
+      var reason = getSelectedRejectReason();
       if (!reason) {
+        document.getElementById('rejectHint').textContent = '请选择驳回原因';
         document.getElementById('rejectHint').classList.add('show');
         return;
       }
+      var remark = document.getElementById('rejectRemark').value.trim();
       document.getElementById('rejectHint').classList.remove('show');
       closeRejectForm();
-      showToast('已驳回');
+      showToast('已驳回：' + reason + (remark ? '（备注：' + remark + '）' : ''));
     }
     function onPass() { showToast('已通过'); }
+
+    /* 通用删除确认弹窗（参考 审核记录-医学可沟通.html） */
+    var pendingAttachItem = null;
+    var confirmCallback = null;
+    function openConfirm(text, cb) {
+      document.getElementById('confirmText').textContent = text;
+      confirmCallback = cb;
+      document.getElementById('confirmOverlay').classList.add('show');
+    }
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+      confirmCallback = null;
+      pendingAttachItem = null;
+    }
+    function runConfirm() {
+      if (confirmCallback) confirmCallback();
+      closeConfirm();
+    }
+
+    function confirmDeleteAttach(btn) {
+      pendingAttachItem = btn.closest('.attach-item');
+      openConfirm('确认删除该附件吗？', doDeleteAttach);
+    }
+    function deleteCommRow(link) {
+      var tr = link.closest('tr');
+      openConfirm('确认删除该条沟通记录吗？', function () { tr.remove(); });
+    }
+    function doDeleteAttach() {
+      if (pendingAttachItem) {
+        var name = pendingAttachItem.querySelector('.attach-name').textContent;
+        pendingAttachItem.className = 'attach-item deleted';
+        pendingAttachItem.innerHTML =
+          '<span class="attach-name">' + name + '</span>' +
+          '<span class="attach-act" onclick="showToast(\'该附件已删除，无法下载\')">下载</span>' +
+          '<span class="attach-tag deleted">已删除</span>';
+      }
+      closeConfirm();
+    }
   </script>
+
+  <!-- 删除确认弹窗（参考 审核记录-医学可沟通.html） -->
+  <div class="confirm-overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirm()">
+    <div class="confirm-card">
+      <div class="confirm-body" id="confirmText">确认删除该附件吗？</div>
+      <div class="confirm-footer">
+        <button class="cancel" onclick="closeConfirm()">取消</button>
+        <button class="danger" onclick="runConfirm()">删除</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

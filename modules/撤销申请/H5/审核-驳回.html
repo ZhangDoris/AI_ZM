@@ -118,6 +118,29 @@
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.12);
     }
     .form-textarea::placeholder { color: #bfbfbf; }
+    .reason-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reason-card {
+      padding: 8px 16px;
+      border: 1px solid #d9d9d9;
+      border-radius: 18px;
+      font-size: 14px;
+      color: #262626;
+      background: #fff;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+    }
+    .reason-card:active { background: #f5f5f5; }
+    .reason-card.selected {
+      border-color: #409eff;
+      color: #409eff;
+      background: #ecf5ff;
+      font-weight: 500;
+    }
     .fail-hint {
       display: none;
       margin-top: 8px;
@@ -186,8 +209,19 @@
 
         <!-- 驳回原因表单（点击"驳回"后平铺到本页面下方，不弹窗） -->
         <div class="fail-form" id="failForm" style="display:none">
-          <label class="form-label">驳回原因</label>
-          <textarea class="form-textarea" id="failReason" placeholder="请输入驳回原因"></textarea>
+          <label class="form-label">驳回原因<span class="req">*</span></label>
+          <div class="reason-cards" id="rejectCards">
+            <div class="reason-card" data-value="不符合入排标准" onclick="selectReason(this)">不符合入排标准</div>
+            <div class="reason-card" data-value="既往治疗或合并用药不符" onclick="selectReason(this)">既往治疗或合并用药不符</div>
+            <div class="reason-card" data-value="资料缺失" onclick="selectReason(this)">资料缺失</div>
+            <div class="reason-card" data-value="无法评估" onclick="selectReason(this)">无法评估</div>
+            <div class="reason-card" data-value="受试者意愿或依从性差" onclick="selectReason(this)">受试者意愿或依从性差</div>
+            <div class="reason-card" data-value="试验执行原因" onclick="selectReason(this)">试验执行原因</div>
+            <div class="reason-card" data-value="重复提交" onclick="selectReason(this)">重复提交</div>
+            <div class="reason-card" data-value="其他" onclick="selectReason(this)">其他</div>
+          </div>
+          <label class="form-label" style="margin-top:16px;">备注</label>
+          <textarea class="form-textarea" id="failRemark" placeholder="请输入备注"></textarea>
         </div>
       </div>
 
@@ -219,14 +253,25 @@
       setTimeout(function () { t.classList.remove('show'); }, 1600);
     }
 
+    function selectReason(el) {
+      var cards = el.parentNode.querySelectorAll('.reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+    }
+    function getSelectedRejectReason() {
+      var sel = document.querySelector('#rejectCards .reason-card.selected');
+      return sel ? sel.getAttribute('data-value') : '';
+    }
+
     // 驳回：在当前页面平铺驳回原因表单，底部按钮变为 取消 / 确认驳回
     function onScreenFail() {
       document.getElementById('failForm').style.display = 'block';
       document.getElementById('failFooter').style.display = 'flex';
       document.getElementById('defaultFooter').style.display = 'none';
-      document.getElementById('failReason').value = '';
+      var cards = document.querySelectorAll('#rejectCards .reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      document.getElementById('failRemark').value = '';
       document.getElementById('failHint').classList.remove('show');
-      document.getElementById('failReason').focus();
     }
     function closeFailForm() {
       document.getElementById('failForm').style.display = 'none';
@@ -234,15 +279,17 @@
       document.getElementById('defaultFooter').style.display = 'flex';
     }
     function confirmScreenFail() {
-      var reason = document.getElementById('failReason').value.trim();
+      var reason = getSelectedRejectReason();
       if (!reason) {
+        document.getElementById('failHint').textContent = '请选择驳回原因';
         document.getElementById('failHint').classList.add('show');
         return;
       }
+      var remark = document.getElementById('failRemark').value.trim();
       document.getElementById('failHint').classList.remove('show');
       closeFailForm();
       closeModal();
-      showToast('已确认驳回：' + reason);
+      showToast('已确认驳回：' + reason + (remark ? '（备注：' + remark + '）' : ''));
     }
   </script>
 </body>

@@ -24,14 +24,16 @@
       inset: 0;
       background: rgba(0, 0, 0, 0.45);
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
+      padding-top: 3vh;
+      overflow: auto;
       z-index: 1000;
     }
     .modal-card {
       width: 780px;
       max-width: 94vw;
-      max-height: 88vh;
+      max-height: 94vh;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -288,6 +290,32 @@
     .reject-hint { display: none; margin-top: 8px; font-size: 12px; color: #f53f3f; }
     .reject-hint.show { display: block; }
 
+    /* 原因标签单选（与撤销原因一致） */
+    .reason-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reason-card {
+      padding: 7px 18px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #262626;
+      background: #fff;
+      cursor: pointer;
+      transition: all .15s;
+      user-select: none;
+      line-height: 1.4;
+    }
+    .reason-card:hover { border-color: #1872a7; color: #1872a7; background: #f2f9fb; }
+    .reason-card.selected {
+      border-color: #1872a7;
+      color: #fff;
+      background: #1872a7;
+      font-weight: 500;
+    }
+
      .action-bar {
       display: flex;
       justify-content: flex-end;
@@ -485,10 +513,22 @@
       <!-- 筛败表单（点击"筛败"后展开，在弹窗内填写筛败原因） -->
       <div class="reject-form-section" id="rejectFormSection">
         <div class="comm-form-title">筛败</div>
-        <div class="reject-field-label">筛败原因：</div>
-        <div class="comm-textarea-box">
-          <textarea id="rejectReasonInput" placeholder="请输入筛败原因"></textarea>
+        <div class="reject-field-label"><span class="req-star">*</span>筛败原因：</div>
+        <div class="reason-cards" id="rejectReasonCards">
+          <div class="reason-card" data-value="不符合入排标准" onclick="selectReason(this)">不符合入排标准</div>
+          <div class="reason-card" data-value="既往治疗或合并用药不符" onclick="selectReason(this)">既往治疗或合并用药不符</div>
+          <div class="reason-card" data-value="资料缺失" onclick="selectReason(this)">资料缺失</div>
+          <div class="reason-card" data-value="无法评估" onclick="selectReason(this)">无法评估</div>
+          <div class="reason-card" data-value="受试者意愿或依从性差" onclick="selectReason(this)">受试者意愿或依从性差</div>
+          <div class="reason-card" data-value="试验执行原因" onclick="selectReason(this)">试验执行原因</div>
+          <div class="reason-card" data-value="重复提交" onclick="selectReason(this)">重复提交</div>
+          <div class="reason-card" data-value="其他" onclick="selectReason(this)">其他</div>
         </div>
+        <div class="reject-field-label" style="margin-top:16px;">备注（非必填）：</div>
+        <div class="comm-textarea-box">
+          <textarea id="rejectRemark" placeholder="请输入备注"></textarea>
+        </div>
+        <div class="reject-hint" id="rejectHint"></div>
         <div class="comm-form-actions">
           <button class="btn btn-default" onclick="closeRejectForm()">取消</button>
           <button class="btn btn-primary" onclick="confirmReject()">确认筛败</button>
@@ -538,10 +578,22 @@
       closeCommForm();
       showToast('已发送沟通');
     }
+    function selectReason(el) {
+      var cards = el.parentNode.querySelectorAll('.reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+    }
+    function getSelectedRejectReason() {
+      var sel = document.querySelector('#rejectReasonCards .reason-card.selected');
+      return sel ? sel.getAttribute('data-value') : '';
+    }
     // 筛败：在审核弹窗内展开筛败表单，填写筛败原因（不弹框）
     function onReject() {
       document.getElementById('rejectFormSection').style.display = 'block';
       document.getElementById('modalFooter').style.display = 'none';
+      var cards = document.querySelectorAll('#rejectReasonCards .reason-card');
+      cards.forEach(function (c) { c.classList.remove('selected'); });
+      document.getElementById('rejectRemark').value = '';
       document.getElementById('rejectHint').classList.remove('show');
     }
     function closeRejectForm() {
@@ -549,14 +601,16 @@
       document.getElementById('modalFooter').style.display = '';
     }
     function confirmReject() {
-      var reason = document.getElementById('rejectReasonInput').value.trim();
+      var reason = getSelectedRejectReason();
       if (!reason) {
+        document.getElementById('rejectHint').textContent = '请选择筛败原因';
         document.getElementById('rejectHint').classList.add('show');
         return;
       }
+      var remark = document.getElementById('rejectRemark').value.trim();
       document.getElementById('rejectHint').classList.remove('show');
       closeRejectForm();
-      showToast('已筛败');
+      showToast('已筛败：' + reason + (remark ? '（备注：' + remark + '）' : ''));
     }
     function onPass() { showToast('已通过'); }
   </script>

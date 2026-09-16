@@ -194,6 +194,78 @@
       line-height: 1.6;
       text-align: left;
     }
+    .attach-label {
+      font-size: 13px;
+      color: #262626;
+      margin: 10px 0 8px;
+      font-weight: 500;
+      text-align: left;
+    }
+    .attach-list {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 8px 12px;
+    }
+    .attach-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+    .attach-name {
+      color: #1872a7;
+      cursor: pointer;
+    }
+    .attach-name:hover { text-decoration: underline; }
+    .attach-act {
+      font-size: 12px;
+      color: #1872a7;
+      cursor: pointer;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-act:hover { border-color: #1872a7; background: #f2f9fb; }
+    .attach-tag {
+      display: inline-block;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .attach-tag.deleted {
+      color: #ff4d4f;
+      background: #fff1f0;
+      border: 1px solid #ffccc7;
+    }
+    .attach-tag.source {
+      color: #8c8c8c;
+      background: #f5f5f5;
+      border: 1px solid #f0f0f0;
+    }
+    .attach-item.deleted .attach-name {
+      color: #bfbfbf;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+    .attach-item.deleted .attach-act { color: #d9d9d9; border-color: #f0f0f0; background: #fafafa; cursor: not-allowed; }
+    .attach-delete {
+      font-size: 12px;
+      color: #ff4d4f;
+      cursor: pointer;
+      border: 1px solid #ffccc7;
+      border-radius: 4px;
+      padding: 1px 10px;
+      line-height: 1.6;
+      background: #fff;
+      user-select: none;
+    }
+    .attach-delete:hover { color: #cf1322; border-color: #ffa39e; background: #fff1f0; }
     .hidden { display: none; }
 
     /* 入组审核沟通弹窗 */
@@ -411,6 +483,57 @@
       transition: opacity .2s;
     }
     .toast.show { opacity: 1; }
+
+    /* 删除确认弹窗 */
+    .confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
+    }
+    .confirm-overlay.show { display: flex; }
+    .confirm-card {
+      width: 320px;
+      max-width: 86vw;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      animation: modalIn .18s ease-out;
+    }
+    .confirm-body {
+      padding: 24px 20px 20px;
+      font-size: 15px;
+      color: #262626;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .confirm-footer {
+      display: flex;
+      border-top: 1px solid #f0f0f0;
+    }
+    .confirm-footer button {
+      flex: 1;
+      height: 48px;
+      border: none;
+      background: #fff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .confirm-footer .cancel {
+      color: #595959;
+      border-right: 1px solid #f0f0f0;
+    }
+    .confirm-footer .cancel:hover { background: #f5f5f5; }
+    .confirm-footer .danger {
+      color: #ff4d4f;
+      font-weight: 500;
+    }
+    .confirm-footer .danger:hover { background: #fff1f0; }
   </style>
 </head>
 <body>
@@ -474,7 +597,7 @@
                 <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
                 <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
                 <td class="status-revoked">已撤销申请</td>
-                <td>2026-09-04 18:28:31</td>
+         <td>2026-09-04 18:28:31</td>
                 <td>—</td>
               </tr>
               <tr class="collapse-row hidden">
@@ -492,12 +615,47 @@
                 <td>2026-08-11 15:19:24</td>
                 <td>—</td>
               </tr>
+              <tr>
+                <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+                <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+                <td class="status-submitted">审核沟通</td>
+                <td>2026-08-11 15:19:24</td>
+                <td>—</td>
+              </tr>
+              <tr class="collapse-row hidden">
+                <td colspan="5">
+                  <div class="collapse-content">
+                    <div class="comment-label">批注：</div>
+                    <div class="comment-box">附件已上传</div>
+                    <div class="attach-label">附件：</div>
+                    <div class="attach-list">
+                      <div class="attach-item deleted">
+                        <span class="attach-name">检验报告单_20260724100623.jpg</span>
+                        <span class="attach-act" onclick="showToast('该附件已删除，无法下载')">下载</span>
+                        <span class="attach-tag deleted">已删除</span>
+                      </div>
+                      <div class="attach-item">
+                        <span class="attach-name" onclick="showToast('下载附件')">病例拍照图片_20260724101059.png</span>
+                        <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+                        <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+
+                        <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+                      </div>
+                      <div class="attach-item">
+                        <span class="attach-name" onclick="showToast('下载附件')">知情同意书_20260724102011.pdf</span>
+                        <span class="attach-act" onclick="showToast('下载附件')">下载</span>
+                        <span class="attach-delete" title="删除" onclick="confirmDeleteAttach(this)">删除</span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
                 <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
               <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
               <td class="status-revoked">驳回</td>
               <td>2026-08-12 14:23:23</td>
-              <td>2026-09-11 13:59:14</td>
+              <td>-</td>
               <td></td>
             </tr>
             <tr class="collapse-row hidden">
@@ -639,6 +797,37 @@
       closeCommModal();
       showToast('沟通消息已发送');
     }
+    var pendingAttachItem = null;
+    function confirmDeleteAttach(btn) {
+      pendingAttachItem = btn.closest('.attach-item');
+      document.getElementById('confirmOverlay').classList.add('show');
+    }
+    function closeConfirm() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+      pendingAttachItem = null;
+    }
+    function doDeleteAttach() {
+      if (pendingAttachItem) {
+        var name = pendingAttachItem.querySelector('.attach-name').textContent;
+        pendingAttachItem.className = 'attach-item deleted';
+        pendingAttachItem.innerHTML =
+          '<span class="attach-name">' + name + '</span>' +
+          '<span class="attach-act" onclick="showToast(\'该附件已删除，无法下载\')">下载</span>' +
+          '<span class="attach-tag deleted">已删除</span>';
+      }
+      closeConfirm();
+    }
   </script>
+
+  <!-- 删除附件确认弹窗 -->
+  <div class="confirm-overlay" id="confirmOverlay" onclick="if(event.target===this) closeConfirm()">
+    <div class="confirm-card">
+      <div class="confirm-body">确认删除该附件吗？</div>
+      <div class="confirm-footer">
+        <button class="cancel" onclick="closeConfirm()">取消</button>
+        <button class="danger" onclick="doDeleteAttach()">删除</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

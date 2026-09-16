@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>审核记录</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+    }
+
+    /* 整屏布局 */
+    .page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+    }
+    .page-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 14px 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .action-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .content-row {
+      flex: 1 1 auto;
+      display: flex;
+      gap: 16px;
+      min-height: 0;
+    }
+    .right-stack {
+      flex: 1 1 0;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    /* 列 */
+    .col {
+      flex: 1 1 0;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      padding: 16px 20px;
+      overflow: hidden;
+    }
+    .right-stack > .col { flex: 1 1 0; min-width: 0; }
+    .right-stack > .col.oplog { flex: 0 0 220px; }
+    .block-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .block-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .block-title .fa { color: #1872a7; }
+    .block-sub {
+      font-size: 12px;
+      color: #bfbfbf;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .col-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    /* 聊天面板 */
+    .chat-panel { display: flex; flex-direction: column; height: 100%; }
+    .chat-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #262626;
+    }
+    .chat-header .fa { color: #1872a7; }
+    .chat-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 4px 8px;
+      background: #fafafa;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+    }
+    .chat-sys {
+      text-align: center;
+      font-size: 12px;
+      color: #bfbfbf;
+      margin: 12px 0;
+    }
+    .chat-msg {
+      display: flex;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+    .chat-msg.self { flex-direction: row-reverse; }
+    .chat-avatar {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+    }
+    .chat-msg.self .chat-avatar { background: #1872a7; }
+    .chat-msg.other .chat-avatar { background: #8c8c8c; }
+    .chat-content { max-width: 80%; }
+    .chat-meta {
+      font-size: 12px;
+      color: #bfbfbf;
+      margin-bottom: 4px;
+    }
+    .chat-msg.self .chat-meta { text-align: right; }
+    .chat-bubble {
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      border-radius: 6px;
+      color: #262626;
+      word-break: break-word;
+    }
+    .chat-msg.self .chat-bubble {
+      background: #1872a7;
+      color: #fff;
+      border-top-right-radius: 0;
+    }
+    .chat-msg.other .chat-bubble {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-top-left-radius: 0;
+    }
+    .chat-files {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .chat-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .chat-msg.other .chat-file {
+      background: #f6f8fb;
+      border: 1px solid #f0f0f0;
+    }
+    .chat-file .fa-download { cursor: pointer; }
+    .chat-file.deleted { opacity: .6; }
+    .chat-file.deleted .chat-fname { text-decoration: line-through; }
+
+    /* 审核流程时间线（纵向） */
+    .process-panel { padding: 4px 0; }
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: #e8e8e8;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 22px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -28px;
+      top: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #1872a7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timeline-dot i { font-size: 9px; color: #1872a7; }
+    .timeline-dot.done { background: #1872a7; }
+    .timeline-dot.done i { color: #fff; }
+    .timeline-dot.warn { border-color: #fa8c16; }
+    .timeline-dot.warn i { color: #fa8c16; }
+    .timeline-dot.danger { border-color: #ff4d4f; }
+    .timeline-dot.danger i { color: #ff4d4f; }
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .timeline-title { font-size: 14px; color: #262626; font-weight: 500; }
+    .timeline-status {
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #f5f7fa;
+      color: #595959;
+      white-space: nowrap;
+    }
+    .timeline-status.done { background: #e6f4ff; color: #1872a7; }
+    .timeline-status.warn { background: #fff7e6; color: #fa8c16; }
+    .timeline-status.danger { background: #fff1f0; color: #ff4d4f; }
+    .timeline-info {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    .timeline-remark {
+      font-size: 13px;
+      color: #595959;
+      margin-top: 6px;
+      background: #f6f8fb;
+      border-radius: 4px;
+      padding: 8px 10px;
+      line-height: 1.6;
+    }
+
+    /* 操作日志时间轴（横向，右下角） */
+    .op-timeline {
+      position: relative;
+      display: flex;
+      padding: 4px 2% 0;
+    }
+    .op-timeline::before {
+      content: '';
+      position: absolute;
+      top: 13px;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: #e8e8e8;
+    }
+    .op-item {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      padding: 0 4px;
+    }
+    .op-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #1872a7;
+      margin: 0 auto 8px;
+      box-sizing: content-box;
+    }
+    .op-dot.blue { border-color: #1872a7; }
+    .op-dot.orange { border-color: #fa8c16; }
+    .op-dot.red { border-color: #ff4d4f; }
+    .op-dot.gray { border-color: #bfbfbf; }
+    .op-status {
+      font-size: 12px;
+      color: #262626;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+    .op-time {
+      font-size: 11px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+    .op-remark {
+      font-size: 11px;
+      color: #ff4d4f;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 16px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #1872a7;
+      color: #fff;
+      border-color: #1872a7;
+    }
+    .btn-primary:hover { background: #2a9ed4; border-color: #2a9ed4; }
+    .btn-primary:active { background: #115a82; border-color: #115a82; }
+    .btn-default {
+      background: #fff;
+      color: #595959;
+      border-color: #d9d9d9;
+    }
+    .btn-default:hover { color: #1872a7; border-color: #1872a7; }
+    .btn-default:active { color: #115a82; border-color: #115a82; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <div class="page-title">测试文件上传失败 · 审核记录</div>
+      <div class="action-bar">
+        <button class="btn btn-default" onclick="onDownload()">下载</button>
+        <button class="btn btn-primary" onclick="showToast('打开入组审核沟通')">入组审核沟通</button>
+      </div>
+    </div>
+
+    <div class="content-row">
+      <!-- 左：聊天 -->
+      <div class="col">
+        <div class="block-header">
+          <div class="block-title"><i class="fa fa-comments"></i> 聊天</div>
+        </div>
+        <div class="col-body">
+          <div class="chat-panel">
+            <div class="chat-header"><i class="fa fa-comments"></i> 入组审核沟通 · 患者「测试文件上传失败」</div>
+            <div class="chat-body">
+              <div class="chat-sys">2026-08-11 15:19:24　沟通已发起</div>
+
+              <div class="chat-msg self">
+                <div class="chat-avatar">刘</div>
+                <div class="chat-content">
+                  <div class="chat-meta">刘雪红 · CRA专员 · 2026-08-11 15:19:24</div>
+                  <div class="chat-bubble">
+                    您好，患者相关入组材料已上传，请查收审核。
+                    <div class="chat-files">
+                      <div class="chat-file deleted">
+                        <i class="fa fa-file-image-o"></i>
+                        <span class="chat-fname">检验报告单_20260724100623.jpg</span>
+                        <i class="fa fa-download" onclick="showToast('该附件已删除，无法下载')"></i>
+                        <span class="op-remark" style="background:#fff1f0;border:1px solid #ffccc7;color:#ff4d4f;border-radius:10px;padding:1px 8px;">已删除</span>
+                      </div>
+                      <div class="chat-file">
+                        <i class="fa fa-file-image-o"></i>
+                        <span class="chat-fname">病例拍照图片_20260724101059.png</span>
+                        <i class="fa fa-download" onclick="showToast('下载附件')"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-msg other">
+                <div class="chat-avatar">审</div>
+                <div class="chat-content">
+                  <div class="chat-meta">医学审核员 · 2026-08-12 09:30:00</div>
+                  <div class="chat-bubble">检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
+                </div>
+              </div>
+
+              <div class="chat-msg self">
+                <div class="chat-avatar">刘</div>
+                <div class="chat-content">
+                  <div class="chat-meta">刘雪红 · CRA专员 · 2026-08-12 10:15:00</div>
+                  <div class="chat-bubble">已重新补充上传病例材料，请再次审核。</div>
+                </div>
+              </div>
+
+              <div class="chat-msg other">
+                <div class="chat-avatar">审</div>
+                <div class="chat-content">
+                  <div class="chat-meta">医学审核员 · 2026-08-12 14:23:23</div>
+                  <div class="chat-bubble">驳回本次入组申请。<br/>驳回原因：12121</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：审核流程 + 操作日志 -->
+      <div class="right-stack">
+        <!-- 右上：审核流程展示 -->
+        <div class="col">
+          <div class="block-header">
+            <div class="block-title"><i class="fa fa-sitemap"></i> 审核流程展示</div>
+          </div>
+          <div class="col-body">
+            <div class="process-panel">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">提交入组申请</div>
+                    <div class="timeline-status done">已提交</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRA专员 · 2026-08-11 15:19:24</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot warn"><i class="fa fa-undo"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">撤回申请</div>
+                    <div class="timeline-status warn">待审核（已撤回）</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRA专员 · 2026-08-11 15:19:25</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-ban"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">撤销申请</div>
+                    <div class="timeline-status danger">已撤销申请</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRA专员 · 2026-09-04 18:28:31</div>
+                  <div class="timeline-remark">撤销原因：12121</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">重新提交申请</div>
+                    <div class="timeline-status done">已提交</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRA专员 · 2026-08-11 15:19:24</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-comment"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">审核沟通</div>
+                    <div class="timeline-status done">沟通完成</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRA专员 · 2026-08-11 15:19:24</div>
+                  <div class="timeline-remark">附件已上传：检验报告单（已删除）、病例拍照图片</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">医学审核驳回</div>
+                    <div class="timeline-status danger">驳回</div>
+                  </div>
+                  <div class="timeline-info">医学审核员 · 2026-08-12 14:23:23</div>
+                  <div class="timeline-remark">驳回原因：12121</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右下：操作日志（时间轴） -->
+        <div class="col oplog">
+          <div class="block-header">
+            <div class="block-title"><i class="fa fa-list-ul"></i> 操作日志 <span class="block-sub">时间轴</span></div>
+          </div>
+          <div class="col-body">
+            <div class="op-timeline">
+              <div class="op-item">
+                <div class="op-dot blue"></div>
+                <div class="op-status">已提交</div>
+                <div class="op-time">08-11 15:19</div>
+              </div>
+              <div class="op-item">
+                <div class="op-dot orange"></div>
+                <div class="op-status">待审核（已撤回）</div>
+                <div class="op-time">08-11 15:19</div>
+              </div>
+              <div class="op-item">
+                <div class="op-dot red"></div>
+                <div class="op-status">已撤销申请</div>
+                <div class="op-time">09-04 18:28</div>
+                <div class="op-remark">撤销：12121</div>
+              </div>
+              <div class="op-item">
+                <div class="op-dot blue"></div>
+                <div class="op-status">已提交</div>
+                <div class="op-time">08-11 15:19</div>
+              </div>
+              <div class="op-item">
+                <div class="op-dot blue"></div>
+                <div class="op-status">审核沟通</div>
+                <div class="op-time">08-11 15:19</div>
+              </div>
+              <div class="op-item">
+                <div class="op-dot red"></div>
+                <div class="op-status">驳回</div>
+                <div class="op-time">08-12 14:23</div>
+                <div class="op-remark">驳回：12121</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+    function onDownload() { showToast('开始下载审核记录'); }
+  </script>
+</body>
+</html>
