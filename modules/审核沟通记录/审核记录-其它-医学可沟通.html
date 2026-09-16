@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>审核记录</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #f0f2f5;
+    }
+
+    /* 整屏布局 */
+    .page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+    }
+    .page-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 14px 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .action-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .content-row {
+      flex: 1 1 auto;
+      display: flex;
+      gap: 16px;
+      min-height: 0;
+    }
+    .content-row > .col { flex: 2 1 0; }
+    .right-stack {
+      flex: 1 1 0;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    /* 列 */
+    .col {
+      flex: 1 1 0;
+      min-width: 320px;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      padding: 16px 20px;
+      overflow: hidden;
+    }
+    .right-stack > .col { flex: 1 1 0; min-width: 0; }
+    .right-stack > .col.oplog { flex: 0 0 280px; }
+    .block-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .block-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #262626;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .block-title .fa { color: #1872a7; }
+    .block-sub {
+      font-size: 12px;
+      color: #bfbfbf;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .col-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    /* 小分组切换 */
+    .group-switch {
+      display: inline-flex;
+      background: #f5f7fa;
+      border-radius: 4px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .group-switch .gs-item {
+      padding: 4px 12px;
+      font-size: 13px;
+      color: #595959;
+      cursor: pointer;
+      border-radius: 3px;
+      user-select: none;
+      transition: all .15s;
+    }
+    .group-switch .gs-item:hover { color: #1872a7; }
+    .group-switch .gs-item.active {
+      background: #fff;
+      color: #1872a7;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+    .col-body > .group-view { height: 100%; }
+    .empty-state {
+      height: 100%;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #bfbfbf;
+      gap: 10px;
+    }
+    .empty-state i { font-size: 28px; }
+    .empty-state .es-text { font-size: 13px; }
+
+    /* 聊天面板 */
+    .chat-panel { display: flex; flex-direction: column; height: 100%; }
+    .chat-header {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: #f5f7fa;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #262626;
+    }
+    .chat-header .fa { color: #1872a7; }
+    .chat-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 4px 8px;
+      background: #fafafa;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+    }
+    .chat-sys {
+      text-align: center;
+      font-size: 12px;
+      color: #bfbfbf;
+      margin: 12px 0;
+    }
+    .chat-msg {
+      display: flex;
+      margin-bottom: 16px;
+      gap: 10px;
+    }
+    .chat-msg.self { flex-direction: row-reverse; }
+    .chat-avatar {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 13px;
+    }
+    .chat-msg.self .chat-avatar { background: #1872a7; }
+    .chat-msg.other .chat-avatar { background: #8c8c8c; }
+    .chat-content { max-width: 80%; }
+    .chat-meta {
+      font-size: 12px;
+      color: #bfbfbf;
+      margin-bottom: 4px;
+    }
+    .chat-msg.self .chat-meta { text-align: right; }
+    .chat-bubble {
+      padding: 9px 12px;
+      font-size: 13px;
+      line-height: 1.6;
+      border-radius: 6px;
+      color: #262626;
+      word-break: break-word;
+    }
+    .chat-msg.self .chat-bubble {
+      background: #1872a7;
+      color: #fff;
+      border-top-right-radius: 0;
+    }
+    .chat-msg.other .chat-bubble {
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-top-left-radius: 0;
+    }
+    .chat-files {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .chat-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .chat-msg.other .chat-file {
+      background: #f6f8fb;
+      border: 1px solid #f0f0f0;
+    }
+    .chat-file .fa-download { cursor: pointer; }
+    .chat-file.deleted { opacity: .75; }
+    .chat-file.deleted .chat-fname { text-decoration: line-through; color: #bfbfbf; }
+    .chat-file.deleted .attach-btn { opacity: .5; cursor: not-allowed; }
+
+    /* 附件操作按钮 */
+    .attach-btn {
+      font-size: 11px;
+      line-height: 1;
+      padding: 3px 8px;
+      border: 1px solid #d9d9d9;
+      border-radius: 3px;
+      background: #fff;
+      color: #595959;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .attach-btn:hover { color: #1872a7; border-color: #1872a7; }
+    .attach-btn.danger { color: #ff4d4f; border-color: #ffccc7; }
+    .attach-btn.danger:hover { background: #fff1f0; }
+    .chat-file .attach-tag { flex-shrink: 0; }
+
+    /* 聊天输入区（微信模式） */
+    .chat-footer {
+      flex: 0 0 auto;
+      border-top: 1px solid #f0f0f0;
+      background: #fff;
+      padding: 8px 10px 10px;
+    }
+    .chat-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #d48806;
+      background: #fffbeb;
+      border: 1px solid #ffe58f;
+      border-radius: 4px;
+      padding: 4px 8px;
+      white-space: nowrap;
+    }
+    .chat-hint .fa { color: #faad14; }
+    .chat-toolbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .chat-toolbar .tool-ic {
+      font-size: 18px;
+      color: #8c8c8c;
+      cursor: pointer;
+    }
+    .chat-toolbar .tool-ic:hover { color: #1872a7; }
+    .remind-pop {
+      position: absolute;
+      bottom: 44px;
+      left: 0;
+      width: 580px;
+      max-width: calc(100vw - 60px);
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+      padding: 14px 16px;
+      z-index: 5;
+    }
+    .remind-pop.hidden { display: none; }
+    .remind-pop .rp-title { font-size: 13px; color: #595959; margin-bottom: 8px; font-weight: 600; }
+    .rp-tag-box {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 42px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      background: #fafafa;
+    }
+    .rp-tag-box:hover { border-color: #1872a7; background: #fff; }
+    .rp-tag-box .rp-placeholder { color: #bfbfbf; font-weight: 400; }
+    .rp-tag {
+      background: #f5f7fa;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 13px;
+      color: #262626;
+      white-space: nowrap;
+    }
+    .rp-more {
+      background: #1872a7;
+      color: #fff;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .rp-tag-box .rp-arrow { margin-left: auto; color: #bfbfbf; font-size: 14px; }
+    .rp-list {
+      border: 1px solid #f0f0f0;
+      border-radius: 6px;
+      margin-top: 10px;
+      max-height: 150px;
+      overflow: auto;
+    }
+    .rp-list.hidden { display: none; }
+    .rp-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: #262626;
+      cursor: pointer;
+    }
+    .rp-option:hover { background: #f6f8fb; }
+    .rp-option .rp-role { color: #8c8c8c; font-size: 12px; }
+    .rp-option .fa-check { margin-left: auto; color: #1872a7; visibility: hidden; }
+    .rp-option.selected .fa-check { visibility: visible; }
+    .rp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+    .rp-table th {
+      background: #1872a7;
+      color: #fff;
+      font-weight: 500;
+      text-align: left;
+      padding: 8px 10px;
+      white-space: nowrap;
+    }
+    .rp-table td { padding: 8px 10px; border-bottom: 1px solid #f5f7fa; color: #262626; }
+    .rp-del { color: #1872a7; cursor: pointer; font-size: 12px; }
+    .rp-del:hover { color: #ff4d4f; }
+    .rp-table .rp-empty { text-align: center; color: #bfbfbf; padding: 10px 0; }
+    .rp-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .rp-label { font-size: 13px; color: #595959; font-weight: 600; white-space: nowrap; }
+    .rp-row .rp-tag-box { flex: 1 1 auto; margin-bottom: 0; }
+    .rp-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13px;
+      color: #262626;
+      margin-right: 16px;
+      cursor: pointer;
+    }
+    .rp-tip {
+      display: flex;
+      gap: 8px;
+      background: #fffbeb;
+      border: 1px solid #ffe58f;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #d48806;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .rp-tip .fa { margin-top: 2px; }
+    .rp-tag .rp-tag-del { margin-left: 6px; cursor: pointer; color: #bfbfbf; }
+    .rp-tag .rp-tag-del:hover { color: #ff4d4f; }
+
+    /* 待发送附件 */
+    .pending-files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .pending-file {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f6f8fb;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #262626;
+    }
+    .pending-file .fa-file-o { color: #1872a7; }
+    .pending-file .pf-del { cursor: pointer; color: #8c8c8c; }
+    .pending-file .pf-del:hover { color: #ff4d4f; }
+
+    /* 消息中的 @ 提及 */
+    .chat-mention { color: #1872a7; font-weight: 600; }
+    .chat-msg.self .chat-mention { color: #ffd666; }
+    .chat-input-row { display: flex; align-items: flex-end; gap: 10px; }
+    .chat-input {
+      flex: 1 1 auto;
+      resize: none;
+      height: 56px;
+      border: 1px solid #f0f0f0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      font-family: inherit;
+      outline: none;
+    }
+    .chat-input:focus { border-color: #1872a7; }
+    .chat-send { height: 36px; margin-bottom: 1px; }
+
+    /* 审核流程时间线（纵向） */
+    .process-panel { padding: 4px 0; }
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 9px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: #e8e8e8;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 22px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -28px;
+      top: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #1872a7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .timeline-dot i { font-size: 9px; color: #1872a7; }
+    .timeline-dot.done { background: #1872a7; }
+    .timeline-dot.done i { color: #fff; }
+    .timeline-dot.warn { border-color: #fa8c16; }
+    .timeline-dot.warn i { color: #fa8c16; }
+    .timeline-dot.danger { border-color: #ff4d4f; }
+    .timeline-dot.danger i { color: #ff4d4f; }
+    .timeline-dot.gray { border-color: #d9d9d9; }
+    .timeline-status.gray { background: #fafafa; color: #bfbfbf; }
+    .timeline-item.upcoming .timeline-title { color: #bfbfbf; }
+    .timeline-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .timeline-title { font-size: 14px; color: #262626; font-weight: 500; }
+    .timeline-status {
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 10px;
+      background: #f5f7fa;
+      color: #595959;
+      white-space: nowrap;
+    }
+    .timeline-status.done { background: #e6f4ff; color: #1872a7; }
+    .timeline-status.warn { background: #fff7e6; color: #fa8c16; }
+    .timeline-status.danger { background: #fff1f0; color: #ff4d4f; }
+    .timeline-info {
+      font-size: 12px;
+      color: #8c8c8c;
+      margin-top: 4px;
+    }
+    .timeline-remark {
+      font-size: 13px;
+      color: #595959;
+      margin-top: 6px;
+      background: #f6f8fb;
+      border-radius: 4px;
+      padding: 8px 10px;
+      line-height: 1.6;
+    }
+
+    /* 操作日志时间轴（横向，右下角） */
+    .op-timeline {
+      position: relative;
+      display: flex;
+      padding: 4px 2% 0;
+    }
+    .op-timeline::before {
+      content: '';
+      position: absolute;
+      top: 13px;
+      left: 8%;
+      right: 8%;
+      height: 2px;
+      background: #e8e8e8;
+    }
+    .op-item {
+      position: relative;
+      flex: 1;
+      text-align: center;
+      padding: 0 4px;
+    }
+    .op-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #1872a7;
+      margin: 0 auto 8px;
+      box-sizing: content-box;
+    }
+    .op-dot.blue { border-color: #1872a7; }
+    .op-dot.orange { border-color: #fa8c16; }
+    .op-dot.red { border-color: #ff4d4f; }
+    .op-dot.gray { border-color: #bfbfbf; }
+    .op-status {
+      font-size: 12px;
+      color: #262626;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+    .op-time {
+      font-size: 11px;
+      color: #8c8c8c;
+      margin-top: 2px;
+    }
+    .op-remark {
+      font-size: 11px;
+      color: #ff4d4f;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
+    /* 按钮 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 16px;
+      font-size: 13px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1;
+      border: 1px solid transparent;
+    }
+    .btn-primary {
+      background: #1872a7;
+      color: #fff;
+      border-color: #1872a7;
+    }
+    .btn-primary:hover { background: #2a9ed4; border-color: #2a9ed4; }
+    .btn-primary:active { background: #115a82; border-color: #115a82; }
+    .btn-default {
+      background: #fff;
+      color: #595959;
+      border-color: #d9d9d9;
+    }
+    .btn-default:hover { color: #1872a7; border-color: #1872a7; }
+    .btn-default:active { color: #115a82; border-color: #115a82; }
+
+    /* 审核链路 */
+    .audit-chain {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      padding: 12px 20px;
+    }
+    .chain-label {
+      font-size: 14px;
+      color: #262626;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chain-label .fa { color: #1872a7; }
+    .chain-steps { display: flex; align-items: flex-start; gap: 12px; }
+    .chain-step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .cs-name {
+      font-size: 14px;
+      padding: 5px 18px;
+      border-radius: 16px;
+      background: #f5f7fa;
+      color: #595959;
+      white-space: nowrap;
+    }
+    .chain-step.done .cs-name { background: #e6f4ff; color: #1872a7; }
+    .chain-step.current .cs-name {
+      background: #52c41a;
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(82, 196, 26, 0.35);
+    }
+    .cs-subs { display: flex; gap: 4px; }
+    .cs-sub {
+      font-size: 11px;
+      padding: 1px 8px;
+      border-radius: 8px;
+      background: #fafafa;
+      color: #8c8c8c;
+      border: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    .chain-step.current .cs-sub { background: #f6ffed; color: #52c41a; border-color: #b7eb8f; }
+    .chain-step.done .cs-sub { background: #f6f8fb; color: #1872a7; border-color: #d6e8f5; }
+    .chain-arrow { color: #bfbfbf; font-size: 18px; margin-top: 4px; }
+
+    /* 区块头部操作区 */
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-sm { padding: 4px 12px; font-size: 12px; }
+
+    /* 审核概览 Tabs（右下角：审核链路 / 操作日志） */
+    .tab-switch {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .tab-item {
+      padding: 6px 16px;
+      font-size: 13px;
+      color: #595959;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-item:hover { color: #1872a7; }
+    .tab-item.active { color: #1872a7; font-weight: 600; border-bottom-color: #1872a7; }
+    .col-body > .tab-view { height: 100%; }
+    .chain-block { padding: 12px 4px; }
+    .chain-steps { flex-wrap: wrap; justify-content: center; }
+
+    /* 详情弹窗 */
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-mask.hidden { display: none; }
+    .modal-box {
+      width: 720px;
+      max-width: 92vw;
+      max-height: 84vh;
+      background: #fff;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    }
+    .modal-box-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .modal-box-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 16px; }
+    .modal-box-head .fa-times:hover { color: #ff4d4f; }
+    .modal-box-body { padding: 16px 18px; overflow: auto; }
+
+    /* 操作明细表格 */
+    .record-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .record-table th {
+      text-align: left;
+      padding: 9px 10px;
+      background: #f5f7fa;
+      color: #595959;
+      font-weight: 600;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+    }
+    .record-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid #f5f7fa;
+      color: #262626;
+      vertical-align: top;
+    }
+    .record-table td:first-child { color: #8c8c8c; cursor: pointer; width: 36px; text-align: center; }
+    .record-table .operator-name { color: #262626; }
+    .status-submitted { color: #1872a7; }
+    .status-pending { color: #fa8c16; }
+    .status-revoked { color: #ff4d4f; }
+    .collapse-row td { background: #fafafa; padding: 0; }
+    .collapse-content { padding: 12px 14px 14px 46px; }
+    .comment-label { font-size: 12px; color: #8c8c8c; margin-bottom: 4px; }
+    .comment-box {
+      font-size: 13px; color: #595959; background: #fff;
+      border: 1px solid #f0f0f0; border-radius: 4px; padding: 8px 10px; line-height: 1.6;
+    }
+    .attach-label { font-size: 12px; color: #8c8c8c; margin: 10px 0 4px; }
+    .attach-list { display: flex; flex-direction: column; gap: 6px; }
+    .attach-item {
+      display: flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid #f0f0f0; border-radius: 4px;
+      padding: 6px 10px; font-size: 12px;
+    }
+    .attach-item .fa-download { cursor: pointer; color: #1872a7; }
+    .attach-item.deleted { opacity: .6; }
+    .attach-item.deleted .attach-name { text-decoration: line-through; }
+    .attach-tag { font-size: 11px; padding: 1px 8px; border-radius: 10px; }
+    .attach-tag.deleted { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .attach-tag.source { background: #f6f8fb; color: #8c8c8c; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.78);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .toast.show { opacity: 1; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="page-header">
+      <div class="page-title">测试文件上传失败 · 审核记录</div>
+      <div class="action-bar">
+        <button class="btn btn-default" onclick="openDetailPage()">操作明细</button>
+      </div>
+    </div>
+
+    <div class="content-row">
+      <!-- 左：聊天 -->
+      <div class="col">
+        <div class="block-header">
+          <div class="block-title"><i class="fa fa-comments"></i> 审核沟通</div>
+          <div class="group-switch">
+            <div class="gs-item" data-group="预筛审核" onclick="switchGroup(this)">预筛审核</div>
+            <div class="gs-item active" data-group="入组审核" onclick="switchGroup(this)">入组审核</div>
+          </div>
+        </div>
+        <div class="col-body">
+          <div class="group-view hidden" data-group="预筛审核">
+            <div class="empty-state">
+              <i class="fa fa-comments-o"></i>
+              <div class="es-text">暂无预筛审核沟通记录</div>
+            </div>
+          </div>
+          <div class="group-view" data-group="入组审核">
+          <div class="chat-panel">
+            <div class="chat-body">
+              <div class="chat-sys">2026-08-11 15:19:24　沟通已发起</div>
+
+              <div class="chat-msg self">
+                <div class="chat-avatar">刘</div>
+                <div class="chat-content">
+                  <div class="chat-meta">刘梅 · CRC专员 · 2026-08-11 15:19:24</div>
+                  <div class="chat-bubble">
+                    <span class="chat-mention">@王强</span><span class="chat-mention">@李明</span> 患者相关入组材料已上传，请查收审核。
+                    <div class="chat-files">
+                      <div class="chat-file deleted">
+                        <span class="chat-fname">检验报告单_20260724100623.jpg</span>
+                        <button class="attach-btn" onclick="showToast('该附件已删除，无法下载')">下载</button>
+                        <span class="attach-tag deleted">已删除</span>
+                      </div>
+                      <div class="chat-file api">
+                        <span class="chat-fname">病例拍照图片_20260724101059.png</span>
+                        <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                        <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                        <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+                      </div>
+                      <div class="chat-file">
+                        <span class="chat-fname">知情同意书_20260724102011.pdf</span>
+                        <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                        <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-msg other">
+                <div class="chat-avatar">王</div>
+                <div class="chat-content">
+                  <div class="chat-meta">王强 · 医学经理 · 2026-08-12 09:30:00</div>
+                  <div class="chat-bubble"> @刘梅 检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
+                </div>
+              </div>
+              <div class="chat-msg other">
+                <div class="chat-avatar">李</div>
+                <div class="chat-content">
+                  <div class="chat-meta">李明 · CRA · 2026-08-12 09:32:00</div>
+                  <div class="chat-bubble">检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
+                </div>
+              </div>
+              <div class="chat-msg self">
+                <div class="chat-avatar">刘</div>
+                <div class="chat-content">
+                  <div class="chat-meta">刘梅 · CRC专员 · 2026-08-12 10:15:00</div>
+                  <div class="chat-bubble">已重新补充上传病例材料，请再次审核。</div>
+                </div>
+              </div>
+
+              <div class="chat-msg other">
+                <div class="chat-avatar">王</div>
+                <div class="chat-content">
+                  <div class="chat-meta">王强 · 医学经理 · 2026-08-12 14:23:23</div>
+                  <div class="chat-bubble">驳回本次入组申请。<br/>驳回原因：12121</div>
+                </div>
+              </div>
+            </div>
+            <div class="chat-footer">
+              <div class="chat-toolbar">
+                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
+                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点击「提醒人员」添加并 @ 后再发送。</div>
+                <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
+                <div class="remind-pop hidden" id="remindPop">
+                  <div class="rp-row">
+                    <span class="rp-label">请选择提醒人员：</span>
+                    <div class="rp-tag-box" id="rpTagBox" onclick="toggleRemindList()"></div>
+                  </div>
+                  <div class="rp-list hidden" id="rpList">
+                    <div class="rp-option" data-idx="0" onclick="togglePerson(0)">张三 <span class="rp-role">CRA</span><i class="fa fa-check"></i></div>
+                    <div class="rp-option" data-idx="1" onclick="togglePerson(1)">李四 <span class="rp-role">CRC</span><i class="fa fa-check"></i></div>
+                    <div class="rp-option" data-idx="2" onclick="togglePerson(2)">测试医学 <span class="rp-role">医学经理</span><i class="fa fa-check"></i></div>
+                  </div>
+                
+                  <div class="rp-tip">
+                    <i class="fa fa-info-circle"></i>
+                    <div id="rpTipText"></div>
+                  </div>
+                  <table class="rp-table">
+                    <thead>
+                      <tr><th>序号</th><th>用户姓名</th><th>角色</th><th>手机号</th><th>操作</th></tr>
+                    </thead>
+                    <tbody id="rpTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="pending-files hidden" id="pendingFiles"></div>
+              <div class="chat-input-row">
+                <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送，Shift+Enter 换行" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+                <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+              </div>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右：审核流程 + 操作日志 -->
+      <div class="right-stack">
+        <!-- 右上：审核流程展示 -->
+        <div class="col">
+          <div class="block-header">
+            <div class="block-title"><i class="fa fa-sitemap"></i> 审核流程</div>
+            <div class="group-switch">
+              <div class="gs-item" data-group="预筛审核" onclick="switchGroup(this)">预筛审核</div>
+              <div class="gs-item active" data-group="入组审核" onclick="switchGroup(this)">入组审核</div>
+            </div>
+          </div>
+          <div class="col-body">
+            <div class="group-view hidden" data-group="预筛审核">
+              <div class="empty-state">
+                <i class="fa fa-sitemap"></i>
+                <div class="es-text">暂无预筛审核流程记录</div>
+              </div>
+            </div>
+            <div class="group-view" data-group="入组审核">
+            <div class="process-panel">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">CRC已提交审核</div>
+                    <div class="timeline-status done">已提交</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-ban"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">CRC撤销申请</div>
+                    <div class="timeline-status danger">已撤销申请</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-12 10:00:00</div>
+                  <div class="timeline-remark">撤销原因：材料不完整</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">CRC 已提交审核</div>
+                    <div class="timeline-status done">已提交</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">CRA审核通过</div>
+                    <div class="timeline-status done">审核通过</div>
+                  </div>
+                  <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">医学经理审核筛败</div>
+                    <div class="timeline-status danger">审核筛败</div>
+                  </div>
+                  <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
+                  <div class="timeline-remark">筛败原因：不符合入组标准</div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右下：审核链路 / 操作日志 切换 -->
+        <div class="col oplog">
+          <div class="block-header">
+            <div class="block-title"><i class="fa fa-clipboard-list"></i> 审核概览</div>
+            <div class="header-actions">
+              <div class="group-switch" style="display:none">
+                <div class="gs-item" data-group="预筛审核" onclick="switchGroup(this)">预筛审核</div>
+                <div class="gs-item active" data-group="入组审核" onclick="switchGroup(this)">入组审核</div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-switch">
+            <div class="tab-item active" data-tab="chain" onclick="switchTab(this)">审核链路</div>
+            <div class="tab-item" data-tab="oplog" onclick="switchTab(this)">操作日志</div>
+          </div>
+          <div class="col-body">
+            <!-- 审核链路（不分组） -->
+            <div class="tab-view" data-tab="chain">
+              <div class="chain-block">
+                <div class="chain-label"><i class="fa fa-link"></i> 审核链路：</div>
+                <div class="chain-steps">
+                  <div class="chain-step done">
+                    <div class="cs-name">预筛审核V1.0</div>
+                    <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
+                  </div>
+                  <i class="fa fa-long-arrow-right chain-arrow"></i>
+                  <div class="chain-step current">
+                    <div class="cs-name">入组审核</div>
+                    <div class="cs-subs">
+                      <span class="cs-sub">CRA审核</span>
+                      <span class="cs-sub">医学审核</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 操作日志 -->
+            <div class="tab-view hidden" data-tab="oplog">
+              <div class="group-view hidden" data-group="预筛审核">
+                <div class="empty-state">
+                  <i class="fa fa-list-ul"></i>
+                  <div class="es-text">暂无预筛审核操作日志</div>
+                </div>
+              </div>
+              <div class="group-view" data-group="入组审核">
+                <div class="op-timeline">
+                  <div class="op-item">
+                    <div class="op-dot blue"></div>
+                    <div class="op-status">已提交</div>
+                    <div class="op-time">08-11 15:19</div>
+                  </div>
+                  <div class="op-item">
+                    <div class="op-dot orange"></div>
+                    <div class="op-status">待审核（已撤回）</div>
+                    <div class="op-time">08-11 15:19</div>
+                  </div>
+                  <div class="op-item">
+                    <div class="op-dot red"></div>
+                    <div class="op-status">已撤销申请</div>
+                    <div class="op-time">09-04 18:28</div>
+                    <div class="op-remark">撤销：12121</div>
+                  </div>
+                  <div class="op-item">
+                    <div class="op-dot blue"></div>
+                    <div class="op-status">已提交</div>
+                    <div class="op-time">08-11 15:19</div>
+                  </div>
+                  <div class="op-item">
+                    <div class="op-dot blue"></div>
+                    <div class="op-status">审核沟通</div>
+                    <div class="op-time">08-11 15:19</div>
+                  </div>
+                  <div class="op-item">
+                    <div class="op-dot red"></div>
+                    <div class="op-status">驳回</div>
+                    <div class="op-time">08-12 14:23</div>
+                    <div class="op-remark">驳回：12121</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作明细弹窗 -->
+  <div class="modal-mask hidden" id="detailMask" onclick="if(event.target===this)closeDetail()">
+    <div class="modal-box">
+      <div class="modal-box-head">
+        <span>操作明细记录</span>
+        <i class="fa fa-times" onclick="closeDetail()"></i>
+      </div>
+      <div class="modal-box-body">
+        <table class="record-table">
+          <thead>
+            <tr>
+              <th>折叠</th>
+              <th>操作人</th>
+              <th>操作状态</th>
+              <th>操作时间</th>
+              <th>操作耗时</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-submitted">已提交</td>
+              <td>2026-08-11 15:19:24</td>
+              <td>—</td>
+            </tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-pending">待审核（已撤回）</td>
+              <td>2026-08-11 15:19:25</td>
+              <td>—</td>
+            </tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-revoked">已撤销申请</td>
+              <td>2026-09-04 18:28:31</td>
+              <td>—</td>
+            </tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content">
+              <div class="comment-label">批注：</div>
+              <div class="comment-box">撤销原因：12121</div>
+            </div></td></tr>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-submitted">已提交</td>
+              <td>2026-08-11 15:19:24</td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-submitted">审核沟通</td>
+              <td>2026-08-11 15:19:24</td>
+              <td>—</td>
+            </tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content">
+              <div class="comment-label">批注：</div>
+              <div class="comment-box">附件已上传</div>
+              <div class="attach-label">附件：</div>
+              <div class="attach-list">
+                <div class="attach-item deleted">
+                  <span class="attach-name">检验报告单_20260724100623.jpg</span>
+                  <button class="attach-btn" onclick="showToast('该附件已删除，无法下载')">下载</button>
+                  <span class="attach-tag deleted">已删除</span>
+                </div>
+                <div class="attach-item">
+                  <span class="attach-name">病例拍照图片_20260724101059.png</span>
+                  <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                  <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                  <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+                </div>
+                <div class="attach-item">
+                  <span class="attach-name">知情同意书_20260724102011.pdf</span>
+                  <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                  <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                </div>
+              </div>
+            </div></td></tr>
+            <tr>
+              <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
+              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td class="status-revoked">驳回</td>
+              <td>2026-08-12 14:23:23</td>
+              <td>-</td>
+            </tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content">
+              <div class="comment-label">批注：</div>
+              <div class="comment-box">驳回原因：12121</div>
+            </div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+      }
+      t.textContent = text;
+      t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+    function onDownload() { showToast('开始下载审核记录'); }
+    function openDetailPage() { window.open('操作明细.html', '_blank'); }
+    function openDetail() { document.getElementById('detailMask').classList.remove('hidden'); }
+    function closeDetail() { document.getElementById('detailMask').classList.add('hidden'); }
+    function toggleRow(td) {
+      var row = td.parentElement;
+      var next = row.nextElementSibling;
+      if (!next || !next.classList.contains('collapse-row')) return;
+      var icon = td.querySelector('i');
+      var hidden = next.classList.toggle('hidden');
+      if (icon) icon.className = hidden ? 'fa fa-chevron-right' : 'fa fa-chevron-down';
+    }
+    var pendingFiles = [];
+    var remindPersons = [
+      { name: '张三', role: 'CRA', phone: '188****0005', selected: true },
+      { name: '李四', role: 'CRC', phone: '182****0005', selected: true },
+      { name: '测试医学', role: '医学经理', phone: '166****0012', selected: false }
+    ];
+    function onUpload() { document.getElementById('fileInput').click(); }
+    function onFileChosen(input) {
+      Array.prototype.forEach.call(input.files, function (f) {
+        pendingFiles.push(f.name);
+      });
+      renderPending();
+      input.value = '';
+    }
+    function renderPending() {
+      var box = document.getElementById('pendingFiles');
+      if (!pendingFiles.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      box.classList.remove('hidden');
+      box.innerHTML = pendingFiles.map(function (name, i) {
+        return '<span class="pending-file"><i class="fa fa-file-o"></i>' + escapeHtml(name) +
+          '<i class="fa fa-times pf-del" title="移除" onclick="removePending(' + i + ')"></i></span>';
+      }).join('');
+    }
+    function removePending(i) { pendingFiles.splice(i, 1); renderPending(); }
+
+    function toggleRemind() {
+      document.getElementById('remindPop').classList.toggle('hidden');
+      renderRemind();
+    }
+    function toggleRemindList() { document.getElementById('rpList').classList.toggle('hidden'); }
+    function togglePerson(i) {
+      remindPersons[i].selected = !remindPersons[i].selected;
+      renderRemind();
+    }
+    function removeRemindRow(i) {
+      remindPersons[i].selected = false;
+      renderRemind();
+    }
+    function renderRemind() {
+      var sel = remindPersons.filter(function (p) { return p.selected; });
+      var box = document.getElementById('rpTagBox');
+      if (!sel.length) {
+        box.innerHTML = '<span class="rp-placeholder">请选择提醒人员</span>' +
+          '<span class="rp-arrow"><i class="fa fa-caret-down"></i></span>';
+      } else {
+        box.innerHTML = sel.map(function (p) {
+          var idx = remindPersons.indexOf(p);
+          return '<span class="rp-tag">' + escapeHtml(p.name + ' - ' + p.role) +
+            '<i class="fa fa-times-circle rp-tag-del" title="移除" onclick="event.stopPropagation();removeRemindRow(' + idx + ')"></i></span>';
+        }).join('') + '<span class="rp-arrow"><i class="fa fa-caret-down"></i></span>';
+      }
+      document.querySelectorAll('#rpList .rp-option').forEach(function (op) {
+        op.classList.toggle('selected', remindPersons[+op.getAttribute('data-idx')].selected);
+      });
+     
+      document.getElementById('rpTipText').innerHTML =
+        '首次发送默认选中CRC/协调员；后续发送默认选中上次人员。<br/>' +
+        '提示：若需更改，可直接删除已选人员后重新添加。';
+      var tbody = document.getElementById('rpTableBody');
+      if (!sel.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="rp-empty">暂未选择提醒人员</td></tr>';
+        return;
+      }
+      tbody.innerHTML = sel.map(function (p) {
+        var idx = remindPersons.indexOf(p);
+        return '<tr><td>' + (sel.indexOf(p) + 1) + '</td><td>' + escapeHtml(p.name) + '</td><td>' + p.role +
+          '</td><td>' + p.phone + '</td><td><span class="rp-del" onclick="removeRemindRow(' + idx + ')">删除</span></td></tr>';
+      }).join('');
+    }
+    function onDefaultNotifyChange() {
+      var cra = document.getElementById('dnCRA').checked;
+      var crc = document.getElementById('dnCRC').checked;
+      remindPersons.forEach(function (p) {
+        if (p.role === 'CRA') p.selected = cra;
+        else if (p.role === 'CRC') p.selected = crc;
+      });
+      renderRemind();
+    }
+    function sendMsg() {
+      var ta = document.getElementById('chatInput');
+      var text = ta.value.trim();
+      var mentions = remindPersons.filter(function (p) { return p.selected; });
+      if (!text && !pendingFiles.length) { showToast('请输入消息内容'); return; }
+      appendSelfMsg(text, pendingFiles.slice(), mentions);
+      ta.value = '';
+      pendingFiles = [];
+      renderPending();
+      remindPersons.forEach(function (p) { p.selected = false; });
+      renderRemind();
+      document.getElementById('remindPop').classList.add('hidden');
+      document.getElementById('rpList').classList.add('hidden');
+    }
+    function appendSelfMsg(text, files, mentions) {
+      var body = document.querySelector('.chat-panel .chat-body');
+      if (!body) return;
+      var mentionHtml = (mentions || []).map(function (p) {
+        return '<span class="chat-mention">@' + escapeHtml(p.name) + '</span>';
+      }).join('');
+      var bubble = mentionHtml + escapeHtml(text);
+      if (files && files.length) {
+        bubble += '<div class="chat-files">' + files.map(function (name) {
+          return '<div class="chat-file"><span class="chat-fname">' + escapeHtml(name) + '</span>' +
+            '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+            '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
+        }).join('') + '</div>';
+      }
+      var msg = document.createElement('div');
+      msg.className = 'chat-msg self';
+      msg.innerHTML = '<div class="chat-avatar">刘</div>' +
+        '<div class="chat-content"><div class="chat-meta">刘梅 · CRC专员 · ' + now() +
+        '</div><div class="chat-bubble">' + bubble + '</div></div>';
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+    function now() {
+      var d = new Date();
+      function p(n) { return (n < 10 ? '0' : '') + n; }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    function escapeHtml(s) {
+      return s.replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+    function switchTab(el) {
+      var sw = el.parentElement;
+      sw.querySelectorAll('.tab-item').forEach(function (i) {
+        i.classList.toggle('active', i === el);
+      });
+      var col = el.closest('.col');
+      var tab = el.getAttribute('data-tab');
+      col.querySelectorAll('.tab-view').forEach(function (v) {
+        v.classList.toggle('hidden', v.getAttribute('data-tab') !== tab);
+      });
+      var gs = col.querySelector('.header-actions .group-switch');
+      if (gs) gs.style.display = (tab === 'oplog') ? '' : 'none';
+    }
+    function switchGroup(el) {
+      var sw = el.parentElement;
+      sw.querySelectorAll('.gs-item').forEach(function (i) {
+        i.classList.toggle('active', i === el);
+      });
+      var col = el.closest('.col');
+      var group = el.getAttribute('data-group');
+      col.querySelectorAll('.group-view').forEach(function (v) {
+        v.classList.toggle('hidden', v.getAttribute('data-group') !== group);
+      });
+    }
+  </script>
+</body>
+</html>
