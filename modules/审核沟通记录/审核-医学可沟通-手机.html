@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>审核（手机版）</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; padding: 0; height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #e9ebef; }
+    body { display: flex; justify-content: center; }
+
+    .phone { width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
+      background: #f0f2f5; display: flex; flex-direction: column; position: relative;
+      overflow: hidden; box-shadow: 0 0 24px rgba(0,0,0,.12); }
+
+    /* 顶部栏 */
+    .app-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+      height: 50px; padding: 0 12px; background: #fff; border-bottom: 1px solid #f0f0f0; }
+    .app-bar .back { font-size: 18px; color: #262626; width: 28px; cursor: pointer; }
+    .app-bar .title { flex: 1; min-width: 0; font-size: 15px; font-weight: 600; color: #262626;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+    .app-bar .op-btn { flex: 0 0 auto; font-size: 13px; color: #409eff;
+      background: #ecf5ff; border: 1px solid #b3d8ff; border-radius: 14px;
+      padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+
+    /* 入组/预筛 切换 */
+    .group-switch { flex: 0 0 auto; display: flex; align-items: stretch;
+      background: #f7f8fa; border-bottom: 1px solid #e8e8e8; overflow: hidden; }
+    .gs-item { flex: 1; text-align: center; height: 44px; line-height: 44px; font-size: 14px;
+      color: #595959; cursor: pointer; background: transparent;
+      border-right: 1px solid #e8e8e8; transition: all .15s; }
+    .gs-item:last-child { border-right: none; }
+    .gs-item:hover { color: #409eff; }
+    .gs-item.active { background: #fff; color: #409eff; font-weight: 600; }
+
+    /* ===== 审核提示条（补充审核原因 / 跨组审核-非正常流程） ===== */
+    .audit-notice { flex: 0 0 auto; margin: 8px 10px 0; padding: 10px 12px;
+      background: #fff2f0; border: 1px solid #ffccc7; border-left: 4px solid #ff4d4f;
+      border-radius: 6px; }
+    .an-row { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+    .an-tag { flex: 0 0 auto; display: inline-block; padding: 2px 10px; border-radius: 3px;
+      background: #ff4d4f; color: #fff; font-size: 12px; font-weight: 600; line-height: 1.7; }
+    .an-text { flex: 1 1 auto; min-width: 0; font-size: 13px; color: #ff4d4f; font-weight: 500;
+      line-height: 1.7; word-break: break-word; }
+    .an-text.plain { color: #595959; font-weight: 400; }
+    .an-reason { margin-top: 6px; padding-left: 2px; font-size: 13px; color: #595959; line-height: 1.7; }
+    .an-reason strong { color: #ff4d4f; }
+
+    /* 主切换 */
+    .seg { flex: 0 0 auto; display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; }
+    .seg-item { flex: 1; text-align: center; padding: 12px 0; font-size: 14px;
+      color: #595959; cursor: pointer; position: relative; }
+    .seg-item.active { color: #409eff; font-weight: 600; }
+    .seg-item.active::after { content: ''; position: absolute; left: 50%; bottom: 0;
+      transform: translateX(-50%); width: 28px; height: 3px; border-radius: 2px; background: #409eff; }
+
+    .views { flex: 1 1 auto; min-height: 0; position: relative; }
+    .view { position: absolute; inset: 0; display: none; flex-direction: column; }
+    .view.active { display: flex; }
+    .view > [data-group] { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .view > [data-group].hidden { display: none; }
+    .view > .chat-footer { flex: 0 0 auto; }
+
+    /* ===== 沟通 ===== */
+    .chat-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px 10px; background: #f5f6f8; }
+    .chat-sys { text-align: center; font-size: 12px; color: #bfbfbf; margin: 10px 0; }
+    .chat-sys.reject { color: #ff4d4f; background: #fff1f0; border-radius: 12px; padding: 6px 10px; display: inline-block; margin: 10px auto; }
+    .chat-sys.approve { color: #52c41a; background: #f6ffed; border-radius: 12px; padding: 6px 10px; display: inline-block; margin: 10px auto; }
+    .chat-sys.reject, .chat-sys.approve { display: block; width: fit-content; }
+    .chat-msg { display: flex; margin-bottom: 14px; gap: 8px; }
+    .chat-msg.self { flex-direction: row-reverse; }
+    .chat-avatar { flex-shrink: 0; width: 34px; height: 34px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; }
+    .chat-msg.self .chat-avatar { background: #409eff; }
+    .chat-msg.other .chat-avatar { background: #8c8c8c; }
+    .chat-content { max-width: 76%; }
+    .chat-meta { font-size: 11px; color: #bfbfbf; margin-bottom: 4px; }
+    .chat-msg.self .chat-meta { text-align: right; }
+
+    /* 消息状态标签（与 PC 审核记录一致） */
+    .chat-status { display: inline-block; font-size: 11px; line-height: 1; padding: 3px 9px;
+      border-radius: 10px; font-weight: 600; margin-left: 8px; vertical-align: middle; white-space: nowrap; }
+    .chat-status.green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+    .chat-status.red { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .chat-status.orange { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+    .chat-status.gray { background: #fafafa; color: #8c8c8c; border: 1px solid #f0f0f0; }
+    .chat-msg.self .chat-status { margin-left: 0; margin-right: 8px; }
+    .chat-bubble { padding: 9px 11px; font-size: 14px; line-height: 1.6; border-radius: 8px;
+      color: #262626; word-break: break-word; }
+    .chat-msg.self .chat-bubble { background: #e6f4ff; color: #262626; border: 1px solid #bae0ff; border-top-right-radius: 2px; }
+    .chat-msg.other .chat-bubble { background: #fff; border: 1px solid #f0f0f0; border-top-left-radius: 2px; }
+    .chat-mention { color: #409eff; font-weight: 600; }
+    .chat-files { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .chat-file { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
+      background: rgba(255,255,255,.15); padding: 6px 8px; border-radius: 4px; font-size: 12px; }
+    .chat-msg.other .chat-file { background: #f6f8fb; border: 1px solid #f0f0f0; }
+    .chat-file .chat-fname { flex: 1 1 110px; min-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .attach-btn { flex-shrink: 0; font-size: 11px; line-height: 1; padding: 4px 8px;
+      border: 1px solid #d9d9d9; border-radius: 3px; background: #fff; color: #595959; cursor: pointer; white-space: nowrap; }
+    .chat-msg.self .chat-file { background: #fff; border: 1px solid #f0f0f0; }
+    .attach-btn.danger { color: #ff4d4f; border-color: #ffccc7; }
+    .chat-file.deleted { opacity: .75; }
+    .chat-file.deleted .chat-fname { text-decoration: line-through; color: #bfbfbf; }
+    .chat-file.deleted .attach-btn { opacity: .5; }
+    .attach-tag { font-size: 11px; padding: 1px 8px; border-radius: 10px; }
+    .attach-tag.deleted { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
+    .attach-tag.source { background: #f6f8fb; color: #8c8c8c; }
+
+    /* 重点关注（与 PC 审核一致） */
+    .chat-focus { margin-top: 8px; background: #fff; border: 1px solid #f0f0f0;
+      border-radius: 4px; padding: 10px 12px; font-size: 12px; line-height: 1.7; color: #262626; }
+    .chat-msg.other .chat-focus { background: #f6f8fb; }
+    .chat-focus .cf-title { font-weight: 600; margin-bottom: 4px; }
+    .cf-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 8px 0; }
+    .cf-item + .cf-item { border-top: 1px solid #f0f0f0; }
+    .cf-tag { flex: 0 0 auto; order: 2; font-size: 11px; line-height: 1.6; padding: 0 6px;
+      border-radius: 3px; margin-top: 1px; white-space: nowrap; }
+    .cf-tag.gray { background: #fafafa; color: #8c8c8c; border: 1px solid #f0f0f0; }
+    .cf-tag.orange { background: #fff7e6; color: #fa8c16; border: 1px solid #ffd591; }
+    .cf-text { flex: 1 1 auto; order: 1; min-width: 0; }
+    .cf-text .cf-label { font-weight: 600; }
+    .cf-item.cf-long { display: block; }
+    .cf-item.cf-long .cf-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .cf-item.cf-long .cf-head .cf-label { flex: 1 1 auto; min-width: 0; }
+    .cf-item.cf-long .cf-value { margin-top: 2px; }
+
+    /* 聊天底部 */
+    .chat-footer { flex: 0 0 auto; background: #fff; border-top: 1px solid #f0f0f0;
+      padding: 8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+    .chat-hint { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #d48806;
+      background: #fffbeb; border: 1px solid #ffe58f; border-radius: 4px; padding: 5px 8px; margin-bottom: 8px; }
+    .chat-hint .fa { color: #faad14; }
+    .chat-toolbar { display: flex; align-items: center; gap: 12px; }
+    .tool-text-btn { font-size: 13px; color: #595959; background: #fff; border: 1px solid #d9d9d9;
+      border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: inherit; line-height: 1.2; }
+    .tool-text-btn:active { color: #409eff; border-color: #409eff; }
+    .chat-input-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+    .chat-input { flex: 1 1 auto; resize: none; height: 42px; max-height: 100px;
+      border: 1px solid #f0f0f0; border-radius: 8px; padding: 9px 10px;
+      font-size: 14px; line-height: 1.5; font-family: inherit; outline: none; }
+    .chat-input:focus { border-color: #409eff; }
+    .chat-send { flex: 0 0 auto; height: 42px; padding: 0 18px; border: none; border-radius: 8px;
+      background: #409eff; color: #fff; font-size: 14px; cursor: pointer; }
+    .chat-send:active { background: #115a82; }
+    .pending-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+    .pending-file { display: inline-flex; align-items: center; gap: 6px; background: #f6f8fb;
+      border: 1px solid #f0f0f0; border-radius: 4px; padding: 4px 8px; font-size: 12px; color: #262626; }
+    .pending-file .pf-del { cursor: pointer; color: #8c8c8c; }
+    .pending-file .pf-del:active { color: #ff4d4f; }
+    .pending-remind { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+    .pending-remind-tag { display: inline-flex; align-items: center; gap: 5px; background: #ecf5ff;
+      border: 1px solid #b3d8ff; border-radius: 4px; padding: 4px 8px; font-size: 12px; color: #0958d9; }
+    .pending-remind-tag .fa-at { color: #337ecc; }
+    .pending-remind-tag .pr-role { color: #4096ff; opacity: .85; }
+    .pending-remind-tag .pr-del { cursor: pointer; color: #95a5b8; margin-left: 2px; }
+    .pending-remind-tag .pr-del:active { color: #ff4d4f; }
+
+    /* ===== 审核操作栏（PC 审核要求的 沟通/驳回/通过） ===== */
+    .review-actions { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #f0f0f0; }
+    .ra-tip { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+      color: #262626; margin-bottom: 8px; }
+    .ra-tip .fa { color: #409eff; }
+    .ra-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .ra-grid .btn { padding-left: 2px; padding-right: 2px; font-size: 12px; gap: 3px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: 14px; line-height: 1; border: 1px solid transparent; border-radius: 8px;
+      padding: 11px 12px; cursor: pointer; font-family: inherit; white-space: nowrap; }
+    .btn:active { filter: brightness(.95); }
+    .btn-default { background: #fff; color: #595959; border-color: #d9d9d9; }
+    .btn-default:active { color: #409eff; border-color: #409eff; }
+    .btn-primary { background: #409eff; color: #fff; border-color: #409eff; }
+    .btn-danger { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-success { background: #52c41a; color: #fff; border-color: #52c41a; }
+
+    /* 审核操作内联面板（驳回 / 通过） */
+    .review-panel { margin-top: 10px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
+    .review-panel-head { display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: #f5f7fa; border-bottom: 1px solid #f0f0f0;
+      font-size: 14px; font-weight: 600; color: #262626; }
+    .review-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
+    .review-panel-head .fa-times:hover { color: #ff4d4f; }
+    .review-panel-body { padding: 14px; }
+    .review-panel-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 10px 14px;
+      border-top: 1px solid #f0f0f0; background: #fafafa; }
+    .form-item { margin-bottom: 14px; }
+    .form-label { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #262626;
+      font-weight: 600; margin-bottom: 6px; }
+    .form-label .req { color: #ff4d4f; }
+    .form-select, .form-textarea { width: 100%; border: 1px solid #d9d9d9; border-radius: 6px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit; color: #262626; outline: none; background: #fff; }
+    .form-select:focus, .form-textarea:focus { border-color: #409eff; }
+    .form-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+    .form-radio { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+      color: #262626; margin-right: 18px; cursor: pointer; }
+    .section-title { font-size: 14px; color: #262626; font-weight: 600; border-left: 3px solid #409eff;
+      padding-left: 8px; margin-bottom: 10px; }
+    .reason-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .reason-tag { font-size: 13px; color: #595959; background: #f5f7fa; border: 1px solid #e8e8e8;
+      border-radius: 4px; padding: 6px 12px; cursor: pointer; user-select: none; transition: all .15s; }
+    .reason-tag:active { color: #409eff; }
+    .reason-tag.active { background: #ecf5ff; color: #409eff; border-color: #409eff; font-weight: 600; }
+
+    /* ===== 通用滚动/卡片 ===== */
+    .scroll-wrap { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; }
+    .card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+    .card + .card { margin-top: 12px; }
+    .card-title { font-size: 15px; font-weight: 600; color: #262626; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px; }
+    .card-title .fa { color: #409eff; }
+    .empty-state { min-height: 200px; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; color: #bfbfbf; gap: 10px; }
+    .empty-state i { font-size: 28px; }
+    .empty-state .es-text { font-size: 13px; }
+
+    /* 审核流程时间线 */
+    .timeline { position: relative; padding-left: 26px; }
+    .timeline::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: #e8e8e8; }
+    .timeline-item { position: relative; margin-bottom: 20px; }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-dot { position: absolute; left: -26px; top: 2px; width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; border: 3px solid #409eff; display: flex; align-items: center; justify-content: center; }
+    .timeline-dot i { font-size: 8px; color: #409eff; }
+    .timeline-dot.done { background: #409eff; }
+    .timeline-dot.done i { color: #fff; }
+    .timeline-dot.danger { border-color: #ff4d4f; }
+    .timeline-dot.danger i { color: #ff4d4f; }
+    .timeline-dot.gray { border-color: #bfbfbf; }
+    .timeline-dot.gray i { color: #bfbfbf; }
+    .timeline-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .timeline-title { font-size: 14px; color: #262626; font-weight: 500; }
+    .timeline-status { font-size: 12px; padding: 2px 10px; border-radius: 10px; background: #f5f7fa; color: #595959; white-space: nowrap; }
+    .timeline-status.done { background: #ecf5ff; color: #409eff; }
+    .timeline-status.danger { background: #fff1f0; color: #ff4d4f; }
+    .timeline-info { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
+    .timeline-remark { font-size: 13px; color: #595959; margin-top: 6px; background: #f6f8fb; border-radius: 4px; padding: 8px 10px; line-height: 1.6; }
+
+    /* 审核链路 */
+    .chain-label { font-size: 14px; color: #262626; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .chain-legend { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8c8c8c; margin-bottom: 12px; }
+    .chain-legend .dot { width: 8px; height: 8px; border-radius: 50%; background: #52c41a; display: inline-block; flex: 0 0 auto; }
+    .chain-label .fa { color: #409eff; }
+    .chain-steps { display: flex; flex-direction: column; }
+    .chain-step { display: flex; align-items: stretch; gap: 12px; position: relative; padding-bottom: 12px; }
+    .chain-step:last-child { padding-bottom: 0; }
+    .cs-index { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; background: #f5f7fa; color: #595959; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; z-index: 1; border: 2px solid #fff; box-sizing: border-box; }
+    .chain-step.done .cs-index { background: #409eff; color: #fff; }
+    .chain-step.current .cs-index { background: #52c41a; color: #fff; }
+    .chain-step:not(:last-child)::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: #d9d9d9; z-index: 0; }
+    .cs-body { flex: 1; display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+    .cs-name { font-size: 14px; padding: 5px 16px; border-radius: 16px; background: #f5f7fa; color: #595959; white-space: nowrap; }
+    .chain-step.done .cs-name { background: #ecf5ff; color: #409eff; }
+    .chain-step.current .cs-name { background: #52c41a; color: #fff; font-weight: 600; }
+    .cs-subs { display: flex; gap: 4px; flex-wrap: wrap; }
+    .cs-sub { font-size: 11px; padding: 1px 8px; border-radius: 8px; background: #fafafa; color: #8c8c8c; border: 1px solid #f0f0f0; }
+    .chain-step.current .cs-sub { background: #f6ffed; color: #52c41a; border-color: #b7eb8f; }
+    .chain-step.done .cs-sub { background: #f6f8fb; color: #409eff; border-color: #b3d8ff; }
+
+    /* ===== 操作日志（独立 Tab，样式对齐 审核记录-其它-医学不可沟通-手机） ===== */
+    .ol-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; background: #f5f7fa; }
+    .ol-section-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #f5f7fa; }
+    .ol-section-title { font-size: 15px; font-weight: 600; color: #262626; }
+    .ol-section-toggle { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #337ecc; cursor: pointer; }
+    .ol-section-toggle i { font-size: 12px; transform: rotate(180deg); transition: transform .2s; }
+    .ol-download-bar { display: flex; justify-content: flex-end; padding: 0 16px 10px; background: #f5f7fa; }
+    .ol-download-btn { padding: 6px 14px; background: #409eff; color: #fff; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; }
+    .ol-download-btn:active { background: #337ecc; }
+    .ol-timeline { position: relative; padding: 4px 16px 20px; background: #f5f7fa; }
+    .ol-timeline::before { content: ''; position: absolute; left: 23px; top: 12px; bottom: 40px; width: 1px; background: #d9d9d9; }
+    .ol-item { position: relative; padding-left: 32px; margin-bottom: 16px; }
+    .ol-item:last-child { margin-bottom: 0; }
+    .ol-dot { position: absolute; left: 0; top: 6px; width: 14px; height: 14px; background: #d9d9d9; border: 2px solid #f5f7fa; border-radius: 50%; z-index: 1; }
+    .ol-card { background: #fff; border-radius: 8px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    .ol-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .ol-operator { font-size: 15px; font-weight: 600; color: #262626; }
+    .ol-status { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .ol-status.blue { color: #337ecc; background: #ecf5ff; }
+    .ol-status.gray { color: #595959; background: #f5f5f5; }
+    .ol-status.red { color: #ff4d4f; background: #fff1f0; }
+    .ol-status.orange { color: #fa8c16; background: #fff7e6; }
+    .ol-row { font-size: 13px; color: #595959; line-height: 1.8; }
+    .ol-row .label { color: #8c8c8c; }
+
+    /* ===== 我的批注 ===== */
+    .remark-btn { position: relative; }
+    .remark-count { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px;
+      padding: 0 5px; border-radius: 9px; background: #ff4d4f; color: #fff; font-size: 11px;
+      line-height: 18px; text-align: center; font-weight: 600; box-shadow: 0 0 0 2px #fff; }
+    .remark-row { margin-bottom: 8px; }
+    .remark-row .btn { width: 100%; }
+    .remark-panel { margin-top: 10px; border: 1px solid #f0f0f0; border-radius: 8px; background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06); overflow: hidden; }
+    .remark-panel-head { display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; background: #f5f7fa; border-bottom: 1px solid #f0f0f0; font-size: 14px;
+      font-weight: 600; color: #262626; }
+    .remark-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
+    .remark-panel-head .remark-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 8px; }
+    .remark-panel-body { padding: 12px 14px; }
+    .remark-card { border: 1px solid #e8e8e8; border-radius: 6px; padding: 10px 12px; background: #fff; }
+    .remark-card + .remark-card { margin-top: 10px; }
+    .remark-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .remark-card-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #ecf5ff;
+      color: #337ecc; font-size: 12px; font-weight: 500; }
+    .remark-card-time { font-size: 12px; color: #8c8c8c; }
+    .remark-card-bd { font-size: 13px; color: #262626; line-height: 1.6; }
+    .remark-card-ops { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    .remark-op { font-size: 12px; color: #409eff; cursor: pointer; }
+    .remark-op.danger { color: #ff4d4f; }
+    .remark-more { display: block; width: 100%; margin-top: 10px; padding: 8px; font-size: 13px;
+      color: #ff4d4f; background: #fff; border: 1px solid #ffccc7; border-radius: 6px;
+      cursor: pointer; font-family: inherit; }
+    .remark-edit-title { font-size: 13px; font-weight: 600; color: #409eff; border-left: 3px solid #409eff;
+      padding-left: 8px; margin: 14px 0 8px; }
+    .remark-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+    /* 操作明细弹窗 / 匹配详情抽屉 */
+    .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex;
+      align-items: flex-end; justify-content: center; z-index: 1000; }
+    .modal-mask.hidden { display: none; }
+    .modal-box { width: 100%; max-width: 480px; max-height: 86vh; background: #fff;
+      border-radius: 14px 14px 0 0; display: flex; flex-direction: column; overflow: hidden;
+      animation: sheetUp .25s ease; }
+    @keyframes sheetUp { from { transform: translateY(40px); opacity: .7; } to { transform: translateY(0); opacity: 1; } }
+    .modal-box-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0; font-size: 15px; font-weight: 600; color: #262626; }
+    .modal-box-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 18px; }
+    .modal-box-body { padding: 12px 14px 18px; overflow: auto; }
+    .record-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .record-table th { text-align: left; padding: 9px 8px; background: #f5f7fa; color: #595959;
+      font-weight: 600; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+    .record-table td { padding: 9px 8px; border-bottom: 1px solid #f5f7fa; color: #262626; vertical-align: top; }
+    .record-table td:first-child { color: #8c8c8c; cursor: pointer; width: 32px; text-align: center; }
+    .status-submitted { color: #409eff; }
+    .status-pending { color: #fa8c16; }
+    .status-revoked { color: #ff4d4f; }
+    .collapse-row td { background: #fafafa; padding: 0; }
+    .collapse-content { padding: 12px 12px 14px 40px; }
+    .comment-label { font-size: 12px; color: #8c8c8c; margin-bottom: 4px; }
+    .comment-box { font-size: 13px; color: #595959; background: #fff; border: 1px solid #f0f0f0;
+      border-radius: 4px; padding: 8px 10px; line-height: 1.6; }
+
+    .drawer-mask { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.45); display: flex; justify-content: flex-end; }
+    .drawer-mask.hidden { display: none; }
+    .drawer-panel { width: 100%; max-width: 480px; height: 100%; background: #fff; display: flex;
+      flex-direction: column; box-shadow: -4px 0 18px rgba(0,0,0,.22); animation: drawerIn .22s ease; }
+    @keyframes drawerIn { from { transform: translateX(40px); opacity: .6; } to { transform: translateX(0); opacity: 1; } }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f0; font-size: 15px; font-weight: 600; color: #262626; }
+    .drawer-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 16px; }
+    .drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+    .drawer-ph { color: #595959; font-size: 13px; line-height: 1.9; }
+    .drawer-ph b { color: #52c41a; }
+    .drawer-ph .no { color: #ff4d4f; }
+
+    /* 提醒人员底部抽屉 */
+    .remind-sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; background: #fff;
+      border-radius: 14px 14px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.18);
+      transform: translateY(100%); transition: transform .25s ease; max-height: 82%;
+      display: flex; flex-direction: column; overflow: hidden; }
+    .remind-sheet.show { transform: translateY(0); }
+    .rs-head { display: flex; align-items: center; justify-content: center; position: relative;
+      padding: 14px 16px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+    .rs-title { font-size: 16px; font-weight: 600; color: #262626; }
+    .rs-close { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #595959; font-size: 18px; cursor: pointer; }
+    .rs-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; background: #f5f7fa; }
+    .rs-notice { position: relative; background: #fffbe6; border: 1px solid #ffe58f; border-radius: 8px;
+      padding: 10px 10px 10px 34px; font-size: 12px; line-height: 1.7; color: #8c8c8c; margin-bottom: 12px; }
+    .rs-notice i { position: absolute; left: 12px; top: 10px; color: #faad14; font-size: 14px; }
+    .rs-search { display: flex; align-items: center; gap: 8px; background: #fff; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+    .rs-search i { color: #bfbfbf; font-size: 14px; }
+    .rs-search input { flex: 1; border: none; outline: none; font-size: 14px; font-family: inherit; color: #262626; background: transparent; }
+    .rs-search input::placeholder { color: #bfbfbf; }
+    .rs-list { background: #fff; border-radius: 8px; overflow: hidden; }
+    .rp-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+    .rp-item:last-child { border-bottom: none; }
+    .rp-info { flex: 1; min-width: 0; }
+    .rp-name { font-size: 15px; color: #262626; margin-bottom: 4px; }
+    .rp-meta { font-size: 13px; color: #8c8c8c; }
+    .rp-check { width: 18px; height: 18px; accent-color: #409eff; cursor: pointer; flex-shrink: 0; margin-left: 12px; }
+    .rp-empty { text-align: center; color: #bfbfbf; padding: 20px 0; font-size: 13px; }
+    .rs-foot { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
+    .rs-count { font-size: 14px; color: #262626; }
+    .rs-actions { display: flex; align-items: center; gap: 20px; }
+    .rs-btn { font-size: 15px; color: #595959; background: none; border: none; cursor: pointer; font-family: inherit; }
+    .rs-btn.primary { color: #409eff; }
+    .rs-mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 15; display: none; }
+    .rs-mask.show { display: block; }
+
+    /* toast */
+    .toast { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      background: rgba(0,0,0,.8); color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 8px;
+      z-index: 2000; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 80%; text-align: center; }
+    .toast.show { opacity: 1; }
+
+    /* 全局隐藏工具类（与 PC 一致），保证同一时间只显示一个状态 */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <!-- 顶部栏 -->
+    <div class="app-bar">
+      <i class="back fa fa-arrow-left" onclick="showToast('返回')"></i>
+      <div class="title">ZHCN-CN001 · 审核</div>
+   
+    </div>
+
+    <!-- 入组/预筛 切换 -->
+    <div class="group-switch">
+            <div class="gs-item" data-group="预筛审核" onclick="switchGroupTab(this)">预筛审核</div>
+      <div class="gs-item active" data-group="入组审核" onclick="switchGroupTab(this)">入组审核</div>
+    </div>
+
+    <!-- 审核提示：补充审核原因 -->
+    <div class="audit-notice" id="supplementNotice" data-group="入组审核">
+      <div class="an-row">
+        <span class="an-tag">补充审核</span>
+        <span class="an-text plain">补充审核原因：999</span>
+      </div>
+    </div>
+    <!-- 审核提示：跨组审核（非正常流程） -->
+    <div class="audit-notice hidden" id="abnormalNotice" data-group="预筛审核">
+      <div class="an-row">
+        <span class="an-tag">非正常流程</span>
+        <span class="an-text">提示：若需要走正常流程，请驳回重新提交审核</span>
+      </div>
+      <div class="an-reason"><strong>原因：</strong>阿三大苏打撒旦</div>
+    </div>
+
+    <!-- 主切换 -->
+    <div class="seg">
+      <div class="seg-item active" data-view="chat" onclick="switchMainTab(this)">沟通</div>
+      <div class="seg-item" data-view="process" onclick="switchMainTab(this)">审核流程</div>
+      <div class="seg-item" data-view="chain" onclick="switchMainTab(this)">审核链路</div>
+      <div class="seg-item" data-view="oplog" onclick="switchMainTab(this)">操作日志</div>
+    </div>
+
+    <div class="views">
+      <!-- 沟通 -->
+      <div class="view active" id="view-chat">
+        <div class="chat-scroll" id="chatScroll">
+          <div data-group="入组审核" id="chatBody">
+            <div class="chat-sys">2026-08-11 15:19:24　沟通已发起</div>
+
+            <div class="chat-msg self">
+              <div class="chat-avatar">刘</div>
+              <div class="chat-content">
+                <div class="chat-meta">刘梅 · CRC专员 · 2026-08-11 15:19:24<span class="chat-status orange">已提交</span></div>
+                <div class="chat-bubble">
+                  <span class="chat-mention">@王强</span><span class="chat-mention">@李明</span> 患者相关入组材料已上传，请查收审核。
+                  <div class="chat-focus">
+                    <div class="cf-title">重点关注：</div>
+                    <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">性别：</span>女</div></div>
+                    <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">年龄：</span>61</div></div>
+                    <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">身高：</span>160cm</div></div>
+                    <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">体重：</span>80kg</div></div>
+                    <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">BMI：</span>31.5</div></div>
+                    <div class="cf-item cf-long"><div class="cf-head"><span class="cf-tag gray">未修改</span><div class="cf-label">是否诊断为ASCVD（包含冠心病、脑血管疾病、外周动脉粥样硬化性疾病）？病史大于3个月？</div></div><div class="cf-value">是否有ASCVD：是-具体疾病名称：冠状动脉粥样硬化性心脏病-首次诊断/操作时间：2025-01-26（外院冠脉造影显示狭窄）-病史是否≥3个月：是</div></div>
+                    <div class="cf-item cf-long"><div class="cf-head"><span class="cf-tag gray">未修改</span><div class="cf-label">符合以下哪种情况（复杂冠状动脉病变/2型糖尿病/CKD/1年内AMI或缺血性卒中）</div></div><div class="cf-value">2型糖尿病-最近一次HbA1c：7.5%-检测日期：2026-09-16</div></div>
+                    <div class="cf-item cf-long"><div class="cf-head"><span class="cf-tag gray">未修改</span><div class="cf-label">是否行冠脉PCI手术</div></div><div class="cf-value">是否行冠脉PCI手术：是-责任血管：第二对角支-病变情况：开口80%狭窄-处理方式：药物球囊扩张-手术日期：2025-02-11</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-msg other">
+              <div class="chat-avatar">王</div>
+              <div class="chat-content">
+                <div class="chat-meta">王强 · 医学经理 · 2026-08-12 09:30:00<span class="chat-status gray">审核沟通中</span></div>
+                <div class="chat-bubble"> @刘梅 检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
+              </div>
+            </div>
+            <div class="chat-msg other">
+              <div class="chat-avatar">李</div>
+              <div class="chat-content">
+                <div class="chat-meta">李明 · CRA · 2026-08-12 09:32:00<span class="chat-status gray">审核沟通中</span></div>
+                <div class="chat-bubble">检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
+              </div>
+            </div>
+
+            <div class="chat-msg self">
+              <div class="chat-avatar">刘</div>
+              <div class="chat-content">
+                <div class="chat-meta">刘梅 · CRC专员 · 2026-08-12 10:15:00<span class="chat-status orange">已提交</span></div>
+                <div class="chat-bubble">已重新补充上传病例材料，请再次审核。
+                  <div class="chat-files">
+                    <div class="chat-file deleted">
+                      <span class="chat-fname">检验报告单_20260724100623.jpg</span>
+                      <button class="attach-btn" onclick="showToast('该附件已删除，无法下载')">下载</button>
+                      <span class="attach-tag deleted">已删除</span>
+                    </div>
+                    <div class="chat-file">
+                      <span class="chat-fname">病例拍照图片_20260724101059.png</span>
+                      <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                      <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                      <span class="attach-tag source">上传来源：更新审核状态API接口</span>
+                    </div>
+                    <div class="chat-file">
+                      <span class="chat-fname">知情同意书_20260724102011.pdf</span>
+                      <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
+                      <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="chat-msg other">
+              <div class="chat-avatar">王</div>
+              <div class="chat-content">
+                <div class="chat-meta">王强 · 医学经理 · 2026-08-12 14:23:23<span class="chat-status red">驳回</span></div>
+                <div class="chat-bubble">驳回本次入组申请。<br/>驳回原因：12121</div>
+              </div>
+            </div>
+
+            <div class="chat-msg other">
+              <div class="chat-avatar">李</div>
+              <div class="chat-content">
+                <div class="chat-meta">李明 · CRA · 2026-08-13 11:20:00<span class="chat-status green">审核通过</span></div>
+                <div class="chat-bubble">材料复核无误，本次入组申请审核通过。</div>
+              </div>
+            </div>
+          </div>
+
+          <div data-group="预筛审核" class="hidden">
+            <div class="empty-state"><i class="fa fa-comments-o"></i><div class="es-text">暂无预筛审核沟通记录</div></div>
+          </div>
+        </div>
+
+        <!-- 聊天底部：输入框 + 审核操作 -->
+        <div class="chat-footer">
+          <!-- 输入区（默认隐藏，点「沟通」展开，与 PC 的 #chatBox 一致） -->
+          <div class="chat-box hidden" id="chatBox">
+            <div class="chat-hint"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点「提醒人员」添加并 @ 后再发送。</div>
+            <div class="chat-toolbar" id="chatToolbar">
+              <button class="tool-text-btn" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+              <button class="tool-text-btn" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
+              <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
+            </div>
+            <div class="pending-files hidden" id="pendingFiles"></div>
+            <div class="pending-remind hidden" id="pendingRemind"></div>
+            <div class="chat-input-row" id="chatInputRow">
+              <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+              <button class="chat-send" onclick="sendMsg()">发送</button>
+            </div>
+          </div>
+
+          <!-- 审核操作：我的批注 / 沟通 / 驳回 / 通过 -->
+          <div class="review-actions" id="reviewActions">
+            <div class="ra-tip"><i class="fa fa-gavel"></i> 审核操作</div>
+            <div class="ra-grid">
+              <button class="btn btn-primary remark-btn" onclick="openRemark()">
+                <i class="fa fa-pencil-square-o"></i> 我的批注
+                <span class="remark-count" id="remarkCount">1</span>
+              </button>
+              <button class="btn btn-default" onclick="sendNotice()"><i class="fa fa-comments"></i> 沟通</button>
+              <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 驳回</button>
+              <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 通过</button>
+            </div>
+          </div>
+
+          <!-- 我的批注面板 -->
+          <div class="remark-panel hidden" id="remarkPanel">
+            <div class="remark-edit-title">我的批注</div>
+              <div class="form-item" style="margin-bottom:0">
+                <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容">患者既往病史需进一步核实，已备注待跟进。</textarea>
+              </div>
+              <div class="remark-edit-actions">
+                 <button class="btn btn-primary" onclick="saveRemark()">取消</button>
+                <button class="btn btn-primary" onclick="saveRemark()">保存批注</button>
+              </div>
+            <div class="remark-panel-head">
+              <span>我的批注<span class="remark-tip">仅自己可见</span></span>
+            </div>
+            <div class="remark-panel-body">
+              <div class="remark-card">
+                <div class="remark-card-hd">
+                  <span class="remark-card-tag">V2审核</span>
+                  <span class="remark-card-time">2026-08-07 20:50:12</span>
+                </div>
+                <div class="remark-card-bd">患者既往病史需进一步核实，已备注待跟进。</div>
+                <div class="remark-card-ops">
+                  <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                  <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                </div>
+              </div>
+              <div class="hidden" id="remarkMore">
+                <div class="remark-card">
+                  <div class="remark-card-hd">
+                    <span class="remark-card-tag">V1审核</span>
+                    <span class="remark-card-time">2026-08-10 14:22:03</span>
+                  </div>
+                  <div class="remark-card-bd">入排标准基本符合，建议补充近期血脂复查结果。</div>
+                  <div class="remark-card-ops">
+                    <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                    <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                  </div>
+                </div>
+                <div class="remark-card">
+                  <div class="remark-card-hd">
+                    <span class="remark-card-tag">预筛审核</span>
+                    <span class="remark-card-time">2026-07-13 09:11:45</span>
+                  </div>
+                  <div class="remark-card-bd">已电话联系患者，确认下周复查时间。</div>
+                  <div class="remark-card-ops">
+                    <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                    <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                  </div>
+                </div>
+              </div>
+
+              
+            </div>
+          </div>
+
+          <!-- 驳回 / 通过 内联面板 -->
+          <div class="review-panel hidden" id="reviewPanel">
+            <div class="review-panel-head">
+              <span id="reviewPanelTitle">驳回审核</span>
+            </div>
+            <div class="review-panel-body">
+              <div id="rejectBlock">
+                <div class="form-item">
+                  <div class="form-label"><span class="req">*</span>驳回原因：</div>
+                  <div class="reason-tags" id="rejectReasonTags">
+                    <span class="reason-tag" onclick="toggleReason(this)">不符合入组标准</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">既往治疗或合并用药不符</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">资料缺失</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">无法评估</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">受试者意愿或依从性差</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">试验执行原因</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">重复提交</span>
+                    <span class="reason-tag" onclick="toggleReason(this)">其他</span>
+                  </div>
+                </div>
+                <div class="form-item">
+                  <div class="form-label">备注：</div>
+                  <textarea class="form-textarea" id="reviewComment" placeholder="请输入备注"></textarea>
+                </div>
+              </div>
+              <div id="approveBlock" style="display:none">
+                <div class="section-title">审核批注</div>
+                <div class="form-item">
+                  <textarea class="form-textarea" id="approveComment" placeholder="请输入审核批注"></textarea>
+                </div>
+                <div class="form-item">
+                  <div class="form-label"><span class="req">*</span> 是否需要加签审核</div>
+                  <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
+                  <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
+                </div>
+                <div class="form-item" id="nextReviewerItem" style="display:none">
+                  <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
+                  <select class="form-select" id="nextReviewer">
+                    <option value="">请选择下一个审核人</option>
+                    <option>王强（医学经理）</option>
+                    <option>李明（CRA）</option>
+                    <option>项目负责人</option>
+                    <option>赵敏（医学总监）</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="review-panel-foot">
+              <button class="btn btn-default" onclick="closeReview()">取消</button>
+              <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 提醒人员抽屉 -->
+        <div class="rs-mask" id="rsMask" onclick="toggleRemind()"></div>
+        <div class="remind-sheet" id="remindSheet">
+          <div class="rs-head">
+            <span class="rs-title">提醒人员</span>
+            <i class="fa fa-times rs-close" onclick="toggleRemind()"></i>
+          </div>
+          <div class="rs-body">
+            <div class="rs-notice">
+              <i class="fa fa-info-circle"></i>
+              <div>本项目已设置 医学经理 和 CRC 不允许直接沟通。首次发送默认选中 CRC / CRA；后续发送默认选中上次人员。</div>
+            </div>
+            <div class="rs-search">
+              <i class="fa fa-search"></i>
+              <input type="text" id="rpSearch" placeholder="请输入关键字" oninput="filterRemind()" />
+            </div>
+            <div class="rs-list" id="rpListBox"></div>
+          </div>
+          <div class="rs-foot">
+            <div class="rs-count">已选 <span id="rpCount">0</span> 人</div>
+            <div class="rs-actions">
+              <button class="rs-btn" onclick="toggleRemind()">取消</button>
+              <button class="rs-btn primary" onclick="confirmRemind()">确定</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 审核流程 -->
+      <div class="view" id="view-process">
+        <div class="scroll-wrap">
+          <div data-group="入组审核">
+            <div class="card">
+              <div class="card-title"><i class="fa fa-sitemap"></i> 审核流程</div>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">CRC已提交审核</div><div class="timeline-status done">已提交</div></div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-ban"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">CRC撤销申请</div><div class="timeline-status danger">已撤销申请</div></div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-12 10:00:00</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">CRC已提交审核</div><div class="timeline-status done">已提交</div></div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">审核通过</div><div class="timeline-status done">审核通过</div></div>
+                  <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">筛败</div><div class="timeline-status danger">筛败</div></div>
+                  <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot gray"><i class="fa fa-clock-o"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">待审核</div></div>
+                  <div class="timeline-info">王强 · CRA专员</div>
+                  <div class="timeline-info">赵四 · CRA专员</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-group="预筛审核" class="hidden">
+            <div class="card"><div class="empty-state"><i class="fa fa-sitemap"></i><div class="es-text">暂无预筛审核流程记录</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 审核链路 -->
+      <div class="view" id="view-chain">
+        <div class="scroll-wrap">
+          <div data-group="入组审核">
+            <div class="card">
+              <div class="card-title"><i class="fa fa-link"></i> 审核链路</div>
+              <div class="chain-label"><i class="fa fa-project-diagram"></i> 审核链路</div>
+              <div class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程</div>
+              <div class="chain-steps">
+                <div class="chain-step done">
+                  <div class="cs-index">1</div>
+                  <div class="cs-body">
+                    <div class="cs-name">预筛审核V1.0</div>
+                    <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
+                  </div>
+                </div>
+                <div class="chain-step current">
+                  <div class="cs-index">2</div>
+                  <div class="cs-body">
+                    <div class="cs-name">入组审核</div>
+                    <div class="cs-subs">
+                      <span class="cs-sub">CRA审核</span>
+                      <span class="cs-sub">医学审核</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div data-group="预筛审核" class="hidden">
+            <div class="card"><div class="empty-state"><i class="fa fa-link"></i><div class="es-text">暂无预筛审核链路记录</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作日志（独立 Tab，内容对齐 审核记录-其它-医学不可沟通-手机） -->
+      <div class="view" id="view-oplog">
+        <div class="ol-scroll">
+          <!-- 入组审批 -->
+          <div data-group="入组审核">
+            <div class="ol-section-header">
+              <div class="ol-section-title">入组审批</div>
+              <div class="ol-section-toggle" onclick="toggleSection(this)">
+                <i class="fa fa-angle-up"></i>
+                <span>收起</span>
+              </div>
+            </div>
+            <div class="ol-download-bar">
+              <button class="ol-download-btn" onclick="onDownload()">下载</button>
+            </div>
+            <div class="ol-timeline">
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-card-header">
+                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-status blue">发起</span>
+                  </div>
+                  <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+                  <div class="ol-row"><span class="label">补充审核原因：</span>999</div>
+                  <div class="ol-row"><span class="label">批注：</span></div>
+                </div>
+              </div>
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-card-header">
+                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-status gray">待审核（已撤回）</span>
+                  </div>
+                  <div class="ol-row"><span class="label">批注：</span></div>
+                  <div class="ol-row"><span class="label">操作时间：</span>2026-08-15 03:06:53</div>
+                  <div class="ol-row"><span class="label">操作耗时：</span></div>
+                </div>
+              </div>
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-card-header">
+                    <span class="ol-operator">刘雪雪&lt;CRC&gt;</span>
+                    <span class="ol-status red">已撤销申请</span>
+                  </div>
+                  <div class="ol-row"><span class="label">批注：</span>撤销原因：12121</div>
+                  <div class="ol-row"><span class="label">操作时间：</span>2026-09-02 11:02:04</div>
+                  <div class="ol-row"><span class="label">操作耗时：</span></div>
+                </div>
+              </div>
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-card-header">
+                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-status blue">发起</span>
+                  </div>
+                  <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+                  <div class="ol-row"><span class="label">批注：</span></div>
+                </div>
+              </div>
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-card-header">
+                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-status red">筛败</span>
+                  </div>
+                  <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
+                  <div class="ol-row"><span class="label">批注：筛败原因：测试筛败</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 预筛审批 -->
+          <div data-group="预筛审核" class="hidden">
+            <div class="ol-section-header">
+              <div class="ol-section-title">预筛审批</div>
+              <div class="ol-section-toggle" onclick="toggleSection(this)">
+                <i class="fa fa-angle-up"></i>
+                <span>收起</span>
+              </div>
+            </div>
+            <div class="ol-timeline">
+              <div class="ol-item">
+                <div class="ol-dot"></div>
+                <div class="ol-card">
+                  <div class="ol-row">暂无预筛审核记录</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 操作明细弹窗 -->
+  <div class="modal-mask hidden" id="detailMask" onclick="if(event.target===this)closeDetail()">
+    <div class="modal-box">
+      <div class="modal-box-head">
+        <span>操作明细记录</span>
+        <i class="fa fa-times" onclick="closeDetail()"></i>
+      </div>
+      <div class="modal-box-body">
+        <table class="record-table">
+          <thead><tr><th>折叠</th><th>操作人</th><th>操作状态</th><th>操作时间</th><th>操作耗时</th></tr></thead>
+          <tbody>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-pending">待审核（已撤回）</td><td>2026-08-11 15:19:25</td><td>—</td></tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-revoked">已撤销申请</td><td>2026-09-04 18:28:31</td><td>—</td></tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">撤销原因：12121</div></div></td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">审核沟通</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">附件已上传</div><div class="attach-label">附件：</div><div class="attach-list"></div></div></td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-revoked">驳回</td><td>2026-08-12 14:23:23</td><td>-</td></tr>
+            <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">驳回原因：12121</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 匹配详情抽屉 -->
+  <div class="drawer-mask hidden" id="matchDrawer" onclick="if(event.target===this)closeMatchDrawer()">
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <span><i class="fa fa-file-alt"></i> 匹配详情</span>
+        <i class="fa fa-times" onclick="closeMatchDrawer()"></i>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-ph">
+          <p>受试者：刘梅（女 / 61）</p>
+          <p>入组标准匹配：</p>
+          <p>· 年龄 18-75 岁：<b>符合</b></p>
+          <p>· 确诊 2 型糖尿病：<b>符合</b>（HbA1c 7.5%）</p>
+          <p>· 冠状动脉粥样硬化性心脏病史 ≥3 个月：<b>符合</b></p>
+          <p>· 已行冠脉 PCI 手术：<b>符合</b></p>
+          <p>排除标准匹配：</p>
+          <p>· 近 1 年内 AMI 或缺血性卒中：<span class="no">不符合排除</span>（通过）</p>
+          <p style="margin-top:12px;color:#8c8c8c;">（原型占位内容，实际可嵌入匹配报告）</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showToast(text) {
+      var t = document.getElementById('toast');
+      if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+      t.textContent = text; t.classList.add('show');
+      setTimeout(function () { t.classList.remove('show'); }, 1600);
+    }
+
+    /* 入组/预筛 切换 */
+    function switchGroupTab(el) {
+      var g = el.getAttribute('data-group');
+      el.parentElement.querySelectorAll('.gs-item').forEach(function (i) { i.classList.toggle('active', i === el); });
+      document.querySelectorAll('.view [data-group], .audit-notice[data-group]').forEach(function (node) {
+        node.classList.toggle('hidden', node.getAttribute('data-group') !== g);
+      });
+    }
+    /* 主切换 */
+    function switchMainTab(el) {
+      var view = el.getAttribute('data-view');
+      el.parentElement.querySelectorAll('.seg-item').forEach(function (i) { i.classList.toggle('active', i === el); });
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('active', v.id === 'view-' + view); });
+    }
+
+    /* 操作明细 */
+    function openDetail() { document.getElementById('detailMask').classList.remove('hidden'); }
+    function closeDetail() { document.getElementById('detailMask').classList.add('hidden'); }
+    function toggleRow(td) {
+      var row = td.parentElement; var next = row.nextElementSibling;
+      if (!next || !next.classList.contains('collapse-row')) return;
+      var icon = td.querySelector('i');
+      var hidden = next.classList.toggle('hidden');
+      if (icon) icon.className = hidden ? 'fa fa-chevron-right' : 'fa fa-chevron-down';
+    }
+
+    /* 匹配详情 */
+    function openMatchDrawer() { document.getElementById('matchDrawer').classList.remove('hidden'); }
+    function closeMatchDrawer() { document.getElementById('matchDrawer').classList.add('hidden'); }
+
+    /* 发送 / 附件 / 提醒 */
+    var pendingFiles = [];
+    var remindPersons = [
+      { name: '张三', role: 'CRA', phone: '188****0005', selected: true },
+      { name: '李四', role: 'CRC', phone: '182****0005', selected: true },
+      { name: '测试医学', role: '医学经理', phone: '166****0012', selected: false }
+    ];
+    function onUpload() { document.getElementById('fileInput').click(); }
+    function onFileChosen(input) {
+      Array.prototype.forEach.call(input.files, function (f) { pendingFiles.push(f.name); });
+      renderPending(); input.value = '';
+    }
+    function renderPending() {
+      var box = document.getElementById('pendingFiles');
+      if (!pendingFiles.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      box.classList.remove('hidden');
+      box.innerHTML = pendingFiles.map(function (name, i) {
+        return '<span class="pending-file"><i class="fa fa-file-o"></i>' + escapeHtml(name) +
+          '<i class="fa fa-times pf-del" onclick="removePending(' + i + ')"></i></span>';
+      }).join('');
+    }
+    function removePending(i) { pendingFiles.splice(i, 1); renderPending(); }
+
+    function toggleRemind() {
+      var sheet = document.getElementById('remindSheet');
+      var mask = document.getElementById('rsMask');
+      var show = sheet.classList.toggle('show');
+      mask.classList.toggle('show', show);
+      if (show) { var s = document.getElementById('rpSearch'); if (s) s.value = ''; renderRemind(); }
+    }
+    function setRemind(i, checked) {
+      remindPersons[i].selected = checked;
+      document.getElementById('rpCount').textContent = remindPersons.filter(function (p) { return p.selected; }).length;
+    }
+    function filterRemind() { renderRemind(); }
+    function renderRemind() {
+      var box = document.getElementById('rpListBox'); if (!box) return;
+      var kw = ''; var s = document.getElementById('rpSearch'); if (s) kw = s.value.trim().toLowerCase();
+      var list = remindPersons.filter(function (p) {
+        if (!kw) return true;
+        return (p.name + p.role + p.phone).toLowerCase().indexOf(kw) > -1;
+      });
+      if (!list.length) { box.innerHTML = '<div class="rp-empty">未找到匹配人员</div>'; }
+      else {
+        box.innerHTML = list.map(function (p) {
+          var idx = remindPersons.indexOf(p);
+          return '<label class="rp-item">' +
+            '<div class="rp-info"><div class="rp-name">' + escapeHtml(p.name) + '</div>' +
+            '<div class="rp-meta">' + escapeHtml(p.role) + '/' + escapeHtml(p.phone) + '</div></div>' +
+            '<input type="checkbox" class="rp-check" ' + (p.selected ? 'checked' : '') + ' onchange="setRemind(' + idx + ', this.checked)" />' +
+            '</label>';
+        }).join('');
+      }
+      document.getElementById('rpCount').textContent = remindPersons.filter(function (p) { return p.selected; }).length;
+    }
+    function confirmRemind() {
+      var sel = remindPersons.filter(function (p) { return p.selected; });
+      if (!sel.length) { showToast('请至少选择一名提醒人员'); return; }
+      toggleRemind(); renderPendingRemind();
+      showToast('已设置提醒人员，发送时将自动 @ 提醒');
+    }
+    function renderPendingRemind() {
+      var box = document.getElementById('pendingRemind'); if (!box) return;
+      var sel = remindPersons.filter(function (p) { return p.selected; });
+      if (!sel.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      box.classList.remove('hidden');
+      box.innerHTML = sel.map(function (p) {
+        var idx = remindPersons.indexOf(p);
+        return '<span class="pending-remind-tag"><i class="fa fa-at"></i>' + escapeHtml(p.name) +
+          '<span class="pr-role">' + escapeHtml(p.role) + '</span>' +
+          '<i class="fa fa-times pr-del" onclick="removeRemindChip(' + idx + ')"></i></span>';
+      }).join('');
+    }
+    function removeRemindChip(i) { remindPersons[i].selected = false; renderPendingRemind(); renderRemind(); }
+    function sendMsg() {
+      var ta = document.getElementById('chatInput');
+      var text = ta.value.trim();
+      var mentions = remindPersons.filter(function (p) { return p.selected; });
+      if (!text && !pendingFiles.length) { showToast('请输入消息内容'); return; }
+      appendSelfMsg(text, pendingFiles.slice(), mentions);
+      ta.value = ''; pendingFiles = []; renderPending();
+      remindPersons.forEach(function (p) { p.selected = false; });
+      renderRemind(); renderPendingRemind();
+      toggleRemind();
+    }
+    function appendSelfMsg(text, files, mentions) {
+      var body = document.getElementById('chatBody'); if (!body) return;
+      var mentionHtml = (mentions || []).map(function (p) { return '<span class="chat-mention">@' + escapeHtml(p.name) + '</span>'; }).join('');
+      var bubble = mentionHtml + escapeHtml(text);
+      if (files && files.length) {
+        bubble += '<div class="chat-files">' + files.map(function (name) {
+          return '<div class="chat-file"><span class="chat-fname">' + escapeHtml(name) + '</span>' +
+            '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+            '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
+        }).join('') + '</div>';
+      }
+      var msg = document.createElement('div');
+      msg.className = 'chat-msg self';
+      msg.innerHTML = '<div class="chat-avatar">刘</div>' +
+        '<div class="chat-content"><div class="chat-meta">刘梅 · CRC专员 · ' + now() +
+        '</div><div class="chat-bubble">' + bubble + '</div></div>';
+      body.appendChild(msg);
+      var scroll = document.getElementById('chatScroll'); if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    }
+    function now() {
+      var d = new Date(); function p(n) { return (n < 10 ? '0' : '') + n; }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    function escapeHtml(s) {
+      return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
+    }
+
+    /* 沟通：展开/收起输入区（与 PC 一致，切换 #chatBox） */
+    function sendNotice() {
+      var box = document.getElementById('chatBox');
+      var show = !box.classList.toggle('hidden');
+      if (show) {
+        document.getElementById('remarkPanel').classList.add('hidden');
+        document.getElementById('reviewPanel').classList.add('hidden');
+        var ta = document.getElementById('chatInput'); if (ta) ta.focus();
+      }
+    }
+
+    /* 我的批注：打开 / 关闭 / 编辑 / 保存 / 更多 */
+    function openRemark() {
+      document.getElementById('chatBox').classList.add('hidden');
+      document.getElementById('reviewPanel').classList.add('hidden');
+      document.getElementById('remarkPanel').classList.remove('hidden');
+      document.getElementById('reviewActions').classList.add('hidden');
+    }
+    function closeRemark() {
+      document.getElementById('remarkPanel').classList.add('hidden');
+      document.getElementById('reviewActions').classList.remove('hidden');
+    }
+    function editRemark() {
+      var ta = document.getElementById('remarkText');
+      if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center' }); }
+    }
+    function saveRemark() {
+      var ta = document.getElementById('remarkText');
+      if (!ta || !ta.value.trim()) { showToast('请输入批注内容'); return; }
+      closeRemark();
+      showToast('批注已保存');
+    }
+    function toggleRemarkMore() {
+      var box = document.getElementById('remarkMore');
+      var btn = document.getElementById('remarkMoreBtn');
+      var open = box.classList.toggle('hidden');
+      btn.textContent = open ? '更多批注（2）' : '收起批注';
+    }
+
+    /* 操作日志：分组收起 / 展开、下载 */
+    function toggleSection(el) {
+      var block = el.closest('[data-group]');
+      var timeline = block.querySelector('.ol-timeline');
+      var icon = el.querySelector('i');
+      var text = el.querySelector('span');
+      if (timeline.style.display === 'none') {
+        timeline.style.display = 'block';
+        icon.style.transform = 'rotate(180deg)';
+        text.textContent = '收起';
+      } else {
+        timeline.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+        text.textContent = '展开';
+      }
+    }
+    function onDownload() { showToast('操作日志下载中…'); }
+
+    /* 审核操作：驳回 / 通过 */
+    var reviewType = '';
+    var chatBoxWasHidden = true;
+    function toggleReason(el) { el.classList.toggle('active'); }
+    function openReview(type) {
+      reviewType = type;
+      document.getElementById('reviewActions').classList.add('hidden');
+      document.getElementById('remarkPanel').classList.add('hidden');
+      // 打开审核面板（驳回/通过）时，隐藏消息输入区
+      var chatBox = document.getElementById('chatBox');
+      chatBoxWasHidden = chatBox.classList.contains('hidden');
+      chatBox.classList.add('hidden');
+      var panel = document.getElementById('reviewPanel');
+      panel.classList.remove('hidden');
+      var title = document.getElementById('reviewPanelTitle');
+      var confirmBtn = document.getElementById('reviewConfirm');
+      if (type === 'reject') {
+        title.textContent = '驳回审核';
+        document.getElementById('rejectBlock').style.display = '';
+        document.getElementById('approveBlock').style.display = 'none';
+        confirmBtn.textContent = '确认驳回';
+        confirmBtn.className = 'btn btn-primary';
+      } else {
+        title.textContent = '通过审核';
+        document.getElementById('rejectBlock').style.display = 'none';
+        document.getElementById('approveBlock').style.display = '';
+        confirmBtn.textContent = '确认通过';
+        confirmBtn.className = 'btn btn-primary';
+      }
+    }
+    function closeReview() {
+      document.getElementById('reviewPanel').classList.add('hidden');
+      document.getElementById('reviewActions').classList.remove('hidden');
+      // 取消时恢复打开前的输入区状态
+      if (!chatBoxWasHidden) document.getElementById('chatBox').classList.remove('hidden');
+    }
+    function toggleCountersign() {
+      var yes = document.querySelector('input[name="countersign"]:checked').value === 'yes';
+      document.getElementById('nextReviewerItem').style.display = yes ? '' : 'none';
+    }
+    function confirmReview() {
+      if (reviewType === 'reject') {
+        var reasons = Array.prototype.map.call(
+          document.querySelectorAll('#rejectReasonTags .reason-tag.active'),
+          function (el) { return el.textContent; }
+        );
+        if (!reasons.length) { showToast('请选择驳回原因'); return; }
+        var comment = document.getElementById('reviewComment').value.trim();
+        appendSysMsg('【驳回】原因：' + reasons.join('、') + (comment ? '；备注：' + comment : ''), 'reject');
+        showToast('已提交驳回');
+      } else {
+        var comment = document.getElementById('approveComment').value.trim();
+        if (!comment) { showToast('请输入审核批注'); return; }
+        var yes = document.querySelector('input[name="countersign"]:checked').value === 'yes';
+        var next = '';
+        if (yes) {
+          next = document.getElementById('nextReviewer').value;
+          if (!next) { showToast('请选择下一个审核人'); return; }
+        }
+        appendSysMsg('【通过】批注：' + comment + (yes ? '；加签至 ' + next : '；不加签'), 'approve');
+        showToast('已通过审核' + (yes ? '并加签' : ''));
+      }
+      document.querySelectorAll('#rejectReasonTags .reason-tag.active').forEach(function (el) { el.classList.remove('active'); });
+      document.getElementById('reviewComment').value = '';
+      document.getElementById('approveComment').value = '';
+      document.querySelector('input[name="countersign"][value="no"]').checked = true;
+      document.getElementById('nextReviewerItem').style.display = 'none';
+      document.getElementById('nextReviewer').value = '';
+      // 提交后不再恢复输入区
+      chatBoxWasHidden = true;
+      closeReview();
+    }
+    function appendSysMsg(text, kind) {
+      var body = document.getElementById('chatBody'); if (!body) return;
+      var cls = kind === 'reject' ? 'chat-sys reject' : (kind === 'approve' ? 'chat-sys approve' : 'chat-sys');
+      var msg = document.createElement('div');
+      msg.className = cls;
+      msg.textContent = '【' + now() + '】 ' + text;
+      body.appendChild(msg);
+      var scroll = document.getElementById('chatScroll'); if (scroll) scroll.scrollTop = scroll.scrollHeight;
+    }
+  </script>
+</body>
+</html>

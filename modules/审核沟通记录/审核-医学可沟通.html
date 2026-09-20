@@ -98,6 +98,44 @@
     }
     .right-stack > .col { flex: 1 1 0; min-width: 0; }
     .right-stack > .col.oplog { flex: 0 0 280px; }
+
+    /* 我的批注：聊天区内可收缩区块 */
+    .chat-remark {
+      margin: 12px 16px 0;
+      border: 1px solid #e3e8f0;
+      border-radius: 8px;
+      background: #f7f9fc;
+      overflow: hidden;
+    }
+    .cr-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: #eef3fb;
+      user-select: none;
+    }
+    .cr-head:hover { background: #e6eef8; }
+    .cr-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #262626; }
+    .cr-title .fa { color: #1872a7; }
+    .cr-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 4px; }
+    .cr-count {
+      min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+      background: #1872a7; color: #fff; font-size: 11px; line-height: 18px;
+      text-align: center; font-weight: 600;
+    }
+    .cr-arrow { margin-left: auto; color: #8c8c8c; transition: transform .2s; }
+    .chat-remark.collapsed .cr-arrow { transform: rotate(180deg); }
+    .cr-body { padding: 12px 14px; }
+    .chat-remark.collapsed .cr-body { display: none; }
+    .cr-body .remark-card {
+      background: #fff;
+      border-left: 3px solid #1872a7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .cr-body .remark-more { width: 100%; justify-content: center; }
+    .cr-body .remark-edit-actions { margin: 4px 0 2px; }
     .block-header {
       flex: 0 0 auto;
       display: flex;
@@ -260,8 +298,9 @@
       word-break: break-word;
     }
     .chat-msg.self .chat-bubble {
-      background: #1872a7;
-      color: #fff;
+      background: #e8f3f6;
+      color: #262626;
+      border: 1px solid #cfe3ea;
       border-top-right-radius: 0;
     }
     .chat-msg.other .chat-bubble {
@@ -279,7 +318,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(24, 114, 167, 0.06);
+      border: 1px solid rgba(24, 114, 167, 0.18);
       padding: 6px 8px;
       border-radius: 4px;
       font-size: 12px;
@@ -313,6 +353,7 @@
     /* 聊天输入区（微信模式） */
     .chat-footer {
       flex: 0 0 auto;
+      position: relative;
       border-top: 1px solid #f0f0f0;
       background: #fff;
       padding: 8px 10px 10px;
@@ -514,7 +555,7 @@
 
     /* 消息中的 @ 提及 */
     .chat-mention { color: #1872a7; font-weight: 600; }
-    .chat-msg.self .chat-mention { color: #ffd666; }
+    .chat-msg.self .chat-mention { color: #1872a7; }
 
     /* 消息状态标签 */
     .chat-status {
@@ -537,8 +578,8 @@
     /* 重点关注 */
     .chat-focus {
       margin-top: 8px;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: rgba(24, 114, 167, 0.05);
+      border: 1px solid rgba(24, 114, 167, 0.18);
       border-radius: 4px;
       padding: 10px 12px;
       font-size: 12px;
@@ -812,6 +853,58 @@
     .ra-tip .fa { color: #1872a7; }
     .review-actions .ra-spacer { margin-left: auto; }
 
+    /* ===== 审核提示条（补充审核原因 / 跨组审核-非正常流程） ===== */
+    .audit-notice {
+      display: flex; flex-direction: column; margin: 0 0 14px; padding: 12px 16px;
+      background: #fff2f0; border: 1px solid #ffccc7; border-left: 4px solid #ff4d4f;
+      border-radius: 6px;
+    }
+    .an-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .an-tag { flex: 0 0 auto; display: inline-block; padding: 2px 12px; border-radius: 3px;
+      background: #ff4d4f; color: #fff; font-size: 13px; font-weight: 600; line-height: 1.8; }
+    .an-text { flex: 1 1 auto; min-width: 0; font-size: 14px; color: #ff4d4f; font-weight: 500;
+      line-height: 1.8; word-break: break-word; }
+    .an-text.plain { color: #595959; font-weight: 400; }
+    .an-reason { margin-top: 6px; font-size: 13px; color: #595959; line-height: 1.8; }
+    .an-reason strong { color: #ff4d4f; }
+
+    /* ===== 我的批注 ===== */
+    .remark-btn { position: relative; }
+    .remark-count {
+      position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px; background: #ff4d4f; color: #fff; font-size: 11px; line-height: 18px;
+      text-align: center; font-weight: 600; box-shadow: 0 0 0 2px #fff;
+    }
+    .remark-scroll { max-height: none; }
+    .remark-panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; border: 1px solid #e3e8f0; border-radius: 8px 8px 0 0; background: #fff; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12); max-height: 60vh; overflow-y: auto; }
+    .remark-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #f5f7fa; border-bottom: 1px solid #f0f0f0; font-size: 14px; font-weight: 600; color: #262626; }
+    .remark-panel-body { padding: 12px 14px; }
+    .remark-panel-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #262626; }
+    .remark-panel-title .fa { color: #1872a7; }
+    .remark-panel-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 4px; }
+    .remark-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
+    .remark-panel-head .fa-times:hover { color: #ff4d4f; }
+    .remark-card { border: 1px solid #e8e8e8; border-radius: 6px; padding: 10px 12px; background: #fff; }
+    .remark-card + .remark-card { margin-top: 10px; }
+    .remark-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .remark-card-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #e8f4fc;
+      color: #1872a7; font-size: 12px; font-weight: 500; }
+    .remark-card-time { font-size: 12px; color: #8c8c8c; }
+    .remark-card-bd { font-size: 13px; color: #262626; line-height: 1.6; }
+    .remark-card-ops { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    .remark-op { font-size: 12px; color: #1872a7; cursor: pointer; }
+    .remark-op:hover { text-decoration: underline; }
+    .remark-op.danger { color: #ff4d4f; }
+    .remark-more {
+      margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 14px;
+      border: 1px solid #ff4d4f; border-radius: 4px; background: #fff; color: #ff4d4f;
+      font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .remark-more:hover { background: #fff1f0; }
+    .remark-edit-title { font-size: 13px; font-weight: 600; color: #1872a7; border-left: 3px solid #1872a7;
+      padding-left: 8px; margin: 12px 0 8px; }
+    .remark-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
     /* 审核弹窗 */
     .modal-box.review { width: 480px; max-width: 92vw; }
     .form-item { margin-bottom: 16px; }
@@ -932,7 +1025,8 @@
       border-radius: 8px;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      overflow: hidden;
+      max-height: 60vh;
+      overflow-y: auto;
     }
     .review-panel-head {
       display: flex;
@@ -1092,6 +1186,22 @@
       </div>
     </div>
 
+    <!-- 审核提示：补充审核原因 -->
+    <div class="audit-notice" id="supplementNotice" data-group="入组审核">
+      <div class="an-row">
+        <span class="an-tag">补充审核</span>
+        <span class="an-text plain">补充审核原因：999</span>
+      </div>
+    </div>
+    <!-- 审核提示：跨组审核（非正常流程） -->
+    <div class="audit-notice hidden" id="abnormalNotice" data-group="预筛审核">
+      <div class="an-row">
+        <span class="an-tag">非正常流程</span>
+        <span class="an-text">提示：若需要走正常流程，请驳回重新提交审核</span>
+      </div>
+      <div class="an-reason"><strong>原因：</strong>阿三大苏打撒旦</div>
+    </div>
+
     <div class="content-row">
       <!-- 左：聊天 -->
       <div class="col">
@@ -1196,6 +1306,9 @@
                 </div>
               </div>
             </div>
+
+
+
             <div class="chat-footer">
               <div class="chat-box hidden" id="chatBox">
               <div class="chat-toolbar">
@@ -1214,11 +1327,16 @@
               <div class="review-actions" id="reviewActions">
                 <div class="ra-tip"><i class="fa fa-gavel"></i> 审核操作</div>
                 <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
+                <button class="btn btn-primary remark-btn" onclick="openRemark()">
+                  <i class="fa fa-pencil-square-o"></i> 我的批注
+                  <span class="remark-count" id="remarkCount">3</span>
+                </button>
                 <button class="btn btn-default" onclick="sendNotice()"><i class="fa fa-comments"></i> 沟通</button>
                 <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 驳回</button>
                 <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 通过</button>
                 <span class="ra-spacer"></span>
               </div>
+
               <div class="review-panel hidden" id="reviewPanel">
                 <div class="review-panel-head">
                   <span class="review-panel-title" id="reviewPanelTitle">驳回审核</span>
@@ -1271,6 +1389,63 @@
                   <button class="btn btn-default" onclick="closeReview()">取消</button>
                   <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
                   <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
+                </div>
+              </div>
+
+              <!-- 我的批注面板（点击「我的批注」按钮弹出，样式参考手机端） -->
+              <div class="remark-panel hidden" id="remarkPanel">
+                <div class="remark-panel-body">
+                  <div class="remark-edit-title">我的批注</div>
+                  <div class="form-item" style="margin-bottom:0">
+                    <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容">患者既往病史需进一步核实，已备注待跟进。</textarea>
+                  </div>
+                  <div class="remark-edit-actions">
+                  <button class="btn btn-default" onclick="closeRemark()">取消</button>
+
+                    <button class="btn btn-primary" onclick="saveRemark()">保存批注</button>
+                  </div>
+                </div>
+                <div class="remark-panel-head">
+                  <span>我的批注<span class="remark-panel-tip">仅自己可见</span></span>
+                
+                </div>
+                <div class="remark-panel-body remark-scroll">
+                  <div class="remark-card">
+                    <div class="remark-card-hd">
+                      <span class="remark-card-tag">V2审核</span>
+                      <span class="remark-card-time">2026-08-07 20:50:12</span>
+                    </div>
+                    <div class="remark-card-bd">患者既往病史需进一步核实，已备注待跟进。</div>
+                    <div class="remark-card-ops">
+                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                    </div>
+                  </div>
+                  <div id="remarkMore">
+                    <div class="remark-card">
+                      <div class="remark-card-hd">
+                        <span class="remark-card-tag">V1审核</span>
+                        <span class="remark-card-time">2026-08-10 14:22:03</span>
+                      </div>
+                      <div class="remark-card-bd">入排标准基本符合，建议补充近期血脂复查结果。</div>
+                      <div class="remark-card-ops">
+                        <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                        <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                      </div>
+                    </div>
+                    <div class="remark-card">
+                      <div class="remark-card-hd">
+                        <span class="remark-card-tag">预筛审核</span>
+                        <span class="remark-card-time">2026-07-13 09:11:45</span>
+                      </div>
+                      <div class="remark-card-bd">已电话联系患者，确认下周复查时间。</div>
+                      <div class="remark-card-ops">
+                        <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                        <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="remark-more" id="remarkMoreBtn" onclick="toggleRemarkMore()">收起历史批注（2）</button>
                 </div>
               </div>
             </div>
@@ -1357,13 +1532,13 @@
           </div>
         </div>
 
-        <!-- 右下：审核链路 / 操作日志 切换 -->
+        <!-- 右下：审核链路 / 操作日志 -->
         <div class="col oplog">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-clipboard-list"></i> 审核链路</div>
             <span class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程</span>
           </div>
-       
+
           <div class="col-body">
             <!-- 审核链路（不分组） -->
             <div class="tab-view" data-tab="chain">
@@ -1432,6 +1607,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -1778,9 +1954,47 @@
     }
     function sendNotice() {
       var box = document.getElementById('chatBox');
+      document.getElementById('remarkPanel').classList.add('hidden');
       box.classList.toggle('hidden');
+      if (!box.classList.contains('hidden')) {
+        document.getElementById('reviewPanel').classList.add('hidden');
+      }
       var ta = document.getElementById('chatInput');
       if (ta && !box.classList.contains('hidden')) ta.focus();
+    }
+
+    /* 我的批注：点「我的批注」按钮弹出面板，类比驳回 */
+    var remarkTotal = 3;
+    function refreshRemark() {
+      var bc = document.getElementById('remarkCount');
+      if (bc) bc.textContent = remarkTotal;
+    }
+    function openRemark() {
+      document.getElementById('reviewActions').classList.add('hidden');
+      document.getElementById('reviewPanel').classList.add('hidden');
+      document.getElementById('chatBox').classList.add('hidden');
+      document.getElementById('remarkPanel').classList.remove('hidden');
+    }
+    function closeRemark() {
+      document.getElementById('remarkPanel').classList.add('hidden');
+      document.getElementById('reviewActions').classList.remove('hidden');
+    }
+    function editRemark() {
+      var ta = document.getElementById('remarkText');
+      if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center' }); }
+    }
+    function saveRemark() {
+      var ta = document.getElementById('remarkText');
+      if (!ta || !ta.value.trim()) { showToast('请输入批注内容'); return; }
+      closeRemark();
+      showToast('批注已保存');
+    }
+    function toggleRemarkMore() {
+      var box = document.getElementById('remarkMore');
+      var btn = document.getElementById('remarkMoreBtn');
+      var open = box.classList.toggle('hidden');
+      var n = box.querySelectorAll('.remark-card').length;
+      btn.textContent = open ? ('更多批注（' + n + '）') : ('收起历史批注（' + n + '）');
     }
 
     /* 审核操作：驳回 / 通过 */
@@ -1790,6 +2004,7 @@
     function openReview(type) {
       reviewType = type;
       document.getElementById('reviewActions').classList.add('hidden');
+      document.getElementById('remarkPanel').classList.add('hidden');
       // 打开审核面板（驳回/通过）时，隐藏消息输入区
       var chatBox = document.getElementById('chatBox');
       chatBoxWasHidden = chatBox.classList.contains('hidden');
@@ -1884,12 +2099,13 @@
         i.classList.toggle('active', i === el);
       });
       var group = el.getAttribute('data-group');
-      document.querySelectorAll('.group-view').forEach(function (v) {
+      document.querySelectorAll('.group-view, .audit-notice[data-group]').forEach(function (v) {
         v.classList.toggle('hidden', v.getAttribute('data-group') !== group);
       });
     }
 
     renderMentionChips();
+    refreshRemark();
   </script>
 </body>
 </html>

@@ -116,10 +116,9 @@
       padding: 9px 11px; font-size: 14px; line-height: 1.6; border-radius: 8px;
       color: #262626; word-break: break-word;
     }
-    .chat-msg.self .chat-bubble { background: #409eff; color: #fff; border-top-right-radius: 2px; }
+    .chat-msg.self .chat-bubble { background: #e6f4ff; color: #262626; border: 1px solid #bae0ff; border-top-right-radius: 2px; }
     .chat-msg.other .chat-bubble { background: #fff; border: 1px solid #f0f0f0; border-top-left-radius: 2px; }
     .chat-mention { color: #409eff; font-weight: 600; }
-    .chat-msg.self .chat-mention { color: #ffd666; }
     .chat-files { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
     .chat-file {
       display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px;
@@ -131,7 +130,7 @@
       flex-shrink: 0; font-size: 11px; line-height: 1; padding: 4px 8px;
       border: 1px solid #d9d9d9; border-radius: 3px; background: #fff; color: #595959; cursor: pointer; white-space: nowrap;
     }
-    .chat-msg.self .attach-btn { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.5); color: #fff; }
+    .chat-msg.self .chat-file { background: #fff; border: 1px solid #f0f0f0; }
     .attach-btn.danger { color: #ff4d4f; border-color: #ffccc7; }
     .chat-file.deleted { opacity: .75; }
     .chat-file.deleted .chat-fname { text-decoration: line-through; color: #bfbfbf; }
@@ -140,16 +139,16 @@
     /* 重点关注（与 PC 审核记录一致） */
     .chat-focus {
       margin-top: 8px;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.35);
+      background: #fff;
+      border: 1px solid #f0f0f0;
       border-radius: 4px;
       padding: 10px 12px;
       font-size: 12px;
       line-height: 1.7;
+      color: #262626;
     }
     .chat-msg.other .chat-focus {
       background: #f6f8fb;
-      border: 1px solid #f0f0f0;
     }
     .chat-focus .cf-title { font-weight: 600; margin-bottom: 4px; }
     .cf-item {
@@ -157,8 +156,7 @@
       gap: 8px; padding: 8px 0;
     }
     /* 每行之间用线条分割 */
-    .cf-item + .cf-item { border-top: 1px solid rgba(255, 255, 255, 0.25); }
-    .chat-msg.other .cf-item + .cf-item { border-top-color: #f0f0f0; }
+    .cf-item + .cf-item { border-top: 1px solid #f0f0f0; }
     .cf-tag {
       flex: 0 0 auto; order: 2;
       font-size: 11px; line-height: 1.6; padding: 0 6px;
@@ -221,11 +219,11 @@
 
     /* 提醒人员底部抽屉 */
     .remind-sheet {
-      position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
-      background: #fff; border-radius: 14px 14px 0 0;
+      position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 20;
+      background: #fff;
       box-shadow: 0 -6px 24px rgba(0,0,0,.18);
       transform: translateY(100%); transition: transform .25s ease;
-      max-height: 82%; display: flex; flex-direction: column; overflow: hidden;
+      display: flex; flex-direction: column; overflow: hidden;
     }
     .remind-sheet.show { transform: translateY(0); }
     .rs-head {
@@ -273,6 +271,35 @@
     .rs-mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 15; display: none; }
     .rs-mask.show { display: block; }
 
+    /* 上传附件动作面板（与手机端底部抽屉一致） */
+    .up-mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 25; display: none; }
+    .up-mask.show { display: block; }
+    .up-sheet {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 26;
+      background: #fff; border-radius: 14px 14px 0 0;
+      box-shadow: 0 -6px 24px rgba(0,0,0,.18);
+      transform: translateY(100%); transition: transform .25s ease;
+    }
+    .up-sheet.show { transform: translateY(0); }
+    .up-handle { width: 36px; height: 4px; background: #d9d9d9; border-radius: 2px; margin: 10px auto 0; }
+    .up-title { text-align: center; font-size: 14px; color: #8c8c8c; padding: 12px 0 4px; }
+    .up-opts { padding: 4px 0 2px; }
+    .up-opt {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 15px 20px; background: #fff; border: none; cursor: pointer;
+      font-size: 16px; color: #262626; font-family: inherit; text-align: left;
+      border-top: 1px solid #f5f5f5;
+    }
+    .up-opt:first-child { border-top: none; }
+    .up-opt i { color: #409eff; font-size: 18px; width: 22px; text-align: center; }
+    .up-opt:active { background: #f5f5f5; }
+    .up-cancel {
+      margin-top: 8px; padding: 15px 0; text-align: center;
+      font-size: 16px; color: #595959; background: #fff; cursor: pointer;
+      border-top: 8px solid #f5f7fa;
+    }
+    .up-cancel:active { background: #f5f5f5; }
+
     /* ===== 通用滚动/卡片 ===== */
     .scroll-wrap { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; }
     .card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
@@ -294,13 +321,14 @@
     .timeline-dot i { font-size: 8px; color: #409eff; }
     .timeline-dot.done { background: #409eff; }
     .timeline-dot.done i { color: #fff; }
+    .timeline-dot.orange { border-color: #fa8c16; }
+    .timeline-dot.orange i { color: #fa8c16; }
+    .timeline-dot.green { border-color: #52c41a; }
+    .timeline-dot.green i { color: #52c41a; }
     .timeline-dot.danger { border-color: #ff4d4f; }
     .timeline-dot.danger i { color: #ff4d4f; }
     .timeline-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .timeline-title { font-size: 14px; color: #262626; font-weight: 500; }
-    .timeline-status { font-size: 12px; padding: 2px 10px; border-radius: 10px; background: #f5f7fa; color: #595959; white-space: nowrap; }
-    .timeline-status.done { background: #ecf5ff; color: #409eff; }
-    .timeline-status.danger { background: #fff1f0; color: #ff4d4f; }
     .timeline-info { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
     .timeline-remark { font-size: 13px; color: #595959; margin-top: 6px; background: #f6f8fb; border-radius: 4px; padding: 8px 10px; line-height: 1.6; }
 
@@ -310,8 +338,14 @@
     .chain-legend { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8c8c8c; margin-bottom: 12px; }
     .chain-legend .dot { width: 8px; height: 8px; border-radius: 50%; background: #52c41a; display: inline-block; flex: 0 0 auto; }
     .chain-label .fa { color: #409eff; }
-    .chain-steps { display: flex; flex-direction: column; gap: 10px; }
-    .chain-step { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+    .chain-steps { display: flex; flex-direction: column; }
+    .chain-step { display: flex; align-items: stretch; gap: 12px; position: relative; padding-bottom: 12px; }
+    .chain-step:last-child { padding-bottom: 0; }
+    .cs-index { flex: 0 0 auto; width: 24px; height: 24px; border-radius: 50%; background: #f5f7fa; color: #595959; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; z-index: 1; border: 2px solid #fff; box-sizing: border-box; }
+    .chain-step.done .cs-index { background: #409eff; color: #fff; }
+    .chain-step.current .cs-index { background: #52c41a; color: #fff; }
+    .chain-step:not(:last-child)::before { content: ''; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: #d9d9d9; z-index: 0; }
+    .cs-body { flex: 1; display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 8px; padding: 12px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
     .cs-name { font-size: 14px; padding: 5px 16px; border-radius: 16px; background: #f5f7fa; color: #595959; white-space: nowrap; }
     .chain-step.done .cs-name { background: #ecf5ff; color: #409eff; }
     .chain-step.current .cs-name { background: #52c41a; color: #fff; font-weight: 600; }
@@ -404,7 +438,7 @@
     <div class="seg">
       <div class="seg-item active" data-view="chat" onclick="switchMainTab(this)">沟通</div>
       <div class="seg-item" data-view="process" onclick="switchMainTab(this)">审核流程</div>
-      <div class="seg-item" data-view="overview" onclick="switchMainTab(this)">审核概览</div>
+      <div class="seg-item" data-view="overview" onclick="switchMainTab(this)">审核链路</div>
       <div class="seg-item" data-view="oplog" onclick="switchMainTab(this)">操作日志</div>
     </div>
 
@@ -495,9 +529,11 @@
           <div class="chat-footer">
             <div class="chat-hint"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点「提醒」添加并 @ 后再发送。</div>
             <div class="chat-toolbar">
-              <button class="tool-text-btn" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+              <button class="tool-text-btn" onclick="toggleUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
               <button class="tool-text-btn" onclick="toggleRemind()"><i class="fa fa-bell"></i>提醒人员</button>
-              <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
+              <input type="file" id="camInput" accept="image/*" capture="environment" style="display:none" onchange="onFileChosen(this)" />
+              <input type="file" id="albumInput" accept="image/*" multiple style="display:none" onchange="onFileChosen(this)" />
+              <input type="file" id="fileInput" multiple style="display:none" onchange="onFileChosen(this)" />
             </div>
             <div class="pending-files hidden" id="pendingFiles"></div>
             <div class="pending-remind hidden" id="pendingRemind"></div>
@@ -531,6 +567,17 @@
               </div>
             </div>
           </div>
+          <div class="up-mask" id="upMask" onclick="toggleUpload()"></div>
+          <div class="up-sheet" id="upSheet">
+            <div class="up-handle"></div>
+            <div class="up-title">选择附件来源</div>
+            <div class="up-opts">
+              <button class="up-opt" onclick="pickFrom('camInput')"><i class="fa fa-camera"></i> 拍照</button>
+              <button class="up-opt" onclick="pickFrom('albumInput')"><i class="fa fa-images"></i> 从手机相册选择</button>
+              <button class="up-opt" onclick="pickFrom('fileInput')"><i class="fa fa-folder-open"></i> 从手机文件选择</button>
+            </div>
+            <div class="up-cancel" onclick="toggleUpload()">取消</div>
+          </div>
         </div>
         <div data-group="预筛审核" class="hidden">
           <div class="scroll-wrap"><div class="empty-state"><i class="fa fa-comments-o"></i><div class="es-text">暂无预筛审核沟通记录</div></div></div>
@@ -545,28 +592,28 @@
               <div class="card-title"><i class="fa fa-sitemap"></i> 审核流程</div>
               <div class="timeline">
                 <div class="timeline-item">
-                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
-                  <div class="timeline-row"><div class="timeline-title">CRC已提交审核</div><div class="timeline-status done">已提交</div></div>
+                  <div class="timeline-dot orange"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">已提交审核</div></div>
                   <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
                 </div>
                 <div class="timeline-item">
-                  <div class="timeline-dot danger"><i class="fa fa-ban"></i></div>
-                  <div class="timeline-row"><div class="timeline-title">CRC撤销申请</div><div class="timeline-status danger">已撤销申请</div></div>
+                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">撤销申请</div></div>
                   <div class="timeline-info">刘雪红 · CRC · 2026-08-12 10:00:00</div>
                 </div>
                 <div class="timeline-item">
-                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
-                  <div class="timeline-row"><div class="timeline-title">CRC 已提交审核</div><div class="timeline-status done">已提交</div></div>
+                  <div class="timeline-dot orange"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">已提交审核</div></div>
                   <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
                 </div>
                 <div class="timeline-item">
-                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
-                  <div class="timeline-row"><div class="timeline-title">CRA审核通过</div><div class="timeline-status done">审核通过</div></div>
+                  <div class="timeline-dot green"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row"><div class="timeline-title">审核通过</div></div>
                   <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
                 </div>
                 <div class="timeline-item">
                   <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
-                  <div class="timeline-row"><div class="timeline-title">医学经理审核筛败</div><div class="timeline-status danger">审核筛败</div></div>
+                  <div class="timeline-row"><div class="timeline-title">筛败</div></div>
                   <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
                 </div>
               </div>
@@ -582,16 +629,21 @@
       <div class="view" id="view-overview">
         <div class="scroll-wrap">
           <div class="card">
-            <div class="chain-label"><i class="fa fa-link"></i> 审核链路</div>
             <div class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程</div>
             <div class="chain-steps">
               <div class="chain-step done">
-                <div class="cs-name">预筛审核V1.0</div>
-                <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
+                <div class="cs-index">1</div>
+                <div class="cs-body">
+                  <div class="cs-name">预筛审核V1.0</div>
+                  <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
+                </div>
               </div>
               <div class="chain-step current">
-                <div class="cs-name">入组审核</div>
-                <div class="cs-subs"><span class="cs-sub">CRA审核</span><span class="cs-sub">医学审核</span></div>
+                <div class="cs-index">2</div>
+                <div class="cs-body">
+                  <div class="cs-name">入组审核</div>
+                  <div class="cs-subs"><span class="cs-sub">CRA审核</span><span class="cs-sub">医学审核</span></div>
+                </div>
               </div>
             </div>
           </div>
@@ -612,7 +664,6 @@
             </div>
             <div class="ol-download-bar">
               <button class="ol-download-btn" onclick="onDownload()">下载</button>
-              <button class="ol-download-btn" style="margin-left: 5px;" onclick="onDownload()">预筛审核沟通</button>
             </div>
             <div class="ol-timeline">
               <div class="ol-item">
@@ -786,7 +837,17 @@
       { name: '李四', role: 'CRC', phone: '182****0005', selected: true },
       { name: '测试医学', role: '医学经理', phone: '166****0012', selected: false }
     ];
-    function onUpload() { document.getElementById('fileInput').click(); }
+    function toggleUpload() {
+      var sheet = document.getElementById('upSheet');
+      var mask = document.getElementById('upMask');
+      var show = sheet.classList.toggle('show');
+      mask.classList.toggle('show', show);
+    }
+    function pickFrom(id) {
+      toggleUpload();
+      var el = document.getElementById(id);
+      if (el) setTimeout(function () { el.click(); }, 60);
+    }
     function onFileChosen(input) {
       Array.prototype.forEach.call(input.files, function (f) { pendingFiles.push(f.name); });
       renderPending(); input.value = '';
