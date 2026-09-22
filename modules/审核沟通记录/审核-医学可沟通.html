@@ -111,7 +111,7 @@
     #rightInfo.collapsed, #rightLink.collapsed { flex: 0 0 auto; min-height: 0; }
     #rightInfo.collapsed .col-body, #rightLink.collapsed .col-body { display: none; }
     #rightInfo.collapsed .block-header, #rightLink.collapsed .block-header { margin-bottom: 0; padding-bottom: 10px; border-bottom: none; }
-    #rightChat { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+    #rightChat { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
     #rightChat .chat-box {
       border: 1px solid #e3e8f0;
       border-radius: 8px;
@@ -1794,7 +1794,6 @@
               </div>
               <div class="review-panel-foot">
                 <button class="btn btn-default" onclick="closeReview()">取消</button>
-                <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
                 <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
               </div>
             </div>
@@ -2279,7 +2278,6 @@
     function toggleReason(el) { el.classList.toggle('active'); }
     function openReview(type) {
       reviewType = type;
-      document.getElementById('reviewActions').classList.add('hidden');
       document.getElementById('remarkPanel').classList.add('hidden');
       // 打开审核面板（驳回/通过）时，隐藏消息输入区
       var chatBox = document.getElementById('chatBox');
@@ -2309,7 +2307,6 @@
     function closeReview() {
       // 右侧切回「信息」模式（展示审核流程 / 审核链路）
       showRightMode('info');
-      document.getElementById('reviewActions').classList.remove('hidden');
       // 取消时恢复打开前的输入区状态
       if (!chatBoxWasHidden) document.getElementById('chatBox').classList.remove('hidden');
     }
@@ -2331,9 +2328,6 @@
       action.classList.toggle('hidden', !isAction);
       chat.classList.toggle('hidden', !isChat);
       if (remark) remark.classList.toggle('hidden', !isRemark);
-      // 非「信息」模式下，隐藏顶部审核操作按钮栏（与驳回 / 通过一致）
-      var actions = document.getElementById('reviewActions');
-      if (actions) actions.classList.toggle('hidden', mode !== 'info');
     }
     function toggleRightDrawer() {
       var stack = document.getElementById('rightStack');
