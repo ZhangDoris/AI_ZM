@@ -100,13 +100,26 @@
       flex-direction: column;
       gap: 16px;
     }
-    #rightInfo, #rightAction {
+    #rightInfo, #rightAction, #rightLink {
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+    /* 沟通模式：审核流程 / 审核链路收缩为仅标题，沟通输入面板居中 */
+    #rightInfo.collapsed, #rightLink.collapsed { flex: 0 0 auto; min-height: 0; }
+    #rightInfo.collapsed .col-body, #rightLink.collapsed .col-body { display: none; }
+    #rightInfo.collapsed .block-header, #rightLink.collapsed .block-header { margin-bottom: 0; padding-bottom: 10px; border-bottom: none; }
+    #rightChat { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
+    #rightChat .chat-box {
+      border: 1px solid #e3e8f0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(22, 93, 255, 0.08);
+      padding: 10px;
+    }
+    #rightInfo.hidden, #rightAction.hidden, #rightLink.hidden, #rightChat.hidden, #rightRemark.hidden { display: none; }
     /* 右侧抽屉收起 / 展开把手（始终可见，贴在右侧边缘） */
     .right-drawer-handle {
       position: absolute;
@@ -139,6 +152,36 @@
       overflow: hidden;
     }
     #rightAction .review-panel-body { flex: 1 1 auto; overflow-y: auto; }
+    /* 右侧「我的批注」模式：与驳回 / 通过一致，顶部按钮栏隐藏，中间显示批注面板 */
+    #rightRemark { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #rightRemark .review-panel {
+      margin-top: 0;
+      max-height: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #rightRemark .review-panel-body.remark-scroll { flex: 1 1 auto; overflow-y: auto; }
+    #rightChat .review-panel-head { flex: 0 0 auto; }
+    /* 右侧「沟通」模式：聊天输入框占满抽屉高度，输入栏贴底 */
+    #rightChat {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #rightChat .chat-box {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e3e8f0;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    #rightChat .chat-input-row { margin-top: auto; }
 
     /* 列 */
     .col {
@@ -289,7 +332,7 @@
     .empty-state .es-text { font-size: 13px; }
 
     /* 聊天面板 */
-    .chat-panel { display: flex; flex-direction: column; height: 100%; }
+    .chat-panel { display: flex; flex-direction: column; height: 100%; position: relative; }
     .chat-header {
       flex: 0 0 auto;
       display: flex;
@@ -950,14 +993,13 @@
     }
     .btn-success:hover { background: #73d13d; border-color: #73d13d; }
 
-    /* 审核操作栏 */
+    /* 审核操作栏（位于「审核沟通」标题行右侧） */
     .review-actions {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px dashed #f0f0f0;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .ra-tip {
       display: flex;
@@ -1324,6 +1366,16 @@
       <div class="col">
         <div class="block-header">
           <div class="block-title"><i class="fa fa-comments"></i> 审核沟通</div>
+          <div class="review-actions" id="reviewActions">
+            <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
+            <button class="btn btn-default remark-btn" onclick="openRemark()">
+              <i class="fa fa-pencil-square-o"></i> 我的批注
+              <span class="remark-count" id="remarkCount">3</span>
+            </button>
+            <button class="btn btn-primary" onclick="openChat()"><i class="fa fa-comments"></i> 沟通</button>
+            <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 驳回</button>
+            <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 通过</button>
+          </div>
         </div>
         <div class="col-body">
           <div class="group-view hidden" data-group="预筛审核">
@@ -1426,103 +1478,7 @@
 
 
 
-            <div class="chat-footer">
-              <div class="chat-box hidden" id="chatBox">
-              <div class="chat-toolbar">
-                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
-                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
-                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
-                <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
-              </div>
-              <div class="pending-files hidden" id="pendingFiles"></div>
-              <div class="mention-chips hidden" id="mentionChips"></div>
-              <div class="chat-input-row" id="chatInputRow">
-                <div class="chat-input-wrap">
-                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送；也可将图片 / 文件拖拽到此处上传" onkeydown="chatInputKey(event)"></textarea>
-                  <button class="chat-expand-btn" id="chatExpandBtn" onclick="toggleChatExpand()" title="放大编辑"><i class="fa fa-expand"></i></button>
-                  <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
-                </div>
-                <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
-              </div>
-              <div class="drop-overlay" id="dropOverlay">
-                <i class="fa fa-cloud-upload-alt"></i>
-                <span>将图片 / 文件拖拽到此处即可上传</span>
-              </div>
-              </div>
-              <div class="review-actions" id="reviewActions">
-                <div class="ra-tip"><i class="fa fa-gavel"></i> 审核操作</div>
-                <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
-                <button class="btn btn-primary remark-btn" onclick="openRemark()">
-                  <i class="fa fa-pencil-square-o"></i> 我的批注
-                  <span class="remark-count" id="remarkCount">3</span>
-                </button>
-                <button class="btn btn-default" onclick="sendNotice()"><i class="fa fa-comments"></i> 沟通</button>
-                <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 驳回</button>
-                <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 通过</button>
-                <span class="ra-spacer"></span>
-              </div>
 
-              <!-- 我的批注面板（点击「我的批注」按钮弹出，样式参考手机端） -->
-              <div class="remark-panel hidden" id="remarkPanel">
-                <div class="remark-panel-body">
-                  <div class="remark-edit-title">我的批注</div>
-                  <div class="form-item x-expand-host" style="margin-bottom:0">
-                    <div class="x-wrap">
-                      <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容" onkeydown="xExpandKey(event,'remarkText')">患者既往病史需进一步核实，已备注待跟进。</textarea>
-                      <button class="x-expand-btn" onclick="toggleXExpand('remarkText')" title="放大编辑"><i class="fa fa-expand"></i></button>
-                    </div>
-                    <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
-                  </div>
-                  <div class="remark-edit-actions">
-                  <button class="btn btn-default" onclick="closeRemark()">取消</button>
-
-                    <button class="btn btn-primary" onclick="saveRemark()">保存批注</button>
-                  </div>
-                </div>
-                <div class="remark-panel-head">
-                  <span>我的批注<span class="remark-panel-tip">仅自己可见</span></span>
-                
-                </div>
-                <div class="remark-panel-body remark-scroll">
-                  <div class="remark-card">
-                    <div class="remark-card-hd">
-                      <span class="remark-card-tag">V2审核</span>
-                      <span class="remark-card-time">2026-08-07 20:50:12</span>
-                    </div>
-                    <div class="remark-card-bd">患者既往病史需进一步核实，已备注待跟进。</div>
-                    <div class="remark-card-ops">
-                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
-                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
-                    </div>
-                  </div>
-                  <div id="remarkMore">
-                    <div class="remark-card">
-                      <div class="remark-card-hd">
-                        <span class="remark-card-tag">V1审核</span>
-                        <span class="remark-card-time">2026-08-10 14:22:03</span>
-                      </div>
-                      <div class="remark-card-bd">入排标准基本符合，建议补充近期血脂复查结果。</div>
-                      <div class="remark-card-ops">
-                        <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
-                        <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
-                      </div>
-                    </div>
-                    <div class="remark-card">
-                      <div class="remark-card-hd">
-                        <span class="remark-card-tag">预筛审核</span>
-                        <span class="remark-card-time">2026-07-13 09:11:45</span>
-                      </div>
-                      <div class="remark-card-bd">已电话联系患者，确认下周复查时间。</div>
-                      <div class="remark-card-ops">
-                        <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
-                        <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button class="remark-more" id="remarkMoreBtn" onclick="toggleRemarkMore()">收起历史批注（2）</button>
-                </div>
-              </div>
-            </div>
           </div>
           </div>
         </div>
@@ -1604,7 +1560,104 @@
             </div>
           </div>
         </div>
+          </div>
 
+          <!-- 沟通输入面板（点击「沟通」时显示，位于收缩后的审核流程 / 审核链路之间） -->
+          <div id="rightChat" class="hidden">
+            <div class="review-panel-head" style="margin-bottom:10px;flex:0 0 auto;">
+              <span class="review-panel-title"><i class="fa fa-comments"></i> 沟通</span>
+              <i class="fa fa-times" onclick="closeChat()" title="关闭"></i>
+            </div>
+            <div class="chat-box" id="chatBox">
+              <div class="chat-toolbar">
+                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
+                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
+                <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
+              </div>
+              <div class="pending-files hidden" id="pendingFiles"></div>
+              <div class="mention-chips hidden" id="mentionChips"></div>
+              <div class="chat-input-row" id="chatInputRow">
+                <div class="chat-input-wrap">
+                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送；也可将图片 / 文件拖拽到此处上传" onkeydown="chatInputKey(event)"></textarea>
+                  <button class="chat-expand-btn" id="chatExpandBtn" onclick="toggleChatExpand()" title="放大编辑"><i class="fa fa-expand"></i></button>
+                  <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                </div>
+                <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+              </div>
+              <div class="drop-overlay" id="dropOverlay">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <span>将图片 / 文件拖拽到此处即可上传</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 我的批注（点击「我的批注」时显示，右侧折叠模式，与驳回 / 通过一致） -->
+          <div id="rightRemark" class="hidden">
+            <div class="review-panel" id="remarkPanel">
+              <div class="review-panel-head">
+                <span class="review-panel-title"><i class="fa fa-pencil-square-o"></i> 我的批注</span>
+                <i class="fa fa-times" onclick="closeRemark()" title="关闭"></i>
+              </div>
+              <div class="review-panel-body">
+                <div class="remark-edit-title">新增 / 编辑批注</div>
+                <div class="form-item x-expand-host" style="margin-bottom:0">
+                  <div class="x-wrap">
+                    <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容" onkeydown="xExpandKey(event,'remarkText')">患者既往病史需进一步核实，已备注待跟进。</textarea>
+                    <button class="x-expand-btn" onclick="toggleXExpand('remarkText')" title="放大编辑"><i class="fa fa-expand"></i></button>
+                  </div>
+                  <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                </div>
+                <div class="remark-edit-actions">
+                  <button class="btn btn-default" onclick="closeRemark()">取消</button>
+                  <button class="btn btn-primary" onclick="saveRemark()">保存批注</button>
+                </div>
+              </div>
+              <div class="review-panel-head" style="border-top:1px solid #f0f0f0">
+                <span class="review-panel-title">历史批注<span class="remark-panel-tip">仅自己可见</span></span>
+              </div>
+              <div class="review-panel-body remark-scroll">
+                <div class="remark-card">
+                  <div class="remark-card-hd">
+                    <span class="remark-card-tag">V2审核</span>
+                    <span class="remark-card-time">2026-08-07 20:50:12</span>
+                  </div>
+                  <div class="remark-card-bd">患者既往病史需进一步核实，已备注待跟进。</div>
+                  <div class="remark-card-ops">
+                    <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                    <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                  </div>
+                </div>
+                <div id="remarkMore">
+                  <div class="remark-card">
+                    <div class="remark-card-hd">
+                      <span class="remark-card-tag">V1审核</span>
+                      <span class="remark-card-time">2026-08-10 14:22:03</span>
+                    </div>
+                    <div class="remark-card-bd">入排标准基本符合，建议补充近期血脂复查结果。</div>
+                    <div class="remark-card-ops">
+                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                    </div>
+                  </div>
+                  <div class="remark-card">
+                    <div class="remark-card-hd">
+                      <span class="remark-card-tag">预筛审核</span>
+                      <span class="remark-card-time">2026-07-13 09:11:45</span>
+                    </div>
+                    <div class="remark-card-bd">已电话联系患者，确认下周复查时间。</div>
+                    <div class="remark-card-ops">
+                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="remark-more" id="remarkMoreBtn" onclick="toggleRemarkMore()">收起历史批注（2）</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="rightLink">
         <!-- 右下：审核链路 / 操作日志 -->
         <div class="col oplog">
           <div class="block-header">
@@ -2096,7 +2149,8 @@
       remindPersons.forEach(function (p) { p.selected = false; });
       renderRemind();
       document.getElementById('rpList').classList.add('hidden');
-      // 消息发送成功后，展开右侧抽屉
+      // 消息发送成功后，右侧切回「信息」模式（重新展示审核流程 / 审核链路）
+      showRightMode('info');
       expandRightDrawer();
     }
     /* 输入框放大编辑（页面内浮层，不脱离当前页面） */
@@ -2174,39 +2228,32 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
       });
     }
-    function sendNotice() {
-      var box = document.getElementById('chatBox');
-      document.getElementById('remarkPanel').classList.add('hidden');
-      document.getElementById('reviewPanel').classList.add('hidden');
-      var willShow = box.classList.contains('hidden');
-      box.classList.toggle('hidden');
-      if (willShow) {
-        // 沟通时收起右侧，让沟通区占满宽度
-        collapseRightDrawer();
-        showRightMode('info');
-        var ta = document.getElementById('chatInput');
-        if (ta) ta.focus();
-      } else {
-        expandRightDrawer();
-      }
+    /* 沟通：点「沟通」按钮打开右侧折叠面板（收缩审核流程 / 审核链路），与驳回 / 通过一致 */
+    function openChat() {
+      showRightMode('chat');
+      expandRightDrawer();
+      document.getElementById('chatBox').classList.remove('hidden');
+      var ta = document.getElementById('chatInput');
+      if (ta) ta.focus();
+    }
+    function closeChat() {
+      showRightMode('info');
     }
 
-    /* 我的批注：点「我的批注」按钮弹出面板，类比驳回 */
+    /* 我的批注：点「我的批注」按钮打开右侧折叠面板，类比驳回 / 通过 */
     var remarkTotal = 3;
     function refreshRemark() {
       var bc = document.getElementById('remarkCount');
       if (bc) bc.textContent = remarkTotal;
     }
     function openRemark() {
-      document.getElementById('reviewActions').classList.add('hidden');
-      document.getElementById('reviewPanel').classList.add('hidden');
-      showRightMode('info');
-      document.getElementById('chatBox').classList.add('hidden');
-      document.getElementById('remarkPanel').classList.remove('hidden');
+      showRightMode('remark');
+      expandRightDrawer();
+      var ta = document.getElementById('remarkText');
+      if (ta) ta.focus();
     }
     function closeRemark() {
-      document.getElementById('remarkPanel').classList.add('hidden');
-      document.getElementById('reviewActions').classList.remove('hidden');
+      showRightMode('info');
     }
     function editRemark() {
       var ta = document.getElementById('remarkText');
@@ -2266,18 +2313,27 @@
       // 取消时恢复打开前的输入区状态
       if (!chatBoxWasHidden) document.getElementById('chatBox').classList.remove('hidden');
     }
-    /* 右侧抽屉：信息 / 操作 两种模式 + 收起 / 展开 */
+    /* 右侧抽屉：信息 / 操作 / 沟通 / 批注 四种模式，互斥整块替换 */
     function showRightMode(mode) {
       var info = document.getElementById('rightInfo');
+      var link = document.getElementById('rightLink');
       var action = document.getElementById('rightAction');
-      if (!info || !action) return;
-      if (mode === 'action') {
-        info.classList.add('hidden');
-        action.classList.remove('hidden');
-      } else {
-        info.classList.remove('hidden');
-        action.classList.add('hidden');
-      }
+      var chat = document.getElementById('rightChat');
+      var remark = document.getElementById('rightRemark');
+      if (!info || !action || !chat) return;
+      // 除「信息」模式外，其余模式均整块替换右侧：审核流程 / 审核链路隐藏，仅显示当前面板
+      var isChat = mode === 'chat';
+      var isRemark = mode === 'remark';
+      var isAction = mode === 'action';
+      var isOther = isChat || isRemark || isAction;
+      info.classList.toggle('hidden', isOther);
+      if (link) link.classList.toggle('hidden', isOther);
+      action.classList.toggle('hidden', !isAction);
+      chat.classList.toggle('hidden', !isChat);
+      if (remark) remark.classList.toggle('hidden', !isRemark);
+      // 非「信息」模式下，隐藏顶部审核操作按钮栏（与驳回 / 通过一致）
+      var actions = document.getElementById('reviewActions');
+      if (actions) actions.classList.toggle('hidden', mode !== 'info');
     }
     function toggleRightDrawer() {
       var stack = document.getElementById('rightStack');
