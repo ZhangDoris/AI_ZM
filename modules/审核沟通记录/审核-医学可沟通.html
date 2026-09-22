@@ -1432,6 +1432,8 @@
         <div class="block-header">
           <div class="block-title"><i class="fa fa-comments"></i> 审核沟通</div>
           <div class="review-actions" id="reviewActions">
+            <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 下载</button>
+
             <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
             <button class="btn btn-default remark-btn" onclick="openRemark()">
               <i class="fa fa-pencil-square-o"></i> 我的批注
@@ -1502,7 +1504,7 @@
                         <span class="attach-tag deleted">已删除</span>
                       </div>
                       <div class="chat-file api">
-                        <img class="file-thumb" src="../../images/medical-record-sample.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
+                        <img class="file-thumb" src="../../images/A_realistic_smartphone_photo_o_2026-09-22T07-31-12.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                         <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                         <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                         <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -1959,7 +1961,7 @@
                   <span class="attach-tag deleted">已删除</span>
                 </div>
                 <div class="attach-item">
-                  <img class="file-thumb" src="../../images/medical-record-sample.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
+                  <img class="file-thumb" src="../../images/A_realistic_smartphone_photo_o_2026-09-22T07-31-12.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                   <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                   <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                   <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -2344,11 +2346,10 @@
         bubble += '<div class="chat-files">';
         files.forEach(function (f) {
           if (f.url) {
-            bubble += '<div class="chat-file api">' +
+            bubble += '<div class="chat-file">' +
               '<img class="file-thumb" src="' + f.url + '" alt="' + escapeHtml(f.name) + '" onclick="zoomImg(this)"/>' +
               '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
-              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button>' +
-              '<span class="attach-tag source">上传来源：本地上传</span></div>';
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
           } else {
             bubble += '<div class="chat-file"><span class="chat-fname">' + escapeHtml(f.name) + '</span>' +
               '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
@@ -2574,7 +2575,14 @@
         i.classList.toggle('active', i === el);
       });
       var group = el.getAttribute('data-group');
-      document.querySelectorAll('.group-view, .audit-notice[data-group]').forEach(function (v) {
+      // 阶段切换仅作用于左侧聊天列；右侧审核流程 / 审核链路不随阶段切换
+      var leftCol = document.querySelector('.content-row > .col');
+      if (leftCol) {
+        leftCol.querySelectorAll('.group-view').forEach(function (v) {
+          v.classList.toggle('hidden', v.getAttribute('data-group') !== group);
+        });
+      }
+      document.querySelectorAll('.audit-notice[data-group]').forEach(function (v) {
         v.classList.toggle('hidden', v.getAttribute('data-group') !== group);
       });
     }
