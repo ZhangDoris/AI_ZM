@@ -43,15 +43,18 @@
     .filter-item { display: flex; flex-direction: column; gap: 6px; }
     .filter-item:nth-child(1) { flex: 0 0 340px; }
     .filter-label { font-size: 13px; color: #666; font-weight: 500; }
-    /* 项目角色面板：项目编码 + 创建时间 */
-    #panelProject .filter-item:nth-child(1) { flex: 0 0 240px; }
-    #panelProject .filter-item:nth-child(2) { flex: 0 0 340px; }
-    /* 调用明细面板：角色 / 项目编码 / 调用人 / 调用时间 / 状态 */
+    /* 管理员角色面板：所属人员 + 创建时间 */
+    #panelAdmin .filter-item:nth-child(1) { flex: 0 0 200px; }
+    #panelAdmin .filter-item:nth-child(2) { flex: 0 0 340px; }
+    /* 项目角色面板：所属人员 + 项目编码 + 创建时间 */
+    #panelProject .filter-item:nth-child(1) { flex: 0 0 200px; }
+    #panelProject .filter-item:nth-child(2) { flex: 0 0 240px; }
+    #panelProject .filter-item:nth-child(3) { flex: 0 0 340px; }
+    /* 调用明细面板：角色 / 调用人 / 调用时间 / 状态 */
     #panelLogs .filter-item:nth-child(1) { flex: 0 0 140px; }
     #panelLogs .filter-item:nth-child(2) { flex: 0 0 200px; }
-    #panelLogs .filter-item:nth-child(3) { flex: 0 0 200px; }
-    #panelLogs .filter-item:nth-child(4) { flex: 0 0 340px; }
-    #panelLogs .filter-item:nth-child(5) { flex: 0 0 120px; }
+    #panelLogs .filter-item:nth-child(3) { flex: 0 0 340px; }
+    #panelLogs .filter-item:nth-child(4) { flex: 0 0 120px; }
     .filter-actions { display: flex; gap: 12px; margin-left: auto; }
     .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #333; outline: none; background: #fff; transition: border-color .2s; }
     .form-input:focus, .form-select:focus { border-color: #1872a7; }
@@ -180,13 +183,6 @@
 <body>
   <div class="container">
 
-    <!-- 顶部：标题 -->
-    <div class="top-bar">
-      <div>
-        <h1 class="section-title">MCP 接入配置</h1>
-      </div>
-      
-    </div>
     <!-- 公司 Tab -->
     <div class="company-tabs" id="companyTabs">
       <div class="company-tab active" data-company="hengrui" onclick="switchCompany(this)">恒瑞医药</div>
@@ -198,12 +194,15 @@
     <div class="role-tabs" id="roleTabs">
       <div class="role-tab active" data-role="admin" onclick="switchRole(this)">管理员角色</div>
       <div class="role-tab" data-role="project" onclick="switchRole(this)">项目角色</div>
-      <div class="role-tab" data-role="logs" onclick="switchRole(this)">调用明细</div>
     </div>
 
     <!-- ===== 面板一：管理员角色 ===== -->
     <div class="role-panel" id="panelAdmin">
     <div class="filter-bar">
+      <div class="filter-item">
+        <label class="filter-label">所属人员</label>
+        <input type="text" class="form-input" id="filterMember" placeholder="姓名 / 手机号" oninput="filterChanged()" />
+      </div>
       <div class="filter-item">
         <label class="filter-label">创建时间</label>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -230,8 +229,9 @@
             <th style="width:60px">序号</th>
             <th>所属人员</th>
             <th style="width:110px">角色</th>
+            <th>API Key</th>
             <th>创建日期</th>
-            <th style="width:120px;text-align:center">操作</th>
+            <th style="width:160px;text-align:center">操作</th>
           </tr>
         </thead>
         <tbody id="keyTableBody"></tbody>
@@ -257,6 +257,10 @@
     <div class="role-panel" id="panelProject" style="display:none">
       <div class="filter-bar">
         <div class="filter-item">
+          <label class="filter-label">所属人员</label>
+          <input type="text" class="form-input" id="pjFilterMember" placeholder="姓名 / 手机号" oninput="pjFilterChanged()" />
+        </div>
+        <div class="filter-item">
           <label class="filter-label">项目编码</label>
           <div class="search-select" id="pjFilterProjectWrap">
             <input type="text" class="search-input" id="pjFilterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
@@ -279,7 +283,7 @@
         </div>
       </div>
       <div class="section-desc">
-以下为项目角色名下的全部 MCP 接入配置，为只读视图：不支持新增与删除。配置中的授权凭证仅在创建时显示一次，如需使用请联系对应人员重新创建。请勿与他人共享凭证信息，或将其暴露在浏览器等客户端代码中。
+以下为项目角色名下的全部 MCP 接入配置，为只读视图：不支持新增与删除。
       </div>
       <div class="table-card">
         <table class="api-table">
@@ -287,9 +291,11 @@
             <tr>
               <th style="width:64px;text-align:center">序号</th>
               <th>项目编码</th>
+              <th>API Key</th>
               <th>所属人员</th>
               <th style="width:110px">角色</th>
               <th>创建日期</th>
+              <th style="width:160px;text-align:center">操作</th>
             </tr>
           </thead>
           <tbody id="pjKeyTableBody"></tbody>
@@ -312,6 +318,10 @@
 
     <!-- ===== 面板三：调用明细（查看全部人员的 MCP 问答调用记录） ===== -->
     <div class="role-panel" id="panelLogs" style="display:none">
+      <div class="top-bar" style="padding-bottom:12px;">
+        <button class="btn btn-default" onclick="backToRoleView()"><i class="fas fa-arrow-left"></i> 返回列表</button>
+        <span style="font-size:13px;color:#6b7280;">当前查看：<b id="logsProjectLabel" style="color:#1872a7;"></b> 的调用明细</span>
+      </div>
       <div class="filter-bar">
         <div class="filter-item">
           <label class="filter-label">角色</label>
@@ -322,15 +332,6 @@
             <option value="项目角色">项目角色</option>
           </select>
         </div>
-       <div class="filter-item">
-        <label class="filter-label">项目编码</label>
-        <div class="search-select" id="filterProjectWrap">
-          <input type="text" class="search-input" id="filterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
-          <i class="fas fa-chevron-down search-arrow"></i>
-          <div class="search-dropdown" id="filterProjectDropdown"></div>
-          <input type="hidden" id="filterProjectValue" />
-        </div>
-      </div>
         <div class="filter-item">
           <label class="filter-label">调用人</label>
           <input type="text" class="form-input" id="lgFilterCaller" placeholder="姓名 / 手机号" />
@@ -402,13 +403,10 @@
         <!-- 所属人员：默认当前登录用户，不可修改 -->
         <div class="form-row">
           <label class="form-label">所属人员 <span class="required">*</span></label>
-          <input type="text" class="form-input" id="createMemberInput" value="张华　138****1234　医学经理" disabled />
+          <input type="text" class="form-input" id="createMemberInput" value="张华　138****1234" disabled />
         </div>
         <!-- 用户角色：随当前登录账号带出，不可修改 -->
-        <div class="form-row">
-          <label class="form-label">用户角色</label>
-          <input type="text" class="form-input" id="createRoleInput" value="医学经理" disabled />
-        </div>
+        
         <div class="created-box" id="createdBox" style="display:none">
           <div class="form-label">MCP 配置参数</div>
           <div class="created-config">
@@ -454,12 +452,12 @@
   <script>
     // ===== 当前登录用户（普通角色） =====
     // 普通角色只能为「本人」创建 API key：所属人员默认当前登录用户、不可修改。
-    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234-医学经理' };
+    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234' };
 
     // 列表数据：仅展示当前登录用户本人名下的 keys
     const KEYS = [
-      { member: '张华-138****1234-医学经理', role: '管理员角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
-      { member: '张华-138****1234-医学经理', role: '管理员角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
+      { member: '张华-138****1234', role: '管理员角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { member: '张华-138****1234', role: '管理员角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
     ];
 
     let createdKeyOnce = false; // 标识本次弹窗是否已复制过/关闭后不可再看
@@ -467,14 +465,23 @@
     let pageSize = 10;
 
     function getFiltered() {
+      const fm = document.getElementById('filterMember').value.trim().toLowerCase();
       const ds = document.getElementById('filterDateStart').value;
       const de = document.getElementById('filterDateEnd').value;
       return KEYS.filter(k => {
+        if (fm && !k.member.toLowerCase().includes(fm)) return false;
         // 创建时间范围过滤（YYYY-MM-DD 字符串直接比较）
         if (ds && k.createdAt < ds) return false;
         if (de && k.createdAt > de) return false;
         return true;
       });
+    }
+
+    function maskKey(key) {
+      if (!key) return '';
+      const head = key.slice(0, 10);
+      const tail = key.slice(-4);
+      return head + '••••••••••••' + tail;
     }
 
     function renderTable() {
@@ -483,16 +490,18 @@
       const pageList = list.slice(start, start + pageSize);
       const tbody = document.getElementById('keyTableBody');
       if (pageList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无符合条件的 API key</td></tr>';
       } else {
         tbody.innerHTML = pageList.map((k, i) => `
           <tr>
             <td>${start + i + 1}</td>
             <td>${k.member}</td>
             <td>${k.role}</td>
+            <td><span class="key-mask" title="${k.fullKey}">${maskKey(k.fullKey)}</span></td>
             <td>${k.createdAt}</td>
             <td class="center">
               <div class="row-actions">
+                <button class="op-btn" title="调用明细" onclick="openLogsForMcp('', '${k.member}', 'admin')">调用明细</button>
                 <button class="op-btn danger" title="删除" onclick="deleteKey('${k.fullKey}')"><i class="fas fa-trash"></i></button>
               </div>
             </td>
@@ -538,6 +547,7 @@
     function queryKeys() { renderTable(); }
 
     function resetFilters() {
+      document.getElementById('filterMember').value = '';
       document.getElementById('filterDateStart').value = '';
       document.getElementById('filterDateEnd').value = '';
       currentPage = 1;
@@ -561,28 +571,70 @@
       lgCurrentPage = 1;
       const isHengrui = el.dataset.company === 'hengrui';
       document.getElementById('roleTabs').style.display = isHengrui ? '' : 'none';
+      currentView = 'role';
       if (isHengrui) {
         // 恒瑞医药：按当前选中的角色 Tab 展示
         const activeRole = document.querySelector('#roleTabs .role-tab.active').dataset.role;
+        returnRole = activeRole;
         showRolePanel(activeRole);
       } else {
         // 其他公司：不区分角色，统一展示管理员视图
         document.querySelectorAll('#roleTabs .role-tab').forEach(t => t.classList.toggle('active', t.dataset.role === 'admin'));
+        returnRole = 'admin';
         showRolePanel('admin');
         renderTable();
       }
       showToast('已切换到：' + el.textContent.trim());
     }
 
-    // 角色 Tab 切换（管理员角色 / 项目角色 / 调用明细）
+    // 视图状态：'role' 表示角色面板视图，'logs' 表示调用明细详情视图
+    let currentView = 'role';
+    let returnRole = 'admin';
+
+    // 角色 Tab 切换（管理员角色 / 项目角色）
     function switchRole(el) {
       document.querySelectorAll('#roleTabs .role-tab').forEach(t => t.classList.remove('active'));
       el.classList.add('active');
       const role = el.dataset.role;
+      currentView = 'role';
+      returnRole = role;
       showRolePanel(role);
       if (role === 'admin') { currentPage = 1; renderTable(); }
-      else if (role === 'project') { pjCurrentPage = 1; pjRenderTable(); }
-      else { lgCurrentPage = 1; lgRenderTable(); }
+      else { pjCurrentPage = 1; pjRenderTable(); }
+    }
+
+    // 由列表「明细」按钮进入：按该 MCP（项目编码 / 调用人）预筛选调用明细
+    function openLogsForMcp(project, caller, role) {
+      returnRole = role;
+      lgFilterProject = project || '';
+      document.getElementById('lgFilterRole').value = '';
+      document.getElementById('lgFilterCaller').value = caller || '';
+      document.getElementById('lgFilterDateStart').value = '';
+      document.getElementById('lgFilterDateEnd').value = '';
+      document.getElementById('lgFilterStatus').value = '';
+      document.getElementById('logsProjectLabel').textContent = project || (caller || '全部');
+      showLogsPanel();
+    }
+
+    // 进入调用明细详情视图（隐藏角色 Tab 与各角色面板）
+    function showLogsPanel() {
+      currentView = 'logs';
+      document.getElementById('roleTabs').style.display = 'none';
+      document.getElementById('panelAdmin').style.display = 'none';
+      document.getElementById('panelProject').style.display = 'none';
+      document.getElementById('panelLogs').style.display = '';
+      lgCurrentPage = 1;
+      lgRenderTable();
+    }
+
+    // 从调用明细详情返回角色列表视图
+    function backToRoleView() {
+      currentView = 'role';
+      const isHengrui = document.querySelector('#companyTabs .company-tab.active').dataset.company === 'hengrui';
+      document.getElementById('roleTabs').style.display = isHengrui ? '' : 'none';
+      document.getElementById('panelLogs').style.display = 'none';
+      document.getElementById('panelAdmin').style.display = returnRole === 'admin' ? '' : 'none';
+      document.getElementById('panelProject').style.display = returnRole === 'project' ? '' : 'none';
     }
 
     // 按角色展示对应面板（不负责数据刷新）
@@ -701,21 +753,23 @@
        ========================================================== */
     const PJ_PROJECT_OPTIONS = ['PRJ-2023-0918', 'PRJ-2025-1107', 'PRJ-2026-0331'];
     const PJ_KEYS = [
-      { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', role: '项目角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
-      { project: 'PRJ-2023-0918', member: '李娜-139****5566-项目经理', role: '项目角色', fullKey: 'sk-2f9c4b7d1e8a3c5b6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f1122', createdAt: '2026-07-28' },
-      { project: 'PRJ-2025-1107', member: '王强-137****8899-数据管理员', role: '项目角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' },
-      { project: 'PRJ-2025-1107', member: '赵敏-136****3344-医学 writer', role: '项目角色', fullKey: 'sk-5b1e2c3d4a5f6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9901', createdAt: '2026-05-11' },
-      { project: 'PRJ-2026-0331', member: '陈静-158****7722-项目经理', role: '项目角色', fullKey: 'sk-9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d', createdAt: '2026-04-02' }
+      { project: 'PRJ-2023-0918', member: '张华-138****1234', role: '医学经理', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { project: 'PRJ-2023-0918', member: '李娜-139****5566', role: '运维部PM', fullKey: 'sk-2f9c4b7d1e8a3c5b6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f1122', createdAt: '2026-07-28' },
+      { project: 'PRJ-2025-1107', member: '王强-137****8899', role: '医学经理', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' },
+      { project: 'PRJ-2025-1107', member: '赵敏-136****3344', role: '医学经理', fullKey: 'sk-5b1e2c3d4a5f6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9901', createdAt: '2026-05-11' },
+      { project: 'PRJ-2026-0331', member: '陈静-158****7722', role: '医学经理', fullKey: 'sk-9d8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a1f0e9d', createdAt: '2026-04-02' }
     ];
 
     let pjCurrentPage = 1;
     let pjPageSize = 10;
 
     function pjGetFiltered() {
+      const fm = document.getElementById('pjFilterMember').value.trim().toLowerCase();
       const fp = document.getElementById('pjFilterProjectValue').value.trim().toLowerCase();
       const ds = document.getElementById('pjFilterDateStart').value;
       const de = document.getElementById('pjFilterDateEnd').value;
       return PJ_KEYS.filter(k => {
+        if (fm && !k.member.toLowerCase().includes(fm)) return false;
         if (fp && !k.project.toLowerCase().includes(fp)) return false;
         if (ds && k.createdAt < ds) return false;
         if (de && k.createdAt > de) return false;
@@ -729,15 +783,21 @@
       const pageList = list.slice(start, start + pjPageSize);
       const tbody = document.getElementById('pjKeyTableBody');
       if (pageList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无符合条件的 API key</td></tr>';
       } else {
         tbody.innerHTML = pageList.map((k, i) => `
           <tr>
             <td class="center">${start + i + 1}</td>
             <td>${k.project}</td>
+            <td><span class="key-mask" title="${k.fullKey}">${maskKey(k.fullKey)}</span></td>
             <td>${k.member}</td>
             <td>${k.role}</td>
             <td>${k.createdAt}</td>
+            <td class="center">
+              <div class="row-actions">
+                <button class="op-btn" title="调用明细" onclick="openLogsForMcp('${k.project}', '', 'project')"> 调用明细</button>
+              </div>
+            </td>
           </tr>
         `).join('');
       }
@@ -775,6 +835,7 @@
     function pjQueryKeys() { pjRenderTable(); }
 
     function pjResetFilters() {
+      document.getElementById('pjFilterMember').value = '';
       document.getElementById('pjFilterProjectValue').value = '';
       document.getElementById('pjFilterProject').value = '';
       document.getElementById('pjFilterDateStart').value = '';
@@ -846,8 +907,8 @@
        ========================================================== */
     const LG_LOGS = [
       {
-        role: '项目角色',
-        caller: '张华-138****1234-医学经理',
+        role: '医学经理',
+        caller: '张华-138****1234',
         project: 'PRJ-2023-0918',
         time: '2026-08-25 10:12:33',
         ip: '192.168.10.23',
@@ -967,6 +1028,7 @@
 
     let lgCurrentPage = 1;
     let lgPageSize = 10;
+    let lgFilterProject = ''; // 当前明细对应的项目编码（由列表「明细」按钮带入，查询栏不展示）
 
     function lgEscapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -980,10 +1042,7 @@
 
     function lgGetFiltered() {
       const fr = document.getElementById('lgFilterRole').value;
-      // 项目编码：兼容 lgFilterProject / filterProject 两种元素命名
-      const projEl = document.getElementById('lgFilterProjectValue') || document.getElementById('filterProjectValue')
-                  || document.getElementById('lgFilterProject') || document.getElementById('filterProject');
-      const fp = (projEl ? projEl.value : '').trim().toLowerCase();
+      const fp = (lgFilterProject || '').trim().toLowerCase();
       const fc = document.getElementById('lgFilterCaller').value.trim().toLowerCase();
       const ds = document.getElementById('lgFilterDateStart').value;
       const de = document.getElementById('lgFilterDateEnd').value;
@@ -1060,12 +1119,8 @@
     }
 
     function lgResetFilters() {
+      lgFilterProject = '';
       document.getElementById('lgFilterRole').value = '';
-      // 项目编码：兼容 lgFilterProject / filterProject 两种元素命名
-      ['lgFilterProjectValue', 'filterProjectValue', 'lgFilterProject', 'filterProject'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
       document.getElementById('lgFilterCaller').value = '';
       document.getElementById('lgFilterDateStart').value = '';
       document.getElementById('lgFilterDateEnd').value = '';
@@ -1108,52 +1163,6 @@
         if (p) lgGoPage(p);
       }
     });
-
-    // 调用明细：查询栏「项目编码」搜索下拉（绑定面板内已有的搜索选择框元素，不改动其结构）
-    (function bindLgProjectSelect() {
-      const wrap = document.getElementById('filterProjectWrap');
-      const input = document.getElementById('filterProject');
-      const dropdown = document.getElementById('filterProjectDropdown');
-      const hidden = document.getElementById('filterProjectValue');
-      if (!wrap || !input || !dropdown || !hidden) return;
-      const OPTIONS = Array.from(new Set(LG_LOGS.map(l => l.project)));
-      function renderOptions(keyword) {
-        const kw = (keyword || '').trim().toLowerCase();
-        const list = OPTIONS.filter(p => p.toLowerCase().includes(kw));
-        dropdown.innerHTML = list.length
-          ? list.map(p => `<div class="search-option" data-value="${p}">${p}</div>`).join('')
-          : '<div class="search-empty">无匹配项目编码</div>';
-      }
-      function setProject(value) {
-        hidden.value = value;
-        input.value = value;
-        dropdown.classList.remove('show');
-        lgCurrentPage = 1;
-        lgRenderTable();
-      }
-      input.addEventListener('focus', () => {
-        renderOptions(input.value);
-        dropdown.classList.add('show');
-      });
-      input.addEventListener('input', () => renderOptions(input.value));
-      input.addEventListener('blur', () => {
-        setTimeout(() => {
-          const val = input.value.trim();
-          if (OPTIONS.includes(val)) setProject(val);
-          else if (!hidden.value) setProject('');
-          else input.value = hidden.value;
-          dropdown.classList.remove('show');
-        }, 180);
-      });
-      dropdown.addEventListener('mousedown', e => {
-        const option = e.target.closest('.search-option');
-        if (!option) return;
-        setProject(option.dataset.value);
-      });
-      document.addEventListener('click', e => {
-        if (!wrap.contains(e.target)) dropdown.classList.remove('show');
-      });
-    })();
 
     renderTable();
     pjRenderTable();

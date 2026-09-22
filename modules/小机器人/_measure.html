@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>measuring...</title></head>
+<body>
+<img id="a" src="images/ai_hide.png">
+<img id="b" src="images/ai_show.png">
+<script>
+function measure(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  let minX = c.width, maxX = -1, minY = c.height, maxY = -1;
+  for (let y = 0; y < c.height; y++)
+    for (let x = 0; x < c.width; x++)
+      if (d[(y * c.width + x) * 4 + 3] > 10) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+  return { w: c.width, h: c.height, minX, maxX, minY, maxY };
+}
+function run() {
+  try {
+    const a = measure(document.getElementById('a'));
+    const b = measure(document.getElementById('b'));
+    document.title = 'RESULT ' + JSON.stringify({ hide: a, show: b });
+  } catch (e) { document.title = 'ERR ' + e.message; }
+}
+let n = 0;
+function waitAndRun() {
+  const a = document.getElementById('a');
+  if (a.naturalWidth > 0) { run(); return; }
+  setTimeout(waitAndRun, 50);
+}
+document.getElementById('a').onload = () => { setTimeout(waitAndRun, 200); };
+document.getElementById('b').onerror = () => { setTimeout(waitAndRun, 200); };
+</script>
+</body>
+</html>

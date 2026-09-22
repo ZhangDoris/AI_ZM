@@ -15,7 +15,7 @@
       background: #f0f2f5;
     }
 
-    /* 整屏布局 */
+    /* 整屏布局：页面始终占满一屏，各区在内部滚动（带滚动条），不把整页撑成长页面 */
     .page {
       height: 100vh;
       display: flex;
@@ -73,16 +73,72 @@
       display: flex;
       gap: 16px;
       min-height: 0;
+      position: relative;
     }
-    .content-row > .col { flex: 2 1 0; }
+    .content-row > .col { flex: 2 1 0; min-width: 0; }
+    /* 右侧抽屉：可收起（收缩到右侧），默认展开显示审核流程 / 审核链路 */
     .right-stack {
-      flex: 1 1 0;
-      min-width: 320px;
+      flex: 0 0 360px;
+      width: 360px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      transition: flex-basis .28s ease, width .28s ease, min-width .28s ease;
+    }
+    .right-stack.collapsed {
+      flex-basis: 0;
+      width: 0;
+      min-width: 0;
+    }
+    .right-stack-inner {
+      width: 360px;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      min-height: 0;
     }
+    #rightInfo, #rightAction {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* 右侧抽屉收起 / 展开把手（始终可见，贴在右侧边缘） */
+    .right-drawer-handle {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 362px;
+      z-index: 30;
+      width: 26px;
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e3e8f0;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      background: #fff;
+      box-shadow: -2px 0 8px rgba(0, 0, 0, 0.06);
+      color: #1872a7;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .right-drawer-handle:hover { background: #f0f5ff; }
+    /* 右侧「操作」模式下：审核面板占满抽屉高度并可滚动 */
+    #rightAction .review-panel {
+      margin-top: 0;
+      max-height: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #rightAction .review-panel-body { flex: 1 1 auto; overflow-y: auto; }
 
     /* 列 */
     .col {
@@ -96,8 +152,8 @@
       padding: 16px 20px;
       overflow: hidden;
     }
-    .right-stack > .col { flex: 1 1 0; min-width: 0; }
-    .right-stack > .col.oplog { flex: 0 0 280px; }
+    #rightInfo > .col { flex: 1 1 0; min-width: 0; }
+    #rightInfo > .col.oplog { flex: 0 0 280px; }
 
     /* 我的批注：聊天区内可收缩区块 */
     .chat-remark {
@@ -196,6 +252,7 @@
     .stage-tabs {
       display: flex;
       align-items: stretch;
+      height: 60px;
     }
     .stage-tabs .stage-tab {
       display: flex;
@@ -358,6 +415,17 @@
       background: #fff;
       padding: 8px 10px 10px;
     }
+    /* 拖拽上传 */
+    .chat-box { position: relative; }
+    .drop-overlay {
+      position: absolute; inset: 6px; z-index: 6; display: none;
+      flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      border: 2px dashed #91caff; border-radius: 8px;
+      background: rgba(240, 248, 255, 0.94);
+      color: #1872a7; font-size: 14px; font-weight: 600; pointer-events: none;
+    }
+    .drop-overlay .fa { font-size: 30px; }
+    .chat-box.dragging .drop-overlay { display: flex; }
     .chat-hint {
       display: flex;
       align-items: center;
@@ -605,6 +673,55 @@
     .cf-text { flex: 1 1 auto; }
     .cf-text .cf-label { font-weight: 600; }
     .chat-input-row { display: flex; align-items: flex-end; gap: 10px; }
+    .chat-input-wrap { position: relative; flex: 1 1 auto; display: flex; }
+    .chat-expand-btn {
+      position: absolute; top: 6px; right: 8px;
+      width: 24px; height: 24px; line-height: 22px; text-align: center;
+      border: none; border-radius: 4px; background: transparent;
+      color: #bfbfbf; font-size: 13px; cursor: pointer;
+      transition: all .15s; z-index: 2;
+    }
+    .chat-expand-btn:hover { color: #1872a7; background: #f0f5ff; }
+    /* 放大编辑态：页面内浮层，不脱离当前页面 */
+    .chat-input-row.expanded {
+      position: fixed; z-index: 1200;
+      left: 50%; transform: translateX(-50%);
+      bottom: 96px;
+      width: min(880px, 86vw);
+      align-items: stretch;
+      background: #fff; border: 1px solid #e3e8f0; border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
+      padding: 12px;
+    }
+    .chat-input-row.expanded .chat-input { height: 48vh; max-height: none; }
+    .chat-input-row.expanded .chat-input-wrap { flex-direction: column; }
+    .chat-input-row.expanded .chat-expand-btn { position: absolute; top: -12px; right: -12px; background: #fff; border: 1px solid #e3e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    .chat-expand-tip {
+      display: none; font-size: 12px; color: #8c8c8c; margin-top: 6px;
+      justify-content: space-between;
+    }
+    .chat-input-row.expanded .chat-expand-tip { display: flex; }
+    /* 通用放大编辑（审批批注 / 批注 等 textarea，页面内浮层，不脱离当前页面） */
+    .x-expand-host { position: relative; }
+    .x-expand-host .x-wrap { position: relative; }
+    .x-expand-btn {
+      position: absolute; top: 6px; right: 8px;
+      width: 24px; height: 24px; line-height: 22px; text-align: center;
+      border: none; border-radius: 4px; background: transparent;
+      color: #bfbfbf; font-size: 13px; cursor: pointer; transition: all .15s; z-index: 2;
+    }
+    .x-expand-btn:hover { color: #1872a7; background: #f0f5ff; }
+    .x-expand-host.expanded {
+      position: fixed; z-index: 1200;
+      left: 50%; transform: translateX(-50%); bottom: 96px;
+      width: min(880px, 86vw);
+      background: #fff; border: 1px solid #e3e8f0; border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18); padding: 12px;
+    }
+    .x-expand-host.expanded .form-textarea { height: 48vh; max-height: none; }
+    .x-expand-host.expanded .x-expand-btn { top: -12px; right: -12px; background: #fff; border: 1px solid #e3e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    .x-expand-tip { display: none; font-size: 12px; color: #8c8c8c; margin-top: 6px; justify-content: space-between; }
+    .x-expand-host.expanded .x-expand-tip { display: flex; }
     .chat-input {
       flex: 1 1 auto;
       resize: none;
@@ -1220,7 +1337,7 @@
             <div class="chat-body">
               <div class="chat-sys">2026-08-11 15:19:24　沟通已发起</div>
 
-              <div class="chat-msg self">
+              <div class="chat-msg other">
                 <div class="chat-avatar">刘</div>
                 <div class="chat-content">
                   <div class="chat-meta">刘梅 · CRC专员 · 2026-08-11 15:19:24<span class="chat-status orange">已提交</span></div>
@@ -1242,7 +1359,7 @@
                 </div>
               </div>
 
-              <div class="chat-msg other">
+              <div class="chat-msg self">
                 <div class="chat-avatar">王</div>
                 <div class="chat-content">
                   <div class="chat-meta">王强 · 医学经理 · 2026-08-12 09:30:00<span class="chat-status gray">审核沟通中</span></div>
@@ -1256,7 +1373,7 @@
                   <div class="chat-bubble">检验报告单已删除无法查看，请重新上传有效的检验报告后再提交审核。</div>
                 </div>
               </div>
-              <div class="chat-msg self">
+              <div class="chat-msg other">
                 <div class="chat-avatar">刘</div>
                 <div class="chat-content">
                   <div class="chat-meta">刘梅 · CRC专员 · 2026-08-12 10:15:00<span class="chat-status orange">已提交</span></div>
@@ -1283,7 +1400,7 @@
                 </div>
               </div>
 
-              <div class="chat-msg other">
+              <div class="chat-msg self">
                 <div class="chat-avatar">王</div>
                 <div class="chat-content">
                   <div class="chat-meta">王强 · 医学经理 · 2026-08-12 14:23:23<span class="chat-status red">驳回</span></div>
@@ -1298,7 +1415,7 @@
                   <div class="chat-bubble">材料复核无误，本次入组申请审核通过。</div>
                 </div>
               </div>
-              <div class="chat-msg self">
+              <div class="chat-msg other">
                 <div class="chat-avatar">刘</div>
                 <div class="chat-content">
                   <div class="chat-meta">刘梅 · CRC专员 · 2026-09-04 18:28:31<span class="chat-status red">撤销申请</span></div>
@@ -1314,14 +1431,22 @@
               <div class="chat-toolbar">
                 <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
                 <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
-                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点击「提醒人员」添加并 @ 后再发送。</div>
+                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
                 <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
               </div>
               <div class="pending-files hidden" id="pendingFiles"></div>
               <div class="mention-chips hidden" id="mentionChips"></div>
               <div class="chat-input-row" id="chatInputRow">
-                <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送，Shift+Enter 换行" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+                <div class="chat-input-wrap">
+                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送；也可将图片 / 文件拖拽到此处上传" onkeydown="chatInputKey(event)"></textarea>
+                  <button class="chat-expand-btn" id="chatExpandBtn" onclick="toggleChatExpand()" title="放大编辑"><i class="fa fa-expand"></i></button>
+                  <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                </div>
                 <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+              </div>
+              <div class="drop-overlay" id="dropOverlay">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <span>将图片 / 文件拖拽到此处即可上传</span>
               </div>
               </div>
               <div class="review-actions" id="reviewActions">
@@ -1337,67 +1462,16 @@
                 <span class="ra-spacer"></span>
               </div>
 
-              <div class="review-panel hidden" id="reviewPanel">
-                <div class="review-panel-head">
-                  <span class="review-panel-title" id="reviewPanelTitle">驳回审核</span>
-                </div>
-                <div class="review-panel-body">
-                  <!-- 驳回 -->
-                  <div id="rejectBlock">
-                    <div class="form-item">
-                      <div class="form-label"><span class="req">*</span>驳回原因：</div>
-                      <div class="reason-tags" id="rejectReasonTags">
-                        <span class="reason-tag" onclick="toggleReason(this)">不符合入组标准</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">既往治疗或合并用药不符</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">资料缺失</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">无法评估</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">受试者意愿或依从性差</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">试验执行原因</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">重复提交</span>
-                        <span class="reason-tag" onclick="toggleReason(this)">其他</span>
-                      </div>
-                    </div>
-                    <div class="form-item">
-                      <div class="form-label">备注：</div>
-                      <textarea class="form-textarea" id="reviewComment" placeholder="请输入备注"></textarea>
-                    </div>
-                  </div>
-                  <!-- 通过 -->
-                  <div id="approveBlock" style="display:none">
-                    <div class="section-title">审核批注</div>
-                    <div class="form-item">
-                      <textarea class="form-textarea" id="approveComment" placeholder="请输入审核批注"></textarea>
-                    </div>
-                    <div class="form-item">
-                      <div class="form-label"><span class="req">*</span> 是否需要加签审核</div>
-                      <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
-                      <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
-                    </div>
-                    <div class="form-item" id="nextReviewerItem" style="display:none">
-                      <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
-                      <select class="form-select" id="nextReviewer">
-                        <option value="">请选择下一个审核人</option>
-                        <option>王强（医学经理）</option>
-                        <option>李明（CRA）</option>
-                        <option>项目负责人</option>
-                        <option>赵敏（医学总监）</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div class="review-panel-foot">
-                  <button class="btn btn-default" onclick="closeReview()">取消</button>
-                  <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
-                  <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
-                </div>
-              </div>
-
               <!-- 我的批注面板（点击「我的批注」按钮弹出，样式参考手机端） -->
               <div class="remark-panel hidden" id="remarkPanel">
                 <div class="remark-panel-body">
                   <div class="remark-edit-title">我的批注</div>
-                  <div class="form-item" style="margin-bottom:0">
-                    <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容">患者既往病史需进一步核实，已备注待跟进。</textarea>
+                  <div class="form-item x-expand-host" style="margin-bottom:0">
+                    <div class="x-wrap">
+                      <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容" onkeydown="xExpandKey(event,'remarkText')">患者既往病史需进一步核实，已备注待跟进。</textarea>
+                      <button class="x-expand-btn" onclick="toggleXExpand('remarkText')" title="放大编辑"><i class="fa fa-expand"></i></button>
+                    </div>
+                    <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                   </div>
                   <div class="remark-edit-actions">
                   <button class="btn btn-default" onclick="closeRemark()">取消</button>
@@ -1455,28 +1529,59 @@
       </div>
 
       <!-- 右：审核流程 + 操作日志 -->
-      <div class="right-stack">
+      <div class="right-drawer-handle" id="rightHandle" onclick="toggleRightDrawer()" title="收起 / 展开右侧"><i class="fa fa-chevron-right"></i></div>
+      <div class="right-stack" id="rightStack">
+        <div class="right-stack-inner">
+          <div id="rightInfo">
         <!-- 右上：审核流程展示 -->
         <div class="col">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-sitemap"></i> 审核流程</div>
           </div>
           <div class="col-body">
-            <div class="group-view hidden" data-group="预筛审核">
-              <div class="empty-state">
-                <i class="fa fa-sitemap"></i>
-                <div class="es-text">暂无预筛审核流程记录</div>
-              </div>
-            </div>
+           
             <div class="group-view" data-group="入组审核">
               <div class="process-panel">
               <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot gray"><i class="fa fa-clock-o"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">待审核</div>
+                  </div>
+                  <div class="timeline-info">王强 · CRA专员</div>
+                   <div class="timeline-info">赵四 · CRA专员</div>
+                </div>
                 <div class="timeline-item">
                   <div class="timeline-dot warn"><i class="fa fa-check"></i></div>
                   <div class="timeline-row">
                     <div class="timeline-title">已提交审核</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-14 12:30:00</div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">筛败</div>
+                  </div>
+                  <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
+                </div>
+
+                <div class="timeline-item">
+                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">审核通过</div>
+                  </div>
+                  <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
+                </div>
+
+                
+
+                <div class="timeline-item">
+                  <div class="timeline-dot warn"><i class="fa fa-check"></i></div>
+                  <div class="timeline-row">
+                    <div class="timeline-title">已提交审核</div>
+                  </div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
                 </div>
 
                 <div class="timeline-item">
@@ -1492,39 +1597,7 @@
                   <div class="timeline-row">
                     <div class="timeline-title">已提交审核</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
-                </div>
-
-                <div class="timeline-item">
-                  <div class="timeline-dot done"><i class="fa fa-check"></i></div>
-                  <div class="timeline-row">
-                    <div class="timeline-title">审核通过</div>
-                  </div>
-                  <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
-                </div>
-
-                <div class="timeline-item">
-                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
-                  <div class="timeline-row">
-                    <div class="timeline-title">筛败</div>
-                  </div>
-                  <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
-                </div>
-
-                <div class="timeline-item">
-                  <div class="timeline-dot warn"><i class="fa fa-check"></i></div>
-                  <div class="timeline-row">
-                    <div class="timeline-title">已提交审核</div>
-                  </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
-                </div>
-                <div class="timeline-item">
-                  <div class="timeline-dot gray"><i class="fa fa-clock-o"></i></div>
-                  <div class="timeline-row">
-                    <div class="timeline-title">待审核</div>
-                  </div>
-                  <div class="timeline-info">王强 · CRA专员</div>
-                   <div class="timeline-info">赵四 · CRA专员</div>
+                  <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
                 </div>
               </div>
             </div>
@@ -1545,7 +1618,7 @@
               <div class="chain-block">
                 <div class="chain-steps">
                   <div class="chain-step done">
-                    <div class="cs-name">预筛审核V1.0</div>
+                    <div class="cs-name">预筛审核</div>
                     <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
                   </div>
                   <i class="fa fa-long-arrow-right chain-arrow"></i>
@@ -1602,6 +1675,74 @@
                     <div class="op-remark">驳回：12121</div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+          <div id="rightAction" class="hidden">
+            <div class="review-panel" id="reviewPanel">
+              <div class="review-panel-head">
+                <span class="review-panel-title" id="reviewPanelTitle">驳回审核</span>
+              </div>
+              <div class="review-panel-body">
+                <!-- 驳回 -->
+                <div id="rejectBlock">
+                  <div class="form-item">
+                    <div class="form-label"><span class="req">*</span>驳回原因：</div>
+                    <div class="reason-tags" id="rejectReasonTags">
+                      <span class="reason-tag" onclick="toggleReason(this)">不符合入组标准</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">既往治疗或合并用药不符</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">资料缺失</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">无法评估</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">受试者意愿或依从性差</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">试验执行原因</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">重复提交</span>
+                      <span class="reason-tag" onclick="toggleReason(this)">其他</span>
+                    </div>
+                  </div>
+                  <div class="form-item">
+                    <div class="form-label">备注：</div>
+                    <div class="x-expand-host">
+                      <div class="x-wrap">
+                        <textarea class="form-textarea" id="reviewComment" placeholder="请输入备注" onkeydown="xExpandKey(event,'reviewComment')"></textarea>
+                        <button class="x-expand-btn" onclick="toggleXExpand('reviewComment')" title="放大编辑"><i class="fa fa-expand"></i></button>
+                      </div>
+                      <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- 通过 -->
+                <div id="approveBlock" style="display:none">
+                  <div class="section-title">审核批注</div>
+                  <div class="form-item x-expand-host">
+                    <div class="x-wrap">
+                      <textarea class="form-textarea" id="approveComment" placeholder="请输入审核批注" onkeydown="xExpandKey(event,'approveComment')"></textarea>
+                      <button class="x-expand-btn" onclick="toggleXExpand('approveComment')" title="放大编辑"><i class="fa fa-expand"></i></button>
+                    </div>
+                    <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                  </div>
+                  <div class="form-item">
+                    <div class="form-label"><span class="req">*</span> 是否需要加签审核</div>
+                    <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
+                    <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
+                  </div>
+                  <div class="form-item" id="nextReviewerItem" style="display:none">
+                    <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
+                    <select class="form-select" id="nextReviewer">
+                      <option value="">请选择下一个审核人</option>
+                      <option>王强（医学经理）</option>
+                      <option>李明（CRA）</option>
+                      <option>项目负责人</option>
+                      <option>赵敏（医学总监）</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="review-panel-foot">
+                <button class="btn btn-default" onclick="closeReview()">取消</button>
+                <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
+                <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
               </div>
             </div>
           </div>
@@ -1801,12 +1942,48 @@
     ];
     function onUpload() { document.getElementById('fileInput').click(); }
     function onFileChosen(input) {
-      Array.prototype.forEach.call(input.files, function (f) {
+      addFiles(input.files);
+      input.value = '';
+    }
+    function addFiles(fileList) {
+      Array.prototype.forEach.call(fileList, function (f) {
         pendingFiles.push(f.name);
       });
       renderPending();
-      input.value = '';
     }
+    /* 拖拽上传：从桌面把图片 / 文件拖到聊天输入区即可上传 */
+    (function () {
+      var box = document.getElementById('chatBox');
+      if (!box) return;
+      function hasFiles(e) {
+        return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1;
+      }
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        box.addEventListener(ev, function (e) {
+          if (!hasFiles(e)) return;
+          e.preventDefault();
+          box.classList.add('dragging');
+        });
+      });
+      box.addEventListener('dragleave', function (e) {
+        if (e.relatedTarget && box.contains(e.relatedTarget)) return;
+        box.classList.remove('dragging');
+      });
+      box.addEventListener('drop', function (e) {
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        box.classList.remove('dragging');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          addFiles(e.dataTransfer.files);
+        }
+      });
+      // 阻止把文件拖到页面其它位置时浏览器直接打开文件
+      ['dragover', 'drop'].forEach(function (ev) {
+        window.addEventListener(ev, function (e) {
+          if (hasFiles(e) && !box.contains(e.target)) e.preventDefault();
+        });
+      });
+    })();
     function renderPending() {
       var box = document.getElementById('pendingFiles');
       if (!pendingFiles.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
@@ -1913,11 +2090,56 @@
       if (!text && !pendingFiles.length) { showToast('请输入消息内容'); return; }
       appendSelfMsg(text, pendingFiles.slice(), mentions);
       ta.value = '';
+      if (document.getElementById('chatInputRow').classList.contains('expanded')) toggleChatExpand(false);
       pendingFiles = [];
       renderPending();
       remindPersons.forEach(function (p) { p.selected = false; });
       renderRemind();
       document.getElementById('rpList').classList.add('hidden');
+      // 消息发送成功后，展开右侧抽屉
+      expandRightDrawer();
+    }
+    /* 输入框放大编辑（页面内浮层，不脱离当前页面） */
+    function toggleChatExpand(force) {
+      var row = document.getElementById('chatInputRow');
+      var btn = document.getElementById('chatExpandBtn');
+      if (!row) return;
+      var on = typeof force === 'boolean' ? force : !row.classList.contains('expanded');
+      row.classList.toggle('expanded', on);
+      if (btn) btn.innerHTML = on ? '<i class="fa fa-compress"></i>' : '<i class="fa fa-expand"></i>';
+      if (on) {
+        var ta = document.getElementById('chatInput');
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }
+    }
+    function chatInputKey(e) {
+      var expanded = document.getElementById('chatInputRow').classList.contains('expanded');
+      if (expanded) {
+        if (e.key === 'Escape') { e.preventDefault(); toggleChatExpand(false); }
+        else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMsg(); }
+      } else {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+      }
+    }
+    /* 通用放大编辑：审批批注 / 批注 等 textarea */
+    function toggleXExpand(id, force) {
+      var ta = document.getElementById(id);
+      if (!ta) return;
+      var host = ta.closest('.x-expand-host');
+      if (!host) return;
+      var btn = host.querySelector('.x-expand-btn');
+      var on = typeof force === 'boolean' ? force : !host.classList.contains('expanded');
+      host.classList.toggle('expanded', on);
+      if (btn) btn.innerHTML = on ? '<i class="fa fa-compress"></i>' : '<i class="fa fa-expand"></i>';
+      if (on) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }
+    function xExpandKey(e, id) {
+      var ta = document.getElementById(id);
+      if (!ta) return;
+      var host = ta.closest('.x-expand-host');
+      if (host && host.classList.contains('expanded') && e.key === 'Escape') {
+        e.preventDefault(); toggleXExpand(id, false);
+      }
     }
     function appendSelfMsg(text, files, mentions) {
       var body = document.querySelector('.chat-panel .chat-body');
@@ -1955,12 +2177,18 @@
     function sendNotice() {
       var box = document.getElementById('chatBox');
       document.getElementById('remarkPanel').classList.add('hidden');
+      document.getElementById('reviewPanel').classList.add('hidden');
+      var willShow = box.classList.contains('hidden');
       box.classList.toggle('hidden');
-      if (!box.classList.contains('hidden')) {
-        document.getElementById('reviewPanel').classList.add('hidden');
+      if (willShow) {
+        // 沟通时收起右侧，让沟通区占满宽度
+        collapseRightDrawer();
+        showRightMode('info');
+        var ta = document.getElementById('chatInput');
+        if (ta) ta.focus();
+      } else {
+        expandRightDrawer();
       }
-      var ta = document.getElementById('chatInput');
-      if (ta && !box.classList.contains('hidden')) ta.focus();
     }
 
     /* 我的批注：点「我的批注」按钮弹出面板，类比驳回 */
@@ -1972,6 +2200,7 @@
     function openRemark() {
       document.getElementById('reviewActions').classList.add('hidden');
       document.getElementById('reviewPanel').classList.add('hidden');
+      showRightMode('info');
       document.getElementById('chatBox').classList.add('hidden');
       document.getElementById('remarkPanel').classList.remove('hidden');
     }
@@ -2009,6 +2238,9 @@
       var chatBox = document.getElementById('chatBox');
       chatBoxWasHidden = chatBox.classList.contains('hidden');
       chatBox.classList.add('hidden');
+      // 右侧切换到「操作」模式并展开抽屉（审核表单在右侧显示）
+      showRightMode('action');
+      expandRightDrawer();
       var panel = document.getElementById('reviewPanel');
       panel.classList.remove('hidden');
       var title = document.getElementById('reviewPanelTitle');
@@ -2028,10 +2260,49 @@
       }
     }
     function closeReview() {
-      document.getElementById('reviewPanel').classList.add('hidden');
+      // 右侧切回「信息」模式（展示审核流程 / 审核链路）
+      showRightMode('info');
       document.getElementById('reviewActions').classList.remove('hidden');
       // 取消时恢复打开前的输入区状态
       if (!chatBoxWasHidden) document.getElementById('chatBox').classList.remove('hidden');
+    }
+    /* 右侧抽屉：信息 / 操作 两种模式 + 收起 / 展开 */
+    function showRightMode(mode) {
+      var info = document.getElementById('rightInfo');
+      var action = document.getElementById('rightAction');
+      if (!info || !action) return;
+      if (mode === 'action') {
+        info.classList.add('hidden');
+        action.classList.remove('hidden');
+      } else {
+        info.classList.remove('hidden');
+        action.classList.add('hidden');
+      }
+    }
+    function toggleRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (!stack) return;
+      if (stack.classList.contains('collapsed')) expandRightDrawer();
+      else collapseRightDrawer();
+    }
+    function collapseRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (stack) stack.classList.add('collapsed');
+      updateRightHandle();
+    }
+    function expandRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (stack) stack.classList.remove('collapsed');
+      updateRightHandle();
+    }
+    function updateRightHandle() {
+      var handle = document.getElementById('rightHandle');
+      if (!handle) return;
+      var collapsed = document.getElementById('rightStack').classList.contains('collapsed');
+      handle.style.right = collapsed ? '12px' : '362px';
+      handle.innerHTML = collapsed
+        ? '<i class="fa fa-chevron-left"></i>'
+        : '<i class="fa fa-chevron-right"></i>';
     }
     function toggleCountersign() {
       var yes = document.querySelector('input[name="countersign"]:checked').value === 'yes';
@@ -2106,6 +2377,7 @@
 
     renderMentionChips();
     refreshRemark();
+    updateRightHandle();
   </script>
 </body>
 </html>

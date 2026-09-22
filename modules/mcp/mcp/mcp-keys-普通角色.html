@@ -42,10 +42,9 @@
     .filter-item:nth-child(1) { flex: 0 0 200px; }
     .filter-item:nth-child(2) { flex: 0 0 340px; }
     .filter-label { font-size: 13px; color: #666; font-weight: 500; }
-    /* 调用明细面板：项目编码 / 调用时间 / 状态 */
-    #panelLogs .filter-item:nth-child(1) { flex: 0 0 240px; }
-    #panelLogs .filter-item:nth-child(2) { flex: 0 0 340px; }
-    #panelLogs .filter-item:nth-child(3) { flex: 0 0 140px; }
+    /* 调用明细面板：调用时间 / 状态 */
+    #panelLogs .filter-item:nth-child(1) { flex: 0 0 340px; }
+    #panelLogs .filter-item:nth-child(2) { flex: 0 0 140px; }
     .filter-actions { display: flex; gap: 12px; margin-left: auto; }
     .form-input, .form-select { width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 13px; color: #333; outline: none; background: #fff; transition: border-color .2s; }
     .form-input:focus, .form-select:focus { border-color: #1872a7; }
@@ -174,24 +173,11 @@
 <body>
   <div class="container">
 
-    <!-- 顶部：标题 -->
-    <div class="top-bar">
-      <div>
-        <h1 class="section-title">MCP 接入配置</h1>
-      </div>
-      
-    </div>
     <!-- 公司 Tab -->
     <div class="company-tabs" id="companyTabs">
       <div class="company-tab active" data-company="hengrui" onclick="switchCompany(this)">恒瑞医药</div>
       <div class="company-tab" data-company="jiangsu-kexin" onclick="switchCompany(this)">江苏科信</div>
       <div class="company-tab" data-company="ops-dept2" onclick="switchCompany(this)">运营二部</div>
-    </div>
-
-    <!-- 视图 Tab：项目角色 / 调用明细 -->
-    <div class="role-tabs" id="roleTabs">
-      <div class="role-tab active" data-role="project" onclick="switchRole(this)">项目角色</div>
-      <div class="role-tab" data-role="logs" onclick="switchRole(this)">调用明细</div>
     </div>
 
     <!-- ===== 面板一：项目角色（MCP 接入配置） ===== -->
@@ -231,9 +217,11 @@
           <tr>
             <th style="width:64px;text-align:center">序号</th>
             <th>项目编码</th>
+            <th>API Key</th>
             <th>所属人员</th>
+            <th>角色</th>
             <th>创建日期</th>
-            <th style="width:120px;text-align:center">操作</th>
+            <th style="width:160px;text-align:center">操作</th>
           </tr>
         </thead>
         <tbody id="keyTableBody"></tbody>
@@ -257,16 +245,11 @@
 
     <!-- ===== 面板二：调用明细（只读，仅本人名下的调用记录） ===== -->
     <div class="role-panel" id="panelLogs" style="display:none">
+      <div class="top-bar" style="padding-bottom:12px;">
+        <button class="btn btn-default" onclick="showProjectPanel()"><i class="fas fa-arrow-left"></i> 返回</button>
+        <span style="font-size:13px;color:#6b7280;">当前查看：<b id="logsProjectLabel" style="color:#1872a7;"></b> 的调用明细</span>
+      </div>
       <div class="filter-bar">
-        <div class="filter-item">
-          <label class="filter-label">项目编码</label>
-          <div class="search-select" id="lgFilterProjectWrap">
-            <input type="text" class="search-input" id="lgFilterProject" placeholder="请选择或搜索项目编码" autocomplete="off" />
-            <i class="fas fa-chevron-down search-arrow"></i>
-            <div class="search-dropdown" id="lgFilterProjectDropdown"></div>
-            <input type="hidden" id="lgFilterProjectValue" />
-          </div>
-        </div>
         <div class="filter-item">
           <label class="filter-label">调用时间</label>
           <div style="display:flex;gap:8px;align-items:center;">
@@ -289,12 +272,13 @@
         </div>
       </div>
       <div class="section-desc">
-以下为你本人名下的 MCP 调用明细，记录每次调用的项目、时间、来源 IP、状态与问答内容，点击「查看详情」可查看完整问答。
+MCP 调用明细，记录每次调用的项目、时间、来源 IP、状态与问答内容，点击「查看详情」可查看完整问答。
       </div>
       <div class="table-card">
         <table class="api-table">
           <thead>
             <tr>
+              <th style="width:60px;text-align:center">序号</th>
               <th style="width:200px">调用人</th>
               <th style="width:150px">项目编码</th>
               <th style="width:170px;text-align:center">调用时间</th>
@@ -333,7 +317,7 @@
         <!-- 所属人员：默认当前登录用户，不可修改 -->
         <div class="form-row">
           <label class="form-label">所属人员 <span class="required">*</span></label>
-          <input type="text" class="form-input" id="createMemberInput" value="张华　138****1234　医学经理" disabled />
+          <input type="text" class="form-input" id="createMemberInput" value="张华-138****1234" disabled />
         </div>
        
         <!-- 项目编码：默认带入本人所在的项目，可模糊搜索切换 -->
@@ -398,7 +382,7 @@
     // 普通角色只能为「本人」创建 API key：
     // 所属人员默认当前登录用户、不可修改；
     // 项目编码默认带入本人所在的项目，可在本人参与的项目内模糊搜索切换。
-    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234-医学经理' };
+    const CURRENT_USER = { name: '张华', phone: '138****1234', role: '医学经理', label: '张华-138****1234' };
 
     // 查询栏 / 创建弹窗：项目编码可选项 = 当前登录用户本人所在的项目
     const PROJECT_OPTIONS = ['PRJ-2023-0918', 'PRJ-2025-1107'];
@@ -406,8 +390,8 @@
 
     // 列表数据：仅展示当前登录用户本人名下的 keys
     const KEYS = [
-      { project: 'PRJ-2023-0918', member: '张华-138****1234-医学经理', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
-      { project: 'PRJ-2025-1107', member: '张华-138****1234-医学经理', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
+      { project: 'PRJ-2023-0918', member: '张华-138****1234', role: '项目角色', fullKey: 'sk-a63d3f8b2c1d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z5598', createdAt: '2026-08-15' },
+      { project: 'PRJ-2025-1107', member: '张华-138****1234', role: '项目角色', fullKey: 'sk-78cd9a0b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v1w2x3y4z5990', createdAt: '2026-06-20' }
     ];
 
     let createdKeyOnce = false; // 标识本次弹窗是否已复制过/关闭后不可再看
@@ -427,22 +411,32 @@
       });
     }
 
+    function maskKey(key) {
+      if (!key) return '';
+      const head = key.slice(0, 10);
+      const tail = key.slice(-4);
+      return head + '••••••••••••' + tail;
+    }
+
     function renderTable() {
       const list = getFiltered();
       const start = (currentPage - 1) * pageSize;
       const pageList = list.slice(start, start + pageSize);
       const tbody = document.getElementById('keyTableBody');
       if (pageList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">暂无符合条件的 API key</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无符合条件的 API key</td></tr>';
       } else {
         tbody.innerHTML = pageList.map((k, i) => `
           <tr>
             <td class="center">${start + i + 1}</td>
             <td>${k.project}</td>
+            <td><span class="key-mask" title="${k.fullKey}">${maskKey(k.fullKey)}</span></td>
             <td>${k.member}</td>
+            <td>${k.role}</td>
             <td>${k.createdAt}</td>
             <td class="center">
               <div class="row-actions">
+                <button class="op-btn" title="调用明细" onclick="openLogsForProject('${k.project}', '${k.fullKey}')">调用明细</button>
                 <button class="op-btn danger" title="删除" onclick="deleteKey('${k.fullKey}')"><i class="fas fa-trash"></i></button>
               </div>
             </td>
@@ -511,20 +505,40 @@
       currentPage = 1;
       lgCurrentPage = 1;
       const name = el.textContent.trim();
-      const activeRole = document.querySelector('#roleTabs .role-tab.active').dataset.role;
-      if (activeRole === 'logs') lgRenderTable(); else renderTable();
+      if (currentView === 'logs') lgRenderTable(); else renderTable();
       showToast('已切换到：' + name);
     }
 
-    // 视图 Tab 切换（项目角色 / 调用明细）
-    function switchRole(el) {
-      document.querySelectorAll('#roleTabs .role-tab').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
-      const role = el.dataset.role;
-      document.getElementById('panelProject').style.display = role === 'project' ? '' : 'none';
-      document.getElementById('panelLogs').style.display = role === 'logs' ? '' : 'none';
-      if (role === 'project') { currentPage = 1; renderTable(); }
-      else { lgCurrentPage = 1; lgRenderTable(); }
+    // 视图切换（项目角色 / 调用明细），不再使用 Tab，由列表操作列按钮与返回按钮触发
+    let currentView = 'project';
+
+    function showProjectPanel() {
+      currentView = 'project';
+      document.getElementById('panelLogs').style.display = 'none';
+      document.getElementById('panelProject').style.display = '';
+      currentPage = 1;
+      renderTable();
+    }
+
+    function showLogsPanel() {
+      currentView = 'logs';
+      document.getElementById('panelProject').style.display = 'none';
+      document.getElementById('panelLogs').style.display = '';
+      lgCurrentPage = 1;
+      lgRenderTable();
+    }
+
+    // 从项目列表操作列「明细」按钮进入：按该 MCP（项目编码）预筛选调用明细
+    function openLogsForProject(project, fullKey) {
+      document.getElementById('lgFilterDateStart').value = '';
+      document.getElementById('lgFilterDateEnd').value = '';
+      document.getElementById('lgFilterStatus').value = '';
+      const label = document.getElementById('logsProjectLabel');
+      label.textContent = maskKey(fullKey);
+      label.title = fullKey;
+      lgFilterProject = project;
+      lgCurrentPage = 1;
+      showLogsPanel();
     }
 
     function openCreateModal() {
@@ -578,7 +592,7 @@
       const newKey = 'sk-' + Array.from({ length: 48 }, () => 'abcdef0123456789'[Math.floor(Math.random() * 16)]).join('');
       const today = new Date().toISOString().slice(0, 10);
 
-      KEYS.unshift({ project, member, fullKey: newKey, createdAt: today });
+      KEYS.unshift({ project, member, role: '项目角色', fullKey: newKey, createdAt: today });
 
       // 生成 MCP 配置参数（Authorization 自动带入本次生成的 key）
       const mcpConfig = JSON.stringify({
@@ -828,11 +842,96 @@
         answer: `<p class="qa-error">调用失败（500 网关超时），未生成答案。</p>
 <p>建议稍后重试，或把时间范围拆分为季度分段拉取后再合并查看。</p>`,
         status: 'fail'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2023-0918',
+        time: '2026-08-22 11:20:08',
+        ip: '192.168.10.23',
+        question: '统计 PRJ-2023-0918 项目各中心的入组进度，标注落后中心。',
+        answer: `<p>当前共开通 <strong>6 个中心</strong>，累计入组 142 例，达成计划的 78%。</p>
+<h4>入组进度</h4>
+<table>
+  <thead><tr><th>中心</th><th>目标</th><th>已入组</th><th>完成率</th></tr></thead>
+  <tbody>
+    <tr><td>中心 A</td><td>40</td><td>38</td><td>95%</td></tr>
+    <tr><td>中心 B</td><td>30</td><td>29</td><td>97%</td></tr>
+    <tr><td>中心 C</td><td>30</td><td>15</td><td>50%（落后）</td></tr>
+    <tr><td>其他中心</td><td>40</td><td>60</td><td>150%</td></tr>
+  </tbody>
+</table>
+<p class="qa-tip">建议对中心 C 进行入组加速，必要时启动备选中心。</p>`,
+        status: 'success'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2025-1107',
+        time: '2026-08-21 15:48:12',
+        ip: '10.20.5.118',
+        question: '受试者 S203 用药依从性如何？近 30 天是否有断药记录。',
+        answer: `<p>受试者 S203 近 30 天服药记录完整，未检出断药。电子日记卡上传率 <strong>96%</strong>。</p>
+<ul>
+  <li>缬沙坦 80mg qd：连续 30 天按时服用。</li>
+  <li>随访就诊 2 次，均按时完成。</li>
+</ul>
+<p class="qa-tip">依从性良好，可继续按当前方案管理。</p>`,
+        status: 'success'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2023-0918',
+        time: '2026-08-20 09:05:54',
+        ip: '192.168.10.23',
+        question: '请列出 PRJ-2023-0918 中所有发生 3 级及以上不良事件的受试者。',
+        answer: `<p>检出 <strong>2 例</strong> 3 级及以上不良事件，均已上报。</p>
+<table>
+  <thead><tr><th>受试者</th><th>AE 名称</th><th>级别</th><th>处置</th></tr></thead>
+  <tbody>
+    <tr><td>P10124</td><td>肝功能异常</td><td>3 级</td><td>暂停用药，保肝治疗</td></tr>
+    <tr><td>P10237</td><td>低血压</td><td>3 级</td><td>调整降压方案</td></tr>
+  </tbody>
+</table>`,
+        status: 'success'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2025-1107',
+        time: '2026-08-19 20:33:17',
+        ip: '172.16.8.40',
+        question: '导出 PRJ-2025-1107 项目全部受试者的随访计划表。',
+        answer: `<p class="qa-error">调用失败（429 限流），请降低请求频率后重试。</p>
+<p>建议在非高峰时段批量导出，单批次不超过 50 例。</p>`,
+        status: 'fail'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2023-0918',
+        time: '2026-08-18 13:57:41',
+        ip: '192.168.10.23',
+        question: '对比 PRJ-2023-0918 与 PRJ-2025-1107 两个目标人群的基线特征差异。',
+        answer: `<p>两项目目标人群在主要诊断构成上存在差异：</p>
+<ul>
+  <li>PRJ-2023-0918：以高血压 / 糖尿病为主，平均年龄 53 岁。</li>
+  <li>PRJ-2025-1107：以高脂血症 / 代谢综合征为主，平均年龄 49 岁。</li>
+</ul>
+<p class="qa-tip">差异主要来自入选标准设定，不影响各自结论外推。</p>`,
+        status: 'success'
+      },
+      {
+        caller: CURRENT_USER.label,
+        project: 'PRJ-2025-1107',
+        time: '2026-08-17 10:44:02',
+        ip: '10.20.5.118',
+        question: '受试者 S205 的末次访视日期与剩余检查项有哪些？',
+        answer: `<p>受试者 S205 末次访视为 <strong>2026-08-15</strong>，剩余检查项 2 项：心电图、血脂四项。</p>
+<p class="qa-tip">请在下次访视前完成，避免数据缺失。</p>`,
+        status: 'success'
       }
     ];
 
     let lgCurrentPage = 1;
     let lgPageSize = 10;
+    let lgFilterProject = ''; // 当前明细对应的项目编码（由列表「明细」按钮带入）
 
     function lgEscapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -845,7 +944,7 @@
     }
 
     function lgGetFiltered() {
-      const fp = document.getElementById('lgFilterProjectValue').value.trim().toLowerCase();
+      const fp = (lgFilterProject || '').trim().toLowerCase();
       const ds = document.getElementById('lgFilterDateStart').value;
       const de = document.getElementById('lgFilterDateEnd').value;
       const fs = document.getElementById('lgFilterStatus').value;
@@ -866,10 +965,11 @@
       const pageList = list.slice(start, start + lgPageSize);
       const tbody = document.getElementById('lgTableBody');
       if (pageList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无符合条件的调用记录</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无符合条件的调用记录</td></tr>';
       } else {
         tbody.innerHTML = pageList.map((l, i) => `
           <tr>
+            <td class="center">${start + i + 1}</td>
             <td>${lgEscapeHtml(l.caller)}</td>
             <td class="mono">${lgEscapeHtml(l.project)}</td>
             <td class="center mono">${lgEscapeHtml(l.time)}</td>
@@ -918,7 +1018,7 @@
     }
 
     function lgResetFilters() {
-      lgSetFilterProject('');
+      lgFilterProject = '';
       document.getElementById('lgFilterDateStart').value = '';
       document.getElementById('lgFilterDateEnd').value = '';
       document.getElementById('lgFilterStatus').value = '';
@@ -958,50 +1058,6 @@
         const p = parseInt(e.target.value, 10);
         if (p) lgGoPage(p);
       }
-    });
-
-    /* ===== 调用明细：查询栏「项目编码」搜索下拉（单选） ===== */
-    const lgFilterProjectInput = document.getElementById('lgFilterProject');
-    const lgFilterProjectDropdown = document.getElementById('lgFilterProjectDropdown');
-    const lgFilterProjectWrap = document.getElementById('lgFilterProjectWrap');
-
-    function lgRenderProjectOptions(keyword) {
-      const kw = (keyword || '').trim().toLowerCase();
-      const list = PROJECT_OPTIONS.filter(p => p.toLowerCase().includes(kw));
-      lgFilterProjectDropdown.innerHTML = list.length
-        ? list.map(p => `<div class="search-option" data-value="${p}">${p}</div>`).join('')
-        : '<div class="search-empty">无匹配项目编码</div>';
-    }
-
-    function lgSetFilterProject(value) {
-      document.getElementById('lgFilterProjectValue').value = value;
-      lgFilterProjectInput.value = value;
-      lgFilterProjectDropdown.classList.remove('show');
-      lgCurrentPage = 1;
-      lgRenderTable();
-    }
-
-    lgFilterProjectInput.addEventListener('focus', () => {
-      lgRenderProjectOptions(lgFilterProjectInput.value);
-      lgFilterProjectDropdown.classList.add('show');
-    });
-    lgFilterProjectInput.addEventListener('input', () => lgRenderProjectOptions(lgFilterProjectInput.value));
-    lgFilterProjectInput.addEventListener('blur', () => {
-      setTimeout(() => {
-        const val = lgFilterProjectInput.value.trim();
-        if (PROJECT_OPTIONS.includes(val)) lgSetFilterProject(val);
-        else if (!document.getElementById('lgFilterProjectValue').value) lgSetFilterProject('');
-        else lgFilterProjectInput.value = document.getElementById('lgFilterProjectValue').value;
-        lgFilterProjectDropdown.classList.remove('show');
-      }, 180);
-    });
-    lgFilterProjectDropdown.addEventListener('mousedown', e => {
-      const option = e.target.closest('.search-option');
-      if (!option) return;
-      lgSetFilterProject(option.dataset.value);
-    });
-    document.addEventListener('click', e => {
-      if (!lgFilterProjectWrap.contains(e.target)) lgFilterProjectDropdown.classList.remove('show');
     });
 
     renderTable();

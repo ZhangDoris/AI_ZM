@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>统计分析 · 移动端</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: #e9eef3; color: #1f2937;
+    }
+    .app {
+      width: 100%; max-width: 480px; margin: 0 auto; min-height: 100vh;
+      background: #f5f8fb; position: relative; overflow: hidden;
+      display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0, 0, 0, .06);
+    }
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    #landingView.active { overflow-y: auto; }
+    #workbenchView.active { overflow: hidden; }
+
+    /* ===== 顶部应用栏 ===== */
+    .appbar {
+      display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+      background: #fff; border-bottom: 1px solid #eef1f5; position: sticky; top: 0; z-index: 30; flex-shrink: 0;
+    }
+    .appbar .back { color: #1872a7; border: none; background: transparent; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+    .appbar .back:active { opacity: .6; }
+    .appbar .title { font-size: 16px; font-weight: 700; flex: 1; text-align: center; }
+    .appbar .crumb { font-size: 13px; color: #6b7280; }
+    .appbar .crumb b { color: #111827; font-weight: 600; }
+    .appbar .spacer { margin-left: auto; }
+    .icon-btn { border: none; background: #f2f6fa; color: #4b5563; width: 38px; height: 38px; border-radius: 10px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:active { background: #e6edf3; }
+
+    /* ===== Hero ===== */
+    .hero-m {
+      margin: 14px; border-radius: 18px; position: relative; overflow: hidden;
+      background: linear-gradient(120deg, #0d517c 0%, #1872a7 55%, #3aa0d8 100%);
+      color: #fff; padding: 22px 20px 20px;
+    }
+    .hero-m::before { content: ''; position: absolute; width: 200px; height: 200px; border-radius: 50%; background: rgba(255, 255, 255, .07); right: -50px; top: -90px; }
+    .hero-kicker { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28); font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+    .hero-title { font-size: 25px; font-weight: 800; margin-top: 12px; letter-spacing: 1px; }
+    .hero-slogan { font-size: 13px; color: rgba(255, 255, 255, .88); margin-top: 4px; font-weight: 500; }
+    .hero-desc { font-size: 12px; color: rgba(255, 255, 255, .72); margin-top: 8px; line-height: 1.7; }
+    .hero-stats { display: flex; gap: 10px; margin-top: 16px; position: relative; z-index: 1; }
+    .glass { flex: 1; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .3); border-radius: 14px; padding: 14px 16px; }
+    .glass .num { font-size: 32px; font-weight: 800; line-height: 1; }
+    .glass .lbl { font-size: 11.5px; color: rgba(255, 255, 255, .82); margin-top: 6px; }
+    .btn-start-m { margin-top: 16px; width: 100%; border: none; border-radius: 12px; padding: 12px; background: #fff; color: #14608f; font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 6px 16px rgba(0, 30, 50, .2); }
+    .btn-start-m:active { transform: translateY(1px); }
+
+    /* ===== 区块标题 ===== */
+    .section { padding: 4px 16px 16px; }
+    .section-head { display: flex; align-items: center; gap: 8px; margin: 18px 0 12px; }
+    .section-head .bar { width: 4px; height: 16px; border-radius: 2px; background: linear-gradient(180deg, #1872a7, #3aa0d8); }
+    .section-head .t { font-size: 15px; font-weight: 700; color: #111827; }
+
+    /* ===== 如何使用 ===== */
+    .flow-m { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .step-m { position: relative; overflow: hidden; background: #fff; border: 1px solid #eef1f5; border-radius: 14px; padding: 14px; }
+    .step-m::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, #1872a7, #3aa0d8); opacity: .8; }
+    .step-m .gnum { position: absolute; right: 8px; top: 0; font-size: 28px; font-weight: 800; color: #eef6fb; user-select: none; }
+    .step-m .dot { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #1872a7, #3aa0d8); color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 12px rgba(24, 114, 167, .22); }
+    .step-m .t-title { font-size: 13.5px; font-weight: 600; color: #111827; margin-top: 8px; position: relative; z-index: 1; }
+    .step-m .t-sub { font-size: 11.5px; color: #9ca3af; margin-top: 3px; line-height: 1.5; }
+
+    /* ===== 场景示例 ===== */
+    .scene-m { background: #fff; border: 1px solid #eef1f5; border-left: 3px solid #1872a7; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; }
+    .scene-m:active { background: #f4faff; }
+    .scene-m .head { display: flex; align-items: center; gap: 10px; }
+    .scene-ico { width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; background: linear-gradient(135deg, #1872a7, #3aa0d8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 4px 10px rgba(24, 114, 167, .2); }
+    .scene-m .name { font-size: 14px; font-weight: 600; color: #111827; }
+    .scene-m .q { font-size: 12.5px; color: #6b7280; margin-top: 9px; line-height: 1.6; padding-left: 2px; }
+
+    /* ===== 工作台 ===== */
+    .wb-m { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+    .scope-bar-m { font-size: 12.5px; color: #4b5563; padding: 11px 16px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+    .scope-bar-m b { color: #1872a7; font-weight: 700; }
+    .scope-bar-m .link { color: #1872a7; margin-left: 2px; }
+    .scope-detail { display: none; margin: 0 16px 8px; background: #fff; border: 1px solid #eef1f5; border-radius: 10px; padding: 11px 14px; font-size: 12.5px; color: #6b7280; line-height: 1.9; flex-shrink: 0; }
+    .scope-detail.show { display: block; }
+
+    .chat-body { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
+    .chat-desc { font-size: 12.5px; color: #6b7280; line-height: 1.8; padding: 6px 2px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip { background: #eef6fb; border: 1px solid #c3e2f1; color: #1872a7; font-size: 12px; line-height: 1.5; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
+    .chip:active { background: #dcecf7; }
+
+    .msg { max-width: 86%; padding: 9px 13px; border-radius: 13px; font-size: 13.5px; line-height: 1.65; word-break: break-word; }
+    .msg.user { align-self: flex-end; background: #1872a7; color: #fff; border-bottom-right-radius: 4px; }
+    .msg.ai { align-self: flex-start; background: #fff; border: 1px solid #e3edf5; color: #374151; border-bottom-left-radius: 4px; }
+    .msg.ai .m-note { font-size: 11px; color: #9ca3af; margin-top: 6px; }
+
+    /* 对话内联结果卡（合并视图） */
+    .msg-result { align-self: stretch; max-width: 100%; background: #fff; border: 1px solid #eef1f5; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(17, 24, 39, .05); }
+    .msg-result .rb-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; background: #f7fafd; font-size: 12.5px; font-weight: 600; color: #1872a7; border-bottom: 1px solid #eef1f5; }
+    .dl-btn { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; border: 1px solid #c3e2f1; background: #fff; color: #1872a7; border-radius: 8px; padding: 5px 11px; font-size: 12px; cursor: pointer; }
+    .dl-btn:active { background: #eef6fb; }
+    .result-block table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .result-block th { background: #eef6fb; color: #334155; font-weight: 600; text-align: left; padding: 8px 10px; white-space: nowrap; }
+    .result-block td { padding: 8px 10px; color: #4b5563; border-top: 1px solid #f4f7fa; }
+
+    .chat-input-wrap { padding: 10px 16px 14px; flex-shrink: 0; }
+    .chat-input { width: 100%; border: 1px solid #dbe4ec; border-radius: 12px; padding: 12px; font-size: 14px; font-family: inherit; height: 58px; resize: none; outline: none; color: #333; }
+    .chat-input:focus { border-color: #1872a7; }
+    .chat-toolbar { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .model-touch { display: inline-flex; align-items: center; gap: 5px; border: 1px solid #dbe4ec; border-radius: 999px; padding: 6px 12px; font-size: 12.5px; color: #4b5563; background: #fff; position: relative; }
+    .model-touch .caret { font-size: 9px; color: #9ca3af; }
+    .btn-send { margin-left: auto; width: 38px; height: 38px; border-radius: 50%; border: none; background: #1872a7; color: #fff; font-size: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 14px rgba(24, 114, 167, .3); }
+    .btn-send:active { background: #15517a; }
+
+    .dropdown-menu { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: #fff; border: 1px solid #e3edf5; border-radius: 10px; box-shadow: 0 10px 28px rgba(17, 24, 39, .12); padding: 5px; min-width: 160px; z-index: 60; }
+    .dropdown-menu.show { display: block; }
+    .dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 7px; font-size: 12.5px; color: #4b5563; cursor: pointer; }
+    .dd-item:hover { background: #eef6fb; color: #1872a7; }
+    .dd-item .check { font-size: 11px; color: #1872a7; visibility: hidden; }
+    .dd-item.selected { color: #1872a7; font-weight: 600; background: #f4faff; }
+    .dd-item.selected .check { visibility: visible; }
+
+    .ai-footer { text-align: center; font-size: 11px; color: #b0b7c3; padding: 8px 0 2px; flex-shrink: 0; }
+
+    /* ===== 历史抽屉 ===== */
+    .drawer-mask { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .35); z-index: 50; }
+    .drawer-mask.show { display: block; }
+    .drawer { position: fixed; top: 0; bottom: 0; right: 0; width: 86%; max-width: 340px; background: #fff; z-index: 60; transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column; box-shadow: -8px 0 30px rgba(0, 0, 0, .12); }
+    .drawer.show { transform: translateX(0); }
+    .drawer-head { display: flex; align-items: center; padding: 16px; border-bottom: 1px solid #eef1f5; font-size: 15px; font-weight: 700; }
+    .drawer-head .close { margin-left: auto; border: none; background: transparent; color: #9ca3af; font-size: 18px; cursor: pointer; }
+    .hd-search-m { position: relative; margin: 12px 16px; }
+    .hd-search-m input { width: 100%; padding: 9px 12px 9px 32px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 13px; outline: none; }
+    .hd-search-m i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 13px; }
+    .hd-list-m { flex: 1; overflow-y: auto; padding: 0 12px; }
+    .hd-group { font-size: 11px; color: #9ca3af; font-weight: 600; padding: 14px 6px 6px; }
+    .hd-item { display: flex; align-items: flex-start; gap: 8px; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; color: #374151; line-height: 1.5; }
+    .hd-item:hover { background: #eef2f6; }
+    .hd-item.active { background: #eef6fb; color: #1872a7; }
+    .hd-item .ic { color: #b6c2cf; margin-top: 2px; font-size: 12px; flex-shrink: 0; }
+    .hd-item.active .ic { color: #1872a7; }
+    .hd-item .q { flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
+    .hd-item .del { opacity: 0; color: #b6c2cf; font-size: 12px; flex-shrink: 0; }
+    .hd-item:hover .del { opacity: 1; }
+    .hd-item .del:hover { color: #ef4444; }
+    .drawer-foot { padding: 12px 16px; border-top: 1px solid #eef1f5; flex-shrink: 0; }
+    .btn-new-m { width: 100%; padding: 11px; border: 1px solid #1872a7; border-radius: 12px; background: #fff; color: #1872a7; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-new-m:active { background: #eef6fb; }
+    .hd-empty { text-align: center; color: #9ca3af; font-size: 13px; padding: 40px 0; }
+
+    /* ===== Toast ===== */
+    .toast { position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-16px); background: rgba(17, 24, 39, .82); color: #fff; padding: 10px 22px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s; z-index: 200; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ==================== 视图一：统计分析首页 ==================== -->
+    <div class="view active" id="landingView">
+      <div class="appbar">
+        <span class="title">统计分析</span>
+      </div>
+
+      <div class="hero-m">
+        <div class="hero-kicker"><i class="fas fa-chart-column"></i> 智能问数</div>
+        <div class="hero-title">统计分析</div>
+        <div class="hero-slogan">数据，随问即达。</div>
+        <p class="hero-desc">用自然语言查询项目数据，结果以表格与图表呈现在工作台。</p>
+        <div class="hero-stats">
+          <div class="glass">
+            <div class="num" id="heroProjNum">0</div>
+            <div class="lbl">我可见的项目</div>
+          </div>
+        </div>
+        <button class="btn-start-m" onclick="showWorkbench()"><i class="fas fa-comment-dots"></i>开始查询</button>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <span class="bar"></span>
+          <span class="t">如何使用</span>
+        </div>
+        <div class="flow-m">
+          <div class="step-m">
+            <span class="gnum">01</span>
+            <div class="dot"><i class="fas fa-comment-dots"></i></div>
+            <div class="t-title">提出你的问题</div>
+            <div class="t-sub">问答形式描述业务问题</div>
+          </div>
+          <div class="step-m">
+            <span class="gnum">02</span>
+            <div class="dot"><i class="fas fa-brain"></i></div>
+            <div class="t-title">自动理解</div>
+            <div class="t-sub">系统听懂并整理查询</div>
+          </div>
+          <div class="step-m">
+            <span class="gnum">03</span>
+            <div class="dot"><i class="fas fa-magnifying-glass-chart"></i></div>
+            <div class="t-title">查找数据</div>
+            <div class="t-sub">在项目数据中找答案</div>
+          </div>
+          <div class="step-m">
+            <span class="gnum">04</span>
+            <div class="dot"><i class="fas fa-table-list"></i></div>
+            <div class="t-title">查看结果</div>
+            <div class="t-sub">答案直接在对话中呈现</div>
+          </div>
+        </div>
+
+        <div class="section-head" id="sceneSec">
+          <span class="bar"></span>
+          <span class="t">场景示例</span>
+        </div>
+        <div class="scene-m" onclick="showWorkbench()">
+          <div class="head"><div class="scene-ico"><i class="fas fa-hospital"></i></div><span class="name">XX项目中心情况</span></div>
+          <div class="q">列出XX项目有多少个中心</div>
+        </div>
+        <div class="scene-m" onclick="showWorkbench()">
+          <div class="head"><div class="scene-ico"><i class="fas fa-calendar-check"></i></div><span class="name">XX项目提交情况</span></div>
+          <div class="q">列出XX项目提交了多少个患者，包括提交、驳回、筛败、审核中、审核通过等状态</div>
+        </div>
+        <div class="scene-m" onclick="showWorkbench()">
+          <div class="head"><div class="scene-ico"><i class="fas fa-shield-halved"></i></div><span class="name">XX项目审核情况</span></div>
+          <div class="q">列出XX项目CRA审核过了多少患者，其中多少是审核通过/多少是审核驳回（包括筛败）</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 视图二：查询工作台（合并对话） ==================== -->
+    <div class="view" id="workbenchView">
+      <div class="appbar">
+        <button class="back" onclick="backHome()"><i class="fas fa-chevron-left"></i>返回</button>
+        <div class="crumb">统计分析 / <b>新建查询</b></div>
+        <span class="spacer"></span>
+        <button class="icon-btn" onclick="openDrawer()" title="历史对话"><i class="fas fa-clock-rotate-left"></i></button>
+      </div>
+
+      <div class="wb-m">
+        <div class="scope-bar-m">
+          <span>查询范围：可见 <b id="scopeProjNum">2</b> 个项目</span>
+          <span class="link" onclick="toggleScopeDetail()">明细</span>
+        </div>
+        <div class="scope-detail" id="scopeDetail">
+          <div><b style="color:#374151">方案编码：</b>HRS-1918-301 / HRS-1910-302</div>
+        </div>
+
+        <div class="chat-body" id="chatBody">
+          <div class="chat-desc">自然语言提问即可分析，表格结果会直接出现在下方对话中，点击结果卡右上角「下载」可导出 CSV。此处同时展示查询进度与业务总结。</div>
+          <div class="chips" id="chatSuggest">
+            <span class="chip" onclick="fillExample(this)">列出XX项目提交了多少个患者，包括提交、驳回、筛败、审核中、审核通过等状态</span>
+            <span class="chip" onclick="fillExample(this)">列出XX项目CRA审核过了多少患者，其中多少是审核通过/多少是审核驳回（包括筛败）</span>
+            <span class="chip" onclick="fillExample(this)">列出XX项目医学经理审核过了多少患者</span>
+          </div>
+        </div>
+
+        <div class="chat-input-wrap">
+          <textarea class="chat-input" id="chatInput" placeholder="例如：列出XX项目提交了多少个患者…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+          <div class="chat-toolbar">
+            <div class="model-select" style="position:relative;">
+              <button type="button" class="model-touch" onclick="toggleDropdown('modelMenu', this)"><i class="fas fa-feather-pointed"></i><span id="modelLabel">DeepSeek-V4 Pro</span><i class="fas fa-chevron-down caret"></i></button>
+              <div class="dropdown-menu" id="modelMenu">
+                <div class="dd-item selected" onclick="pickOption(this, 'modelLabel')">DeepSeek-R1<i class="fas fa-check check"></i></div>
+                <div class="dd-item" onclick="pickOption(this, 'modelLabel')">GLM-5.1<i class="fas fa-check check"></i></div>
+                <div class="dd-item" onclick="pickOption(this, 'modelLabel')">MiniMax-M2.7<i class="fas fa-check check"></i></div>
+              </div>
+            </div>
+            <button class="btn-send" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+          </div>
+        </div>
+        <div class="ai-footer">内容由 AI 生成，仅供参考</div>
+      </div>
+    </div>
+
+    <!-- 历史抽屉 -->
+    <div class="drawer-mask" id="drawerMask" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="historyDrawer">
+      <div class="drawer-head">历史对话 <button class="close" onclick="closeDrawer()"><i class="fas fa-xmark"></i></button></div>
+      <div class="hd-search-m">
+        <i class="fas fa-search"></i>
+        <input id="hdSearch" type="text" placeholder="搜索历史对话" oninput="renderHistory()">
+      </div>
+      <div class="hd-list-m" id="historyList"></div>
+      <div class="drawer-foot">
+        <button class="btn-new-m" onclick="newChat()"><i class="fas fa-plus"></i> 新对话</button>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    var toastTimer = null;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    }
+
+    // ===== 模型选择器 =====
+    function toggleDropdown(menuId, btn) {
+      var menu = document.getElementById(menuId);
+      var wrap = btn.closest('.model-select');
+      var isOpen = menu.classList.contains('show');
+      closeAllDropdowns();
+      if (!isOpen) { menu.classList.add('show'); wrap.classList.add('open'); }
+    }
+    function pickOption(item, labelId) {
+      var menu = item.closest('.dropdown-menu');
+      menu.querySelectorAll('.dd-item').forEach(function (d) { d.classList.remove('selected'); });
+      item.classList.add('selected');
+      document.getElementById(labelId).textContent = item.textContent.trim();
+      closeAllDropdowns();
+      showToast('已切换至 ' + item.textContent.trim());
+    }
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu').forEach(function (m) { m.classList.remove('show'); });
+      document.querySelectorAll('.model-select').forEach(function (w) { w.classList.remove('open'); });
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.model-select')) closeAllDropdowns();
+    });
+
+    // ===== 历史查询 =====
+    var GROUP_ORDER = ['今天', '昨天', '过去7天', '过去30天'];
+    var historyData = [
+      { q: '列出XX项目提交了多少个患者，包括提交、驳回、筛败、审核中、审核通过等状态', group: '今天', time: '09:12' },
+      { q: '列出XX项目CRA审核过了多少患者，其中多少是审核通过/多少是审核驳回（包括筛败）', group: '昨天', time: '17:40' },
+    ];
+    var activeQuery = '';
+
+    function renderHistory() {
+      var list = document.getElementById('historyList');
+      var kw = (document.getElementById('hdSearch').value || '').trim().toLowerCase();
+      var filtered = historyData.filter(function (h) { return !kw || h.q.toLowerCase().indexOf(kw) !== -1; });
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="hd-empty">' + (kw ? '未找到相关对话' : '暂无历史对话') + '</div>';
+        return;
+      }
+      list.innerHTML = '';
+      GROUP_ORDER.forEach(function (g) {
+        var items = filtered.filter(function (h) { return h.group === g; });
+        if (items.length === 0) return;
+        var gt = document.createElement('div');
+        gt.className = 'hd-group';
+        gt.textContent = g;
+        list.appendChild(gt);
+        items.forEach(function (h) {
+          var d = document.createElement('div');
+          d.className = 'hd-item' + (h.q === activeQuery ? ' active' : '');
+          d.innerHTML = '<i class="fas fa-message ic"></i><div class="q">' + h.q + '</div><i class="fas fa-trash-can del" title="删除"></i>';
+          d.querySelector('.q').onclick = function () { openHistory(h.q); };
+          d.querySelector('.del').onclick = function (e) { e.stopPropagation(); deleteHistory(h.q); };
+          list.appendChild(d);
+        });
+      });
+    }
+
+    function openHistory(q) {
+      activeQuery = q;
+      closeDrawer();
+      document.getElementById('chatSuggest').style.display = 'none';
+      document.getElementById('chatInput').value = q;
+      sendMessage();
+    }
+    function deleteHistory(q) {
+      historyData = historyData.filter(function (h) { return h.q !== q; });
+      if (activeQuery === q) activeQuery = '';
+      renderHistory();
+    }
+    function recordHistory(q) {
+      var exists = historyData.some(function (h) { return h.q === q; });
+      if (!exists) historyData.unshift({ q: q, group: '今天', time: '刚刚' });
+    }
+
+    // ===== 视图切换 =====
+    function switchView(id) {
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+    }
+    function showWorkbench() { switchView('workbenchView'); renderHistory(); }
+    function backHome() { switchView('landingView'); }
+
+    // ===== 历史抽屉 =====
+    function openDrawer() { document.getElementById('drawerMask').classList.add('show'); document.getElementById('historyDrawer').classList.add('show'); renderHistory(); }
+    function closeDrawer() { document.getElementById('drawerMask').classList.remove('show'); document.getElementById('historyDrawer').classList.remove('show'); }
+
+    // ===== 查询范围明细 =====
+    var VISIBLE_PROJECT_COUNT = 30;
+    (function syncVisibleCount() {
+      var a = document.getElementById('heroProjNum');
+      var b = document.getElementById('scopeProjNum');
+      if (a) a.textContent = VISIBLE_PROJECT_COUNT;
+      if (b) b.textContent = VISIBLE_PROJECT_COUNT;
+    })();
+    function toggleScopeDetail() { document.getElementById('scopeDetail').classList.toggle('show'); }
+
+    // ===== 结果导出（CSV） =====
+    function downloadResult(btn) {
+      var block = btn.closest('.msg-result');
+      var table = block.querySelector('table');
+      var titleEl = block.querySelector('.rb-title');
+      var title = titleEl.textContent.replace('下载', '').replace('导出', '').trim();
+      var rows = table.querySelectorAll('tr');
+      var lines = [];
+      rows.forEach(function (tr) {
+        var cells = tr.querySelectorAll('th, td');
+        var line = Array.prototype.map.call(cells, function (c) {
+          var t = c.textContent.replace(/"/g, '""').replace(/\s+/g, ' ').trim();
+          return '"' + t + '"';
+        }).join(',');
+        lines.push(line);
+      });
+      var csv = '﻿' + lines.join('\r\n');
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = (title || '查询结果') + '.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('已开始下载：' + a.download);
+    }
+
+    // ===== 对话 =====
+    function fillExample(el) {
+      document.getElementById('chatInput').value = el.textContent.trim();
+      document.getElementById('chatInput').focus();
+    }
+    function appendMsg(cls, html) {
+      var body = document.getElementById('chatBody');
+      var div = document.createElement('div');
+      div.className = 'msg ' + cls;
+      div.innerHTML = html;
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    // 结果直接作为对话内的一张卡片呈现，并提供下载
+    function addResultTable(question) {
+      var body = document.getElementById('chatBody');
+      var block = document.createElement('div');
+      block.className = 'msg msg-result';
+      block.innerHTML =
+        '<div class="rb-title"><span><i class="fas fa-table-list"></i> 查询结果 · ' + question.slice(0, 18) + (question.length > 18 ? '…' : '') + '</span>' +
+        '<button class="dl-btn" onclick="downloadResult(this)"><i class="fas fa-download"></i> 下载</button></div>' +
+        '<div class="result-block">' +
+        '<table>' +
+        '<thead><tr><th>项目编码</th><th>项目名称</th><th>状态</th><th>中心数</th><th>已入组</th></tr></thead>' +
+        '<tbody>' +
+        '<tr><td>PRJ-2026-018</td><td>XX 项目一期临床研究</td><td>进行中</td><td>12</td><td>86</td></tr>' +
+        '<tr><td>PRJ-2026-032</td><td>XX 项目多中心研究</td><td>进行中</td><td>8</td><td>45</td></tr>' +
+        '</tbody></table>' +
+        '</div>';
+      body.appendChild(block);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function sendMessage() {
+      var input = document.getElementById('chatInput');
+      var text = input.value.trim();
+      if (!text) { showToast('请先输入你的问题'); return; }
+      input.value = '';
+      document.getElementById('chatSuggest').style.display = 'none';
+      appendMsg('user', text);
+      addResultTable(text);
+      recordHistory(text);
+      setTimeout(function () {
+        appendMsg('ai', '已完成查询：共匹配到 <b>2</b> 条相关记录，表格已展示在上方结果卡中，可点击「下载」导出。<div class="m-note">内容由 AI 生成，仅供参考</div>');
+      }, 600);
+    }
+
+    function newChat() {
+      var body = document.getElementById('chatBody');
+      var suggest = document.getElementById('chatSuggest');
+      suggest.style.display = '';
+      body.innerHTML = '';
+      var desc = document.createElement('div');
+      desc.className = 'chat-desc';
+      desc.textContent = '自然语言提问即可分析，表格结果会直接出现在下方对话中，点击结果卡右上角「下载」可导出 CSV。此处同时展示查询进度与业务总结。';
+      body.appendChild(desc);
+      body.appendChild(suggest);
+      activeQuery = '';
+      closeDrawer();
+    }
+  </script>
+</body>
+</html>
