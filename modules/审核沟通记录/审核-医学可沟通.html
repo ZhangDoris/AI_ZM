@@ -78,8 +78,8 @@
     .content-row > .col { flex: 2 1 0; min-width: 0; }
     /* 右侧抽屉：可收起（收缩到右侧），默认展开显示审核流程 / 审核链路 */
     .right-stack {
-      flex: 0 0 360px;
-      width: 360px;
+      flex: 0 0 500px;
+      width: 500px;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -93,7 +93,7 @@
       min-width: 0;
     }
     .right-stack-inner {
-      width: 360px;
+      width: 500px;
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
@@ -125,7 +125,7 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      right: 362px;
+      right: 502px;
       z-index: 30;
       width: 26px;
       height: 66px;
@@ -181,7 +181,14 @@
       border-radius: 10px;
       padding: 10px;
     }
-    #rightChat .chat-input-row { margin-top: auto; }
+    #rightChat .chat-toolbar { flex-wrap: wrap; gap: 8px; row-gap: 6px; }
+    #rightChat .chat-toolbar .btn { white-space: nowrap; }
+    #rightChat .chat-hint { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.5; align-items: flex-start; text-align: left; margin-top: 8px; }
+    #rightChat .chat-input-row { flex: 1 1 auto; min-height: 0; margin-top: 8px; display: flex; flex-direction: column; align-items: stretch; }
+    #rightChat .chat-input-wrap { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; width: 100%; }
+    #rightChat .chat-input { height: 100%; min-height: 300px; }
+    #rightChat .chat-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+    #rightChat .chat-actions-right { display: flex; gap: 10px; }
 
     /* 列 */
     .col {
@@ -318,6 +325,25 @@
       font-weight: 600;
     }
     .col-body > .group-view { height: 100%; }
+    /* 审核流程树形分组（纯列表式，无卡片边框） */
+    .flow-tree { display: flex; flex-direction: column; }
+    .tree-group-hd {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 6px; cursor: pointer; user-select: none;
+      font-weight: 600; color: #262626; font-size: 13px;
+      border-radius: 6px;
+    }
+    .tree-group-hd:hover { background: #f5f8fc; }
+    .tree-caret { color: #8c8c8c; width: 12px; text-align: center; transition: transform .2s; }
+    .tree-group.collapsed .tree-caret { transform: rotate(-90deg); }
+    .tree-group-name { display: flex; align-items: center; gap: 6px; }
+    .tree-group-bd { padding: 2px 0 6px 24px; }
+    .tree-group.collapsed .tree-group-bd { display: none; }
+    /* 预筛审核流程环节（简单列表） */
+    .tree-sub-item { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: #595959; padding: 4px 0; }
+    .tree-sub-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #d9d9d9; transform: translateY(-1px); }
+    .tree-sub-dot.done { background: #52c41a; }
+    .tree-sub-note { color: #8c8c8c; font-size: 11px; }
     .empty-state {
       height: 100%;
       min-height: 160px;
@@ -432,6 +458,45 @@
     .chat-file.deleted { opacity: .75; }
     .chat-file.deleted .chat-fname { text-decoration: line-through; color: #bfbfbf; }
     .chat-file.deleted .attach-btn { opacity: .5; cursor: not-allowed; }
+    /* 图片类附件缩略图预览（点击放大） */
+    .file-thumb {
+      display: block; width: 120px; height: 90px; object-fit: cover;
+      border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #f5f7fa;       cursor: zoom-in; margin-bottom: 6px;
+    }
+    /* 聊天中的图片（微信式气泡内图片） */
+    .chat-img {
+      display: block;
+      max-width: 200px;
+      max-height: 240px;
+      border-radius: 6px;
+      margin-top: 4px;
+      cursor: zoom-in;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .chat-img-wrap { position: relative; display: inline-block; max-width: 200px; vertical-align: top; }
+    .chat-msg.self .chat-img-wrap { margin-left: auto; }
+    .chat-img-del {
+      position: absolute; top: -8px; right: -8px;
+      width: 18px; height: 18px; line-height: 18px; text-align: center;
+      background: #ff4d4f; color: #fff; border-radius: 50%; font-size: 11px;
+      cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    }
+    .chat-img-del:hover { background: #d9363e; }
+    /* 待发送图片缩略图 */
+    .pending-file.img { padding: 0; border: none; background: transparent; background: none; }
+    .pending-thumb {
+      width: 64px; height: 64px; object-fit: cover;
+      border-radius: 6px; border: 1px solid #f0f0f0; display: block;
+    }
+    .pending-file.img .pf-del {
+      position: absolute; top: -6px; right: -6px;
+      width: 16px; height: 16px; line-height: 16px; text-align: center;
+      background: #ff4d4f; color: #fff; border-radius: 50%; font-size: 10px;
+    }
+    .pending-file.img { position: relative; }
+    /* 图片放大查看 */
+    .img-zoom { max-width: 86vw; max-height: 84vh; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.3); }
 
     /* 附件操作按钮 */
     .attach-btn {
@@ -1437,7 +1502,7 @@
                         <span class="attach-tag deleted">已删除</span>
                       </div>
                       <div class="chat-file api">
-                        <span class="chat-fname">病例拍照图片_20260724101059.png</span>
+                        <img class="file-thumb" src="../../images/medical-record-sample.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                         <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                         <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                         <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -1495,7 +1560,21 @@
             <div class="block-title"><i class="fa fa-sitemap"></i> 审核流程</div>
           </div>
           <div class="col-body">
-           
+            <div class="flow-tree">
+              <div class="tree-group collapsed">
+                <div class="tree-group-hd" onclick="toggleTreeGroup(this)">
+                  <i class="fa fa-caret-down tree-caret"></i><span class="tree-group-name">预筛审核</span>
+                </div>
+                <div class="tree-group-bd">
+                  <div class="tree-sub-item"><span class="tree-sub-dot done"></span>CRA审核<span class="tree-sub-note">已通过 · 王强 · CRA · 2026-07-20 10:00:00</span></div>
+                  <div class="tree-sub-item"><span class="tree-sub-dot done"></span>_crc预筛确认<span class="tree-sub-note">已通过 · 刘雪红 · CRC · 2026-07-21 14:30:00</span></div>
+                </div>
+              </div>
+              <div class="tree-group">
+                <div class="tree-group-hd" onclick="toggleTreeGroup(this)">
+                  <i class="fa fa-caret-down tree-caret"></i><span class="tree-group-name">入组审核</span>
+                </div>
+                <div class="tree-group-bd">
             <div class="group-view" data-group="入组审核">
               <div class="process-panel">
               <div class="timeline">
@@ -1558,6 +1637,9 @@
               </div>
             </div>
             </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
           </div>
@@ -1566,24 +1648,27 @@
           <div id="rightChat" class="hidden">
             <div class="review-panel-head" style="margin-bottom:10px;flex:0 0 auto;">
               <span class="review-panel-title"><i class="fa fa-comments"></i> 沟通</span>
-              <i class="fa fa-times" onclick="closeChat()" title="关闭"></i>
             </div>
             <div class="chat-box" id="chatBox">
               <div class="chat-toolbar">
                 <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
-                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
-                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
                 <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
               </div>
               <div class="pending-files hidden" id="pendingFiles"></div>
               <div class="mention-chips hidden" id="mentionChips"></div>
               <div class="chat-input-row" id="chatInputRow">
                 <div class="chat-input-wrap">
-                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送；也可将图片 / 文件拖拽到此处上传" onkeydown="chatInputKey(event)"></textarea>
-                  <button class="chat-expand-btn" id="chatExpandBtn" onclick="toggleChatExpand()" title="放大编辑"><i class="fa fa-expand"></i></button>
+                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 换行；也可将图片 / 文件拖拽、复制到此处上传" onkeydown="chatInputKey(event)"></textarea>
                   <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                 </div>
-                <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+                <div class="chat-hint" style="flex:0 0 auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
+                <div class="chat-actions">
+                  <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
+                  <div class="chat-actions-right">
+                    <button class="btn btn-default" onclick="closeChat()">取消</button>
+                    <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+                  </div>
+                </div>
               </div>
               <div class="drop-overlay" id="dropOverlay">
                 <i class="fa fa-cloud-upload-alt"></i>
@@ -1597,7 +1682,6 @@
             <div class="review-panel" id="remarkPanel">
               <div class="review-panel-head">
                 <span class="review-panel-title"><i class="fa fa-pencil-square-o"></i> 我的批注</span>
-                <i class="fa fa-times" onclick="closeRemark()" title="关闭"></i>
               </div>
               <div class="review-panel-body">
                 <div class="remark-edit-title">新增 / 编辑批注</div>
@@ -1875,7 +1959,7 @@
                   <span class="attach-tag deleted">已删除</span>
                 </div>
                 <div class="attach-item">
-                  <span class="attach-name">病例拍照图片_20260724101059.png</span>
+                  <img class="file-thumb" src="../../images/medical-record-sample.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                   <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                   <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                   <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -1999,7 +2083,8 @@
     }
     function addFiles(fileList) {
       Array.prototype.forEach.call(fileList, function (f) {
-        pendingFiles.push(f.name);
+        var url = (f.type && f.type.indexOf('image/') === 0) ? URL.createObjectURL(f) : null;
+        pendingFiles.push({ name: f.name, file: f, url: url });
       });
       renderPending();
     }
@@ -2036,16 +2121,70 @@
         });
       });
     })();
+    /* 粘贴上传：在输入框直接 Ctrl/Cmd+V 粘贴图片（微信式），图片作为待发送附件 */
+    (function () {
+      var ta = document.getElementById('chatInput');
+      if (!ta) return;
+      ta.addEventListener('paste', function (e) {
+        var cd = e.clipboardData || window.clipboardData;
+        if (!cd) return;
+        var imgs = [];
+        if (cd.files && cd.files.length) {
+          for (var i = 0; i < cd.files.length; i++) {
+            if (cd.files[i].type && cd.files[i].type.indexOf('image/') === 0) imgs.push(cd.files[i]);
+          }
+        }
+        if (!imgs.length && cd.items) {
+          for (var j = 0; j < cd.items.length; j++) {
+            var it = cd.items[j];
+            if (it.kind === 'file' && it.type && it.type.indexOf('image/') === 0) {
+              var f = it.getAsFile();
+              if (f) imgs.push(f);
+            }
+          }
+        }
+        if (imgs.length) {
+          e.preventDefault();
+          addFiles(imgs);
+          ta.focus();
+        }
+      });
+    })();
+    /* 点击聊天中的图片放大查看 */
+    function zoomImg(img) {
+      var mask = document.getElementById('imgZoomMask');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'imgZoomMask';
+        mask.className = 'modal-mask';
+        mask.onclick = function () { mask.classList.add('hidden'); };
+        document.body.appendChild(mask);
+      }
+      mask.innerHTML = '<img class="img-zoom" src="' + img.src + '" alt="" onclick="event.stopPropagation()"/>';
+      mask.classList.remove('hidden');
+    }
+    function delMsg(el) {
+      var msg = el.closest ? el.closest('.chat-msg') : null;
+      if (msg && msg.parentNode) msg.parentNode.removeChild(msg);
+    }
     function renderPending() {
       var box = document.getElementById('pendingFiles');
       if (!pendingFiles.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
       box.classList.remove('hidden');
-      box.innerHTML = pendingFiles.map(function (name, i) {
-        return '<span class="pending-file"><i class="fa fa-file-o"></i>' + escapeHtml(name) +
+      box.innerHTML = pendingFiles.map(function (p, i) {
+        if (p.url) {
+          return '<span class="pending-file img"><img class="pending-thumb" src="' + p.url + '" alt="' + escapeHtml(p.name) + '"/>' +
+            '<i class="fa fa-times pf-del" title="移除" onclick="removePending(' + i + ')"></i></span>';
+        }
+        return '<span class="pending-file"><i class="fa fa-file-o"></i>' + escapeHtml(p.name) +
           '<i class="fa fa-times pf-del" title="移除" onclick="removePending(' + i + ')"></i></span>';
       }).join('');
     }
-    function removePending(i) { pendingFiles.splice(i, 1); renderPending(); }
+    function removePending(i) {
+      if (pendingFiles[i] && pendingFiles[i].url) URL.revokeObjectURL(pendingFiles[i].url);
+      pendingFiles.splice(i, 1);
+      renderPending();
+    }
 
     function toggleRemind() {
       openRemind();
@@ -2202,16 +2341,26 @@
       }).join('');
       var bubble = mentionHtml + escapeHtml(text);
       if (files && files.length) {
-        bubble += '<div class="chat-files">' + files.map(function (name) {
-          return '<div class="chat-file"><span class="chat-fname">' + escapeHtml(name) + '</span>' +
-            '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
-            '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
-        }).join('') + '</div>';
+        bubble += '<div class="chat-files">';
+        files.forEach(function (f) {
+          if (f.url) {
+            bubble += '<div class="chat-file api">' +
+              '<img class="file-thumb" src="' + f.url + '" alt="' + escapeHtml(f.name) + '" onclick="zoomImg(this)"/>' +
+              '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button>' +
+              '<span class="attach-tag source">上传来源：本地上传</span></div>';
+          } else {
+            bubble += '<div class="chat-file"><span class="chat-fname">' + escapeHtml(f.name) + '</span>' +
+              '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
+          }
+        });
+        bubble += '</div>';
       }
       var msg = document.createElement('div');
       msg.className = 'chat-msg self';
-      msg.innerHTML = '<div class="chat-avatar">刘</div>' +
-        '<div class="chat-content"><div class="chat-meta">刘梅 · CRC专员 · ' + now() +
+      msg.innerHTML = '<div class="chat-avatar">王</div>' +
+        '<div class="chat-content"><div class="chat-meta">王强 · 医学经理 · ' + now() +
         '</div><div class="chat-bubble">' + bubble + '</div></div>';
       body.appendChild(msg);
       body.scrollTop = body.scrollHeight;
@@ -2349,7 +2498,7 @@
       var handle = document.getElementById('rightHandle');
       if (!handle) return;
       var collapsed = document.getElementById('rightStack').classList.contains('collapsed');
-      handle.style.right = collapsed ? '12px' : '362px';
+      handle.style.right = collapsed ? '12px' : '502px';
       handle.innerHTML = collapsed
         ? '<i class="fa fa-chevron-left"></i>'
         : '<i class="fa fa-chevron-right"></i>';
@@ -2413,6 +2562,11 @@
       col.querySelectorAll('.tab-view').forEach(function (v) {
         v.classList.toggle('hidden', v.getAttribute('data-tab') !== tab);
       });
+    }
+    /* 审核流程树形分组：展开 / 收起 */
+    function toggleTreeGroup(hd) {
+      var group = hd.parentElement;
+      if (group) group.classList.toggle('collapsed');
     }
     function switchStage(el) {
       var sw = el.parentElement;
