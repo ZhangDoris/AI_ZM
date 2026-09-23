@@ -785,7 +785,85 @@
         icon.className = next.classList.contains('hidden') ? 'fa fa-chevron-down' : 'fa fa-chevron-up';
       }
     }
-    function onDownload() { showToast('开始下载审核记录'); }
+    function escHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function onDownload() {
+      // 收集表格数据：主行 + 其下方折叠行内的批注 / 附件
+      var records = [];
+      var cur = null;
+      document.querySelectorAll('#sectionContent .record-table tbody tr').forEach(function (tr) {
+        if (tr.classList.contains('collapse-row')) {
+          if (!cur) return;
+          cur.comments = Array.prototype.map.call(tr.querySelectorAll('.comment-box'), function (el) { return el.textContent.trim(); });
+          cur.attachs = Array.prototype.map.call(tr.querySelectorAll('.attach-item'), function (el) {
+            var nameEl = el.querySelector('.attach-name');
+            return { name: nameEl ? nameEl.textContent.trim() : '', deleted: el.classList.contains('deleted') };
+          }).filter(function (a) { return a.name; });
+          return;
+        }
+        var tds = tr.querySelectorAll('td');
+        if (tds.length < 4) return;
+        var time = tds[3] ? tds[3].textContent.trim() : '';
+        var cost = tds[4] ? tds[4].textContent.trim() : '';
+        cur = {
+          operator: (tr.querySelector('.operator-name') || tds[1]).textContent.trim(),
+          status: tds[2] ? tds[2].textContent.trim() : '',
+          receive: '—',
+          time: time || '—',
+          cost: (!cost || cost === '-') ? '—' : cost,
+          comments: [], attachs: []
+        };
+        records.push(cur);
+      });
+
+      // 生成打印视图：批注 / 附件 在每条记录下方单独占一整行
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>FYNA_审核记录表</title><style>' +
+        'body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;padding:24px;color:#333}' +
+        'h1{text-align:center;font-size:18px;margin:0 0 16px;font-weight:600}' +
+        'table{width:100%;border-collapse:collapse;table-layout:fixed}' +
+        'th,td{border:1px solid #333;padding:8px 10px;font-size:12px;line-height:1.7;word-break:break-all;vertical-align:top}' +
+        'th{background:#f2f2f2;text-align:center;font-weight:600}' +
+        'td.c{text-align:center}' +
+        'tr.detail-row td{background:#fafafa}' +
+        '.d-label{font-weight:600;margin:0 0 2px}' +
+        '.d-gap{margin-top:8px}' +
+        '.d-item{margin:1px 0}' +
+        '@media print{body{padding:0}}' +
+        '</style></head><body>' +
+        '<h1>FYNA_审核记录表</h1>' +
+        '<table><thead><tr>' +
+        '<th style="width:6%">序号</th><th style="width:14%">操作人</th><th style="width:14%">操作状态</th>' +
+        '<th style="width:16%">接收时间</th><th style="width:26%">操作时间</th><th style="width:12%">操作耗时</th>' +
+        '</tr></thead><tbody>';
+      records.forEach(function (r, i) {
+        html += '<tr>' +
+          '<td class="c">' + (i + 1) + '</td>' +
+          '<td class="c">' + escHtml(r.operator) + '</td>' +
+          '<td class="c">' + escHtml(r.status) + '</td>' +
+          '<td class="c">' + escHtml(r.receive) + '</td>' +
+          '<td class="c">' + escHtml(r.time) + '</td>' +
+          '<td class="c">' + escHtml(r.cost) + '</td>' +
+          '</tr>';
+        html += '<tr class="detail-row"><td colspan="6">';
+        html += '<div class="d-label">批注：</div>';
+        html += r.comments.length ? r.comments.map(escHtml).join('<br/>') : '（无）';
+        html += '<div class="d-label d-gap">附件：</div>';
+        html += r.attachs.length
+          ? r.attachs.map(function (a, j) {
+              return '<div class="d-item">' + (j + 1) + '. ' + escHtml(a.name) + (a.deleted ? '（已删除）' : '') + '</div>';
+            }).join('')
+          : '（无）';
+        html += '</td></tr>';
+      });
+      html += '</tbody></table></body></html>';
+
+      var w = window.open('', '_blank');
+      if (!w) { showToast('请允许弹出窗口以导出审核记录表'); return; }
+      w.document.write(html);
+      w.document.close();
+      setTimeout(function () { w.focus(); w.print(); }, 300);
+    }
     function onAuditComm() {
       document.getElementById('commModalOverlay').classList.add('show');
     }

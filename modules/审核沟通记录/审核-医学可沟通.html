@@ -56,13 +56,17 @@
     }
     /* 审核链路图例 */
     .chain-legend {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: flex;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 4px 10px;
       font-size: 12px;
       color: #8c8c8c;
-      white-space: nowrap;
+      margin-top: 8px;
+      white-space: normal;
+      text-align: left;
     }
+    .chain-legend .lg { display: inline-flex; align-items: center; gap: 4px; }
     .chain-legend .dot {
       width: 8px;
       height: 8px;
@@ -1077,7 +1081,7 @@
 
     /* ===== 审核提示条（补充审核原因 / 跨组审核-非正常流程） ===== */
     .audit-notice {
-      display: flex; flex-direction: column; margin: 0 0 14px; padding: 12px 16px;
+      display: flex; flex-direction: column; margin: 0 0 0; padding: 6px 6px;
       background: #fff2f0; border: 1px solid #ffccc7; border-left: 4px solid #ff4d4f;
       border-radius: 6px;
     }
@@ -1153,7 +1157,7 @@
     }
     .form-select:focus, .form-textarea:focus { border-color: #1872a7; }
     .form-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
-    /* 审核批注 / 不建议备注：编辑框放大，内容可能很长 */
+    /* 批注 / 不建议备注：编辑框放大，内容可能很长 */
     #approveComment, #reviewComment { min-height: 320px; height: 320px; }
     .form-radio {
       display: inline-flex;
@@ -1392,7 +1396,29 @@
     }
     .toast.show { opacity: 1; }
     .hidden { display: none; }
-  </style>
+  
+    .cs-inline-label { display:inline-flex; margin-bottom:0; margin-right:14px; vertical-align:middle; }
+    .cs-hint { display:flex; align-items:center; gap:5px; margin-top:8px; color:#d48806; font-size:12px; line-height:1.4; }
+    .cs-hint .fa { color:#faad14; font-size:12px; }
+
+    /* 参考手机端：未修改/已修改 改为彩色圆点 + 图例 */
+    .cf-legend { display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; color:#8c8c8c; font-size:11px; margin-bottom:6px; }
+    .cf-dot { flex:0 0 auto; width:8px; height:8px; border-radius:50%; }
+    .cf-dot.gray { background:#bfbfbf; }
+    .cf-dot.orange { background:#fa8c16; }
+    .cf-item > .cf-dot { order:1; margin:6px 0 0; }
+    .cf-legend .cf-dot { margin:0; }
+
+    /* 重点关注标题与图例同行 */
+    .chat-focus .cf-title { display:inline-block; margin:0 10px 0 0; vertical-align:middle; }
+    .chat-focus .cf-legend { display:inline-flex; margin-bottom:2px; vertical-align:middle; }
+
+    /* 审核链路面板高度自适应内容，不再拉伸占满右栏 */
+    #rightLink { flex: 0 0 auto; }
+    #rightLink .col-body { flex: 0 0 auto; max-height: 40vh; }
+    /* 审核流程列允许收缩，时间线超长时在面板内滚动 */
+    #rightInfo > .col { min-height: 0; }
+</style>
 </head>
 <body>
   <div class="page">
@@ -1406,18 +1432,14 @@
     <!-- 审核提示：补充审核原因 -->
     <div class="audit-notice" id="supplementNotice" data-group="入组审核">
       <div class="an-row">
-        <span class="an-tag">补充审核</span>
-        <span class="an-text plain">补充审核原因：999</span>
-      </div>
-    </div>
-    <!-- 审核提示：跨组审核（非正常流程） -->
-    <div class="audit-notice hidden" id="abnormalNotice" data-group="预筛审核">
-      <div class="an-row">
         <span class="an-tag">非正常流程</span>
         <span class="an-text">提示：若需要走正常流程，请不建议重新提交审核</span>
       </div>
-      <div class="an-reason"><strong>原因：</strong>阿三大苏打撒旦</div>
+      <div class="an-reason"><strong>原因：</strong>测试审核</div>
     </div>
+   
+    <!-- 审核提示：跨组审核（非正常流程） -->
+    
 
     <div class="content-row">
       <!-- 左：聊天 -->
@@ -1453,7 +1475,6 @@
           <div class="group-view" data-group="入组审核">
           <div class="chat-panel">
             <div class="chat-body">
-              <div class="chat-sys">2026-08-11 15:19:24　沟通已发起</div>
 
               <div class="chat-msg other">
                 <div class="chat-avatar">刘</div>
@@ -1464,14 +1485,15 @@
                    
                     <div class="chat-focus">
                       <div class="cf-title">重点关注：</div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">性别：</span>女</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">年龄：</span>61</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">身高：</span>160cm</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">体重：</span>80kg</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">BMI：</span>31.5</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">是否诊断为ASCVD（包含冠心病、脑血管疾病、外周动脉粥样硬化性疾病）？病史大于3个月？：</span>是否有ASCVD：是-具体疾病名称：冠状动脉粥样硬化性心脏病-首次诊断/操作时间：2025-01-26（外院冠脉造影显示狭窄）-病史是否≥3个月：是</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">符合以下哪种情况（复杂冠状动脉病变/2型糖尿病/CKD/1年内AMI或缺血性卒中）：</span>2型糖尿病-最近一次HbA1c：7.5%-检测日期：2026-09-16</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">是否行冠脉PCI手术：</span>是否行冠脉PCI手术：是-责任血管：第二对角支-病变情况：开口80%狭窄-处理方式：药物球囊扩张-手术日期：2025-02-11</div></div>
+                      <div class="cf-legend"><span class="cf-dot gray"></span><span>灰色圆点代表未修改</span><span class="cf-dot orange"></span><span>橙色圆点代表已修改</span></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">性别：</span>女</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">年龄：</span>61</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">身高：</span>160cm</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">体重：</span>80kg</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">BMI：</span>31.5</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">是否诊断为ASCVD（包含冠心病、脑血管疾病、外周动脉粥样硬化性疾病）？病史大于3个月？：</span>是否有ASCVD：是-具体疾病名称：冠状动脉粥样硬化性心脏病-首次诊断/操作时间：2025-01-26（外院冠脉造影显示狭窄）-病史是否≥3个月：是</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">符合以下哪种情况（复杂冠状动脉病变/2型糖尿病/CKD/1年内AMI或缺血性卒中）：</span>2型糖尿病-最近一次HbA1c：7.5%-检测日期：2026-09-16</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">是否行冠脉PCI手术：</span>是否行冠脉PCI手术：是-责任血管：第二对角支-病变情况：开口80%狭窄-处理方式：药物球囊扩张-手术日期：2025-02-11</div></div>
                     </div>
                   </div>
                 </div>
@@ -1529,8 +1551,8 @@
               <div class="chat-msg other">
                 <div class="chat-avatar">李</div>
                 <div class="chat-content">
-                  <div class="chat-meta">李明 · CRA · 2026-08-13 11:20:00<span class="chat-status green">审核无异议</span></div>
-                  <div class="chat-bubble">材料复核无误，本次入组申请审核无异议。</div>
+                  <div class="chat-meta">李明 · CRA · 2026-08-13 11:20:00<span class="chat-status green">无异议</span></div>
+                  <div class="chat-bubble">材料复核无误，本次入组申请无异议。</div>
                 </div>
               </div>
               <div class="chat-msg other">
@@ -1573,7 +1595,7 @@
                         <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                         <div class="timeline-row"><div class="timeline-title">CRA审核</div></div>
                         <div class="timeline-info">王强 · CRA · 2026-07-20 10:00:00</div>
-                        <div class="timeline-info">审核无异议</div>
+                        <div class="timeline-info">无异议</div>
                       </div>
                       <div class="timeline-item">
                         <div class="timeline-dot done"><i class="fa fa-check"></i></div>
@@ -1618,7 +1640,7 @@
                 <div class="timeline-item">
                   <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                   <div class="timeline-row">
-                    <div class="timeline-title">审核无异议</div>
+                    <div class="timeline-title">无异议</div>
                   </div>
                   <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
                 </div>
@@ -1759,7 +1781,6 @@
         <div class="col oplog">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-clipboard-list"></i> 审核链路</div>
-            <span class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程</span>
           </div>
 
           <div class="col-body">
@@ -1780,6 +1801,12 @@
                     </div>
                   </div>
                 </div>
+                <span class="chain-legend">
+              <span class="lg"><i class="dot" style="background:#52c41a"></i>绿色代表正在进行的审核流程</span>
+              <span class="lg"><i class="dot" style="background:#86909c"></i>灰色代表已走过</span>
+              <span class="lg"><i class="dot" style="background:#e8f3f6; border: 1px solid #cfe3ee"></i>浅蓝代表未走的流程</span>
+              <span class="lg"><i class="dot" style="background:#fa5151"></i>红色代表跳过的流程</span>
+            </span>
               </div>
             </div>
             <!-- 操作日志 -->
@@ -1833,7 +1860,7 @@
           <div id="rightAction" class="hidden">
             <div class="review-panel" id="reviewPanel">
               <div class="review-panel-head">
-                <span class="review-panel-title" id="reviewPanelTitle">不建议审核</span>
+                <span class="review-panel-title" id="reviewPanelTitle">不建议</span>
               </div>
               <div class="review-panel-body">
                 <!-- 不建议 -->
@@ -1852,10 +1879,10 @@
                     </div>
                   </div>
                   <div class="form-item">
-                    <div class="form-label">备注：</div>
+                    <div class="form-label">批注：</div>
                     <div class="x-expand-host">
                       <div class="x-wrap">
-                        <textarea class="form-textarea" id="reviewComment" placeholder="请输入备注" onkeydown="xExpandKey(event,'reviewComment')"></textarea>
+                        <textarea class="form-textarea" id="reviewComment" placeholder="请输入批注" onkeydown="xExpandKey(event,'reviewComment')"></textarea>
                       </div>
                       <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                     </div>
@@ -1863,17 +1890,18 @@
                 </div>
                 <!-- 无异议 -->
                 <div id="approveBlock" style="display:none">
-                  <div class="section-title">审核批注</div>
+                  <div class="section-title">批注</div>
                   <div class="form-item x-expand-host">
                     <div class="x-wrap">
-                      <textarea class="form-textarea" id="approveComment" placeholder="请输入审核批注" onkeydown="xExpandKey(event,'approveComment')"></textarea>
+                      <textarea class="form-textarea" id="approveComment" placeholder="请输入批注" onkeydown="xExpandKey(event,'approveComment')"></textarea>
                     </div>
                     <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                   </div>
                   <div class="form-item">
-                    <div class="form-label"><span class="req">*</span> 是否需要加签审核</div>
+                    <div class="form-label cs-inline-label"><span class="req">*</span> 是否需要加签审核</div>
                     <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
                     <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
+                  <div class="cs-hint" id="countersignHint" style="display:none"><i class="fa fa-exclamation-triangle"></i> 若不加签，该审核流程将办结</div>
                   </div>
                   <div class="form-item" id="nextReviewerItem" style="display:none">
                     <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
@@ -1889,7 +1917,7 @@
               </div>
               <div class="review-panel-foot">
                 <button class="btn btn-default" onclick="closeReview()">取消</button>
-                <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认不建议</button>
+                <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认</button>
               </div>
             </div>
           </div>
@@ -2450,16 +2478,17 @@
       var title = document.getElementById('reviewPanelTitle');
       var confirmBtn = document.getElementById('reviewConfirm');
       if (type === 'reject') {
-        title.textContent = '不建议审核';
+        title.textContent = '不建议';
         document.getElementById('rejectBlock').style.display = '';
         document.getElementById('approveBlock').style.display = 'none';
-        confirmBtn.textContent = '确认不建议';
+        confirmBtn.textContent = '确认';
         confirmBtn.className = 'btn btn-primary';
       } else {
-        title.textContent = '无异议审核';
+        title.textContent = '无异议';
         document.getElementById('rejectBlock').style.display = 'none';
         document.getElementById('approveBlock').style.display = '';
-        confirmBtn.textContent = '确认无异议';
+        toggleCountersign();
+        confirmBtn.textContent = '确认';
         confirmBtn.className = 'btn btn-primary';
       }
     }
@@ -2516,6 +2545,8 @@
     function toggleCountersign() {
       var yes = document.querySelector('input[name="countersign"]:checked').value === 'yes';
       document.getElementById('nextReviewerItem').style.display = yes ? '' : 'none';
+      var hint = document.getElementById('countersignHint');
+      if (hint) hint.style.display = yes ? 'none' : 'flex';
     }
     function confirmReview() {
       if (reviewType === 'reject') {
@@ -2529,7 +2560,7 @@
         showToast('已提交不建议');
       } else {
         var comment = document.getElementById('approveComment').value.trim();
-        if (!comment) { showToast('请输入审核批注'); return; }
+        if (!comment) { showToast('请输入批注'); return; }
         var yes = document.querySelector('input[name="countersign"]:checked').value === 'yes';
         var next = '';
         if (yes) {

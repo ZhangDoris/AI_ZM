@@ -56,13 +56,17 @@
     }
     /* 审核链路图例 */
     .chain-legend {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: flex;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 4px 10px;
       font-size: 12px;
       color: #8c8c8c;
-      white-space: nowrap;
+      margin-top: 8px;
+      white-space: normal;
+      text-align: left;
     }
+    .chain-legend .lg { display: inline-flex; align-items: center; gap: 4px; }
     .chain-legend .dot {
       width: 8px;
       height: 8px;
@@ -1018,7 +1022,7 @@
       color: #595959;
       white-space: nowrap;
     }
-    .chain-step.done .cs-name { background: #e6f4ff; color: #1872a7; }
+    .chain-step.done .cs-name { background: #f2f3f5; color: #86909c; }
     .chain-step.current .cs-name {
       background: #52c41a;
       color: #fff;
@@ -1036,7 +1040,7 @@
       white-space: nowrap;
     }
     .chain-step.current .cs-sub { background: #f6ffed; color: #52c41a; border-color: #b7eb8f; }
-    .chain-step.done .cs-sub { background: #f6f8fb; color: #1872a7; border-color: #d6e8f5; }
+    .chain-step.done .cs-sub { background: #f7f8fa; color: #86909c; border-color: #e5e6eb; }
     .chain-arrow { color: #bfbfbf; font-size: 18px; margin-top: 4px; }
 
     /* 区块头部操作区 */
@@ -1392,7 +1396,25 @@
     }
     .toast.show { opacity: 1; }
     .hidden { display: none; }
-  </style>
+  
+    /* 参考手机端：未修改/已修改 改为彩色圆点 + 图例 */
+    .cf-legend { display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; color:#8c8c8c; font-size:11px; margin-bottom:6px; }
+    .cf-dot { flex:0 0 auto; width:8px; height:8px; border-radius:50%; }
+    .cf-dot.gray { background:#bfbfbf; }
+    .cf-dot.orange { background:#fa8c16; }
+    .cf-item > .cf-dot { order:1; margin:6px 0 0; }
+    .cf-legend .cf-dot { margin:0; }
+
+    /* 重点关注标题与图例同行 */
+    .chat-focus .cf-title { display:inline-block; margin:0 10px 0 0; vertical-align:middle; }
+    .chat-focus .cf-legend { display:inline-flex; margin-bottom:2px; vertical-align:middle; }
+
+    /* 审核链路面板高度自适应内容，不再拉伸占满右栏 */
+    #rightLink { flex: 0 0 auto; }
+    #rightLink .col-body { flex: 0 0 auto; max-height: 40vh; }
+    /* 审核流程列允许收缩，时间线超长时在面板内滚动 */
+    #rightInfo > .col { min-height: 0; }
+</style>
 </head>
 <body>
   <div class="page">
@@ -1417,10 +1439,7 @@
           <div class="review-actions" id="reviewActions">
             <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 下载</button>
             <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
-            <button class="btn btn-default remark-btn" onclick="openRemark()">
-              <i class="fa fa-pencil-square-o"></i> 我的批注
-              <span class="remark-count" id="remarkCount">3</span>
-            </button>
+          
             <button class="btn btn-primary" onclick="openChat()"><i class="fa fa-comments"></i> 沟通</button>
           </div>
         </div>
@@ -1445,14 +1464,15 @@
                    
                     <div class="chat-focus">
                       <div class="cf-title">重点关注：</div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">性别：</span>女</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">年龄：</span>61</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">身高：</span>160cm</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">体重：</span>80kg</div></div>
-                      <div class="cf-item"><span class="cf-tag orange">已修改</span><div class="cf-text"><span class="cf-label">BMI：</span>31.5</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">是否诊断为ASCVD（包含冠心病、脑血管疾病、外周动脉粥样硬化性疾病）？病史大于3个月？：</span>是否有ASCVD：是-具体疾病名称：冠状动脉粥样硬化性心脏病-首次诊断/操作时间：2025-01-26（外院冠脉造影显示狭窄）-病史是否≥3个月：是</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">符合以下哪种情况（复杂冠状动脉病变/2型糖尿病/CKD/1年内AMI或缺血性卒中）：</span>2型糖尿病-最近一次HbA1c：7.5%-检测日期：2026-09-16</div></div>
-                      <div class="cf-item"><span class="cf-tag gray">未修改</span><div class="cf-text"><span class="cf-label">是否行冠脉PCI手术：</span>是否行冠脉PCI手术：是-责任血管：第二对角支-病变情况：开口80%狭窄-处理方式：药物球囊扩张-手术日期：2025-02-11</div></div>
+                      <div class="cf-legend"><span class="cf-dot gray"></span><span>灰色圆点代表未修改</span><span class="cf-dot orange"></span><span>橙色圆点代表已修改</span></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">性别：</span>女</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">年龄：</span>61</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">身高：</span>160cm</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">体重：</span>80kg</div></div>
+                      <div class="cf-item"><span class="cf-dot orange"></span><div class="cf-text"><span class="cf-label">BMI：</span>31.5</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">是否诊断为ASCVD（包含冠心病、脑血管疾病、外周动脉粥样硬化性疾病）？病史大于3个月？：</span>是否有ASCVD：是-具体疾病名称：冠状动脉粥样硬化性心脏病-首次诊断/操作时间：2025-01-26（外院冠脉造影显示狭窄）-病史是否≥3个月：是</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">符合以下哪种情况（复杂冠状动脉病变/2型糖尿病/CKD/1年内AMI或缺血性卒中）：</span>2型糖尿病-最近一次HbA1c：7.5%-检测日期：2026-09-16</div></div>
+                      <div class="cf-item"><span class="cf-dot gray"></span><div class="cf-text"><span class="cf-label">是否行冠脉PCI手术：</span>是否行冠脉PCI手术：是-责任血管：第二对角支-病变情况：开口80%狭窄-处理方式：药物球囊扩张-手术日期：2025-02-11</div></div>
                     </div>
                   </div>
                 </div>
@@ -1723,7 +1743,6 @@
         <div class="col oplog">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-clipboard-list"></i> 审核链路</div>
-            <span class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程</span>
           </div>
          
           <div class="col-body">
@@ -1732,7 +1751,7 @@
               <div class="chain-block">
                 <div class="chain-steps">
                   <div class="chain-step done">
-                    <div class="cs-name">预筛审核V1.0</div>
+                    <div class="cs-name">预筛审核</div>
                     <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
                   </div>
                   <i class="fa fa-long-arrow-right chain-arrow"></i>
@@ -1744,6 +1763,12 @@
                     </div>
                   </div>
                 </div>
+                <span class="chain-legend">
+              <span class="lg"><i class="dot" style="background:#52c41a"></i>绿色代表正在进行的审核流程</span>
+              <span class="lg"><i class="dot" style="background:#86909c"></i>灰色代表已走过</span>
+              <span class="lg"><i class="dot" style="background:#e8f3f6; border: 1px solid #cfe3ee"></i>浅蓝代表未走的流程</span>
+              <span class="lg"><i class="dot" style="background:#fa5151"></i>红色代表跳过的流程</span>
+            </span>
               </div>
             </div>
             <!-- 操作日志 -->
@@ -2193,12 +2218,12 @@
           if (f.url) {
             bubble += '<div class="chat-file">' +
               '<img class="file-thumb" src="' + f.url + '" alt="' + escapeHtml(f.name) + '" onclick="zoomImg(this)"/>' +
-              '<button class="attach-btn" onclick="showToast('下载附件')">下载</button>' +
-              '<button class="attach-btn danger" onclick="showToast('删除附件')">删除</button></div>';
+              '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
           } else {
             bubble += '<div class="chat-file"><span class="chat-fname">' + escapeHtml(f.name) + '</span>' +
-              '<button class="attach-btn" onclick="showToast('下载附件')">下载</button>' +
-              '<button class="attach-btn danger" onclick="showToast('删除附件')">删除</button></div>';
+              '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
           }
         });
         bubble += '</div>';
@@ -2352,7 +2377,15 @@
     function closeMatchDrawer() { document.getElementById('matchDrawer').classList.add('hidden'); }
     updateRightHandle();
 
-  </script>
+  
+    /* 审核流程时间线倒叙（最新事件置顶，不影响操作日志） */
+    (function () {
+      document.querySelectorAll('.process-panel .timeline').forEach(function (tl) {
+        var items = Array.prototype.slice.call(tl.querySelectorAll('.timeline-item'));
+        items.reverse().forEach(function (it) { tl.appendChild(it); });
+      });
+    })();
+</script>
   <!-- 匹配详情抽屉（右侧大屏，iframe 嵌入） -->
   <div class="drawer-mask hidden" id="matchDrawer" onclick="if(event.target===this)closeMatchDrawer()">
     <div class="drawer-panel">
