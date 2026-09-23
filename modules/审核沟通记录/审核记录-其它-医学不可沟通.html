@@ -15,7 +15,7 @@
       background: #f0f2f5;
     }
 
-    /* 整屏布局 */
+    /* 整屏布局：页面始终占满一屏，各区在内部滚动（带滚动条），不把整页撑成长页面 */
     .page {
       height: 100vh;
       display: flex;
@@ -43,13 +43,16 @@
       justify-content: flex-end;
       gap: 10px;
     }
-    /* 阶段切换条（标题下方全宽 Tab，统一控制下方所有区块） */
+    /* 阶段切换条（位于左侧列顶部，仅控制左侧聊天列，不影响右侧审核流程 / 审核链路） */
     .stage-nav {
       display: flex;
       align-items: stretch;
+      height: 80px;
       background: #f7f8fa;
       border: 1px solid #e8e8e8;
+      border-radius: 6px;
       overflow: hidden;
+      margin-bottom: 12px;
     }
     /* 审核链路图例 */
     .chain-legend {
@@ -73,16 +76,122 @@
       display: flex;
       gap: 16px;
       min-height: 0;
+      position: relative;
     }
-    .content-row > .col { flex: 2 1 0; }
+    .content-row > .col { flex: 2 1 0; min-width: 0; }
+    /* 右侧抽屉：可收起（收缩到右侧），默认展开显示审核流程 / 审核链路 */
     .right-stack {
-      flex: 1 1 0;
-      min-width: 320px;
+      flex: 0 0 500px;
+      width: 500px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      transition: flex-basis .28s ease, width .28s ease, min-width .28s ease;
+    }
+    .right-stack.collapsed {
+      flex-basis: 0;
+      width: 0;
+      min-width: 0;
+    }
+    .right-stack-inner {
+      width: 500px;
+      flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      min-height: 0;
     }
+    #rightInfo, #rightAction, #rightLink {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    /* 沟通模式：审核流程 / 审核链路收缩为仅标题，沟通输入面板居中 */
+    #rightInfo.collapsed, #rightLink.collapsed { flex: 0 0 auto; min-height: 0; }
+    #rightInfo.collapsed .col-body, #rightLink.collapsed .col-body { display: none; }
+    #rightInfo.collapsed .block-header, #rightLink.collapsed .block-header { margin-bottom: 0; padding-bottom: 10px; border-bottom: none; }
+    #rightChat { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #rightChat .chat-box {
+      border: 1px solid #e3e8f0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(22, 93, 255, 0.08);
+      padding: 10px;
+    }
+    #rightInfo.hidden, #rightAction.hidden, #rightLink.hidden, #rightChat.hidden, #rightRemark.hidden { display: none; }
+    /* 右侧抽屉收起 / 展开把手（始终可见，贴在右侧边缘） */
+    .right-drawer-handle {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 502px;
+      z-index: 30;
+      width: 26px;
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e3e8f0;
+      border-right: none;
+      border-radius: 8px 0 0 8px;
+      background: #fff;
+      box-shadow: -2px 0 8px rgba(0, 0, 0, 0.06);
+      color: #1872a7;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .right-drawer-handle:hover { background: #f0f5ff; }
+    /* 右侧「操作」模式下：审核面板占满抽屉高度并可滚动 */
+    #rightAction .review-panel {
+      margin-top: 0;
+      max-height: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #rightAction .review-panel-body { flex: 1 1 auto; overflow-y: auto; }
+    /* 右侧「我的批注」模式：与不建议 / 无异议一致，顶部按钮栏隐藏，中间显示批注面板 */
+    #rightRemark { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #rightRemark .review-panel {
+      margin-top: 0;
+      max-height: none;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #rightRemark .review-panel-body.remark-scroll { flex: 1 1 auto; overflow-y: auto; }
+    #rightChat .review-panel-head { flex: 0 0 auto; }
+    /* 右侧「沟通」模式：聊天输入框占满抽屉高度，输入栏贴底 */
+    #rightChat {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    #rightChat .chat-box {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e3e8f0;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    #rightChat .chat-toolbar { flex-wrap: wrap; gap: 8px; row-gap: 6px; }
+    #rightChat .chat-toolbar .btn { white-space: nowrap; }
+    #rightChat .chat-hint { flex: 1 1 auto; min-width: 0; white-space: normal; line-height: 1.5; align-items: flex-start; text-align: left; margin-top: 8px; }
+    #rightChat .chat-input-row { flex: 1 1 auto; min-height: 0; margin-top: 8px; display: flex; flex-direction: column; align-items: stretch; }
+    #rightChat .chat-input-wrap { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; width: 100%; }
+    #rightChat .chat-input { height: 100%; min-height: 300px; }
+    #rightChat .chat-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 8px; }
+    #rightChat .chat-actions-right { display: flex; gap: 10px; }
 
     /* 列 */
     .col {
@@ -96,8 +205,46 @@
       padding: 16px 20px;
       overflow: hidden;
     }
-    .right-stack > .col { flex: 1 1 0; min-width: 0; }
-    .right-stack > .col.oplog { flex: 0 0 280px; }
+    #rightInfo > .col { flex: 1 1 0; min-width: 0; }
+    #rightInfo > .col.oplog { flex: 0 0 280px; }
+
+    /* 我的批注：聊天区内可收缩区块 */
+    .chat-remark {
+      margin: 12px 16px 0;
+      border: 1px solid #e3e8f0;
+      border-radius: 8px;
+      background: #f7f9fc;
+      overflow: hidden;
+    }
+    .cr-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: #eef3fb;
+      user-select: none;
+    }
+    .cr-head:hover { background: #e6eef8; }
+    .cr-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #262626; }
+    .cr-title .fa { color: #1872a7; }
+    .cr-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 4px; }
+    .cr-count {
+      min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+      background: #1872a7; color: #fff; font-size: 11px; line-height: 18px;
+      text-align: center; font-weight: 600;
+    }
+    .cr-arrow { margin-left: auto; color: #8c8c8c; transition: transform .2s; }
+    .chat-remark.collapsed .cr-arrow { transform: rotate(180deg); }
+    .cr-body { padding: 12px 14px; }
+    .chat-remark.collapsed .cr-body { display: none; }
+    .cr-body .remark-card {
+      background: #fff;
+      border-left: 3px solid #1872a7;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .cr-body .remark-more { width: 100%; justify-content: center; }
+    .cr-body .remark-edit-actions { margin: 4px 0 2px; }
     .block-header {
       flex: 0 0 auto;
       display: flex;
@@ -158,6 +305,7 @@
     .stage-tabs {
       display: flex;
       align-items: stretch;
+      height: 60px;
     }
     .stage-tabs .stage-tab {
       display: flex;
@@ -180,6 +328,20 @@
       font-weight: 600;
     }
     .col-body > .group-view { height: 100%; }
+    /* 审核流程树形分组（纯列表式，无卡片边框） */
+    .flow-tree { display: flex; flex-direction: column; }
+    .tree-group-hd {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 6px; cursor: pointer; user-select: none;
+      font-weight: 600; color: #262626; font-size: 13px;
+      border-radius: 6px;
+    }
+    .tree-group-hd:hover { background: #f5f8fc; }
+    .tree-caret { color: #8c8c8c; width: 12px; text-align: center; transition: transform .2s; }
+    .tree-group.collapsed .tree-caret { transform: rotate(-90deg); }
+    .tree-group-name { display: flex; align-items: center; gap: 6px; }
+    .tree-group-bd { padding: 2px 0 6px 24px; }
+    .tree-group.collapsed .tree-group-bd { display: none; }
     .empty-state {
       height: 100%;
       min-height: 160px;
@@ -194,7 +356,7 @@
     .empty-state .es-text { font-size: 13px; }
 
     /* 聊天面板 */
-    .chat-panel { display: flex; flex-direction: column; height: 100%; }
+    .chat-panel { display: flex; flex-direction: column; height: 100%; position: relative; }
     .chat-header {
       flex: 0 0 auto;
       display: flex;
@@ -223,6 +385,8 @@
       color: #bfbfbf;
       margin: 12px 0;
     }
+    .chat-sys.reject { color: #ff4d4f; font-weight: 600; }
+    .chat-sys.approve { color: #52c41a; font-weight: 600; }
     .chat-msg {
       display: flex;
       margin-bottom: 16px;
@@ -258,8 +422,9 @@
       word-break: break-word;
     }
     .chat-msg.self .chat-bubble {
-      background: #1872a7;
-      color: #fff;
+      background: #e8f3f6;
+      color: #262626;
+      border: 1px solid #cfe3ea;
       border-top-right-radius: 0;
     }
     .chat-msg.other .chat-bubble {
@@ -291,6 +456,45 @@
     .chat-file.deleted { opacity: .75; }
     .chat-file.deleted .chat-fname { text-decoration: line-through; color: #bfbfbf; }
     .chat-file.deleted .attach-btn { opacity: .5; cursor: not-allowed; }
+    /* 图片类附件缩略图预览（点击放大） */
+    .file-thumb {
+      display: block; width: 120px; height: 90px; object-fit: cover;
+      border-radius: 6px; border: 1px solid rgba(0, 0, 0, 0.08);
+      background: #f5f7fa;       cursor: zoom-in; margin-bottom: 6px;
+    }
+    /* 聊天中的图片（微信式气泡内图片） */
+    .chat-img {
+      display: block;
+      max-width: 200px;
+      max-height: 240px;
+      border-radius: 6px;
+      margin-top: 4px;
+      cursor: zoom-in;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .chat-img-wrap { position: relative; display: inline-block; max-width: 200px; vertical-align: top; }
+    .chat-msg.self .chat-img-wrap { margin-left: auto; }
+    .chat-img-del {
+      position: absolute; top: -8px; right: -8px;
+      width: 18px; height: 18px; line-height: 18px; text-align: center;
+      background: #ff4d4f; color: #fff; border-radius: 50%; font-size: 11px;
+      cursor: pointer; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    }
+    .chat-img-del:hover { background: #d9363e; }
+    /* 待发送图片缩略图 */
+    .pending-file.img { padding: 0; border: none; background: transparent; background: none; }
+    .pending-thumb {
+      width: 64px; height: 64px; object-fit: cover;
+      border-radius: 6px; border: 1px solid #f0f0f0; display: block;
+    }
+    .pending-file.img .pf-del {
+      position: absolute; top: -6px; right: -6px;
+      width: 16px; height: 16px; line-height: 16px; text-align: center;
+      background: #ff4d4f; color: #fff; border-radius: 50%; font-size: 10px;
+    }
+    .pending-file.img { position: relative; }
+    /* 图片放大查看 */
+    .img-zoom { max-width: 86vw; max-height: 84vh; border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,.3); }
 
     /* 附件操作按钮 */
     .attach-btn {
@@ -312,10 +516,22 @@
     /* 聊天输入区（微信模式） */
     .chat-footer {
       flex: 0 0 auto;
+      position: relative;
       border-top: 1px solid #f0f0f0;
       background: #fff;
       padding: 8px 10px 10px;
     }
+    /* 拖拽上传 */
+    .chat-box { position: relative; }
+    .drop-overlay {
+      position: absolute; inset: 6px; z-index: 6; display: none;
+      flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      border: 2px dashed #91caff; border-radius: 8px;
+      background: rgba(240, 248, 255, 0.94);
+      color: #1872a7; font-size: 14px; font-weight: 600; pointer-events: none;
+    }
+    .drop-overlay .fa { font-size: 30px; }
+    .chat-box.dragging .drop-overlay { display: flex; }
     .chat-hint {
       display: flex;
       align-items: center;
@@ -513,7 +729,7 @@
 
     /* 消息中的 @ 提及 */
     .chat-mention { color: #1872a7; font-weight: 600; }
-    .chat-msg.self .chat-mention { color: #ffd666; }
+    .chat-msg.self .chat-mention { color: #1872a7; }
 
     /* 消息状态标签 */
     .chat-status {
@@ -563,6 +779,55 @@
     .cf-text { flex: 1 1 auto; }
     .cf-text .cf-label { font-weight: 600; }
     .chat-input-row { display: flex; align-items: flex-end; gap: 10px; }
+    .chat-input-wrap { position: relative; flex: 1 1 auto; display: flex; }
+    .chat-expand-btn {
+      position: absolute; top: 6px; right: 8px;
+      width: 24px; height: 24px; line-height: 22px; text-align: center;
+      border: none; border-radius: 4px; background: transparent;
+      color: #bfbfbf; font-size: 13px; cursor: pointer;
+      transition: all .15s; z-index: 2;
+    }
+    .chat-expand-btn:hover { color: #1872a7; background: #f0f5ff; }
+    /* 放大编辑态：页面内浮层，不脱离当前页面 */
+    .chat-input-row.expanded {
+      position: fixed; z-index: 1200;
+      left: 50%; transform: translateX(-50%);
+      bottom: 96px;
+      width: min(880px, 86vw);
+      align-items: stretch;
+      background: #fff; border: 1px solid #e3e8f0; border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18);
+      padding: 12px;
+    }
+    .chat-input-row.expanded .chat-input { height: 48vh; max-height: none; }
+    .chat-input-row.expanded .chat-input-wrap { flex-direction: column; }
+    .chat-input-row.expanded .chat-expand-btn { position: absolute; top: -12px; right: -12px; background: #fff; border: 1px solid #e3e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    .chat-expand-tip {
+      display: none; font-size: 12px; color: #8c8c8c; margin-top: 6px;
+      justify-content: space-between;
+    }
+    .chat-input-row.expanded .chat-expand-tip { display: flex; }
+    /* 通用放大编辑（审批批注 / 批注 等 textarea，页面内浮层，不脱离当前页面） */
+    .x-expand-host { position: relative; }
+    .x-expand-host .x-wrap { position: relative; }
+    .x-expand-btn {
+      position: absolute; top: 6px; right: 8px;
+      width: 24px; height: 24px; line-height: 22px; text-align: center;
+      border: none; border-radius: 4px; background: transparent;
+      color: #bfbfbf; font-size: 13px; cursor: pointer; transition: all .15s; z-index: 2;
+    }
+    .x-expand-btn:hover { color: #1872a7; background: #f0f5ff; }
+    .x-expand-host.expanded {
+      position: fixed; z-index: 1200;
+      left: 50%; transform: translateX(-50%); bottom: 96px;
+      width: min(880px, 86vw);
+      background: #fff; border: 1px solid #e3e8f0; border-radius: 8px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18); padding: 12px;
+    }
+    .x-expand-host.expanded .form-textarea { height: 48vh; max-height: none; }
+    .x-expand-host.expanded .x-expand-btn { top: -12px; right: -12px; background: #fff; border: 1px solid #e3e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    .x-expand-tip { display: none; font-size: 12px; color: #8c8c8c; margin-top: 6px; justify-content: space-between; }
+    .x-expand-host.expanded .x-expand-tip { display: flex; }
     .chat-input {
       flex: 1 1 auto;
       resize: none;
@@ -743,7 +1008,7 @@
       gap: 6px;
     }
     .chain-label .fa { color: #1872a7; }
-    .chain-steps { display: flex; align-items: flex-start; gap: 0; }
+    .chain-steps { display: flex; align-items: flex-start; gap: 12px; }
     .chain-step { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     .cs-name {
       font-size: 14px;
@@ -777,6 +1042,238 @@
     /* 区块头部操作区 */
     .header-actions { display: flex; align-items: center; gap: 10px; }
     .btn-sm { padding: 4px 12px; font-size: 12px; }
+    .btn-danger {
+      background: #ff4d4f;
+      color: #fff;
+      border-color: #ff4d4f;
+    }
+    .btn-danger:hover { background: #ff7875; border-color: #ff7875; }
+    .btn-danger:active { background: #d9363e; border-color: #d9363e; }
+    .btn-success {
+      background: #52c41a;
+      color: #fff;
+      border-color: #52c41a;
+    }
+    .btn-success:hover { background: #73d13d; border-color: #73d13d; }
+
+    /* 审核操作栏（位于「审核沟通」标题行右侧） */
+    .review-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .ra-tip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #262626;
+      font-weight: 600;
+    }
+    .ra-tip .fa { color: #1872a7; }
+    .review-actions .ra-spacer { margin-left: auto; }
+
+    /* ===== 审核提示条（补充审核原因 / 跨组审核-非正常流程） ===== */
+    .audit-notice {
+      display: flex; flex-direction: column; margin: 0 0 14px; padding: 12px 16px;
+      background: #fff2f0; border: 1px solid #ffccc7; border-left: 4px solid #ff4d4f;
+      border-radius: 6px;
+    }
+    .an-row { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .an-tag { flex: 0 0 auto; display: inline-block; padding: 2px 12px; border-radius: 3px;
+      background: #ff4d4f; color: #fff; font-size: 13px; font-weight: 600; line-height: 1.8; }
+    .an-text { flex: 1 1 auto; min-width: 0; font-size: 14px; color: #ff4d4f; font-weight: 500;
+      line-height: 1.8; word-break: break-word; }
+    .an-text.plain { color: #595959; font-weight: 400; }
+    .an-reason { margin-top: 6px; font-size: 13px; color: #595959; line-height: 1.8; }
+    .an-reason strong { color: #ff4d4f; }
+
+    /* ===== 我的批注 ===== */
+    .remark-btn { position: relative; }
+    .remark-count {
+      position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 9px; background: #ff4d4f; color: #fff; font-size: 11px; line-height: 18px;
+      text-align: center; font-weight: 600; box-shadow: 0 0 0 2px #fff;
+    }
+    .remark-scroll { max-height: none; }
+    .remark-panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; border: 1px solid #e3e8f0; border-radius: 8px 8px 0 0; background: #fff; box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12); max-height: 60vh; overflow-y: auto; }
+    .remark-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: #f5f7fa; border-bottom: 1px solid #f0f0f0; font-size: 14px; font-weight: 600; color: #262626; }
+    .remark-panel-body { padding: 12px 14px; }
+    .remark-panel-title { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #262626; }
+    .remark-panel-title .fa { color: #1872a7; }
+    .remark-panel-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 4px; }
+    .remark-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
+    .remark-panel-head .fa-times:hover { color: #ff4d4f; }
+    .remark-card { border: 1px solid #e8e8e8; border-radius: 6px; padding: 10px 12px; background: #fff; }
+    .remark-card + .remark-card { margin-top: 10px; }
+    .remark-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .remark-card-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #e8f4fc;
+      color: #1872a7; font-size: 12px; font-weight: 500; }
+    .remark-card-time { font-size: 12px; color: #8c8c8c; }
+    .remark-card-bd { font-size: 13px; color: #262626; line-height: 1.6; }
+    .remark-card-ops { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+    .remark-op { font-size: 12px; color: #1872a7; cursor: pointer; }
+    .remark-op:hover { text-decoration: underline; }
+    .remark-op.danger { color: #ff4d4f; }
+    .remark-more {
+      margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; height: 30px; padding: 0 14px;
+      border: 1px solid #ff4d4f; border-radius: 4px; background: #fff; color: #ff4d4f;
+      font-size: 13px; cursor: pointer; font-family: inherit;
+    }
+    .remark-more:hover { background: #fff1f0; }
+    .remark-edit-title { font-size: 13px; font-weight: 600; color: #1872a7; border-left: 3px solid #1872a7;
+      padding-left: 8px; margin: 12px 0 8px; }
+    .remark-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+    /* 审核弹窗 */
+    .modal-box.review { width: 480px; max-width: 92vw; }
+    .form-item { margin-bottom: 16px; }
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #262626;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .form-label .req { color: #ff4d4f; }
+    .form-select, .form-textarea {
+      width: 100%;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #262626;
+      outline: none;
+      background: #fff;
+    }
+    .form-select:focus, .form-textarea:focus { border-color: #1872a7; }
+    .form-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+    /* 审核批注 / 不建议备注：编辑框放大，内容可能很长 */
+    #approveComment, #reviewComment { min-height: 320px; height: 320px; }
+    .form-radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #262626;
+      margin-right: 18px;
+      cursor: pointer;
+    }
+    .section-title {
+      font-size: 14px;
+      color: #262626;
+      font-weight: 600;
+      border-left: 3px solid #1872a7;
+      padding-left: 8px;
+      margin-bottom: 10px;
+    }
+    .reason-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .reason-tag {
+      font-size: 13px;
+      color: #595959;
+      background: #f5f7fa;
+      border: 1px solid #e8e8e8;
+      border-radius: 4px;
+      padding: 6px 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: all .15s;
+    }
+    .reason-tag:hover { color: #1872a7; border-color: #1872a7; }
+    .reason-tag.active {
+      background: #e6f4ff;
+      color: #1872a7;
+      border-color: #1872a7;
+      font-weight: 600;
+    }
+    .modal-box-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 18px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    /* 匹配详情抽屉 */
+    .drawer-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.45);
+      display: flex;
+      justify-content: flex-end;
+    }
+    .drawer-mask.hidden { display: none; }
+    .drawer-panel {
+      width: 82%;
+      height: 100%;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 18px rgba(0, 0, 0, 0.22);
+      animation: drawerIn .22s ease;
+    }
+    @keyframes drawerIn {
+      from { transform: translateX(40px); opacity: .6; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .drawer-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 16px; }
+    .drawer-head .fa-times:hover { color: #ff4d4f; }
+    .drawer-body { flex: 1; min-height: 0; }
+    .drawer-iframe { width: 100%; height: 100%; border: 0; background: #fff; }
+    .ra-hint { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
+
+    /* 审核操作内联面板（不建议 / 无异议） */
+    .review-panel {
+      margin-top: 10px;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .review-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #f5f7fa;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #262626;
+    }
+    .review-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
+    .review-panel-head .fa-times:hover { color: #ff4d4f; }
+    .review-panel-body { padding: 16px; }
+    .review-panel-foot {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 16px;
+      border-top: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
 
     /* 审核概览 Tabs（右下角：审核链路 / 操作日志） */
     .tab-switch {
@@ -906,18 +1403,26 @@
       </div>
     </div>
 
-    <div class="stage-nav">
-      <div class="stage-tabs" id="stageTabs">
-        <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛阶段</div>
-        <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组阶段</div>
-      </div>
-    </div>
-
     <div class="content-row">
       <!-- 左：聊天 -->
       <div class="col">
+        <div class="stage-nav">
+          <div class="stage-tabs" id="stageTabs">
+            <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛阶段</div>
+            <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组阶段</div>
+          </div>
+        </div>
         <div class="block-header">
           <div class="block-title"><i class="fa fa-comments"></i> 审核沟通</div>
+          <div class="review-actions" id="reviewActions">
+            <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 下载</button>
+            <button class="btn btn-default" onclick="openMatchDrawer()"><i class="fa fa-external-link-alt"></i> 匹配详情</button>
+            <button class="btn btn-default remark-btn" onclick="openRemark()">
+              <i class="fa fa-pencil-square-o"></i> 我的批注
+              <span class="remark-count" id="remarkCount">3</span>
+            </button>
+            <button class="btn btn-primary" onclick="openChat()"><i class="fa fa-comments"></i> 沟通</button>
+          </div>
         </div>
         <div class="col-body">
           <div class="group-view hidden" data-group="预筛审核">
@@ -979,7 +1484,7 @@
                         <span class="attach-tag deleted">已删除</span>
                       </div>
                       <div class="chat-file api">
-                        <span class="chat-fname">病例拍照图片_20260724101059.png</span>
+                        <img class="file-thumb" src="../../images/A_realistic_smartphone_photo_o_2026-09-22T07-31-12.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                         <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                         <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                         <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -1017,39 +1522,40 @@
                 </div>
               </div>
             </div>
-            <div class="chat-footer">
-              <div class="chat-toolbar">
-                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
-                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
-                <div class="chat-hint" style="margin-left:auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
-                <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
-              </div>
-              <div class="pending-files hidden" id="pendingFiles"></div>
-              <div class="mention-chips hidden" id="mentionChips"></div>
-              <div class="chat-input-row">
-                <textarea class="chat-input" id="chatInput" placeholder="请输入批注" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-                <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
-              </div>
-            </div>
+
           </div>
           </div>
         </div>
       </div>
 
       <!-- 右：审核流程 + 操作日志 -->
-      <div class="right-stack">
+      <div class="right-drawer-handle" id="rightHandle" onclick="toggleRightDrawer()" title="收起 / 展开右侧"><i class="fa fa-chevron-right"></i></div>
+      <div class="right-stack" id="rightStack">
+        <div class="right-stack-inner">
+          <div id="rightInfo">
         <!-- 右上：审核流程展示 -->
         <div class="col">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-sitemap"></i> 审核流程</div>
           </div>
           <div class="col-body">
-            <div class="group-view hidden" data-group="预筛审核">
-              <div class="empty-state">
-                <i class="fa fa-sitemap"></i>
-                <div class="es-text">暂无预筛审核流程记录</div>
+            <div class="flow-tree">
+              <div class="tree-group collapsed">
+                <div class="tree-group-hd" onclick="toggleTreeGroup(this)">
+                  <i class="fa fa-caret-down tree-caret"></i><span class="tree-group-name">预筛审核</span>
+                </div>
+                <div class="tree-group-bd">
+                  <div class="empty-state">
+                    <i class="fa fa-sitemap"></i>
+                    <div class="es-text">暂无预筛审核流程记录</div>
+                  </div>
+                </div>
               </div>
-            </div>
+              <div class="tree-group">
+                <div class="tree-group-hd" onclick="toggleTreeGroup(this)">
+                  <i class="fa fa-caret-down tree-caret"></i><span class="tree-group-name">入组审核</span>
+                </div>
+                <div class="tree-group-bd">
             <div class="group-view" data-group="入组审核">
             <div class="process-panel">
               <div class="timeline">
@@ -1111,10 +1617,109 @@
               </div>
             </div>
             </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- 右下：审核链路 / 操作日志 切换 -->
+          </div>
+          <!-- 沟通输入面板（点击「沟通」时显示，位于收缩后的审核流程 / 审核链路之间） -->
+          <div id="rightChat" class="hidden">
+            <div class="review-panel-head" style="margin-bottom:10px;flex:0 0 auto;">
+              <span class="review-panel-title"><i class="fa fa-comments"></i> 沟通</span>
+            </div>
+            <div class="chat-box" id="chatBox">
+              <div class="chat-toolbar">
+                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
+                <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
+              </div>
+              <div class="pending-files hidden" id="pendingFiles"></div>
+              <div class="mention-chips hidden" id="mentionChips"></div>
+              <div class="chat-input-row" id="chatInputRow">
+                <div class="chat-input-wrap">
+                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 换行；也可将图片 / 文件拖拽、复制到此处上传" onkeydown="chatInputKey(event)"></textarea>
+                  <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                </div>
+                <div class="chat-hint" style="flex:0 0 auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
+                <div class="chat-actions">
+                  <div class="chat-actions-right">
+                    <button class="btn btn-default" onclick="closeChat()">取消</button>
+                    <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
+                  </div>
+                </div>
+              </div>
+              <div class="drop-overlay" id="dropOverlay">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <span>将图片 / 文件拖拽到此处即可上传</span>
+              </div>
+            </div>
+          </div>
+          <!-- 我的批注（点击「我的批注」时显示，右侧折叠模式） -->
+          <div id="rightRemark" class="hidden">
+            <div class="review-panel" id="remarkPanel">
+              <div class="review-panel-head">
+                <span class="review-panel-title"><i class="fa fa-pencil-square-o"></i> 我的批注</span>
+              </div>
+              <div class="review-panel-body">
+                <div class="remark-edit-title">新增 / 编辑批注</div>
+                <div class="form-item x-expand-host" style="margin-bottom:0">
+                  <div class="x-wrap">
+                    <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容" onkeydown="xExpandKey(event,'remarkText')">患者既往病史需进一步核实，已备注待跟进。</textarea>
+                  </div>
+                  <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
+                </div>
+                <div class="remark-edit-actions">
+                  <button class="btn btn-default" onclick="closeRemark()">取消</button>
+                  <button class="btn btn-primary" onclick="saveRemark()">保存批注</button>
+                </div>
+              </div>
+              <div class="review-panel-head" style="border-top:1px solid #f0f0f0">
+                <span class="review-panel-title">历史批注<span class="remark-panel-tip">仅自己可见</span></span>
+              </div>
+              <div class="review-panel-body remark-scroll">
+                <div class="remark-card">
+                  <div class="remark-card-hd">
+                    <span class="remark-card-tag">V2审核</span>
+                    <span class="remark-card-time">2026-08-07 20:50:12</span>
+                  </div>
+                  <div class="remark-card-bd">患者既往病史需进一步核实，已备注待跟进。</div>
+                  <div class="remark-card-ops">
+                    <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                    <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                  </div>
+                </div>
+                <div id="remarkMore">
+                  <div class="remark-card">
+                    <div class="remark-card-hd">
+                      <span class="remark-card-tag">V1审核</span>
+                      <span class="remark-card-time">2026-08-10 14:22:03</span>
+                    </div>
+                    <div class="remark-card-bd">入排标准基本符合，建议补充近期血脂复查结果。</div>
+                    <div class="remark-card-ops">
+                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                    </div>
+                  </div>
+                  <div class="remark-card">
+                    <div class="remark-card-hd">
+                      <span class="remark-card-tag">预筛审核</span>
+                      <span class="remark-card-time">2026-07-13 09:11:45</span>
+                    </div>
+                    <div class="remark-card-bd">已电话联系患者，确认下周复查时间。</div>
+                    <div class="remark-card-ops">
+                      <span class="remark-op" onclick="editRemark()"><i class="fa fa-pencil"></i> 编辑</span>
+                      <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="remark-more" id="remarkMoreBtn" onclick="toggleRemarkMore()">收起历史批注（2）</button>
+              </div>
+            </div>
+          </div>
+          <div id="rightLink">
         <div class="col oplog">
           <div class="block-header">
             <div class="block-title"><i class="fa fa-clipboard-list"></i> 审核链路</div>
@@ -1186,6 +1791,8 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
           </div>
         </div>
       </div>
@@ -1263,7 +1870,7 @@
                   <span class="attach-tag deleted">已删除</span>
                 </div>
                 <div class="attach-item">
-                  <span class="attach-name">病例拍照图片_20260724101059.png</span>
+                  <img class="file-thumb" src="../../images/A_realistic_smartphone_photo_o_2026-09-22T07-31-12.png" alt="病例拍照图片" onclick="zoomImg(this)"/>
                   <button class="attach-btn" onclick="showToast('下载附件')">下载</button>
                   <button class="attach-btn danger" onclick="showToast('删除附件')">删除</button>
                   <span class="attach-tag source">上传来源：更新审核状态API接口</span>
@@ -1488,6 +2095,12 @@
       var bubble = mentionHtml + escapeHtml(text);
       if (files && files.length) {
         bubble += '<div class="chat-files">' + files.map(function (name) {
+          if (/\.(png|jpe?g|gif|bmp|webp)$/i.test(name)) {
+            return '<div class="chat-file">' +
+              '<img class="file-thumb" src="../../images/A_realistic_smartphone_photo_o_2026-09-22T07-31-12.png" alt="' + escapeHtml(name) + '" onclick="zoomImg(this)"/>' +
+              '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
+          }
           return '<div class="chat-file"><span class="chat-fname">' + escapeHtml(name) + '</span>' +
             '<button class="attach-btn" onclick="showToast(\'下载附件\')">下载</button>' +
             '<button class="attach-btn danger" onclick="showToast(\'删除附件\')">删除</button></div>';
@@ -1523,6 +2136,24 @@
         v.classList.toggle('hidden', v.getAttribute('data-tab') !== tab);
       });
     }
+    /* 点击聊天中的图片放大查看 */
+    function zoomImg(img) {
+      var mask = document.getElementById('imgZoomMask');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'imgZoomMask';
+        mask.className = 'modal-mask';
+        mask.onclick = function () { mask.classList.add('hidden'); };
+        document.body.appendChild(mask);
+      }
+      mask.innerHTML = '<img class="img-zoom" src="' + img.src + '" alt="" onclick="event.stopPropagation()"/>';
+      mask.classList.remove('hidden');
+    }
+    /* 审核流程树形分组：展开 / 收起 */
+    function toggleTreeGroup(hd) {
+      var group = hd.parentElement;
+      if (group) group.classList.toggle('collapsed');
+    }
     function switchStage(el) {
       var sw = el.parentElement;
       sw.querySelectorAll('.stage-tab').forEach(function (i) {
@@ -1530,11 +2161,209 @@
       });
       var group = el.getAttribute('data-group');
       document.querySelectorAll('.group-view').forEach(function (v) {
+        if (v.closest('.flow-tree')) return;
         v.classList.toggle('hidden', v.getAttribute('data-group') !== group);
       });
     }
 
     renderMentionChips();
+  
+    /* ===== 以下为对齐「审核页」布局补齐的抽屉 / 沟通 / 批注 逻辑 ===== */
+    function now() {
+      var d = new Date();
+      function p(n) { return (n < 10 ? '0' : '') + n; }
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+        p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    }
+    function escapeHtml(s) {
+      return s.replace(/[&<>"]/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+      });
+    }
+    function appendSelfMsg(text, files, mentions) {
+      var body = document.querySelector('.chat-panel .chat-body');
+      if (!body) return;
+      var mentionHtml = (mentions || []).map(function (p) {
+        return '<span class="chat-mention">@' + escapeHtml(p.name) + '</span>';
+      }).join('');
+      var bubble = mentionHtml + escapeHtml(text);
+      if (files && files.length) {
+        bubble += '<div class="chat-files">';
+        files.forEach(function (f) {
+          if (f.url) {
+            bubble += '<div class="chat-file">' +
+              '<img class="file-thumb" src="' + f.url + '" alt="' + escapeHtml(f.name) + '" onclick="zoomImg(this)"/>' +
+              '<button class="attach-btn" onclick="showToast('下载附件')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast('删除附件')">删除</button></div>';
+          } else {
+            bubble += '<div class="chat-file"><span class="chat-fname">' + escapeHtml(f.name) + '</span>' +
+              '<button class="attach-btn" onclick="showToast('下载附件')">下载</button>' +
+              '<button class="attach-btn danger" onclick="showToast('删除附件')">删除</button></div>';
+          }
+        });
+        bubble += '</div>';
+      }
+      var msg = document.createElement('div');
+      msg.className = 'chat-msg self';
+      msg.innerHTML = '<div class="chat-avatar">王</div>' +
+        '<div class="chat-content"><div class="chat-meta">王强 · 医学经理 · ' + now() +
+        '</div><div class="chat-bubble">' + bubble + '</div></div>';
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+    function toggleChatExpand(force) {
+      var row = document.getElementById('chatInputRow');
+      var btn = document.getElementById('chatExpandBtn');
+      if (!row) return;
+      var on = typeof force === 'boolean' ? force : !row.classList.contains('expanded');
+      row.classList.toggle('expanded', on);
+      if (btn) btn.innerHTML = on ? '<i class="fa fa-compress"></i>' : '<i class="fa fa-expand"></i>';
+      if (on) {
+        var ta = document.getElementById('chatInput');
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      }
+    }
+    function chatInputKey(e) {
+      var expanded = document.getElementById('chatInputRow').classList.contains('expanded');
+      if (expanded) {
+        if (e.key === 'Escape') { e.preventDefault(); toggleChatExpand(false); }
+        else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendMsg(); }
+      } else {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+      }
+    }
+    function toggleXExpand(id, force) {
+      var ta = document.getElementById(id);
+      if (!ta) return;
+      var host = ta.closest('.x-expand-host');
+      if (!host) return;
+      var btn = host.querySelector('.x-expand-btn');
+      var on = typeof force === 'boolean' ? force : !host.classList.contains('expanded');
+      host.classList.toggle('expanded', on);
+      if (btn) btn.innerHTML = on ? '<i class="fa fa-compress"></i>' : '<i class="fa fa-expand"></i>';
+      if (on) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }
+    function xExpandKey(e, id) {
+      var ta = document.getElementById(id);
+      if (!ta) return;
+      var host = ta.closest('.x-expand-host');
+      if (host && host.classList.contains('expanded') && e.key === 'Escape') {
+        e.preventDefault(); toggleXExpand(id, false);
+      }
+    }
+    /* 右侧抽屉：信息 / 沟通 / 批注 三种模式，互斥整块替换（本页无「操作/通过驳回」） */
+    function showRightMode(mode) {
+      var info = document.getElementById('rightInfo');
+      var link = document.getElementById('rightLink');
+      var chat = document.getElementById('rightChat');
+      var remark = document.getElementById('rightRemark');
+      if (!info || !chat) return;
+      var isChat = mode === 'chat';
+      var isRemark = mode === 'remark';
+      var isOther = isChat || isRemark;
+      info.classList.toggle('hidden', isOther);
+      if (link) link.classList.toggle('hidden', isOther);
+      chat.classList.toggle('hidden', !isChat);
+      if (remark) remark.classList.toggle('hidden', !isRemark);
+    }
+    function toggleRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (!stack) return;
+      if (stack.classList.contains('collapsed')) expandRightDrawer();
+      else collapseRightDrawer();
+    }
+    function collapseRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (stack) stack.classList.add('collapsed');
+      updateRightHandle();
+    }
+    function expandRightDrawer() {
+      var stack = document.getElementById('rightStack');
+      if (stack) stack.classList.remove('collapsed');
+      updateRightHandle();
+    }
+    function updateRightHandle() {
+      var handle = document.getElementById('rightHandle');
+      if (!handle) return;
+      var collapsed = document.getElementById('rightStack').classList.contains('collapsed');
+      handle.style.right = collapsed ? '12px' : '502px';
+      handle.innerHTML = collapsed
+        ? '<i class="fa fa-chevron-left"></i>'
+        : '<i class="fa fa-chevron-right"></i>';
+    }
+    function openChat() {
+      showRightMode('chat');
+      expandRightDrawer();
+      document.getElementById('chatBox').classList.remove('hidden');
+      var ta = document.getElementById('chatInput');
+      if (ta) ta.focus();
+    }
+    function closeChat() {
+      showRightMode('info');
+    }
+    function openRemark() {
+      showRightMode('remark');
+      expandRightDrawer();
+      var ta = document.getElementById('remarkText');
+      if (ta) ta.focus();
+    }
+    function closeRemark() {
+      showRightMode('info');
+    }
+    function editRemark() {
+      var ta = document.getElementById('remarkText');
+      if (ta) { ta.focus(); ta.scrollIntoView({ block: 'center' }); }
+    }
+    function saveRemark() {
+      var ta = document.getElementById('remarkText');
+      if (!ta || !ta.value.trim()) { showToast('请输入批注内容'); return; }
+      closeRemark();
+      showToast('批注已保存');
+    }
+    function toggleRemarkMore() {
+      var box = document.getElementById('remarkMore');
+      var btn = document.getElementById('remarkMoreBtn');
+      var open = box.classList.toggle('hidden');
+      var n = box.querySelectorAll('.remark-card').length;
+      btn.textContent = open ? ('更多批注（' + n + '）') : ('收起历史批注（' + n + '）');
+    }
+    var remarkTotal = 3;
+    function refreshRemark() {
+      var bc = document.getElementById('remarkCount');
+      if (bc) bc.textContent = remarkTotal;
+    }
+    function sendMsg() {
+      var ta = document.getElementById('chatInput');
+      var text = ta.value.trim();
+      var mentions = remindPersons.filter(function (p) { return p.selected; });
+      if (!text && !pendingFiles.length) { showToast('请输入消息内容'); return; }
+      appendSelfMsg(text, pendingFiles.slice(), mentions);
+      ta.value = '';
+      if (document.getElementById('chatInputRow').classList.contains('expanded')) toggleChatExpand(false);
+      pendingFiles = [];
+      renderPending();
+      remindPersons.forEach(function (p) { p.selected = false; });
+      renderRemind();
+      document.getElementById('rpList').classList.add('hidden');
+      showRightMode('info');
+      expandRightDrawer();
+    }
+    function openMatchDrawer() { document.getElementById('matchDrawer').classList.remove('hidden'); }
+    function closeMatchDrawer() { document.getElementById('matchDrawer').classList.add('hidden'); }
+    updateRightHandle();
+
   </script>
+  <!-- 匹配详情抽屉（右侧大屏，iframe 嵌入） -->
+  <div class="drawer-mask hidden" id="matchDrawer" onclick="if(event.target===this)closeMatchDrawer()">
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <span><i class="fa fa-file-alt"></i> 匹配详情</span>
+        <i class="fa fa-times" onclick="closeMatchDrawer()"></i>
+      </div>
+      <div class="drawer-body">
+        <iframe class="drawer-iframe" src="预筛没有匹配.html" title="匹配详情"></iframe>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

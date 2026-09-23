@@ -43,13 +43,16 @@
       justify-content: flex-end;
       gap: 10px;
     }
-    /* 阶段切换条（标题下方全宽 Tab，统一控制下方所有区块） */
+    /* 阶段切换条（位于左侧列顶部，仅控制左侧聊天列，不影响右侧审核流程 / 审核链路） */
     .stage-nav {
       display: flex;
       align-items: stretch;
+      height: 80px;
       background: #f7f8fa;
       border: 1px solid #e8e8e8;
+      border-radius: 6px;
       overflow: hidden;
+      margin-bottom: 12px;
     }
     /* 审核链路图例 */
     .chain-legend {
@@ -152,7 +155,7 @@
       overflow: hidden;
     }
     #rightAction .review-panel-body { flex: 1 1 auto; overflow-y: auto; }
-    /* 右侧「我的批注」模式：与驳回 / 通过一致，顶部按钮栏隐藏，中间显示批注面板 */
+    /* 右侧「我的批注」模式：与不建议 / 无异议一致，顶部按钮栏隐藏，中间显示批注面板 */
     #rightRemark { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
     #rightRemark .review-panel {
       margin-top: 0;
@@ -187,7 +190,7 @@
     #rightChat .chat-input-row { flex: 1 1 auto; min-height: 0; margin-top: 8px; display: flex; flex-direction: column; align-items: stretch; }
     #rightChat .chat-input-wrap { flex: 1 1 auto; min-width: 0; min-height: 0; display: flex; width: 100%; }
     #rightChat .chat-input { height: 100%; min-height: 300px; }
-    #rightChat .chat-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+    #rightChat .chat-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 8px; }
     #rightChat .chat-actions-right { display: flex; gap: 10px; }
 
     /* 列 */
@@ -339,11 +342,6 @@
     .tree-group-name { display: flex; align-items: center; gap: 6px; }
     .tree-group-bd { padding: 2px 0 6px 24px; }
     .tree-group.collapsed .tree-group-bd { display: none; }
-    /* 预筛审核流程环节（简单列表） */
-    .tree-sub-item { display: flex; align-items: baseline; gap: 8px; font-size: 12px; color: #595959; padding: 4px 0; }
-    .tree-sub-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #d9d9d9; transform: translateY(-1px); }
-    .tree-sub-dot.done { background: #52c41a; }
-    .tree-sub-note { color: #8c8c8c; font-size: 11px; }
     .empty-state {
       height: 100%;
       min-height: 160px;
@@ -1155,6 +1153,8 @@
     }
     .form-select:focus, .form-textarea:focus { border-color: #1872a7; }
     .form-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+    /* 审核批注 / 不建议备注：编辑框放大，内容可能很长 */
+    #approveComment, #reviewComment { min-height: 320px; height: 320px; }
     .form-radio {
       display: inline-flex;
       align-items: center;
@@ -1242,7 +1242,7 @@
     .drawer-iframe { width: 100%; height: 100%; border: 0; background: #fff; }
     .ra-hint { font-size: 12px; color: #8c8c8c; margin-top: 4px; }
 
-    /* 审核操作内联面板（驳回 / 通过） */
+    /* 审核操作内联面板（不建议 / 无异议） */
     .review-panel {
       margin-top: 10px;
       border: 1px solid #f0f0f0;
@@ -1403,13 +1403,6 @@
       </div>
     </div>
 
-    <div class="stage-nav">
-      <div class="stage-tabs" id="stageTabs">
-        <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛阶段</div>
-        <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组阶段</div>
-      </div>
-    </div>
-
     <!-- 审核提示：补充审核原因 -->
     <div class="audit-notice" id="supplementNotice" data-group="入组审核">
       <div class="an-row">
@@ -1421,7 +1414,7 @@
     <div class="audit-notice hidden" id="abnormalNotice" data-group="预筛审核">
       <div class="an-row">
         <span class="an-tag">非正常流程</span>
-        <span class="an-text">提示：若需要走正常流程，请驳回重新提交审核</span>
+        <span class="an-text">提示：若需要走正常流程，请不建议重新提交审核</span>
       </div>
       <div class="an-reason"><strong>原因：</strong>阿三大苏打撒旦</div>
     </div>
@@ -1429,6 +1422,12 @@
     <div class="content-row">
       <!-- 左：聊天 -->
       <div class="col">
+        <div class="stage-nav">
+          <div class="stage-tabs" id="stageTabs">
+            <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛阶段</div>
+            <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组阶段</div>
+          </div>
+        </div>
         <div class="block-header">
           <div class="block-title"><i class="fa fa-comments"></i> 审核沟通</div>
           <div class="review-actions" id="reviewActions">
@@ -1440,8 +1439,8 @@
               <span class="remark-count" id="remarkCount">3</span>
             </button>
             <button class="btn btn-primary" onclick="openChat()"><i class="fa fa-comments"></i> 沟通</button>
-            <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 驳回</button>
-            <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 通过</button>
+            <button class="btn btn-danger" onclick="openReview('reject')"><i class="fa fa-times-circle"></i> 不建议</button>
+            <button class="btn btn-success" onclick="openReview('approve')"><i class="fa fa-check-circle"></i> 无异议</button>
           </div>
         </div>
         <div class="col-body">
@@ -1522,16 +1521,16 @@
               <div class="chat-msg self">
                 <div class="chat-avatar">王</div>
                 <div class="chat-content">
-                  <div class="chat-meta">王强 · 医学经理 · 2026-08-12 14:23:23<span class="chat-status red">驳回</span></div>
-                  <div class="chat-bubble">驳回本次入组申请。<br/>驳回原因：12121</div>
+                  <div class="chat-meta">王强 · 医学经理 · 2026-08-12 14:23:23<span class="chat-status red">不建议</span></div>
+                  <div class="chat-bubble">不建议本次入组申请。<br/>不建议原因：12121</div>
                 </div>
               </div>
 
               <div class="chat-msg other">
                 <div class="chat-avatar">李</div>
                 <div class="chat-content">
-                  <div class="chat-meta">李明 · CRA · 2026-08-13 11:20:00<span class="chat-status green">审核通过</span></div>
-                  <div class="chat-bubble">材料复核无误，本次入组申请审核通过。</div>
+                  <div class="chat-meta">李明 · CRA · 2026-08-13 11:20:00<span class="chat-status green">审核无异议</span></div>
+                  <div class="chat-bubble">材料复核无误，本次入组申请审核无异议。</div>
                 </div>
               </div>
               <div class="chat-msg other">
@@ -1568,8 +1567,21 @@
                   <i class="fa fa-caret-down tree-caret"></i><span class="tree-group-name">预筛审核</span>
                 </div>
                 <div class="tree-group-bd">
-                  <div class="tree-sub-item"><span class="tree-sub-dot done"></span>CRA审核<span class="tree-sub-note">已通过 · 王强 · CRA · 2026-07-20 10:00:00</span></div>
-                  <div class="tree-sub-item"><span class="tree-sub-dot done"></span>_crc预筛确认<span class="tree-sub-note">已通过 · 刘雪红 · CRC · 2026-07-21 14:30:00</span></div>
+                  <div class="process-panel">
+                    <div class="timeline">
+                      <div class="timeline-item">
+                        <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                        <div class="timeline-row"><div class="timeline-title">CRA审核</div></div>
+                        <div class="timeline-info">王强 · CRA · 2026-07-20 10:00:00</div>
+                        <div class="timeline-info">审核无异议</div>
+                      </div>
+                      <div class="timeline-item">
+                        <div class="timeline-dot done"><i class="fa fa-check"></i></div>
+                        <div class="timeline-row"><div class="timeline-title">已提交</div></div>
+                        <div class="timeline-info">刘雪红 · CRC · 2026-07-20 09:00:00</div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="tree-group">
@@ -1606,7 +1618,7 @@
                 <div class="timeline-item">
                   <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                   <div class="timeline-row">
-                    <div class="timeline-title">审核通过</div>
+                    <div class="timeline-title">审核无异议</div>
                   </div>
                   <div class="timeline-info">王强 · CRA · 2026-08-13 14:20:00</div>
                 </div>
@@ -1654,6 +1666,7 @@
             <div class="chat-box" id="chatBox">
               <div class="chat-toolbar">
                 <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
+                <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
                 <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
               </div>
               <div class="pending-files hidden" id="pendingFiles"></div>
@@ -1665,7 +1678,6 @@
                 </div>
                 <div class="chat-hint" style="flex:0 0 auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
                 <div class="chat-actions">
-                  <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
                   <div class="chat-actions-right">
                     <button class="btn btn-default" onclick="closeChat()">取消</button>
                     <button class="btn btn-primary chat-send" onclick="sendMsg()">发送</button>
@@ -1679,7 +1691,7 @@
             </div>
           </div>
 
-          <!-- 我的批注（点击「我的批注」时显示，右侧折叠模式，与驳回 / 通过一致） -->
+          <!-- 我的批注（点击「我的批注」时显示，右侧折叠模式，与不建议 / 无异议一致） -->
           <div id="rightRemark" class="hidden">
             <div class="review-panel" id="remarkPanel">
               <div class="review-panel-head">
@@ -1690,7 +1702,6 @@
                 <div class="form-item x-expand-host" style="margin-bottom:0">
                   <div class="x-wrap">
                     <textarea class="form-textarea" id="remarkText" placeholder="请输入批注内容" onkeydown="xExpandKey(event,'remarkText')">患者既往病史需进一步核实，已备注待跟进。</textarea>
-                    <button class="x-expand-btn" onclick="toggleXExpand('remarkText')" title="放大编辑"><i class="fa fa-expand"></i></button>
                   </div>
                   <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                 </div>
@@ -1756,7 +1767,7 @@
             <div class="tab-view" data-tab="chain">
               <div class="chain-block">
                 <div class="chain-steps">
-                  <div class="chain-step done">
+                  <div class="chain-step">
                     <div class="cs-name">预筛审核</div>
                     <div class="cs-subs"><span class="cs-sub">CRA审核</span></div>
                   </div>
@@ -1809,9 +1820,9 @@
                   </div>
                   <div class="op-item">
                     <div class="op-dot red"></div>
-                    <div class="op-status">驳回</div>
+                    <div class="op-status">不建议</div>
                     <div class="op-time">08-12 14:23</div>
-                    <div class="op-remark">驳回：12121</div>
+                    <div class="op-remark">不建议：12121</div>
                   </div>
                 </div>
               </div>
@@ -1822,13 +1833,13 @@
           <div id="rightAction" class="hidden">
             <div class="review-panel" id="reviewPanel">
               <div class="review-panel-head">
-                <span class="review-panel-title" id="reviewPanelTitle">驳回审核</span>
+                <span class="review-panel-title" id="reviewPanelTitle">不建议审核</span>
               </div>
               <div class="review-panel-body">
-                <!-- 驳回 -->
+                <!-- 不建议 -->
                 <div id="rejectBlock">
                   <div class="form-item">
-                    <div class="form-label"><span class="req">*</span>驳回原因：</div>
+                    <div class="form-label">不建议原因：</div>
                     <div class="reason-tags" id="rejectReasonTags">
                       <span class="reason-tag" onclick="toggleReason(this)">不符合入组标准</span>
                       <span class="reason-tag" onclick="toggleReason(this)">既往治疗或合并用药不符</span>
@@ -1845,19 +1856,17 @@
                     <div class="x-expand-host">
                       <div class="x-wrap">
                         <textarea class="form-textarea" id="reviewComment" placeholder="请输入备注" onkeydown="xExpandKey(event,'reviewComment')"></textarea>
-                        <button class="x-expand-btn" onclick="toggleXExpand('reviewComment')" title="放大编辑"><i class="fa fa-expand"></i></button>
                       </div>
                       <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                     </div>
                   </div>
                 </div>
-                <!-- 通过 -->
+                <!-- 无异议 -->
                 <div id="approveBlock" style="display:none">
                   <div class="section-title">审核批注</div>
                   <div class="form-item x-expand-host">
                     <div class="x-wrap">
                       <textarea class="form-textarea" id="approveComment" placeholder="请输入审核批注" onkeydown="xExpandKey(event,'approveComment')"></textarea>
-                      <button class="x-expand-btn" onclick="toggleXExpand('approveComment')" title="放大编辑"><i class="fa fa-expand"></i></button>
                     </div>
                     <div class="x-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                   </div>
@@ -1880,7 +1889,7 @@
               </div>
               <div class="review-panel-foot">
                 <button class="btn btn-default" onclick="closeReview()">取消</button>
-                <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认驳回</button>
+                <button class="btn btn-primary" id="reviewConfirm" onclick="confirmReview()">确认不建议</button>
               </div>
             </div>
           </div>
@@ -1976,13 +1985,13 @@
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
               <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
-              <td class="status-revoked">驳回</td>
+              <td class="status-revoked">不建议</td>
               <td>2026-08-12 14:23:23</td>
               <td>-</td>
             </tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content">
               <div class="comment-label">批注：</div>
-              <div class="comment-box">驳回原因：12121</div>
+              <div class="comment-box">不建议原因：12121</div>
             </div></td></tr>
           </tbody>
         </table>
@@ -2377,7 +2386,7 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
       });
     }
-    /* 沟通：点「沟通」按钮打开右侧折叠面板（收缩审核流程 / 审核链路），与驳回 / 通过一致 */
+    /* 沟通：点「沟通」按钮打开右侧折叠面板（收缩审核流程 / 审核链路），与不建议 / 无异议一致 */
     function openChat() {
       showRightMode('chat');
       expandRightDrawer();
@@ -2389,7 +2398,7 @@
       showRightMode('info');
     }
 
-    /* 我的批注：点「我的批注」按钮打开右侧折叠面板，类比驳回 / 通过 */
+    /* 我的批注：点「我的批注」按钮打开右侧折叠面板，类比不建议 / 无异议 */
     var remarkTotal = 3;
     function refreshRemark() {
       var bc = document.getElementById('remarkCount');
@@ -2422,14 +2431,14 @@
       btn.textContent = open ? ('更多批注（' + n + '）') : ('收起历史批注（' + n + '）');
     }
 
-    /* 审核操作：驳回 / 通过 */
+    /* 审核操作：不建议 / 无异议 */
     var reviewType = '';
     var chatBoxWasHidden = true;
     function toggleReason(el) { el.classList.toggle('active'); }
     function openReview(type) {
       reviewType = type;
       document.getElementById('remarkPanel').classList.add('hidden');
-      // 打开审核面板（驳回/通过）时，隐藏消息输入区
+      // 打开审核面板（不建议/无异议）时，隐藏消息输入区
       var chatBox = document.getElementById('chatBox');
       chatBoxWasHidden = chatBox.classList.contains('hidden');
       chatBox.classList.add('hidden');
@@ -2441,16 +2450,16 @@
       var title = document.getElementById('reviewPanelTitle');
       var confirmBtn = document.getElementById('reviewConfirm');
       if (type === 'reject') {
-        title.textContent = '驳回审核';
+        title.textContent = '不建议审核';
         document.getElementById('rejectBlock').style.display = '';
         document.getElementById('approveBlock').style.display = 'none';
-        confirmBtn.textContent = '确认驳回';
+        confirmBtn.textContent = '确认不建议';
         confirmBtn.className = 'btn btn-primary';
       } else {
-        title.textContent = '通过审核';
+        title.textContent = '无异议审核';
         document.getElementById('rejectBlock').style.display = 'none';
         document.getElementById('approveBlock').style.display = '';
-        confirmBtn.textContent = '确认通过';
+        confirmBtn.textContent = '确认无异议';
         confirmBtn.className = 'btn btn-primary';
       }
     }
@@ -2514,10 +2523,10 @@
           document.querySelectorAll('#rejectReasonTags .reason-tag.active'),
           function (el) { return el.textContent; }
         );
-        if (!reasons.length) { showToast('请选择驳回原因'); return; }
+        if (!reasons.length) { showToast('请选择不建议原因'); return; }
         var comment = document.getElementById('reviewComment').value.trim();
-        appendSysMsg('【驳回】原因：' + reasons.join('、') + (comment ? '；备注：' + comment : ''), 'reject');
-        showToast('已提交驳回');
+        appendSysMsg('【不建议】原因：' + reasons.join('、') + (comment ? '；备注：' + comment : ''), 'reject');
+        showToast('已提交不建议');
       } else {
         var comment = document.getElementById('approveComment').value.trim();
         if (!comment) { showToast('请输入审核批注'); return; }
@@ -2527,8 +2536,8 @@
           next = document.getElementById('nextReviewer').value;
           if (!next) { showToast('请选择下一个审核人'); return; }
         }
-        appendSysMsg('【通过】批注：' + comment + (yes ? '；加签至 ' + next : '；不加签'), 'approve');
-        showToast('已通过审核' + (yes ? '并加签' : ''));
+        appendSysMsg('【无异议】批注：' + comment + (yes ? '；加签至 ' + next : '；不加签'), 'approve');
+        showToast('已无异议审核' + (yes ? '并加签' : ''));
       }
       document.querySelectorAll('#rejectReasonTags .reason-tag.active').forEach(function (el) {
         el.classList.remove('active');
