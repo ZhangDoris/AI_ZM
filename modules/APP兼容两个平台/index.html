@@ -313,6 +313,23 @@
       background: #fff; color: #165DFF;
       box-shadow: 0 2px 8px rgba(22, 93, 255, 0.10);
     }
+    .msg-subtabs { display: none; gap: 8px; margin: 10px 4px 2px; }
+    .msg-subtabs.show { display: flex; }
+    .msg-subtab {
+      position: relative; padding: 6px 16px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; color: #6b7c99;
+      background: rgba(255,255,255,0.85); cursor: pointer;
+      transition: all .2s ease;
+    }
+    .msg-subtab.active {
+      background: #165DFF; color: #fff;
+      box-shadow: 0 2px 8px rgba(22, 93, 255, 0.25);
+    }
+    .msg-source {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #6b7c99; margin-bottom: 8px;
+    }
+    .msg-source i { color: #165DFF; font-size: 11px; }
     .msg-cats {
       display: flex; gap: 8px; padding: 8px 16px 4px;
       background: #fff; border-bottom: 1px solid #f0f0f0;
@@ -335,6 +352,14 @@
     .modal-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
     .modal-close { width: 32px; height: 32px; border-radius: 50%; background: #f5f7fa; display: flex; align-items: center; justify-content: center; color: #666; cursor: pointer; }
     .modal-close:active { transform: scale(0.94); }
+    /* 一键已读确认弹窗（仿iOS居中样式） */
+    .clear-modal-card { background: #fff; border-radius: 14px; width: 300px; max-width: 85%; overflow: hidden; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+    .clear-modal-title { font-size: 17px; font-weight: 700; color: #1a1a1a; padding: 26px 20px 8px; }
+    .clear-modal-text { font-size: 14px; color: #6b7280; padding: 0 20px 24px; line-height: 1.6; }
+    .clear-modal-btns { display: flex; border-top: 1px solid #ebebeb; }
+    .clear-modal-btn { flex: 1; padding: 14px 0; font-size: 16px; color: #1a1a1a; background: #fff; border: none; cursor: pointer; font-family: inherit; }
+    .clear-modal-btn:active { background: #f5f5f5; }
+    .clear-modal-btn.danger { color: #ff4d4f; border-left: 1px solid #ebebeb; font-weight: 500; }
 
     .form-input { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 12px; font-size: 14px; }
     .form-input:focus { border-color: #165DFF; box-shadow: 0 0 0 3px rgba(22,93,255,0.1); outline: none; }
@@ -653,10 +678,11 @@
           <div class="module-topbar">
             <div class="icon-btn" onclick="backFromMessages()"><i class="fas fa-chevron-left"></i></div>
             <div class="app-list-title">消息</div>
-            <div class="icon-btn" id="broomBtn" style="margin-left:auto; position:relative" onclick="markAllRead()" title="一键清理未读"><i class="fas fa-broom"></i><span class="topbar-badge" id="broomBadge">0</span></div>
+            <div class="icon-btn" id="broomBtn" style="margin-left:auto" onclick="showClearConfirm()" title="一键清理未读"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 6.2 a1.6 1.6 0 0 1 2.8 0"/><path d="M5 13.2 a7 7 0 0 1 14 0"/><path d="M5 13.2 h14 v3.3 a2.5 2.5 0 0 1 -2.5 2.5 h-9 a2.5 2.5 0 0 1 -2.5 -2.5 z"/><path d="M10 16.3 v2.7 M14 16.3 v2.7"/></svg></div>
             <div class="icon-btn" onclick="openMsgSettings()"><i class="fas fa-gear"></i></div>
             </div>
             <div class="msg-tabs" id="msgTabs"></div>
+            <div class="msg-subtabs" id="msgSubTabs"></div>
             <div class="msg-list" id="msgList"></div>
         </div>
 
@@ -701,6 +727,18 @@
             <div style="display:flex;gap:12px;padding:0 18px 18px">
               <button class="ghost-btn" onclick="closeRemoveConfirm()">取消</button>
               <button class="primary-btn" style="margin:0" onclick="confirmRemoveDevice()">确定</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 一键已读确认弹窗 -->
+        <div class="modal-overlay hidden" id="clearMsgModal">
+          <div class="clear-modal-card">
+            <div class="clear-modal-title">一键已读</div>
+            <div class="clear-modal-text">是否清除全部新消息提醒？</div>
+            <div class="clear-modal-btns">
+              <button class="clear-modal-btn" onclick="closeClearConfirm()">取消</button>
+              <button class="clear-modal-btn danger" onclick="confirmClearAll()">清除</button>
             </div>
           </div>
         </div>
@@ -808,11 +846,6 @@
       if (badge) {
         if (unread > 0) { badge.textContent = unread > 99 ? '99+' : String(unread); badge.style.display = ''; }
         else badge.style.display = 'none';
-      }
-      const bb = document.getElementById('broomBadge');
-      if (bb) {
-        if (unread > 0) { bb.textContent = unread > 99 ? '99+' : String(unread); bb.style.display = ''; }
-        else bb.style.display = 'none';
       }
       const hb = document.getElementById('homeBellBadge');
       if (hb) {
@@ -940,28 +973,34 @@
     }
 
     // ========== 消息页 ==========
-    const MSG_CATS = ['智能筛选', '艾康逸', '患者管理', '患者储备'];
-    const MSG_ALL_TABS = [
-      { type: 'system', key: 'other',    label: '智能筛选' },
-      { type: 'system', key: 'aikangyi', label: '艾康逸' },
+    const MSG_CATS = ['智能筛选', '患者管理', '患者储备'];
+    // 主 tab：智能筛选（来源分组）/ 患者管理 / 患者储备
+    const MSG_MAIN_TABS = [
+      { type: 'source', label: '智能筛选' },
       { type: 'category', key: '患者管理', label: '患者管理' },
       { type: 'category', key: '患者储备', label: '患者储备' }
     ];
-    let currentMsgFilter = MSG_ALL_TABS[0];
+    // 二级来源 tab（智能筛选主 tab 下显示）
+    const MSG_SOURCE_TABS = [
+      { type: 'system', key: 'other',    label: '智能筛选' },
+      { type: 'system', key: 'aikangyi', label: '艾康逸' }
+    ];
+    let currentMsgMain = MSG_MAIN_TABS[0];
+    let currentMsgFilter = MSG_SOURCE_TABS[0];
     const messagesData = {
       aikangyi: [
-        { type: '患者管理', title: '入组审核已撤回', time: '2026-09-29 13:20:00', read: false,
+        { type: '智能筛选', title: '入组审核已撤回', time: '2026-09-29 13:20:00', read: false,
           rows: [{ label: '方案编号', value: '测试项目5' }, { label: '中心号', value: '222' }, { label: '中心', value: '安顺市贵航集团302医院' }],
           footer: '受试者55&lt;知情审核通知&gt; 入组撤回' },
-        { type: '患者管理', title: '入组审核已通过', time: '2026-09-28 09:30:00', read: true,
+        { type: '智能筛选', title: '入组审核已通过', time: '2026-09-28 09:30:00', read: true,
           rows: [{ label: '方案编号', value: '测试项目3' }, { label: '中心号', value: '105' }, { label: '中心', value: '贵阳市第一人民医院' }],
           footer: '受试者12&lt;入排审核通知&gt; 入组通过' },
       ],
       other: [
-        { type: '患者管理', title: '入组审核已撤回', time: '2026-09-29 11:05:00', read: false,
+        { type: '智能筛选', title: '入组审核已撤回', time: '2026-09-29 11:05:00', read: false,
           rows: [{ label: '方案编号', value: '测试项目5' }, { label: '中心号', value: '222' }, { label: '中心', value: '安顺市贵航集团302医院' }],
           footer: '受试者55&lt;知情审核通知&gt; 入组撤回' },
-        { type: '患者管理', title: '入组审核已通过', time: '2026-09-27 16:40:00', read: true,
+        { type: '智能筛选', title: '入组审核已通过', time: '2026-09-27 16:40:00', read: true,
           rows: [{ label: '方案编号', value: '测试项目3' }, { label: '中心号', value: '105' }, { label: '中心', value: '贵阳市第一人民医院' }],
           footer: '受试者12&lt;入排审核通知&gt; 入组通过' },
       ]
@@ -970,22 +1009,55 @@
     function renderMsgTabs() {
       const tabs = document.getElementById('msgTabs');
       tabs.innerHTML = '';
-      MSG_ALL_TABS.forEach(tab => {
+      MSG_MAIN_TABS.forEach(tab => {
         let unread = 0;
-        if (tab.type === 'system') {
-          unread = (messagesData[tab.key] || []).filter(m => !m.read).length;
+        if (tab.type === 'source') {
+          // 智能筛选主 tab 未读 = 全部来源未读之和
+          MSG_SOURCE_TABS.forEach(sys => {
+            (messagesData[sys.key] || []).forEach(m => { if (!m.read) unread++; });
+          });
         } else {
-          MSG_ALL_TABS.filter(t => t.type === 'system').forEach(sys => {
+          MSG_SOURCE_TABS.forEach(sys => {
             (messagesData[sys.key] || []).forEach(m => { if (m.type === tab.key && !m.read) unread++; });
           });
         }
+        const badgeHtml = (unread > 0)
+          ? '<span class="msg-tab-badge">' + (unread > 99 ? '99+' : unread) + '</span>' : '';
         const el = document.createElement('div');
-        el.className = 'msg-tab' + (tab === currentMsgFilter ? ' active' : '');
+        el.className = 'msg-tab' + (tab === currentMsgMain ? ' active' : '');
+        el.innerHTML = '<span>' + tab.label + '</span>' + badgeHtml;
+        el.onclick = () => switchMsgMain(tab);
+        tabs.appendChild(el);
+      });
+      renderMsgSubTabs();
+    }
+
+    function renderMsgSubTabs() {
+      const wrap = document.getElementById('msgSubTabs');
+      wrap.innerHTML = '';
+      if (currentMsgMain.type !== 'source') { wrap.classList.remove('show'); return; }
+      wrap.classList.add('show');
+      MSG_SOURCE_TABS.forEach(tab => {
+        const unread = (messagesData[tab.key] || []).filter(m => !m.read).length;
+        const el = document.createElement('div');
+        el.className = 'msg-subtab' + (tab === currentMsgFilter ? ' active' : '');
         el.innerHTML = '<span>' + tab.label + '</span>' +
           (unread > 0 ? '<span class="msg-tab-badge">' + (unread > 99 ? '99+' : unread) + '</span>' : '');
         el.onclick = () => switchMsgFilter(tab);
-        tabs.appendChild(el);
+        wrap.appendChild(el);
       });
+    }
+
+    function switchMsgMain(tab) {
+      currentMsgMain = tab;
+      if (tab.type === 'source') {
+        // 回到智能筛选时，恢复上次浏览的来源（默认智能筛选）
+        if (currentMsgFilter.type !== 'system') currentMsgFilter = MSG_SOURCE_TABS[0];
+      } else {
+        currentMsgFilter = tab;
+      }
+      renderMsgTabs();
+      renderMessages();
     }
 
     function switchMsgFilter(tab) {
@@ -995,8 +1067,8 @@
     }
 
     function openMessagesPage(backTarget) {
-      const sysTab = MSG_ALL_TABS.filter(t => t.type === 'system' && t.key === currentPlatform)[0];
-      currentMsgFilter = sysTab || MSG_ALL_TABS[0];
+      currentMsgMain = MSG_MAIN_TABS[0];
+      currentMsgFilter = MSG_SOURCE_TABS[0];
       msgBackTarget = backTarget || 'appList';
       document.getElementById('homePage').classList.add('page-hidden');
       document.getElementById('appList').classList.add('page-hidden');
@@ -1023,10 +1095,18 @@
       list.innerHTML = '';
       let items = [];
       if (currentMsgFilter.type === 'system') {
-        items = messagesData[currentMsgFilter.key] || [];
+        const src = currentMsgFilter.key === 'aikangyi' ? '智能筛选（艾康逸）' : '智能筛选';
+        (messagesData[currentMsgFilter.key] || []).forEach(m => { m._source = src; items.push(m); });
+      } else if (currentMsgFilter.type === 'source') {
+        // 智能筛选：聚合全部来源，卡片上标注来源
+        (messagesData.other || []).forEach(m => { m._source = '智能筛选'; items.push(m); });
+        (messagesData.aikangyi || []).forEach(m => { m._source = '智能筛选（艾康逸）'; items.push(m); });
       } else {
-        MSG_ALL_TABS.filter(t => t.type === 'system').forEach(sys => {
-          (messagesData[sys.key] || []).forEach(m => { if (m.type === currentMsgFilter.key) items.push(m); });
+        MSG_SOURCE_TABS.forEach(sys => {
+          const src = sys.key === 'aikangyi' ? '智能筛选（艾康逸）' : '智能筛选';
+          (messagesData[sys.key] || []).forEach(m => {
+            if (m.type === currentMsgFilter.key) { m._source = src; items.push(m); }
+          });
         });
       }
       if (!items.length) {
@@ -1048,8 +1128,9 @@
         '<div class="msg-top"><div class="msg-title">' + msg.title + '</div>' +
         (msg.read ? '' : '<span class="msg-status unread"></span>') + '</div>' +
         '<div class="msg-time">' + msg.time + '</div>' +
+        '<div class="msg-footer">消息来源：' +(msg._source || '智能筛选')+ '</div>'+
         rows +
-        '<div class="msg-footer">' + msg.footer + '</div>' +
+        '<div class="msg-label">' + msg.footer + '</div>' +
         '<div class="msg-card-detail"><span>详情</span><i class="fas fa-chevron-right"></i></div>';
       card.querySelector('.msg-card-detail').onclick = function(e) {
         e.stopPropagation();
@@ -1079,8 +1160,15 @@
       updateHomeCounts();
     }
 
-    // 全部标记为已读
-    function markAllRead() {
+    // 一键已读：先弹确认窗
+    function showClearConfirm() {
+      openModal('clearMsgModal');
+    }
+    function closeClearConfirm() {
+      closeModal('clearMsgModal');
+    }
+    function confirmClearAll() {
+      closeModal('clearMsgModal');
       PLAT_KEYS.forEach(k => (messagesData[k] || []).forEach(m => m.read = true));
       renderMsgTabs();
       renderMessages();
@@ -1108,6 +1196,7 @@
       { key: 'other',    name: '智能筛选', short: '智能筛选' },
       { key: 'aikangyi', name: '艾康逸', short: '艾康逸' }
     ];
+    // 消息来源在设置页的展示顺序：智能筛选在上，艾康逸在下（不要调换）
     const msgReceive = {
       other:    { app: true, wecom: true },
       aikangyi: { app: true, wecom: true }
