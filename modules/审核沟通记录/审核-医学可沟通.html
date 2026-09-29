@@ -207,7 +207,7 @@
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
       padding: 16px 20px;
-      overflow: hidden;
+ 
     }
     #rightInfo > .col { flex: 1 1 0; min-width: 0; }
     #rightInfo > .col.oplog { flex: 0 0 280px; }
@@ -828,7 +828,7 @@
       background: #fff; border: 1px solid #e3e8f0; border-radius: 8px;
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.18); padding: 12px;
     }
-    .x-expand-host.expanded .form-textarea { height: 48vh; max-height: none; }
+    .x-expand-host.expanded .form-textarea { height: 48vh !important; max-height: none; }
     .x-expand-host.expanded .x-expand-btn { top: -12px; right: -12px; background: #fff; border: 1px solid #e3e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
     .x-expand-tip { display: none; font-size: 12px; color: #8c8c8c; margin-top: 6px; justify-content: space-between; }
     .x-expand-host.expanded .x-expand-tip { display: flex; }
@@ -1093,6 +1093,10 @@
     .an-text.plain { color: #595959; font-weight: 400; }
     .an-reason { margin-top: 6px; font-size: 13px; color: #595959; line-height: 1.8; }
     .an-reason strong { color: #ff4d4f; }
+    /* 中性色提示（审核流程提示，不使用红色） */
+    .audit-notice.info { background: #f0f7ff; border-color: #d6e8ff; border-left-color: #409eff; }
+    .audit-notice.info .an-tag { background: #409eff; }
+    .audit-notice.info .an-text { color: #595959; font-weight: 400; }
 
     /* ===== 我的批注 ===== */
     .remark-btn { position: relative; }
@@ -1157,8 +1161,14 @@
     }
     .form-select:focus, .form-textarea:focus { border-color: #1872a7; }
     .form-textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
-    /* 批注 / 不建议备注：编辑框放大，内容可能很长 */
-    #approveComment, #reviewComment { min-height: 320px; height: 320px; }
+    /* 批注 / 不建议备注：编辑框填满面板剩余高度，内容可能很长 */
+    #approveComment, #reviewComment { min-height: 320px; height: auto; flex: 1 1 auto; }
+    #rightAction .review-panel-body { display: flex; flex-direction: column; }
+    #rightAction .review-panel-body > * { flex: 0 0 auto; }
+    #rightAction #approveBlock, #rightAction #rejectBlock { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #rightAction #approveBlock .x-expand-host, #rightAction #rejectBlock .x-expand-host { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #rightAction #approveBlock .x-wrap, #rightAction #rejectBlock .x-wrap { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    #rightAction #approveBlock .form-textarea, #rightAction #rejectBlock .form-textarea { flex: 1 1 auto; }
     .form-radio {
       display: inline-flex;
       align-items: center;
@@ -1429,16 +1439,14 @@
       </div>
     </div>
 
-    <!-- 审核提示：补充审核原因 -->
-    <div class="audit-notice" id="supplementNotice" data-group="入组审核">
+    <!-- 审核提示：审核流程提示（中性色，直接展示原因） -->
+    <div class="audit-notice info" id="supplementNotice" data-group="入组审核">
       <div class="an-row">
-        <span class="an-tag">非正常流程</span>
-        <span class="an-text">提示：若需要走正常流程，请不建议重新提交审核</span>
+        <span class="an-tag">补充审核</span>
+        <span class="an-text">测试补充审核</span>
       </div>
-      <div class="an-reason"><strong>原因：</strong>测试审核</div>
     </div>
    
-    <!-- 审核提示：跨组审核（非正常流程） -->
     
 
     <div class="content-row">
@@ -1600,7 +1608,7 @@
                       <div class="timeline-item">
                         <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                         <div class="timeline-row"><div class="timeline-title">已提交</div></div>
-                        <div class="timeline-info">刘雪红 · CRC · 2026-07-20 09:00:00</div>
+                        <div class="timeline-info">刘梅 · CRC · 2026-07-20 09:00:00</div>
                       </div>
                     </div>
                   </div>
@@ -1627,15 +1635,9 @@
                   <div class="timeline-row">
                     <div class="timeline-title">已提交审核</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-14 12:30:00</div>
+                  <div class="timeline-info">刘梅 · CRC · 2026-08-14 12:30:00</div>
                 </div>
-                <div class="timeline-item">
-                  <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
-                  <div class="timeline-row">
-                    <div class="timeline-title">筛败</div>
-                  </div>
-                  <div class="timeline-info">李明 · 医学经理 · 2026-08-14 11:00:00</div>
-                </div>
+             
 
                 <div class="timeline-item">
                   <div class="timeline-dot done"><i class="fa fa-check"></i></div>
@@ -1652,7 +1654,7 @@
                   <div class="timeline-row">
                     <div class="timeline-title">已提交审核</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
+                  <div class="timeline-info">刘梅 · CRC · 2026-08-13 09:30:00</div>
                 </div>
 
                 <div class="timeline-item">
@@ -1660,7 +1662,7 @@
                   <div class="timeline-row">
                     <div class="timeline-title">撤销申请</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-12 10:00:00</div>
+                  <div class="timeline-info">刘梅 · CRC · 2026-08-12 10:00:00</div>
                 </div>
 
                 <div class="timeline-item">
@@ -1668,7 +1670,7 @@
                   <div class="timeline-row">
                     <div class="timeline-title">已提交审核</div>
                   </div>
-                  <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
+                  <div class="timeline-info">刘梅 · CRC · 2026-08-11 15:19:24</div>
                 </div>
               </div>
             </div>
@@ -1803,9 +1805,9 @@
                 </div>
                 <span class="chain-legend">
               <span class="lg"><i class="dot" style="background:#52c41a"></i>绿色代表正在进行的审核流程</span>
-              <span class="lg"><i class="dot" style="background:#86909c"></i>灰色代表已走过</span>
-              <span class="lg"><i class="dot" style="background:#e8f3f6; border: 1px solid #cfe3ee"></i>浅蓝代表未走的流程</span>
-              <span class="lg"><i class="dot" style="background:#fa5151"></i>红色代表跳过的流程</span>
+              <span class="lg"><i class="dot" style="background:#86909c"></i>灰色代表已审核通过的审核流程</span>
+              <span class="lg"><i class="dot" style="background:#e8f3f6; border: 1px solid #cfe3ee"></i>浅蓝代表还未走到的审核流程</span>
+              <span class="lg"><i class="dot" style="background:#fa5151"></i>红色代表跳过的审核流程</span>
             </span>
               </div>
             </div>
@@ -1901,7 +1903,7 @@
                     <div class="form-label cs-inline-label"><span class="req">*</span> 是否需要加签审核</div>
                     <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
                     <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
-                  <div class="cs-hint" id="countersignHint" style="display:none"><i class="fa fa-exclamation-triangle"></i> 若不加签，该审核流程将办结</div>
+                  <div class="cs-hint" id="countersignHint" style="display:none"><i class="fa fa-exclamation-triangle"></i> 当前为最后审核节点，加签需选择下一审核人。</div>
                   </div>
                   <div class="form-item" id="nextReviewerItem" style="display:none">
                     <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
@@ -1948,7 +1950,7 @@
           <tbody>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-submitted">已提交</td>
               <td>2026-08-11 15:19:24</td>
               <td>—</td>
@@ -1956,7 +1958,7 @@
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-pending">待审核（已撤回）</td>
               <td>2026-08-11 15:19:25</td>
               <td>—</td>
@@ -1964,7 +1966,7 @@
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-revoked">已撤销申请</td>
               <td>2026-09-04 18:28:31</td>
               <td>—</td>
@@ -1975,14 +1977,14 @@
             </div></td></tr>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-submitted">已提交</td>
               <td>2026-08-11 15:19:24</td>
               <td>—</td>
             </tr>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-submitted">审核沟通</td>
               <td>2026-08-11 15:19:24</td>
               <td>—</td>
@@ -2012,7 +2014,7 @@
             </div></td></tr>
             <tr>
               <td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td>
-              <td><span class="operator-name">刘雪红&lt;CRA专员&gt;</span></td>
+              <td><span class="operator-name">刘梅&lt;CRA专员&gt;</span></td>
               <td class="status-revoked">不建议</td>
               <td>2026-08-12 14:23:23</td>
               <td>-</td>

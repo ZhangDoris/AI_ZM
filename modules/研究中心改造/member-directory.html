@@ -1119,7 +1119,7 @@
     var memberData = [
       { id:'m1', name:'王慧柳', role:'医学经理', phone:'186****4409', status:'启用', statusTime:'2026-06-01 09:20',
         centers: wangCenters, viewCenters: ['-'] },
-      { id:'m2', name:'刘雪红', role:'CRA专员', phone:'139****3242', status:'启用', statusTime:'2026-07-12 14:05',
+      { id:'m2', name:'刘梅', role:'CRA专员', phone:'139****3242', status:'启用', statusTime:'2026-07-12 14:05',
         centers: ['CN001·首都医科大学附属北京同仁医院·张罗/王成硕'], viewCenters: ['-'] },
       { id:'m3', name:'陈CRA', role:'CRA专员', phone:'137****7788', status:'停用', statusTime:'2026-08-15 09:30',
         centers: ['CN030·北京医院·李华'], viewCenters: ['-'] },
@@ -1135,7 +1135,7 @@
         { id: 'P-A02', screenNo: 'SCR-A02', nameAbbr: '患B', age: 47, gender: '女', field: '肝部', status: '审核中', statusClass: 'status-auditing', creator: '王慧柳', centerName: 'CN029·郫都区人民医院', note: '待补充资料', auditName: '肝癌早筛计划', auditor: '王审核', submitTime: '-' },
         { id: 'P-A03', screenNo: 'SCR-A03', nameAbbr: '患C', age: 62, gender: '男', field: '乳腺', status: '审核沟通中', statusClass: 'status-auditing', creator: '王慧柳', centerName: 'CN015·唐镇市中心医院', note: '', auditName: '乳腺癌筛查', auditor: '张审核', submitTime: '2026-05-22 14:05' }
       ],
-      '刘雪红': [],                              // 无患者 → 可直接删除/停用
+      '刘梅': [],                              // 无患者 → 可直接删除/停用
       '陈CRA': [],                              // 已停用，无患者
       '周CRC': [   // 有患者
         { id: 'P-D01', screenNo: 'SCR-D01', nameAbbr: '患D', age: 51, gender: '女', field: '乳腺', status: '审核中', statusClass: 'status-auditing', creator: '周CRC', centerName: 'CN031·上海瑞金医院', note: '随访中', auditName: '乳腺癌筛查', auditor: '李审核', submitTime: '2026-07-15 10:20' }
@@ -1821,7 +1821,7 @@
     // ========== 人员选择 ==========
     var allUserPool = [
       { id: 'U1001', name: '王慧柳', dept: '医学部', phone: '138****1111' },
-      { id: 'U1002', name: '刘雪红', dept: '临床运营', phone: '139****2222' },
+      { id: 'U1002', name: '刘梅', dept: '临床运营', phone: '139****2222' },
       { id: 'U1003', name: '陈静', dept: '临床协调', phone: '137****3333' },
       { id: 'U1004', name: '周明', dept: '临床协调', phone: '135****4444' },
       { id: 'U1005', name: '李响', dept: 'CRA', phone: '136****5555' },
@@ -1922,8 +1922,8 @@
       var phone = document.getElementById('mfPhone').value.trim();
       var statusEl = document.querySelector('input[name="mfStatus"]:checked');
       var status = statusEl ? statusEl.value : '启用';
-      if (!name) { alert('请选择人员'); return; }
-      if (!role) { alert('请选择角色'); return; }
+      if (!name) { showPageAlert('提示', '请选择人员'); return; }
+      if (!role) { showPageAlert('提示', '请选择角色'); return; }
       var auth = getAuthResult();
       var selCenters = auth.centers, selViews = auth.viewCenters;
       if (currentEditId) {
@@ -2223,7 +2223,7 @@
       if (partial && sel.length > 1) {
         var check = checkSameCenterForSelected();
         if (!check.ok) {
-          showToast('批量交接仅支持同一中心的患者，当前选中了「' + check.centers.join('、') + '」多个中心的患者，请分批选择', 'error');
+          showPageAlert('提示', '批量交接仅支持同一中心的患者，当前选中了多个中心的患者，请分批选择');
           return;
         }
       }
@@ -2264,7 +2264,7 @@
     function openHandover(id) {
       try {
         handoverMemberId = id;
-        if (typeof memberData === 'undefined' || !memberData) { alert('数据未初始化，请刷新页面'); return; }
+        if (typeof memberData === 'undefined' || !memberData) { showPageAlert('提示', '数据未初始化，请刷新页面'); return; }
         var m = memberData.find(function(x) { return x.id === id; });
         if (!m) return;
         var pats = (typeof patientData !== 'undefined' && patientData) ? (patientData[m.name] || []) : [];
@@ -2284,7 +2284,7 @@
         showToast('成员「' + m.name + '」已停用');
         renderMemberList();
       } catch (err) {
-        alert('openHandover 出错：' + (err && err.message ? err.message : err));
+        showPageAlert('提示', 'openHandover 出错：' + (err && err.message ? err.message : err));
       }
     }
     function switchHoScope() {
@@ -2349,11 +2349,11 @@
       var moved = selectedIds.length;
       // 有患者必须选择交接人
       if (moved > 0 && !t) {
-        alert('请选择至少 1 名需交接的患者并指定交接人');
+        showPageAlert('提示', '请选择至少 1 名需交接的患者并指定交接人');
         return;
       }
       if (scope === 'part' && moved === 0) {
-        alert('请至少勾选 1 名需要交接的患者');
+        showPageAlert('提示', '请至少勾选 1 名需要交接的患者');
         return;
       }
       // 交接：仅选中的患者转移给交接人
@@ -2429,7 +2429,7 @@
     function confirmStatusReason() {
       var ta = document.getElementById('msReason');
       var reason = ta ? (ta.value || '').trim() : '';
-      if (!reason) { alert('请填写' + statusReasonAction + '原因'); return; }
+      if (!reason) { showPageAlert('提示', '请填写' + statusReasonAction + '原因'); return; }
       var m = memberData.find(function (x) { return x.id === statusReasonMemberId; });
       if (!m) { closeStatusReason(); return; }
 
@@ -2461,7 +2461,7 @@
       if (!m) return;
       var pats = patientData[m.name] || [];
       if (pats.length > 0) {
-        alert('该成员名下有 ' + pats.length + ' 名在管患者，不可删除，请先使用「停用」进行交接。');
+        showPageAlert('提示', '该成员名下有 ' + pats.length + ' 名在管患者，不可删除，请先使用「停用」进行交接。');
         return;
       }
       deleteMemberId = id;
@@ -2514,7 +2514,7 @@
       var file = input.files && input.files[0];
       if (!file) return;
       if (!/\.xlsx$/i.test(file.name)) {
-        alert('仅支持 .xlsx 格式的文件');
+        showPageAlert('提示', '仅支持 .xlsx 格式的文件');
         input.value = '';
         return;
       }
@@ -2529,7 +2529,7 @@
       if (!file) return;
       var input = document.getElementById('importFile');
       input.files = dt.files;
-      if (!/\.xlsx$/i.test(file.name)) { alert('仅支持 .xlsx 格式的文件'); return; }
+      if (!/\.xlsx$/i.test(file.name)) { showPageAlert('提示', '仅支持 .xlsx 格式的文件'); return; }
       handleImportFile(input);
     }
 
@@ -2632,7 +2632,7 @@
 
     function uploadImport() {
       var file = document.getElementById('importFile').files && document.getElementById('importFile').files[0];
-      if (!file) { alert('请先选择要导入的文件'); return; }
+      if (!file) { showPageAlert('提示', '请先选择要导入的文件'); return; }
       startImportProgress(function () {
         importParsedRows = parseImportFile();
         var successCount = 0, failCount = 0;
@@ -2692,7 +2692,7 @@
     // 操作日志数据（成员新增/编辑/停用/启用/删除）
     var opLogData = [
       { time: '2026-08-20 10:15', type: '新增', user: '系统管理员', target: '王慧柳', detail: '创建成员账号，分配 29 个负责中心', before: null, after: { name: '王慧柳', role: '医学经理', phone: '138****8001', centers: ['CN001','CN002'], status: '启用' } },
-      { time: '2026-08-18 16:42', type: '编辑', user: '李运营', target: '刘雪红', detail: '更新手机号与负责中心范围', before: { name: '刘雪红', role: 'SMO-PM', phone: '139****9001', centers: ['CN003'], status: '启用' }, after: { name: '刘雪红', role: 'SMO-PM', phone: '139****9002', centers: ['CN003','CN004'], status: '启用' } },
+      { time: '2026-08-18 16:42', type: '编辑', user: '李运营', target: '刘梅', detail: '更新手机号与负责中心范围', before: { name: '刘梅', role: 'SMO-PM', phone: '139****9001', centers: ['CN003'], status: '启用' }, after: { name: '刘梅', role: 'SMO-PM', phone: '139****9002', centers: ['CN003','CN004'], status: '启用' } },
       { time: '2026-08-15 09:30', type: '停用', user: '系统管理员', target: '周CRC', detail: '因岗位调动停用账号，触发患者交接', before: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '启用' }, after: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '停用' } },
       { time: '2026-08-12 14:05', type: '启用', user: '李运营', target: '陈CRA', detail: '重新启用账号', before: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '停用' }, after: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '启用' } },
       { time: '2026-08-10 11:20', type: '删除', user: '系统管理员', target: '张测试', detail: '删除测试账号', before: { name: '张测试', role: '临床协调员', phone: '135****5001', centers: ['CN007'], status: '启用' }, after: null },

@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品原型 - APP一体化平台（未登录首页）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+    /* 手机外框 */
+    .phone-frame {
+      width: 100%;
+      max-width: 390px;
+      height: 844px;
+      border-radius: 48px;
+      background: #1a1a1a;
+      padding: 12px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25), 0 10px 25px rgba(0,0,0,0.15);
+      position: relative;
+      margin: 0 auto;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 40px;
+      background: linear-gradient(180deg, #eef4ff 0%, #f6faff 25%, #ffffff 55%, #f5f8ff 100%);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 126px;
+      height: 30px;
+      background: #1a1a1a;
+      border-radius: 0 0 20px 20px;
+      z-index: 30;
+    }
+
+    /* 状态栏 */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      position: relative;
+      z-index: 20;
+    }
+    .status-time { display: flex; align-items: center; gap: 4px; }
+    .status-icons { display: flex; align-items: center; gap: 5px; }
+    .signal-icon { display: flex; align-items: flex-end; gap: 1.5px; height: 12px; }
+    .signal-bar { width: 3px; background: #333; border-radius: 1px; }
+
+    /* 首页内容 */
+    .home-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 16px 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .home-content::-webkit-scrollbar { display: none; }
+
+    /* 顶部快捷功能 */
+    .quick-card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 22px;
+      padding: 22px 18px;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 6px 22px rgba(120,160,220,0.12);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.9);
+      margin-bottom: 18px;
+    }
+    .quick-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .quick-item:active { transform: scale(0.94); }
+    .quick-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .quick-icon.blue {
+      background: linear-gradient(135deg, #5b9cff 0%, #2a7fff 100%);
+      color: #fff;
+    }
+    .quick-icon.orange {
+      background: linear-gradient(135deg, #ff9a6c 0%, #ff7a45 100%);
+      color: #fff;
+    }
+    .quick-icon svg { width: 26px; height: 26px; }
+    .quick-label {
+      font-size: 13px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* 资讯标题 */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    /* 资讯列表项 */
+    .news-item {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+      border: 1px solid rgba(0,0,0,0.02);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .news-item:active { transform: scale(0.98); }
+    .news-item:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+    .news-thumb {
+      width: 96px;
+      height: 72px;
+      border-radius: 12px;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: #eef4ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .news-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      color: #222;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* 登录按钮 */
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4a8eff 0%, #2a7fff 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(42,127,255,0.25);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      border: none;
+      margin-top: 8px;
+    }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:hover { box-shadow: 0 8px 24px rgba(42,127,255,0.35); }
+
+    /* 底部 home indicator */
+    .home-indicator {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 134px;
+      height: 5px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+      z-index: 20;
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .phone-frame { transform: scale(0.92); transform-origin: top center; }
+    }
+
+    /* ============ 登录页 ============ */
+    .login-modal {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #d8e8ff 0%, #edf5ff 35%, #ffffff 75%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .login-modal.show { opacity: 1; pointer-events: auto; }
+    .login-close {
+      align-self: flex-end;
+      padding: 16px 20px;
+      color: #4a8eff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      text-align: center;
+      margin: 24px 0 28px;
+    }
+    .login-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 24px 16px;
+    }
+    .platform-tabs {
+      display: flex;
+      background: #fff;
+      border-radius: 12px;
+      margin: 0 24px 18px;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .platform-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .platform-tab.active {
+      background: #2a7fff;
+      color: #fff;
+    }
+    .login-input-group {
+      background: #fff;
+      border-radius: 12px;
+      margin: 0 24px 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .login-input-row {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .login-input-row:last-child { border-bottom: none; }
+    .login-input-label {
+      width: 46px;
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .login-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: #333;
+      background: transparent;
+    }
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 24px 24px;
+      font-size: 13px;
+      color: #666;
+    }
+    .login-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .login-checkbox input { width: 16px; height: 16px; accent-color: #2a7fff; }
+    .login-link { color: #4a8eff; cursor: pointer; }
+    .login-btn-blue {
+      margin: 0 24px 12px;
+      padding: 14px;
+      border-radius: 24px;
+      background: #2a7fff;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(42,127,255,0.25);
+      transition: transform 0.1s ease;
+    }
+    .login-btn-blue:active { transform: scale(0.98); }
+    .login-divider {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin: 0 24px 16px;
+    }
+    .login-other-btn {
+      margin: 0 24px 16px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      color: #333;
+      font-size: 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .login-agreement {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin: 0 24px 12px;
+      font-size: 12px;
+      color: #666;
+    }
+    .login-agreement input { margin-top: 2px; accent-color: #2a7fff; }
+    .login-register {
+      text-align: center;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    /* ============ 已登录 App 首页 ============ */
+    .page-hidden { display: none !important; }
+    .app-home { flex: 1; display: flex; flex-direction: column; min-height: 0; position: relative; z-index: 10; }
+    #appList { background: #fff; }
+    .app-topbar { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.9);
+      display: flex; align-items: center; justify-content: center; color: #333; font-size: 15px;
+      cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .icon-btn:active { transform: scale(0.94); }
+    .app-brand {
+      flex: 1; text-align: center; padding: 8px 0; font-size: 14px; font-weight: 700;
+      border-radius: 10px; color: #fff;
+      background: linear-gradient(135deg,#5b9cff,#2a7fff);
+      box-shadow: 0 3px 10px rgba(42,127,255,0.3);
+    }
+    .app-banner {
+      margin: 6px 16px 14px; border-radius: 16px; padding: 16px; color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg,#5b9cff,#2a7fff);
+    }
+    .app-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 14px; }
+    .app-stat { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.04); }
+    .app-stat-num { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+    .app-stat-label { font-size: 12px; color: #8a94a6; margin-top: 4px; }
+
+    .plat-switch { display: flex; gap: 8px; padding: 0 16px 10px; }
+    .plat-switch-tab {
+      flex: 1; text-align: center; padding: 8px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      background: #eef4ff; color: #6b7c99; cursor: pointer; border: 1px solid transparent;
+      position: relative; transition: all 0.15s ease;
+    }
+    .plat-switch-tab.active { background: #fff; color: #165DFF; border-color: #4a8eff; box-shadow: 0 2px 8px rgba(42,127,255,0.12); }
+    .plat-switch-tab .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #c2c9d6; margin-left: 6px; vertical-align: middle; }
+    .plat-switch-tab.on .dot { background: #00B42A; }
+
+    .app-scroll { flex: 1; overflow-y: auto; }
+    .app-scroll::-webkit-scrollbar { display: none; }
+
+    /* ============ 应用列表 ============ */
+    .app-list-title { flex: 1; text-align: center; font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 20px 16px; }
+    .app-card { background: #fff; border-radius: 16px; padding: 14px 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+    .app-card:active { transform: scale(0.96); }
+    .app-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+    .app-icon.blue { background: linear-gradient(135deg,#5b9cff,#2a7fff); box-shadow: 0 4px 12px rgba(42,127,255,0.2); }
+    .app-icon.violet { background: linear-gradient(135deg,#a855f7,#7c3aed); box-shadow: 0 4px 12px rgba(124,58,237,0.2); }
+    .app-name { font-size: 13px; font-weight: 500; color: #333; }
+
+    /* ============ 弹窗 ============ */
+    .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 80; display: flex; align-items: center; justify-content: center; }
+    .modal-card { background: #fff; border-radius: 20px; width: 332px; max-width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.25); overflow: hidden; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid #f0f0f0; }
+    .modal-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .modal-close { width: 32px; height: 32px; border-radius: 50%; background: #f5f7fa; display: flex; align-items: center; justify-content: center; color: #666; cursor: pointer; }
+    .modal-close:active { transform: scale(0.94); }
+    .ghost-btn { width: 100%; background: #f5f7fa; color: #555; font-weight: 600; font-size: 14px; padding: 11px; border-radius: 12px; border: none; cursor: pointer; }
+    .ghost-btn:active { transform: scale(0.98); }
+    .hidden { display: none; }
+
+    .toast {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      background: rgba(0,0,0,0.78); color: #fff; padding: 10px 18px; border-radius: 12px;
+      font-size: 14px; z-index: 99; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ============ 两个平台各自的模块样式 ============ */
+    .module-body { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+    .app-brand.blue { background: linear-gradient(135deg,#5b9cff,#2a7fff); box-shadow: 0 3px 10px rgba(42,127,255,0.3); }
+    .app-brand.violet { background: linear-gradient(135deg,#a855f7,#7c3aed); box-shadow: 0 3px 10px rgba(124,58,237,0.3); }
+
+    /* —— 艾康逸（蓝色 · 临床预筛风） —— */
+    .mod-aikangyi .app-banner { background: linear-gradient(135deg,#5b9cff,#2a7fff); }
+
+    /* —— 智能筛选（紫色 · 智能引擎风） —— */
+    .mod-other .app-banner-v {
+      margin: 6px 16px 14px; border-radius: 16px; padding: 16px; color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg,#a855f7,#7c3aed);
+    }
+    .app-stat-v { background: #fff; border-radius: 14px; padding: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.04); border-top: 3px solid #7c3aed; }
+    .app-stat-v .app-stat-num { color: #7c3aed; }
+    .ai-assistant {
+      margin: 0 16px 14px; background: #fff; border-radius: 16px; padding: 14px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 12px;
+    }
+    .ai-avatar { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg,#a855f7,#7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0; }
+    .ai-input-pill { flex: 1; background: #f5f3ff; border-radius: 999px; padding: 10px 14px; font-size: 13px; color: #8b5cf6; display: flex; align-items: center; justify-content: space-between; }
+    .ai-input-pill i { color: #a855f7; }
+    .ai-features { display: flex; gap: 10px; padding: 0 16px 14px; }
+    .ai-feature { flex: 1; background: #faf5ff; border: 1px solid #f0e6ff; border-radius: 14px; padding: 12px; text-align: center; }
+    .ai-feature .ficon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,#c084fc,#7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; margin: 0 auto 8px; }
+    .ai-feature .flabel { font-size: 12px; font-weight: 600; color: #6b21a8; }
+    .ai-progress-track { height: 8px; background: #f0e6ff; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+    .ai-progress-fill { height: 100%; background: linear-gradient(90deg,#a855f7,#7c3aed); border-radius: 999px; }
+    .ai-status-pill { font-size: 11px; padding: 3px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .ai-status-pill.analyzing { background: rgba(124,58,237,0.12); color: #7c3aed; }
+    .ai-status-pill.review { background: rgba(247,162,3,0.14); color: #F7A203; }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <!-- 全屏手机原型 -->
+  <div class="min-h-screen w-full flex items-start justify-center p-6">
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <!-- 刘海 -->
+        <div class="phone-notch"></div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+          <div class="status-time">
+            <span>14:10</span>
+            <i class="fas fa-clock text-xs"></i>
+          </div>
+          <div class="status-icons">
+            <i class="fas fa-moon text-xs"></i>
+            <span class="text-[10px] font-bold">4G</span>
+            <span class="text-[10px] font-bold">4G</span>
+            <div class="signal-icon">
+              <div class="signal-bar" style="height:4px"></div>
+              <div class="signal-bar" style="height:7px"></div>
+              <div class="signal-bar" style="height:10px"></div>
+              <div class="signal-bar" style="height:12px"></div>
+            </div>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="flex items-center gap-1">
+              <i class="fas fa-battery-half text-sm"></i>
+              <span class="text-[10px]">58</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ 未登录首页 ============ -->
+        <div class="home-content" id="landingContent">
+          <!-- 顶部快捷功能 -->
+          <div class="quick-card">
+            <div class="quick-item">
+              <div class="quick-icon blue">
+                <svg viewBox="0 0 48 48" fill="none">
+                  <rect x="10" y="12" width="28" height="30" rx="4" stroke="#fff" stroke-width="2.5" fill="none"/>
+                  <line x1="10" y1="20" x2="38" y2="20" stroke="#fff" stroke-width="2"/>
+                  <line x1="10" y1="32" x2="38" y2="32" stroke="#fff" stroke-width="2" stroke-dasharray="3 2"/>
+                  <line x1="6" y1="16" x2="10" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="6" y1="28" x2="10" y2="28" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="38" y1="16" x2="42" y2="16" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="38" y1="28" x2="42" y2="28" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <span class="quick-label">文件扫描</span>
+            </div>
+            <div class="quick-item">
+              <div class="quick-icon orange">
+                <svg viewBox="0 0 48 48" fill="none">
+                  <circle cx="18" cy="18" r="7" fill="#fff"/>
+                  <path d="M12 38 C12 31.5 14.5 28 18 28 C21.5 28 24 31.5 24 38 L24 42 L12 42 Z" fill="#fff"/>
+                  <circle cx="34" cy="16" r="6" fill="#fff" opacity="0.9"/>
+                  <path d="M29 34 C29 29 31 26 34 26 C37 26 39 29 39 34 L39 42 L29 42 Z" fill="#fff" opacity="0.9"/>
+                </svg>
+              </div>
+              <span class="quick-label">患者管理</span>
+            </div>
+            <div class="quick-item" onclick="openLoginForCheck()">
+              <div class="quick-icon blue">
+                <svg viewBox="0 0 48 48" fill="none">
+                  <path d="M10 22 L24 14 L38 22 L24 30 Z" fill="#fff" opacity="0.95"/>
+                  <path d="M10 32 L24 24 L38 32 L24 40 Z" fill="#fff" opacity="0.75"/>
+                  <circle cx="35" cy="35" r="7" fill="#fff" opacity="0.3"/>
+                  <path d="M32 35 L34 37 L39 32" stroke="#2a7fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="quick-label">智能筛选</span>
+            </div>
+          </div>
+
+          <!-- 前沿资讯 -->
+          <div class="section-title">前沿资讯</div>
+
+          <div class="news-item">
+            <div class="news-thumb">
+              <svg width="80" height="60" viewBox="0 0 80 60" fill="none">
+                <rect width="80" height="60" rx="8" fill="url(#mazeBg)"/>
+                <path d="M10 50 H25 V40 H35 V30 H50 V20 H70 V10" stroke="#2a7fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+                <path d="M10 10 H25 V25 H15 V45 H35 V35 H55 V50 H70" stroke="#4a8eff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="70" cy="10" r="4" fill="#00B42A"/>
+                <defs>
+                  <linearGradient id="mazeBg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#e8f1ff"/>
+                    <stop offset="100%" stop-color="#c2d8ff"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="news-title">上市后临床研究管理最优路径探索</div>
+          </div>
+
+          <div class="news-item">
+            <div class="news-thumb">
+              <svg width="80" height="60" viewBox="0 0 80 60" fill="none">
+                <rect width="80" height="60" rx="8" fill="#eef4ff"/>
+                <circle cx="26" cy="30" r="10" fill="#4a8eff" opacity="0.2"/>
+                <circle cx="26" cy="30" r="6" fill="#2a7fff" opacity="0.6"/>
+                <path d="M36 30 L50 20 L70 35" stroke="#00B42A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="52" y="10" width="22" height="16" rx="2" fill="#fff" stroke="#2a7fff" stroke-width="1.5"/>
+                <line x1="55" y1="15" x2="70" y2="15" stroke="#a8c6ff" stroke-width="1.5"/>
+                <line x1="55" y1="19" x2="66" y2="19" stroke="#a8c6ff" stroke-width="1.5"/>
+                <circle cx="22" cy="48" r="5" fill="#4a8eff" opacity="0.2"/>
+                <path d="M20 48 L21 49 L24 46" stroke="#2a7fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="news-title">告别“大海捞针”：AI深度赋能之AI智能预筛系统</div>
+          </div>
+
+          <div class="news-item">
+            <div class="news-thumb">
+              <svg width="80" height="60" viewBox="0 0 80 60" fill="none">
+                <rect width="80" height="60" rx="8" fill="url(#recordBg)"/>
+                <rect x="18" y="10" width="30" height="40" rx="3" fill="#fff" stroke="#2a7fff" stroke-width="1.5"/>
+                <line x1="22" y1="18" x2="44" y2="18" stroke="#a8c6ff" stroke-width="1.5"/>
+                <line x1="22" y1="24" x2="44" y2="24" stroke="#a8c6ff" stroke-width="1.5"/>
+                <line x1="22" y1="30" x2="38" y2="30" stroke="#a8c6ff" stroke-width="1.5"/>
+                <path d="M52 30 C58 24 68 26 72 34 C74 40 70 46 64 48 C58 50 50 44 50 36" stroke="#2a7fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <circle cx="52" cy="36" r="3" fill="#00B42A"/>
+                <defs>
+                  <linearGradient id="recordBg" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f0f6ff"/>
+                    <stop offset="100%" stop-color="#d6e6ff"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <div class="news-title">不止于记录！患者管理系统全面赋能项目运营</div>
+          </div>
+
+          <div class="news-item">
+            <div class="news-thumb">
+              <svg width="80" height="60" viewBox="0 0 80 60" fill="none">
+                <defs>
+                  <linearGradient id="cat1Bg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffe8d6"/>
+                    <stop offset="100%" stop-color="#ffccaa"/>
+                  </linearGradient>
+                </defs>
+                <rect width="80" height="60" rx="8" fill="url(#cat1Bg)"/>
+                <ellipse cx="40" cy="38" rx="18" ry="14" fill="#fff"/>
+                <path d="M28 26 L32 14 L40 22" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <path d="M52 26 L48 14 L40 22" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <ellipse cx="34" cy="34" rx="3" ry="4" fill="#333"/>
+                <ellipse cx="46" cy="34" rx="3" ry="4" fill="#333"/>
+                <path d="M38 42 Q40 45 42 42" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <rect x="30" y="22" width="22" height="5" rx="1" fill="#333" opacity="0.8"/>
+                <rect x="24" y="48" width="32" height="10" rx="2" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <line x1="28" y1="52" x2="52" y2="52" stroke="#4a8eff" stroke-width="1.5"/>
+                <line x1="28" y1="55" x2="46" y2="55" stroke="#a8c6ff" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div class="news-title">AI来了，DM不用再“死磕”Excel了</div>
+          </div>
+
+          <div class="news-item">
+            <div class="news-thumb">
+              <svg width="80" height="60" viewBox="0 0 80 60" fill="none">
+                <defs>
+                  <linearGradient id="cat2Bg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#e6f4ff"/>
+                    <stop offset="100%" stop-color="#c2e0ff"/>
+                  </linearGradient>
+                </defs>
+                <rect width="80" height="60" rx="8" fill="url(#cat2Bg)"/>
+                <ellipse cx="40" cy="38" rx="18" ry="14" fill="#fff"/>
+                <path d="M28 26 L32 14 L40 22" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <path d="M52 26 L48 14 L40 22" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <ellipse cx="34" cy="34" rx="3" ry="4" fill="#333"/>
+                <ellipse cx="46" cy="34" rx="3" ry="4" fill="#333"/>
+                <path d="M38 42 Q40 45 42 42" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                <path d="M22 30 C18 30 14 34 18 38 C20 40 24 38 24 34" fill="#333" opacity="0.8"/>
+                <path d="M58 30 C62 30 66 34 62 38 C60 40 56 38 56 34" fill="#333" opacity="0.8"/>
+                <rect x="24" y="48" width="32" height="10" rx="2" fill="#fff" stroke="#ddd" stroke-width="1"/>
+                <line x1="28" y1="52" x2="52" y2="52" stroke="#00B42A" stroke-width="1.5"/>
+                <line x1="28" y1="55" x2="46" y2="55" stroke="#a8c6ff" stroke-width="1.2"/>
+                <text x="26" y="18" font-size="8" fill="#2a7fff" font-weight="bold">一键生成</text>
+              </svg>
+            </div>
+            <div class="news-title">告别“人工耗时”！AI秒录与智能建库，正在碾压上…</div>
+          </div>
+
+          <!-- 登录按钮 -->
+          <button class="login-btn" onclick="openAccountMgmt()">登录</button>
+        </div>
+
+        <!-- ============ 应用列表（登录后门户页） ============ -->
+        <div class="app-home page-hidden" id="appList">
+          <div class="app-topbar">
+            <div class="icon-btn" onclick="backToLanding()"><i class="fas fa-chevron-left"></i></div>
+            <div class="app-list-title">应用列表</div>
+            <div class="icon-btn" onclick="openAccountMgmt()"><i class="far fa-user"></i></div>
+          </div>
+
+          <div class="app-grid" id="appGrid">
+            <!-- 由 JS 按当前平台渲染 -->
+          </div>
+        </div>
+
+        <!-- ============ 已登录 App 首页（不同平台不同模块样式） ============ -->
+        <div class="app-home page-hidden" id="appHome">
+          <div class="app-topbar">
+            <div class="icon-btn" onclick="backToAppList()"><i class="fas fa-chevron-left"></i></div>
+            <div class="app-brand" id="appBrand">艾康逸</div>
+            <div class="icon-btn" onclick="openAccountMgmt()"><i class="fas fa-gear"></i></div>
+          </div>
+
+          <div class="plat-switch" id="appPlatSwitch">
+                        <div class="plat-switch-tab" id="appSwitchOther" onclick="switchApp('other')">智能筛选</div>
+
+            <div class="plat-switch-tab" id="appSwitchAikangyi" onclick="switchApp('aikangyi')">艾康逸</div>
+          </div>
+
+          <!-- 艾康逸 模块（蓝色 · 临床预筛风） -->
+          <div class="module-body mod-aikangyi" id="moduleAikangyi">
+            <div class="app-scroll">
+              <div class="app-banner">
+                <div>
+                  <div style="font-size:13px;opacity:0.9">当前平台</div>
+                  <div style="font-size:20px;font-weight:700;margin-top:2px" id="aikangyiBannerBrand">艾康逸</div>
+                  <div style="font-size:12px;opacity:0.85;margin-top:2px" id="aikangyiBannerUser"></div>
+                </div>
+                <i class="fas fa-shield-halved" style="font-size:28px;opacity:0.85"></i>
+              </div>
+
+              <div class="app-stat-grid">
+                <div class="app-stat"><div class="app-stat-num">128</div><div class="app-stat-label">待筛选患者</div></div>
+                <div class="app-stat"><div class="app-stat-num">36</div><div class="app-stat-label">本周新增</div></div>
+                <div class="app-stat"><div class="app-stat-num">92%</div><div class="app-stat-label">入排匹配率</div></div>
+                <div class="app-stat"><div class="app-stat-num">7</div><div class="app-stat-label">进行中项目</div></div>
+              </div>
+
+              <div style="font-size:13px;color:#8a94a6;padding:0 16px 8px;font-weight:600">预筛任务</div>
+              <div class="news-item" style="margin:0 16px 10px">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;background:linear-gradient(135deg,#5b9cff,#2a7fff)">王</div>
+                <div style="flex:1"><div style="font-size:14px;font-weight:600;color:#222">王小明</div><div style="font-size:12px;color:#8a94a6;margin-top:2px">肺癌 II 期 · 入排校验中</div></div>
+                <i class="fas fa-chevron-right" style="color:#b8c0cc"></i>
+              </div>
+              <div class="news-item" style="margin:0 16px 10px">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;background:linear-gradient(135deg,#5b9cff,#2a7fff)">李</div>
+                <div style="flex:1"><div style="font-size:14px;font-weight:600;color:#222">李华</div><div style="font-size:12px;color:#8a94a6;margin-top:2px">乳腺癌 III 期 · 待复核</div></div>
+                <i class="fas fa-chevron-right" style="color:#b8c0cc"></i>
+              </div>
+              <div style="height:24px"></div>
+            </div>
+          </div>
+
+          <!-- 智能筛选 模块（紫色 · 智能引擎风） -->
+          <div class="module-body mod-other page-hidden" id="moduleOther">
+            <div class="app-scroll">
+              <div class="app-banner-v">
+                <div>
+                  <div style="font-size:13px;opacity:0.9">当前平台</div>
+                  <div style="font-size:20px;font-weight:700;margin-top:2px">智能筛选</div>
+                  <div style="font-size:12px;opacity:0.85;margin-top:2px" id="otherBannerUser"></div>
+                </div>
+                <i class="fas fa-robot" style="font-size:28px;opacity:0.9"></i>
+              </div>
+
+              <div class="ai-assistant">
+                <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                <div style="flex:1">
+                  <div style="font-size:14px;font-weight:700;color:#1a1a1a">AI 预筛助手</div>
+                  <div style="font-size:12px;color:#8a94a6;margin-top:2px">描述病情，自动匹配入排标准</div>
+                </div>
+                <div class="ai-input-pill">问问 AI 助手 <i class="fas fa-arrow-right"></i></div>
+              </div>
+
+              <div class="ai-features">
+                <div class="ai-feature"><div class="ficon"><i class="fas fa-check-double"></i></div><div class="flabel">智能入排校验</div></div>
+                <div class="ai-feature"><div class="ficon"><i class="fas fa-book-open"></i></div><div class="flabel">文献自动综述</div></div>
+                <div class="ai-feature"><div class="ficon"><i class="fas fa-database"></i></div><div class="flabel">一键智能建库</div></div>
+              </div>
+
+              <div class="app-stat-grid">
+                <div class="app-stat-v"><div class="app-stat-num">256</div><div class="app-stat-label">今日智能处理</div></div>
+                <div class="app-stat-v">
+                  <div class="app-stat-num">94%</div><div class="app-stat-label">AI 匹配准确率</div>
+                  <div class="ai-progress-track"><div class="ai-progress-fill" style="width:78%"></div></div>
+                  <div style="font-size:11px;color:#8a94a6;margin-top:4px">本月目标 78%</div>
+                </div>
+              </div>
+
+              <div style="font-size:13px;color:#8a94a6;padding:14px 16px 8px;font-weight:600">AI 预筛队列</div>
+              <div class="news-item" style="margin:0 16px 10px">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;background:linear-gradient(135deg,#a855f7,#7c3aed)">陈</div>
+                <div style="flex:1"><div style="font-size:14px;font-weight:600;color:#222">陈伟</div><div style="font-size:12px;color:#8a94a6;margin-top:2px">胃癌 I 期 · AI 分析中</div></div>
+                <span class="ai-status-pill analyzing">AI 分析中</span>
+              </div>
+              <div class="news-item" style="margin:0 16px 10px">
+                <div style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;background:linear-gradient(135deg,#a855f7,#7c3aed)">赵</div>
+                <div style="flex:1"><div style="font-size:14px;font-weight:600;color:#222">赵敏</div><div style="font-size:12px;color:#8a94a6;margin-top:2px">淋巴瘤 II 期 · 待人工复核</div></div>
+                <span class="ai-status-pill review">待复核</span>
+              </div>
+              <div style="height:24px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ 登录页面 ============ -->
+        <div class="login-modal" id="loginModal">
+          <div class="login-close" onclick="closeLogin()">关闭</div>
+          <div class="login-title">欢迎</div>
+          <div class="login-section-title">账号密码登录</div>
+
+          <div class="login-input-group">
+            <div class="login-input-row">
+              <span class="login-input-label">账号</span>
+              <input type="text" class="login-input" id="loginAccount" value="13001046242" />
+            </div>
+            <div class="login-input-row">
+              <span class="login-input-label">密码</span>
+              <input type="password" class="login-input" id="loginPwd" value="HRyy046242" />
+              <i class="fas fa-eye" style="color:#999"></i>
+            </div>
+          </div>
+
+          <div class="login-options">
+            <label class="login-checkbox">
+              <input type="checkbox" checked />
+              <span>记住密码</span>
+            </label>
+            <span class="login-link">忘记密码？</span>
+          </div>
+
+          <button class="login-btn-blue" id="loginBtn" onclick="doLogin()">立即登录</button>
+          <button class="login-btn-blue" id="enterBtn" style="display:none;background:#00B42A;box-shadow:0 6px 18px rgba(0,180,42,0.25)" onclick="enterSystem(currentPlatform)">进入系统</button>
+
+          <div class="login-divider">其他登录方式</div>
+          <div class="login-other-btn"><i class="fas fa-mobile-screen mr-2"></i>手机号</div>
+
+          <div style="flex:1"></div>
+
+          <label class="login-agreement">
+            <input type="checkbox" checked />
+            <span>我已阅读并同意 <span class="login-link">《用户协议》</span> 和 <span class="login-link">《隐私政策》</span></span>
+          </label>
+
+          <div class="login-register">还没有账号？ <span class="login-link">立即注册</span></div>
+        </div>
+
+        <!-- 底部指示条 -->
+        <div class="home-indicator"></div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 账号管理弹窗（两个平台均可管理） ========== -->
+  <div class="modal-overlay hidden" id="accountModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">账号管理</div>
+        <div class="modal-close" onclick="closeModal('accountModal')"><i class="fas fa-times"></i></div>
+      </div>
+      <div style="padding:14px" id="accountList"></div>
+    </div>
+  </div>
+
+  <!-- ========== 登录系统二选一弹窗（账号在两个系统都有时） ========== -->
+  <div class="modal-overlay hidden" id="sysChoiceModal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div class="modal-title">系统选择</div>
+        <div class="modal-close" onclick="closeModal('sysChoiceModal')"><i class="fas fa-times"></i></div>
+      </div>
+      <div style="padding:14px" id="sysChoiceList"></div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 平台状态（两个平台独立会话，可同时登录） ==========
+    const platformState = {
+            other:    { name: '智能筛选', loggedIn: false, user: '' },
+      aikangyi: { name: '艾康逸',     loggedIn: false, user: '' },
+    };
+    const PLAT_KEYS = ['other', 'aikangyi'];
+    let currentPlatform = 'aikangyi';
+    // 两个系统共用同一账号密码：一旦用某账号登录过任一系统，切换另一系统时自动复用该账号
+    let accountCreds = null;
+    let loginContext = 'account'; // 'account' 表示从账号管理进入，'switch' 表示从模块内切换进入
+
+    function anyLoggedIn() { return PLAT_KEYS.some(k => platformState[k].loggedIn); }
+
+    // 手机号脱敏：保留前 3 后 4，中间用 **** 代替
+    function maskPhone(p) {
+      p = (p || '').trim();
+      if (p.length < 7) return p;
+      return p.slice(0, 3) + '****' + p.slice(-4);
+    }
+
+    // ---- 弹窗工具 ----
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => { if (e.target === o) o.classList.add('hidden'); });
+    });
+
+    // ---- Toast ----
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 1500);
+    }
+
+    // ========== 登录页 ==========
+    function openLogin() {
+      renderLoginTabs();
+      document.getElementById('loginModal').classList.add('show');
+    }
+    function closeLogin() {
+      document.getElementById('loginModal').classList.remove('show');
+      loginContext = 'account';
+    }
+
+    // 登录页：根据是否已登录决定是否显示「进入系统」
+    function renderLoginTabs() {
+      document.getElementById('enterBtn').style.display = anyLoggedIn() ? 'block' : 'none';
+    }
+
+    // 模拟后端账号查询：返回该账号拥有账号的系统 key 列表（'aikangyi' / 'other'）
+    const MOCK_ACCOUNTS = {
+      '13001046242': ['aikangyi', 'other'], // 两个系统都有
+      '13800138000': ['aikangyi'],          // 仅艾康逸
+      '13912345678': ['other'],             // 仅智能筛选
+    };
+    function checkAccountBackend(account) {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(MOCK_ACCOUNTS[account] || []), 600); // 模拟网络延迟
+      });
+    }
+
+    // 登录：先让"后台"查这个账号在哪些系统有账号，再决定直接登录还是让用户选
+    async function doLogin() {
+      const btn = document.getElementById('loginBtn');
+      const account = (document.getElementById('loginAccount').value || '').trim();
+      const pwd = (document.getElementById('loginPwd') ? document.getElementById('loginPwd').value : '') || '';
+      if (!account) { showToast('请输入账号'); return; }
+      if (!pwd) { showToast('请输入密码'); return; }
+
+      btn.disabled = true; btn.textContent = '登录中...';
+      const systems = await checkAccountBackend(account);
+      btn.disabled = false; btn.textContent = '立即登录';
+
+      if (systems.length === 0) { showToast('该账号未在任何系统中注册'); return; }
+      if (systems.length === 1) { finishLogin(systems[0], account); return; }
+      showSystemChoice(account, systems); // 两个系统都有 → 弹窗二选一
+    }
+
+    // 登录到指定系统
+    function finishLogin(p, account) {
+      const st = platformState[p];
+      st.loggedIn = true;
+      st.user = '张琳';
+      st.phone = account;
+      accountCreds = { user: '张琳', phone: account };
+      currentPlatform = p;
+      showToast(st.name + ' 已登录');
+      enterSystem(p);
+    }
+
+    // 账号在两个系统都有 → 弹出选择登录哪个（卡片式）
+    function showSystemChoice(account, systems) {
+      const list = document.getElementById('sysChoiceList');
+      list.innerHTML = '';
+      // 固定顺序：智能筛选在前，艾康逸在后
+      const order = ['other', 'aikangyi'];
+      systems.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b)).forEach(k => {
+        const st = platformState[k];
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;background:#fff;' +
+          'border:1px solid #eef2f7;border-radius:14px;padding:14px 16px;margin-bottom:12px;' +
+          'cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.04);transition:all .15s';
+        row.innerHTML =
+          '<div style="width:40px;height:40px;border-radius:10px;background:#2a7fff;' +
+          'display:flex;align-items:center;justify-content:center;color:#fff">' +
+          '<i class="fas fa-layer-group"></i></div>' +
+          '<div style="font-size:15px;font-weight:600;color:#1a1a1a">' + st.name + '</div>';
+        row.onclick = () => { closeModal('sysChoiceModal'); finishLogin(k, account); };
+        list.appendChild(row);
+      });
+      openModal('sysChoiceModal');
+    }
+
+    // 点"筛选系统"等入口：直接进入登录页（登录后回到应用列表）
+    function openLoginForCheck() {
+      loginContext = 'account';
+      openLogin();
+    }
+
+    // 从账号管理/登录页进入对应系统：'account' 到应用列表，'switch' 到模块页
+    function enterSystem(p) {
+      currentPlatform = p;
+      const ctx = loginContext;
+      closeModal('accountModal');
+      closeLogin();
+      if (ctx === 'switch') {
+        document.getElementById('appList').classList.add('page-hidden');
+        document.getElementById('appHome').classList.remove('page-hidden');
+        renderApp();
+      } else {
+        document.getElementById('landingContent').classList.add('page-hidden');
+        document.getElementById('appHome').classList.add('page-hidden');
+        document.getElementById('appList').classList.remove('page-hidden');
+        renderAppList();
+      }
+      loginContext = 'account';
+    }
+
+    // ========== 已登录 App 首页 ==========
+    function renderApp() {
+      const st = platformState[currentPlatform];
+      const brand = document.getElementById('appBrand');
+      brand.textContent = st.name;
+      brand.className = 'app-brand ' + (currentPlatform === 'aikangyi' ? 'blue' : 'violet');
+
+      // 按平台显示不同的模块样式
+      document.getElementById('moduleAikangyi').classList.toggle('page-hidden', currentPlatform !== 'aikangyi');
+      document.getElementById('moduleOther').classList.toggle('page-hidden', currentPlatform !== 'other');
+      if (currentPlatform === 'aikangyi') {
+        document.getElementById('aikangyiBannerBrand').textContent = st.name;
+        document.getElementById('aikangyiBannerUser').textContent = st.user ? (st.user + '（' + maskPhone(st.phone) + '）') : '';
+      } else {
+        document.getElementById('otherBannerUser').textContent = st.user ? (st.user + '（' + maskPhone(st.phone) + '）') : '';
+      }
+
+      PLAT_KEYS.forEach(k => {
+        const tab = document.getElementById(k === 'aikangyi' ? 'appSwitchAikangyi' : 'appSwitchOther');
+        tab.classList.toggle('active', k === currentPlatform);
+        tab.classList.toggle('on', platformState[k].loggedIn);
+      });
+    }
+
+    // ========== 应用列表门户页 ==========
+    function renderAppList() {
+      const color = currentPlatform === 'aikangyi' ? 'blue' : 'violet';
+      const apps = currentPlatform === 'aikangyi'
+        ? [
+            { id: 'review', name: '审核列表',
+              svg: '<svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a9 9 0 1 1-3.6-7.2"/><polyline points="22 2 22 12 12 12"/></svg>' },
+            { id: 'screen', name: '智能筛选',
+              svg: '<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="11" cy="14" r="3.5"/><line x1="17" y1="20" x2="13.5" y2="16.5"/></svg>' }
+          ]
+        : [
+            { id: 'screen', name: '智能筛选',
+              svg: '<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><circle cx="11" cy="14" r="3.5"/><line x1="17" y1="20" x2="13.5" y2="16.5"/></svg>' },
+            { id: 'ai', name: 'AI 预筛助手',
+              svg: '<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="18" height="18" rx="4"/><circle cx="11" cy="11" r="2"/><path d="M20 20l-3.5-3.5"/><path d="M8 18h10"/></svg>' }
+          ];
+      const grid = document.getElementById('appGrid');
+      grid.innerHTML = '';
+      apps.forEach(app => {
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.onclick = openModule;
+        card.innerHTML =
+          '<div class="app-icon ' + color + '">' + app.svg + '</div>' +
+          '<div class="app-name">' + app.name + '</div>';
+        grid.appendChild(card);
+      });
+    }
+
+    function openModule() {
+      document.getElementById('appList').classList.add('page-hidden');
+      document.getElementById('appHome').classList.remove('page-hidden');
+      renderApp();
+    }
+
+    // 切换平台：已登录→直接切换；未登录但已认证过同一账号→自动复用凭证登录；否则打开登录页
+    function switchApp(p) {
+      currentPlatform = p;
+      if (!platformState[p].loggedIn) {
+        if (accountCreds) {
+          platformState[p].loggedIn = true;
+          platformState[p].user = accountCreds.user;
+          platformState[p].phone = accountCreds.phone;
+          showToast(platformState[p].name + ' 已用同一账号登录');
+        } else { loginContext = 'switch'; openLogin(); return; }
+      }
+      // 如果当前在模块页，切换平台时切换模块；否则刷新应用列表
+      if (!document.getElementById('appHome').classList.contains('page-hidden')) renderApp();
+      else renderAppList();
+    }
+
+    // 返回未登录首页
+    function backToLanding() {
+      document.getElementById('appList').classList.add('page-hidden');
+      document.getElementById('appHome').classList.add('page-hidden');
+      document.getElementById('landingContent').classList.remove('page-hidden');
+    }
+
+    // 从模块页返回应用列表
+    function backToAppList() {
+      document.getElementById('appHome').classList.add('page-hidden');
+      document.getElementById('appList').classList.remove('page-hidden');
+      renderAppList();
+    }
+
+    // ========== 账号管理：列出两个平台，登录/登出/点击进入系统 ==========
+    function openAccountMgmt() {
+      const list = document.getElementById('accountList');
+      list.innerHTML = '';
+      PLAT_KEYS.forEach(k => {
+        const st = platformState[k];
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1.5px solid #eef2f7;margin-bottom:10px;cursor:pointer';
+        row.innerHTML =
+          '<div style="width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;background:linear-gradient(135deg,#5b9cff,#2a7fff)"><i class="fas fa-layer-group"></i></div>' +
+          '<div style="flex:1"><div style="font-size:15px;font-weight:700;color:#1a1a1a">' + st.name + '</div>' +
+          '<div style="font-size:12px;margin-top:2px;color:' + (st.loggedIn ? '#00B42A' : '#8a94a6') + '">' + (st.loggedIn ? ('已登录 · ' + st.user + '（' + maskPhone(st.phone) + '）') : '未登录') + '</div></div>' +
+          (st.loggedIn
+            ? ''
+            : '<button class="ghost-btn" data-action="login" style="width:auto;padding:7px 14px;font-size:13px">登录</button>');
+        row.onclick = () => {
+          if (platformState[k].loggedIn) enterSystem(k);
+          else { loginContext = 'account'; closeModal('accountModal'); currentPlatform = k; openLogin(); }
+        };
+        const btn = row.querySelector('button');
+        if (btn) {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            loginContext = 'account'; closeModal('accountModal'); currentPlatform = k; openLogin();
+          };
+        }
+        list.appendChild(row);
+      });
+      openModal('accountModal');
+    }
+
+    renderLoginTabs();
+  </script>
+
+</body>
+</html>

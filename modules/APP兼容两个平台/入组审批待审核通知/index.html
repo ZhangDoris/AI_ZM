@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>入组审批待审核通知</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #F5F7FA; }
+    ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+
+    .btn-click:active { transform: scale(0.96); }
+
+    /* 手机外框 */
+    .phone-frame {
+      width: 100%;
+      max-width: 420px;
+      background: #1a1a1a;
+      border-radius: 44px;
+      padding: 10px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+      position: relative;
+    }
+    .phone-screen {
+      background: linear-gradient(180deg, #d4b8b8 0%, #c4a8a8 100%);
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      min-height: 720px;
+    }
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 28px;
+      background: #1a1a1a;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      z-index: 20;
+    }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 24px 0;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* 卡片样式 */
+    .notification-card {
+      background: rgba(255, 245, 245, 0.95);
+      border-radius: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+      backdrop-filter: blur(4px);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+    .notification-card:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,0,0,0.12); }
+    .notification-card:active { transform: scale(0.985); }
+    .robot-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .robot-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background:
+        radial-gradient(circle, #a8c8ff 1.5px, transparent 1.5px) 0 0 / 5px 5px,
+        radial-gradient(circle, #c3d9ff 1.5px, transparent 1.5px) 2.5px 2.5px / 5px 5px,
+        radial-gradient(circle, #d6eaff 1.5px, transparent 1.5px) 1.25px 1.25px / 5px 5px;
+      filter: blur(0.6px);
+      -webkit-mask: radial-gradient(transparent 46%, black 56%);
+      mask: radial-gradient(transparent 46%, black 56%);
+      z-index: 0;
+    }
+    .robot-icon img { position: relative; z-index: 1; }
+    .idy-logo {
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: #1a3a6e;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .idy-logo span { color: #165DFF; }
+    .idy-arrow {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 5px solid #F53F3F;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      margin-left: 1px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+
+  <!-- 手机外框 -->
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <!-- 刘海 -->
+      <div class="notch"></div>
+      <!-- 状态栏 -->
+      <div class="status-bar" style="padding-top: 10px;">
+        <span>9:41</span>
+        <div class="flex items-center gap-1.5">
+          <i class="fas fa-signal text-[10px]"></i>
+          <i class="fas fa-wifi text-[10px]"></i>
+          <i class="fas fa-battery-full text-[12px]"></i>
+        </div>
+      </div>
+
+      <!-- 微信下拉通知面板 -->
+      <div class="px-4 pt-8 pb-10 h-full flex flex-col">
+        <!-- 通知面板标题 -->
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-white text-lg font-medium tracking-wide drop-shadow-sm">艾迪研一体化平台(2)</h2>
+          <button class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white btn-click">
+            <i class="fas fa-chevron-up text-sm"></i>
+          </button>
+        </div>
+
+        <!-- 通知卡片列表 -->
+        <div class="space-y-3">
+          <!-- 通知卡片 1 -->
+          <div class="notification-card p-3.5" onclick="openModal('detailModal')">
+            <div class="flex items-start gap-3">
+              <div class="robot-icon">
+                <img src="https://integration.aidiyanyiyao.com/img/ai_show.9884747b.png" alt="icon" style="width:32px;height:32px;object-fit:contain;">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-[#333333] font-bold text-[15px] leading-tight">入组审批待审核通知</h3>
+                <div class="mt-1.5 space-y-0.5">
+                  <div class="inline-flex items-center gap-1">
+                    <i class="fas fa-building text-[11px] text-[#165DFF]"></i>
+                    <span class="text-[#165DFF] text-[12px] font-medium">消息来源：智能筛选（艾康逸）</span>
+                  </div>
+                  <p class="text-[#666666] text-[13px] leading-snug truncate">方案编号：测试项目，请勿匹配1</p>
+                  <p class="text-[#666666] text-[13px] leading-snug truncate">中心号：1...</p>
+                </div>
+              </div>
+              <div class="flex flex-col items-end justify-between h-full shrink-0">
+                <span class="text-[#999999] text-xs">15:16</span>
+                <div class="idy-logo mt-4">ID<span>Y</span><i class="idy-arrow"></i></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 通知卡片 2 -->
+          <div class="notification-card p-3.5" onclick="openModal('detailModal')">
+            <div class="flex items-start gap-3">
+              <div class="robot-icon">
+                <img src="https://integration.aidiyanyiyao.com/img/ai_show.9884747b.png" alt="icon" style="width:32px;height:32px;object-fit:contain;">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-[#333333] font-bold text-[15px] leading-tight">入组审批待审核通知</h3>
+                <div class="mt-1.5 space-y-0.5">
+                  <div class="inline-flex items-center gap-1">
+                    <i class="fas fa-building text-[11px] text-[#165DFF]"></i>
+                    <span class="text-[#165DFF] text-[12px] font-medium">消息来源：智能筛选</span>
+                  </div>
+                  <p class="text-[#666666] text-[13px] leading-snug truncate">方案编号：测试项目，请勿匹配1</p>
+                  <p class="text-[#666666] text-[13px] leading-snug truncate">中心号：1...</p>
+                </div>
+              </div>
+              <div class="flex flex-col items-end justify-between h-full shrink-0">
+                <span class="text-[#999999] text-xs">15:16</span>
+                <div class="idy-logo mt-4">ID<span>Y</span><i class="idy-arrow"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+       
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 模态框：通知详情 ========== -->
+  <div id="detailModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden transform scale-95 transition-transform duration-300" id="detailModalContent">
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-base font-bold text-gray-800">入组审批待审核通知</h3>
+        <button onclick="closeModal('detailModal')" class="text-gray-400 hover:text-gray-600 btn-click"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="bg-gray-50 rounded-lg p-3">
+          <label class="block text-xs text-gray-500 mb-1">消息来源</label>
+          <div class="text-sm font-medium text-[#165DFF]">智能筛选（艾康逸）</div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <label class="block text-xs text-gray-500 mb-1">方案编号</label>
+          <div class="text-sm font-medium text-gray-800">测试项目，请勿匹配1</div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <label class="block text-xs text-gray-500 mb-1">中心号</label>
+          <div class="text-sm font-medium text-gray-800">1</div>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3">
+          <label class="block text-xs text-gray-500 mb-1">发送时间</label>
+          <div class="text-sm font-medium text-gray-800">15:16</div>
+        </div>
+      </div>
+      <div class="px-5 py-4 border-t border-gray-100 flex gap-3">
+        <button onclick="closeModal('detailModal')" class="flex-1 bg-[#165DFF] hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-medium btn-click">去审核</button>
+        <button onclick="closeModal('detailModal')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium btn-click">稍后处理</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      const content = modal.querySelector('div');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      content.classList.remove('scale-95');
+      content.classList.add('scale-100');
+    }
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      const content = modal.querySelector('div');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      content.classList.remove('scale-100');
+      content.classList.add('scale-95');
+    }
+  </script>
+</body>
+</html>

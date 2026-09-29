@@ -48,6 +48,10 @@
     .an-text.plain { color: #595959; font-weight: 400; }
     .an-reason { margin-top: 6px; padding-left: 2px; font-size: 13px; color: #595959; line-height: 1.7; }
     .an-reason strong { color: #ff4d4f; }
+    /* 中性色提示（审核流程提示，不使用红色） */
+    .audit-notice.info { background: #f0f7ff; border-color: #d6e8ff; border-left-color: #409eff; }
+    .audit-notice.info .an-tag { background: #409eff; }
+    .audit-notice.info .an-text { color: #595959; font-weight: 400; }
 
     /* 主切换 */
     .seg { flex: 0 0 auto; display: flex; background: #fff; border-bottom: 1px solid #f0f0f0; }
@@ -60,7 +64,7 @@
     .views { flex: 1 1 auto; min-height: 0; position: relative; }
     .view { position: absolute; inset: 0; display: none; flex-direction: column; }
     .view.active { display: flex; }
-    .view > [data-group] { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    .view > [data-group] { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; }
     .view > [data-group].hidden { display: none; }
     .view > .chat-footer { flex: 0 0 auto; }
 
@@ -118,6 +122,10 @@
     .img-viewer-img { max-width: 92vw; max-height: 88vh; border-radius: 6px; transition: transform .25s ease;
       cursor: zoom-in; }
     .img-viewer-img.zoomed { transform: scale(2); cursor: zoom-out; }
+    .img-viewer-close { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px;
+      border: none; background: rgba(255,255,255,.16); color: #fff; font-size: 18px; line-height: 36px;
+      text-align: center; border-radius: 50%; cursor: pointer; z-index: 2; transition: background .15s; }
+    .img-viewer-close:active { background: rgba(255,255,255,.3); }
     .attach-tag { font-size: 11px; padding: 1px 8px; border-radius: 10px; }
     .attach-tag.deleted { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffccc7; }
     .attach-tag.source { background: #f6f8fb; color: #8c8c8c; }
@@ -158,17 +166,12 @@
     .tool-text-btn { font-size: 13px; color: #595959; background: #fff; border: 1px solid #d9d9d9;
       border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: inherit; line-height: 1.2; }
     .tool-text-btn:active { color: #409eff; border-color: #409eff; }
-    .chat-input-row { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; }
+    .chat-input-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .chat-actions { display: flex; justify-content: flex-end; gap: 6px; }
     .chat-input { flex: 1 1 auto; resize: none; height: 72px; min-height: 72px; max-height: 140px;
       border: 1px solid #d9d9d9; border-radius: 6px; padding: 8px 10px;
       font-size: 13px; line-height: 1.6; font-family: inherit; outline: none; }
     .chat-input:focus { border-color: #409eff; }
-    .chat-send { flex: 0 0 auto; height: 42px; padding: 0 18px; border: none; border-radius: 8px;
-      background: #409eff; color: #fff; font-size: 14px; cursor: pointer; }
-    .chat-send:active { background: #115a82; }
-    .chat-cancel { flex: 0 0 auto; height: 42px; padding: 0 18px; border: 1px solid #d9d9d9; border-radius: 8px;
-      background: #fff; color: #595959; font-size: 14px; cursor: pointer; }
-    .chat-cancel:active { color: #115a82; border-color: #115a82; }
     .pending-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
     .pending-file { display: inline-flex; align-items: center; gap: 6px; background: #f6f8fb;
       border: 1px solid #f0f0f0; border-radius: 4px; padding: 4px 8px; font-size: 12px; color: #262626; }
@@ -271,8 +274,13 @@
 
     /* 审核链路 */
     .chain-label { font-size: 14px; color: #262626; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-    .chain-legend { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #8c8c8c; margin-bottom: 12px; }
-    .chain-legend .dot { width: 8px; height: 8px; border-radius: 50%; background: #52c41a; display: inline-block; flex: 0 0 auto; }
+    .chain-legend { display: grid; grid-template-columns: 1fr; gap: 6px; font-size: 11px; color: #8c8c8c; margin-bottom: 12px; }
+    .chain-legend .lg-item { display: flex; align-items: center; gap: 5px; min-width: 0; }
+    .chain-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+    .chain-legend .dot.green { background: #52c41a; }
+    .chain-legend .dot.gray { background: #bfbfbf; }
+    .chain-legend .dot.blue { background: #91caff; }
+    .chain-legend .dot.red { background: #ff4d4f; }
     .chain-label .fa { color: #409eff; }
     .chain-steps { display: flex; flex-direction: column; }
     .chain-step { display: flex; align-items: stretch; gap: 12px; position: relative; padding-bottom: 12px; }
@@ -329,7 +337,7 @@
       font-weight: 600; color: #262626; }
     .remark-panel-head .fa-times { cursor: pointer; color: #8c8c8c; font-size: 15px; }
     .remark-panel-head .remark-tip { font-size: 12px; color: #8c8c8c; font-weight: 400; margin-left: 8px; }
-    .remark-panel-body { padding: 12px 14px; }
+    .remark-panel-body { padding: 12px 14px; max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .remark-card { border: 1px solid #e8e8e8; border-radius: 6px; padding: 10px 12px; background: #fff; }
     .remark-card + .remark-card { margin-top: 10px; }
     .remark-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -340,9 +348,6 @@
     .remark-card-ops { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
     .remark-op { font-size: 12px; color: #409eff; cursor: pointer; }
     .remark-op.danger { color: #ff4d4f; }
-    .remark-more { display: block; width: 100%; margin-top: 10px; padding: 8px; font-size: 13px;
-      color: #ff4d4f; background: #fff; border: 1px solid #ffccc7; border-radius: 6px;
-      cursor: pointer; font-family: inherit; }
     .remark-edit-title { font-size: 13px; font-weight: 600; color: #409eff; border-left: 3px solid #409eff;
       padding-left: 8px; margin: 14px 0 8px; }
     .remark-edit-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
@@ -464,14 +469,13 @@
           <div class="gs-item active" data-group="入组审核" onclick="switchGroupTab(this)">入组审核</div>
         </div>
 
-        <!-- 审核提示：补充审核原因 -->
-        <div class="audit-notice" id="supplementNotice" data-group="入组审核">
+        <!-- 审核提示：补充审核原因（中性色，不使用红色） -->
+        <div class="audit-notice info" id="supplementNotice" data-group="入组审核">
           <div class="an-row">
             <span class="an-tag">补充审核</span>
-            <span class="an-text plain">补充审核原因：999</span>
+            <span class="an-text plain">测试补充审核</span>
           </div>
         </div>
-        <!-- 审核提示：跨组审核（非正常流程） -->
         
 
         <div class="chat-scroll" id="chatScroll">
@@ -563,7 +567,7 @@
             <div class="chat-msg other">
               <div class="chat-avatar">刘</div>
               <div class="chat-content">
-                <div class="chat-meta">刘雪红 · CRC专员 · 2026-07-20 09:00:00<span class="chat-status orange">已提交</span></div>
+                <div class="chat-meta">刘梅 · CRC专员 · 2026-07-20 09:00:00<span class="chat-status orange">已提交</span></div>
                 <div class="chat-bubble">
                   <span class="chat-mention">@王强</span><span class="chat-mention">@李明</span> 患者预筛资料已上传，请查收审核。
                   <div class="chat-focus">
@@ -584,14 +588,14 @@
               <div class="chat-avatar">王</div>
               <div class="chat-content">
                 <div class="chat-meta">王强 · 医学经理 · 2026-07-20 09:40:00<span class="chat-status gray">审核沟通中</span></div>
-                <div class="chat-bubble"> @刘雪红 知情同意书尚未签署，请补充签署后再提交预筛审核。</div>
+                <div class="chat-bubble"> @刘梅 知情同意书尚未签署，请补充签署后再提交预筛审核。</div>
               </div>
             </div>
 
             <div class="chat-msg other">
               <div class="chat-avatar">刘</div>
               <div class="chat-content">
-                <div class="chat-meta">刘雪红 · CRC专员 · 2026-07-20 09:55:00<span class="chat-status orange">已提交</span></div>
+                <div class="chat-meta">刘梅 · CRC专员 · 2026-07-20 09:55:00<span class="chat-status orange">已提交</span></div>
                 <div class="chat-bubble">已补充签署知情同意书，请再次审核。
                   <div class="chat-files">
                     <div class="chat-file">
@@ -623,7 +627,7 @@
         <div class="chat-footer">
           <!-- 输入区（默认隐藏，点「沟通」展开，与 PC 的 #chatBox 一致） -->
           <div class="chat-box hidden" id="chatBox">
-            <div class="chat-hint"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点「提醒人员」添加并 @ 后再发送。</div>
+            <div class="chat-hint"><i class="fa fa-info-circle"></i> 如需通知对应人员，请先点「提醒人员」添加后再发送。</div>
             <div class="chat-toolbar" id="chatToolbar">
               <button class="tool-text-btn" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
               <button class="tool-text-btn" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
@@ -633,8 +637,10 @@
             <div class="pending-remind hidden" id="pendingRemind"></div>
             <div class="chat-input-row" id="chatInputRow">
               <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 发送" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-              <button class="chat-send" onclick="sendMsg()">发送</button>
-              <button class="chat-cancel" onclick="clearMsg()">取消</button>
+              <div class="chat-actions">
+                <button class="btn btn-default" onclick="cancelChat()">取消</button>
+                <button class="btn btn-primary" onclick="sendMsg()">发送</button>
+              </div>
             </div>
           </div>
 
@@ -678,8 +684,7 @@
                   <span class="remark-op danger" onclick="showToast('删除批注')"><i class="fa fa-trash"></i> 删除</span>
                 </div>
               </div>
-              <button class="remark-more" id="remarkMoreBtn" onclick="toggleRemarkMore()">更多批注（2）</button>
-              <div class="hidden" id="remarkMore">
+              <div id="remarkMore">
                 <div class="remark-card">
                   <div class="remark-card-hd">
                     <span class="remark-card-tag">V1审核</span>
@@ -742,7 +747,7 @@
                   <div class="form-label cs-inline-label"><span class="req">*</span> 是否需要加签审核</div>
                   <label class="form-radio"><input type="radio" name="countersign" value="yes" onchange="toggleCountersign()" /> 是</label>
                   <label class="form-radio"><input type="radio" name="countersign" value="no" checked onchange="toggleCountersign()" /> 否</label>
-                  <div class="cs-hint" id="countersignHint" style="display:none"><i class="fa fa-exclamation-triangle"></i> 若不加签，该审核流程将办结</div>
+                  <div class="cs-hint" id="countersignHint" style="display:none"><i class="fa fa-exclamation-triangle"></i>当前为最后审核节点，加签需选择下一审核人。</div>
                 </div>
                 <div class="form-item" id="nextReviewerItem" style="display:none">
                   <div class="form-label"><span class="req">*</span> 选择下一个审核人</div>
@@ -795,7 +800,6 @@
       <div class="view" id="view-process">
         <div class="scroll-wrap">
           <div class="card">
-            <div class="card-title"><i class="fa fa-sitemap"></i> 审核流程</div>
 
             <div class="proc-group">
               <div class="proc-group-hd" onclick="toggleProcGroup(this)">
@@ -812,7 +816,7 @@
                   <div class="timeline-item">
                     <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                     <div class="timeline-row"><div class="timeline-title">已提交</div></div>
-                    <div class="timeline-info">刘雪红 · CRC · 2026-07-20 09:00:00</div>
+                    <div class="timeline-info">刘梅 · CRC · 2026-07-20 09:00:00</div>
                   </div>
                 </div>
               </div>
@@ -834,7 +838,7 @@
                   <div class="timeline-item">
                     <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                     <div class="timeline-row"><div class="timeline-title">已提交审核</div></div>
-                    <div class="timeline-info">刘雪红 · CRC · 2026-08-14 12:30:00</div>
+                    <div class="timeline-info">刘梅 · CRC · 2026-08-14 12:30:00</div>
                   </div>
                   <div class="timeline-item">
                     <div class="timeline-dot danger"><i class="fa fa-times"></i></div>
@@ -849,17 +853,17 @@
                   <div class="timeline-item">
                     <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                     <div class="timeline-row"><div class="timeline-title">已提交审核</div></div>
-                    <div class="timeline-info">刘雪红 · CRC · 2026-08-13 09:30:00</div>
+                    <div class="timeline-info">刘梅 · CRC · 2026-08-13 09:30:00</div>
                   </div>
                   <div class="timeline-item">
                     <div class="timeline-dot danger"><i class="fa fa-ban"></i></div>
                     <div class="timeline-row"><div class="timeline-title">撤销申请</div></div>
-                    <div class="timeline-info">刘雪红 · CRC · 2026-08-12 10:00:00</div>
+                    <div class="timeline-info">刘梅 · CRC · 2026-08-12 10:00:00</div>
                   </div>
                   <div class="timeline-item">
                     <div class="timeline-dot done"><i class="fa fa-check"></i></div>
                     <div class="timeline-row"><div class="timeline-title">已提交审核</div></div>
-                    <div class="timeline-info">刘雪红 · CRC · 2026-08-11 15:19:24</div>
+                    <div class="timeline-info">刘梅 · CRC · 2026-08-11 15:19:24</div>
                   </div>
                 </div>
               </div>
@@ -872,9 +876,6 @@
       <div class="view" id="view-chain">
         <div class="scroll-wrap">
           <div class="card">
-            <div class="card-title"><i class="fa fa-link"></i> 审核链路</div>
-            <div class="chain-label"><i class="fa fa-project-diagram"></i> 审核链路</div>
-            <div class="chain-legend"><span class="dot"></span>绿色代表正在进行的审核流程；灰色代表已走过；浅蓝代表未走的流程；红色代表跳过的流程</div>
             <div class="chain-steps">
               <div class="chain-step done">
                 <div class="cs-index">1</div>
@@ -893,6 +894,12 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="chain-legend">
+              <span class="lg-item"><span class="dot green"></span>绿色代表正在进行的审核流程</span>
+              <span class="lg-item"><span class="dot gray"></span>灰色代表已审核通过的审核流程</span>
+              <span class="lg-item"><span class="dot blue"></span>浅蓝代表还未走到的审核流程</span>
+              <span class="lg-item"><span class="dot red"></span>红色代表跳过的审核流程</span>
             </div>
           </div>
         </div>
@@ -918,7 +925,7 @@
                 <div class="ol-dot"></div>
                 <div class="ol-card">
                   <div class="ol-card-header">
-                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-operator">刘梅&lt;CRA专员&gt;</span>
                     <span class="ol-status blue">发起</span>
                   </div>
                   <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
@@ -930,7 +937,7 @@
                 <div class="ol-dot"></div>
                 <div class="ol-card">
                   <div class="ol-card-header">
-                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-operator">刘梅&lt;CRA专员&gt;</span>
                     <span class="ol-status gray">待审核（已撤回）</span>
                   </div>
                   <div class="ol-row"><span class="label">批注：</span></div>
@@ -954,7 +961,7 @@
                 <div class="ol-dot"></div>
                 <div class="ol-card">
                   <div class="ol-card-header">
-                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-operator">刘梅&lt;CRA专员&gt;</span>
                     <span class="ol-status blue">发起</span>
                   </div>
                   <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
@@ -965,7 +972,7 @@
                 <div class="ol-dot"></div>
                 <div class="ol-card">
                   <div class="ol-card-header">
-                    <span class="ol-operator">刘雪红&lt;CRA专员&gt;</span>
+                    <span class="ol-operator">刘梅&lt;CRA专员&gt;</span>
                     <span class="ol-status red">筛败</span>
                   </div>
                   <div class="ol-row"><span class="label">提交时间：</span>2026-08-15 03:06:53</div>
@@ -1008,16 +1015,16 @@
         <table class="record-table">
           <thead><tr><th>折叠</th><th>操作人</th><th>操作状态</th><th>操作时间</th><th>操作耗时</th></tr></thead>
           <tbody>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-pending">待审核（已撤回）</td><td>2026-08-11 15:19:25</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-pending">待审核（已撤回）</td><td>2026-08-11 15:19:25</td><td>—</td></tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"></div></td></tr>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-revoked">已撤销申请</td><td>2026-09-04 18:28:31</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-revoked">已撤销申请</td><td>2026-09-04 18:28:31</td><td>—</td></tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">撤销原因：12121</div></div></td></tr>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-submitted">审核沟通</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-submitted">已提交</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-down"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-submitted">审核沟通</td><td>2026-08-11 15:19:24</td><td>—</td></tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">附件已上传</div><div class="attach-label">附件：</div><div class="attach-list"></div></div></td></tr>
-            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td><td>刘雪红&lt;CRA专员&gt;</td><td class="status-revoked">不建议</td><td>2026-08-12 14:23:23</td><td>-</td></tr>
+            <tr><td onclick="toggleRow(this)"><i class="fa fa-chevron-right"></i></td><td>刘梅&lt;CRA专员&gt;</td><td class="status-revoked">不建议</td><td>2026-08-12 14:23:23</td><td>-</td></tr>
             <tr class="collapse-row hidden"><td colspan="5"><div class="collapse-content"><div class="comment-label">批注：</div><div class="comment-box">不建议原因：12121</div></div></td></tr>
           </tbody>
         </table>
@@ -1051,6 +1058,7 @@
   <!-- 图片放大查看（微信式）：点击图片放大，再点图片可 2x 缩放，点击空白处关闭 -->
   <div class="img-viewer" id="imgViewer" onclick="closeImgViewer()">
     <img class="img-viewer-img" id="imgViewerImg" onclick="toggleImgScale(event)" />
+    <button class="img-viewer-close" onclick="closeImgViewer()" aria-label="关闭"><i class="fa fa-times"></i></button>
   </div>
 
   <script>
@@ -1195,11 +1203,6 @@
       // 发送后收起输入区，回到沟通默认视图（与 PC 发送后切回「信息」模式一致）
       document.getElementById('chatBox').classList.add('hidden');
     }
-    function clearMsg() {
-      var ta = document.getElementById('chatInput');
-      if (ta) ta.value = '';
-      ta && ta.blur();
-    }
     function appendSelfMsg(text, files, mentions) {
       var body = getActiveChatBody(); if (!body) return;
       var mentionHtml = (mentions || []).map(function (p) { return '<span class="chat-mention">@' + escapeHtml(p.name) + '</span>'; }).join('');
@@ -1233,15 +1236,29 @@
       return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
     }
 
-    /* 沟通：展开/收起输入区（与 PC 一致，切换 #chatBox） */
+    /* 沟通：展开/收起输入区（与 PC 一致，切换 #chatBox；展开时隐藏审核操作栏） */
     function sendNotice() {
       var box = document.getElementById('chatBox');
       var show = !box.classList.toggle('hidden');
+      var actions = document.getElementById('reviewActions');
       if (show) {
+        actions.classList.add('hidden');
         document.getElementById('remarkPanel').classList.add('hidden');
         document.getElementById('reviewPanel').classList.add('hidden');
         var ta = document.getElementById('chatInput'); if (ta) ta.focus();
+      } else {
+        actions.classList.remove('hidden');
       }
+    }
+    /* 取消：回到初始状态——清空输入/附件/提醒，收起沟通输入区，恢复审核操作栏 */
+    function cancelChat() {
+      var ta = document.getElementById('chatInput');
+      if (ta) { ta.value = ''; ta.blur(); }
+      pendingFiles = []; renderPending();
+      remindPersons.forEach(function (p) { p.selected = false; });
+      renderRemind(); renderPendingRemind();
+      document.getElementById('chatBox').classList.add('hidden');
+      document.getElementById('reviewActions').classList.remove('hidden');
     }
 
     /* 我的批注：打开 / 关闭 / 编辑 / 保存 / 更多 */
@@ -1264,12 +1281,6 @@
       if (!ta || !ta.value.trim()) { showToast('请输入批注内容'); return; }
       closeRemark();
       showToast('批注已保存');
-    }
-    function toggleRemarkMore() {
-      var box = document.getElementById('remarkMore');
-      var btn = document.getElementById('remarkMoreBtn');
-      var open = box.classList.toggle('hidden');
-      btn.textContent = open ? '更多批注（2）' : '收起批注';
     }
 
     /* 操作日志：分组收起 / 展开、下载 */

@@ -34,5 +34,5 @@ try {
   // 检查 m1 状态
   var m1 = ctx.memberData.find(function(x){return x.id==='m1';});
   console.log('m1 status after confirm:', m1 && m1.status);
-  console.log('patientData 王慧柳 len:', (ctx.patientData['王慧柳']||[]).length, '| 刘雪红 len:', (ctx.patientData['刘雪红']||[]).length);
+  console.log('patientData 王慧柳 len:', (ctx.patientData['王慧柳']||[]).length, '| 刘梅 len:', (ctx.patientData['刘梅']||[]).length);
 } catch(e){ console.log('RUNTIME ERROR in confirmHandover:', e.message); console.log(e.stack.split('\n').slice(0,6).join('\n')); }
