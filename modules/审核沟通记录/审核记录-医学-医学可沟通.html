@@ -692,6 +692,20 @@
     .pending-file .fa-file-o { color: #1872a7; }
     .pending-file .pf-del { cursor: pointer; color: #8c8c8c; }
     .pending-file .pf-del:hover { color: #ff4d4f; }
+    /* 附件拖拽 / 粘贴上传区（chatInputRow 上方） */
+    .attach-zone {
+      display: flex; align-items: center; gap: 12px;
+      border: 1.5px dashed #bcd6ff; border-radius: 8px;
+      background: #f7faff; padding: 12px 14px; margin-bottom: 8px;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .attach-zone:hover { border-color: #165DFF; background: #eef4ff; }
+    .attach-zone.dragging { border-color: #165DFF; border-style: solid; background: #e3edff; }
+    .attach-zone > .fa-cloud-upload-alt { font-size: 26px; color: #165DFF; flex: 0 0 auto; }
+    .attach-zone .az-text { display: flex; flex-direction: column; gap: 2px; line-height: 1.4; }
+    .attach-zone .az-main { font-size: 13px; color: #333; }
+    .attach-zone .az-main b { color: #165DFF; }
+    .attach-zone .az-sub { font-size: 12px; color: #8c8c8c; }
 
     /* 待发送的 @ 提醒人员标签 */
     .mention-chips {
@@ -1447,8 +1461,8 @@
       <div class="col">
         <div class="stage-nav">
           <div class="stage-tabs" id="stageTabs">
-            <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛阶段</div>
-            <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组阶段</div>
+            <div class="stage-tab" data-group="预筛审核" onclick="switchStage(this)">预筛审核</div>
+            <div class="stage-tab active" data-group="入组审核" onclick="switchStage(this)">入组审核</div>
           </div>
         </div>
         <div class="block-header">
@@ -1679,15 +1693,21 @@
             </div>
             <div class="chat-box" id="chatBox">
               <div class="chat-toolbar">
-                <button class="btn btn-default btn-sm" onclick="onUpload()"><i class="fa fa-paperclip"></i> 上传附件</button>
                 <button class="btn btn-default btn-sm" onclick="toggleRemind()"><i class="fa fa-bell"></i> 提醒人员</button>
                 <input type="file" id="fileInput" style="display:none" multiple onchange="onFileChosen(this)" />
               </div>
               <div class="pending-files hidden" id="pendingFiles"></div>
               <div class="mention-chips hidden" id="mentionChips"></div>
+              <div class="attach-zone" id="attachZone" tabindex="0" onmousedown="this.focus()" onclick="onUpload()" title="点击上传 · 拖拽文件到此处 · 可直接 Ctrl/⌘+V 粘贴附件">
+                <i class="fa fa-cloud-upload-alt"></i>
+                <div class="az-text">
+                  <span class="az-main">拖拽文件到此处上传，或<strong>点击选择</strong></span>
+                  <span class="az-sub">支持图片 / PDF 等，可多选</span>
+                </div>
+              </div>
               <div class="chat-input-row" id="chatInputRow">
                 <div class="chat-input-wrap">
-                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 换行；也可将图片 / 文件拖拽、复制到此处上传" onkeydown="chatInputKey(event)"></textarea>
+                  <textarea class="chat-input" id="chatInput" placeholder="请输入消息，Enter 换行" onkeydown="chatInputKey(event)"></textarea>
                   <div class="chat-expand-tip"><span>放大编辑中：Enter 换行，Esc 缩小</span></div>
                 </div>
                 <div class="chat-hint" style="flex:0 0 auto;"><i class="fa fa-info-circle"></i> 如需提醒相关人员，请先点击「提醒人员」添加后再发送。</div>
@@ -2152,32 +2172,54 @@
         });
       });
     })();
-    /* 粘贴上传：在输入框直接 Ctrl/Cmd+V 粘贴图片（微信式），图片作为待发送附件 */
+    /* 粘贴上传：在沟通面板内 Ctrl/Cmd+V 粘贴图片或文件（微信式），作为待发送附件
+       监听挂在 document 上，避免焦点不在输入框时粘贴事件无法被捕获 */
     (function () {
-      var ta = document.getElementById('chatInput');
-      if (!ta) return;
-      ta.addEventListener('paste', function (e) {
+      document.addEventListener('paste', function (e) {
         var cd = e.clipboardData || window.clipboardData;
         if (!cd) return;
-        var imgs = [];
+        var files = [];
         if (cd.files && cd.files.length) {
-          for (var i = 0; i < cd.files.length; i++) {
-            if (cd.files[i].type && cd.files[i].type.indexOf('image/') === 0) imgs.push(cd.files[i]);
-          }
+          for (var i = 0; i < cd.files.length; i++) files.push(cd.files[i]);
         }
-        if (!imgs.length && cd.items) {
+        if (!files.length && cd.items) {
           for (var j = 0; j < cd.items.length; j++) {
             var it = cd.items[j];
-            if (it.kind === 'file' && it.type && it.type.indexOf('image/') === 0) {
-              var f = it.getAsFile();
-              if (f) imgs.push(f);
-            }
+            if (it.kind === 'file') { var f = it.getAsFile(); if (f) files.push(f); }
           }
         }
-        if (imgs.length) {
-          e.preventDefault();
-          addFiles(imgs);
-          ta.focus();
+        if (!files.length) return; // 纯文本粘贴：交还浏览器默认行为
+        // 仅当焦点 / 事件目标位于沟通面板内时，才作为附件处理，避免误捕获其它输入框
+        var panel = document.getElementById('rightChat');
+        var ae = document.activeElement;
+        var inPanel = panel && (panel.contains(ae) || (e.target && panel.contains(e.target)));
+        if (!inPanel) return;
+        e.preventDefault();
+        addFiles(files);
+        showToast('已从剪贴板添加 ' + files.length + ' 个附件');
+        var ta = document.getElementById('chatInput');
+        if (ta) ta.focus();
+      });
+    })();
+    /* 附件拖拽区高亮：拖拽悬停到上传区时高亮提示 */
+    (function () {
+      var zone = document.getElementById('attachZone');
+      if (!zone) return;
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        zone.addEventListener(ev, function (e) {
+          if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1) {
+            e.preventDefault(); e.stopPropagation(); zone.classList.add('dragging');
+          }
+        });
+      });
+      zone.addEventListener('dragleave', function (e) {
+        if (e.relatedTarget && zone.contains(e.relatedTarget)) return;
+        zone.classList.remove('dragging');
+      });
+      zone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          e.preventDefault(); e.stopPropagation(); zone.classList.remove('dragging');
+          addFiles(e.dataTransfer.files);
         }
       });
     })();

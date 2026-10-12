@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<!--
+  匹配优先级控制 · 交互原型（v4）
+  双层模型：
+  ① 项目层（方案编号）：可选优先级标签（重点/优先/普通/未设置），仅作标记，不参与匹配顺序；这是「设置重点项目」的入口（重点项目 Tab）。
+  ② 患者层（匹配任务）：真实匹配发生在患者层面。字段=患者编号/患者缩写/方案编号/操作时间。
+     受并发阈值（默认10）控制：超过即按到达时间 FIFO 排队；紧急患者可手动「立即匹配」加急（突破阈值，不打断在跑匹配）（匹配队列 Tab）。
+  顶部以 Tab 切换「匹配队列 / 重点项目」两个页面；左侧控制台，右侧琥珀色功能说明；悬停高亮连线。手机端上下布局。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>匹配优先级控制 · 原型 v3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    #split { position: relative; display: flex; height: 100vh; width: 100%; }
+    #left-panel { flex: 0 0 82%; max-width: 82%; overflow-y: auto; background: #F5F7FA; padding: 20px 24px; }
+    #right-panel { flex: 0 0 18%; max-width: 18%; overflow-y: auto; background: #FFFBE6; border-left: 2px solid #FFE58F; padding: 20px 14px; }
+    #connector { position: absolute; inset: 0; pointer-events: none; z-index: 30; overflow: visible; }
+    .conn-line { fill: none; stroke: #5d58dc; stroke-width: 2; opacity: .5; transition: stroke .2s, stroke-width .2s, opacity .2s; }
+    .conn-line.active { stroke: #FF7D00; stroke-width: 3.5; opacity: 1; }
+    .conn-badge circle { fill: #5d58dc; transition: fill .2s; }
+    .conn-badge.active circle { fill: #FF7D00; }
+    .conn-badge text { fill: #fff; font-size: 11px; font-weight: 700; }
+    .conn-badge { pointer-events: none; }
+    .hl { outline: 2px solid #FF7D00 !important; outline-offset: 3px; border-radius: 10px; }
+    .right-doc { border: 1px solid #FFD591; background: #FFFEF5; border-radius: 10px; padding: 12px 12px 12px 16px; position: relative; }
+    .right-doc.hl { background: #FFF1C2; }
+    .right-doc .num { position: absolute; left: -10px; top: 10px; width: 22px; height: 22px; border-radius: 50%; background: #FA8C16; color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+
+    .prio-重点 { background: #F53F3F; color: #fff; }
+    .prio-优先 { background: #5d58dc; color: #fff; }
+    .prio-普通 { background: #E5E6EB; color: #4E5969; }
+    .prio-未设置 { background: #F2F3F5; color: #86909C; border: 1px solid #E5E6EB; }
+    .status-匹配中 { background: #E8FFEA; color: #00B42A; border: 1px solid #AFF0B5; }
+    .status-排队中 { background: #FFF7E6; color: #FA8C16; border: 1px solid #FFD591; }
+    .tag-加急 { background: #FFF1C2; color: #D4380D; border: 1px solid #FFBB96; }
+
+    .mobile-toggle { display: none; }
+    .mobile-note { display: none; }
+
+    @media (max-width: 768px) {
+      #split { flex-direction: column; height: auto; min-height: 100vh; }
+      #left-panel { flex: none; max-width: 100%; width: 100%; padding: 16px; }
+      #right-panel { flex: none; max-width: 100%; width: 100%; border-left: none; border-top: 2px solid #FFE58F; display: none; }
+      body.show-docs #right-panel { display: block; }
+      .mobile-toggle { display: flex; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 50;
+        background: #5d58dc; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px; box-shadow: 0 4px 14px rgba(22,93,255,.4); align-items: center; gap: 8px; }
+      .mobile-note { display: block; margin-top: 6px; font-size: 12px; color: #FA8C16; }
+      #connector { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="split">
+    <!-- 左侧：管理控制台 -->
+    <div id="left-panel">
+      <!-- 顶部栏 -->
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-lg bg-[#5d58dc] text-white flex items-center justify-center text-lg"><i class="fa-solid fa-sliders"></i></div>
+        <div>
+          <h1 class="text-lg font-bold text-[#333333]">匹配调度配置</h1>
+        </div>
+      </div>
+
+      <!-- Tab 切换 -->
+      <div class="inline-flex gap-1 mb-4 bg-[#E5E6EB] rounded-t-lg p-1">
+        <button id="tab-queue" onclick="switchTab('queue')" class="px-4 py-2 rounded-md text-sm font-semibold flex items-center justify-center gap-2 bg-white text-[#5d58dc] shadow-sm">
+         匹配排队
+        </button>
+        <button id="tab-project" onclick="switchTab('project')" class="px-4 py-2 rounded-md text-sm font-semibold flex items-center justify-center gap-2 text-gray-500 hover:text-[#5d58dc]">
+         调度配置
+        </button>
+      </div>
+
+      <!-- 匹配队列 Tab -->
+      <div id="panel-queue">
+      <!-- 实时看板 -->
+      <div id="el-kpi" class="grid grid-cols-3 gap-3 mb-4">
+        <div class="bg-white rounded-xl shadow-sm p-3 text-center">
+          <p class="text-xs text-gray-400">实时并发匹配</p>
+          <p id="kpi-running" class="text-2xl font-bold text-[#5d58dc]">0</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-3 text-center">
+          <p class="text-xs text-gray-400">并发阈值</p>
+          <p id="kpi-capacity" class="text-2xl font-bold text-[#333333]">10</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm p-3 text-center">
+          <p class="text-xs text-gray-400">排队中（患者）</p>
+          <p id="kpi-queue" class="text-2xl font-bold text-[#FA8C16]">0</p>
+        </div>
+      </div>
+
+        <!-- 患者匹配队列（真实匹配发生处：受阈值/FIFO/加急控制） -->
+        <div id="el-queue" class="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <h2 class="font-semibold text-[#333333] mb-3 flex items-center gap-2">患者匹配队列</h2>
+          <p class="text-xs text-gray-400 mb-2">实时并发达阈值即排队；队列中特别着急的患者可手动「立即匹配」加急。</p>
+        <!-- 查询条件 -->
+        <div class="flex flex-wrap items-center gap-3 mb-3">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div class="flex items-center gap-2 text-sm">
+              <label class="text-gray-600 whitespace-nowrap">患者缩写：</label>
+              <input id="filter-pname" type="text" placeholder="请输入患者缩写" onkeydown="if(event.key==='Enter')applyFilter()" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-40 outline-none focus:border-[#5d58dc]" />
+            </div>
+            <div class="flex items-center gap-2 text-sm">
+              <label class="text-gray-600 whitespace-nowrap">方案编号：</label>
+              <input id="filter-code" type="text" placeholder="请输入方案编号" onkeydown="if(event.key==='Enter')applyFilter()" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 outline-none focus:border-[#5d58dc]" />
+            </div>
+            <span id="filter-count" class="text-xs text-gray-400"></span>
+          </div>
+          <div class="flex items-center justify-end gap-2 mt-2">
+            <button onclick="applyFilter()" class="px-4 py-1.5 rounded bg-[#5d58dc] text-white text-sm hover:bg-[#4b46c4]"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询</button>
+            <button onclick="clearFilter()" class="px-4 py-1.5 rounded bg-[#5d58dc] text-white text-sm hover:bg-[#4b46c4]"><i class="fa-solid fa-rotate-right mr-1"></i>重置</button>
+          </div>
+        </div>
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-[#ECEAFB] text-[#5d58dc] border-b border-[#d9d6f0] text-left">
+                <th class="py-2 pr-2 font-semibold">患者编号</th>
+                <th class="py-2 pr-2 font-semibold">患者缩写</th>
+                <th class="py-2 pr-2 font-semibold">方案编号</th>
+                <th class="py-2 pr-2 font-semibold">操作时间</th>
+                <th class="py-2 pr-2 font-semibold">状态</th>
+                <th class="py-2 pr-2 font-semibold">操作</th>
+              </tr>
+            </thead>
+            <tbody id="patient-tbody"></tbody>
+          </table>
+          <div id="patient-pager" class="flex items-center justify-end mt-3 gap-2 flex-wrap"></div>
+          <div class="mobile-note">说明④：队列按操作时间，特别着急可手动「立即匹配」加急（见右侧）。</div>
+        </div>
+      </div><!-- /panel-queue -->
+
+      <!-- 重点项目 Tab -->
+      <div id="panel-project" style="display:none">
+
+      <!-- 调度配置 -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <h2 class="font-semibold text-[#333333] mb-3 flex items-center gap-2"><i class="fa-solid fa-gear text-[#5d58dc]"></i>调度配置</h2>
+        <!-- 启动/关闭配置 -->
+        <div class="flex items-center justify-between mb-3 bg-[#5d58dc]/5 border border-[#5d58dc]/25 rounded-lg px-3 py-2.5">
+          <div class="flex items-center gap-2 text-sm">
+            <i class="fa-solid fa-power-off text-[#5d58dc]"></i>
+            <span class="font-semibold text-[#333333]">匹配配置开关</span>
+            <span id="config-status" class="text-xs font-semibold"></span>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="config-switch" type="checkbox" checked class="sr-only peer" onchange="toggleConfig()" />
+            <div class="relative w-11 h-6 bg-gray-200 rounded-full peer-checked:bg-[#5d58dc] after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-5"></div>
+          </label>
+        </div>
+        <hr class="my-4 border-gray-100" />
+        <!-- 调度时段 -->
+        <!-- <div id="el-schedule" class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 text-sm">
+            <i class="fa-solid fa-clock text-[#5d58dc]"></i>
+            <span class="font-semibold text-[#333333]">调度时段（仅此时段配置生效）</span>
+          </div>
+          <label class="text-sm text-gray-600">生效日期</label>
+          <select id="schedule-day" onchange="setSchedule()" class="border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-[#5d58dc] disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed">
+            <option value="weekday">周一~周五</option>
+            <option value="all">每天</option>
+            <option value="weekend">周末</option>
+          </select>
+          <label class="text-sm text-gray-600">生效时间（可多选）</label>
+          <div class="flex items-center gap-2 flex-wrap">
+            <label class="win-label flex items-center gap-1 text-xs border rounded px-2 py-1 cursor-pointer hover:bg-gray-50">
+              <input type="checkbox" id="chk-win-morning" checked onchange="setSchedule()" class="accent-[#5d58dc]" /> 上午 09:00-12:00
+            </label>
+            <label class="win-label flex items-center gap-1 text-xs border rounded px-2 py-1 cursor-pointer hover:bg-gray-50">
+              <input type="checkbox" id="chk-win-afternoon" checked onchange="setSchedule()" class="accent-[#5d58dc]" /> 下午 13:00-17:00
+            </label>
+            <label class="win-label flex items-center gap-1 text-xs border rounded px-2 py-1 cursor-pointer hover:bg-gray-50">
+              <input type="checkbox" id="chk-win-night" onchange="setSchedule()" class="accent-[#5d58dc]" /> 夜间 18:00-第二日上午09:00
+            </label>
+          </div>
+          <span id="schedule-status" class="text-xs font-semibold"></span>
+          <div class="mobile-note">说明⑤：配置仅在设定时段生效；周末 / 夜间自动暂停，队列不推进。</div>
+        </div> -->
+
+        <hr class="my-4 border-gray-100" />
+        <!-- 并发阈值 -->
+        <div id="el-threshold" class="flex flex-wrap items-center gap-4">
+          <label class="text-sm text-gray-600">并发匹配阈值（N，默认 10）</label>
+          <div class="flex items-center border rounded-lg overflow-hidden">
+            <button id="capacity-minus" onclick="stepCapacity(-1)" class="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fa-solid fa-minus"></i></button>
+            <input id="capacity-input" type="number" value="10" min="1" max="200" class="w-16 text-center py-1.5 outline-none disabled:opacity-50 disabled:bg-gray-50 disabled:cursor-not-allowed" onchange="setCapacity(this.value)" />
+            <button id="capacity-plus" onclick="stepCapacity(1)" class="px-3 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <span class="text-xs text-gray-400">最多同时匹配 N 个患者；超过即进入排队（按匹配时间顺序）</span>
+          <div class="mobile-note">说明②：默认并发阈值 10，超过的患者请求自动排队（见右侧）。</div>
+        </div>
+      </div>
+
+      <!-- 项目匹配列表（仅设置优先级标签，即“设置重点项目”入口） -->
+      <div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+        <h2 class="font-semibold text-[#333333] mb-3 flex items-center gap-2 flex-wrap">
+          <i class="fa-solid fa-folder-tree text-[#5d58dc]"></i>项目匹配列表
+          <span class="text-xs text-gray-400 font-normal">设置优先级标签（可选），勾选后可批量设置</span>
+        </h2>
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 mb-3">
+          <div class="flex items-center gap-2 text-sm">
+            <label class="text-gray-600 whitespace-nowrap">方案编号：</label>
+            <input id="filter-pcode" type="text" placeholder="请输入方案编号" onkeydown="if(event.key==='Enter')applyProjectFilter()" class="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 outline-none focus:border-[#5d58dc]" />
+          </div>
+          <span id="project-filter-count" class="text-xs text-gray-400"></span>
+          <div class="flex items-center justify-end gap-2 ml-auto">
+            <button onclick="applyProjectFilter()" class="px-4 py-1.5 rounded bg-[#5d58dc] text-white text-sm hover:bg-[#4b46c4]"><i class="fa-solid fa-magnifying-glass mr-1"></i>查询</button>
+            <button onclick="clearProjectFilter()" class="px-4 py-1.5 rounded bg-[#5d58dc] text-white text-sm hover:bg-[#4b46c4]"><i class="fa-solid fa-rotate-right mr-1"></i>重置</button>
+          </div>
+        </div>
+        <div id="el-priority" class="flex items-center gap-2 text-sm mb-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+          <span class="text-gray-500 text-xs whitespace-nowrap">勾选下方列表后设为：</span>
+          <button onclick="batchSet('重点')" class="px-3 py-1 rounded bg-[#F53F3F] text-white text-xs font-semibold hover:bg-[#d92e2e]"><i class="fa-solid fa-star"></i> 重点</button>
+          <button onclick="batchSet('优先')" class="px-3 py-1 rounded bg-white border border-[#5d58dc] text-[#5d58dc] text-xs hover:bg-[#5d58dc]/5">优先</button>
+          <button onclick="batchSet('普通')" class="px-3 py-1 rounded bg-white border border-gray-300 text-gray-600 text-xs hover:bg-gray-50">普通</button>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-[#ECEAFB] text-[#5d58dc] border-b border-[#d9d6f0] text-left">
+              <th class="py-2 pr-1 w-8"><input id="select-all" type="checkbox" onchange="toggleSelectAll(this)" class="accent-[#5d58dc]" title="全选" /></th>
+              <th class="py-2 pr-2 font-semibold">方案编号</th>
+              <th class="py-2 pr-2 font-semibold">项目名称</th>
+              <th class="py-2 pr-2 font-semibold">优先级标签</th>
+            </tr>
+          </thead>
+          <tbody id="project-tbody"></tbody>
+        </table>
+        <div id="project-pager" class="flex items-center justify-end mt-3 gap-2 flex-wrap"></div>
+      </div>
+
+      </div><!-- /panel-project -->
+    </div>
+
+    <!-- 右侧：功能说明（琥珀色） -->
+    <div id="right-panel">
+      <h3 class="text-sm font-bold text-[#AD6800] mb-3 flex items-center gap-2"><i class="fa-solid fa-book-open"></i>功能说明</h3>
+
+      <div id="doc-1" class="right-doc mb-4" data-tab="project">
+        <span class="num">1</span>
+        <h4 class="font-semibold text-[#AD6800] text-sm">项目层：可选优先级标签</h4>
+        <p class="text-xs text-gray-600 mt-1 leading-relaxed">在「项目匹配列表」按方案编号打 <b>重点/优先/普通</b> 标签，<b>也可不打</b>。仅作标记，<b>不影响</b>患者匹配顺序。</p>
+      </div>
+
+      <div id="doc-2" class="right-doc mb-4" data-tab="project">
+        <span class="num">2</span>
+        <h4 class="font-semibold text-[#AD6800] text-sm">并发阈值（默认 10）</h4>
+        <p class="text-xs text-gray-600 mt-1 leading-relaxed">系统最多同时匹配 <b>N 个患者</b>（默认 10）。容量闸门，超出部分进入待匹配队列。</p>
+      </div>
+
+      <div id="doc-3" class="right-doc mb-4" data-tab="queue">
+        <span class="num">3</span>
+        <h4 class="font-semibold text-[#AD6800] text-sm">患者层自动 FIFO 排队</h4>
+        <p class="text-xs text-gray-600 mt-1 leading-relaxed">超过阈值的患者请求<b>按操作时间先进先出</b>排队；有空闲并发位时队首自动补位。</p>
+      </div>
+
+      <div id="doc-4" class="right-doc mb-4" data-tab="queue">
+        <span class="num">4</span>
+        <h4 class="font-semibold text-[#AD6800] text-sm">手动立即匹配</h4>
+        <p class="text-xs text-gray-600 mt-1 leading-relaxed">队列中特别着急的患者，可手动<b>「立即匹配」加急执行</b>（突破阈值），不打断在跑匹配；完成后队列按序补位。</p>
+      </div>
+
+      <div id="doc-5" class="right-doc mb-4" data-tab="project">
+        <span class="num">5</span>
+        <h4 class="font-semibold text-[#AD6800] text-sm">调度时段</h4>
+        <p class="text-xs text-gray-600 mt-1 leading-relaxed">可设<b>生效日期</b>（仅工作日/每天/仅周末）与<b>生效时间</b>（上午 09:00-12:00 / 下午 14:00-17:00 / 夜间 18:00-09:00，<b>可单选或多选</b>）。仅在勾选时段内配置生效，<b>未勾选时段自动暂停</b>，队列不推进；紧急加急仍可行。</p>
+      </div>
+    </div>
+
+    <!-- SVG 连线层 -->
+    <svg id="connector"></svg>
+  </div>
+
+  <button class="mobile-toggle" onclick="document.body.classList.toggle('show-docs')"><i class="fa-solid fa-eye"></i> 切换视图：仅界面 / 界面+说明</button>
+
+  <!-- 自定义确认弹窗 -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-lg w-[340px] max-w-[90%] p-5">
+      <div class="flex items-center gap-2 mb-3">
+        <i class="fa-solid fa-circle-question text-[#5d58dc] text-lg"></i>
+        <h3 id="modal-title" class="font-semibold text-[#333333] text-sm">确认操作</h3>
+      </div>
+      <p id="modal-msg" class="text-sm text-gray-600 mb-5 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button id="modal-cancel" class="px-4 py-1.5 rounded border border-gray-300 text-gray-600 text-sm hover:bg-gray-50">取消</button>
+        <button id="modal-ok" class="px-4 py-1.5 rounded bg-[#5d58dc] text-white text-sm hover:bg-[#4b46c4]">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    let capacity = 10;
+    let seqCounter = 0;
+    let projects = [];
+    let patients = [];
+    let currentTab = "queue";
+    let filterPname = "";
+    let filterCode = "";
+    let filterPcode = "";
+    let patientPage = 1, patientPageSize = 5;
+    let projectPage = 1, projectPageSize = 5;
+    let scheduleDay = "weekday";
+    let scheduleWindows = ["morning", "afternoon"];
+    let configEnabled = true;
+
+    function fmtTime(baseMin, add) {
+      const t = baseMin + add;
+      const dayOffset = Math.floor(t / (24 * 60));
+      const hh = String(Math.floor(t / 60) % 24).padStart(2, "0");
+      const mm = String(t % 60).padStart(2, "0");
+      const ss = String((add * 7) % 60).padStart(2, "0");
+      const baseDate = new Date(2026, 9, 12);
+      baseDate.setDate(baseDate.getDate() + dayOffset);
+      const Y = baseDate.getFullYear();
+      const M = String(baseDate.getMonth() + 1).padStart(2, "0");
+      const D = String(baseDate.getDate()).padStart(2, "0");
+      return `${Y}-${M}-${D} ${hh}:${mm}:${ss}`;
+    }
+
+    function initSample() {
+      // 项目层：14 个方案编号，部分打标签（可选）
+      projects = [];
+      const pLabels = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N"];
+      for (let i = 0; i < 14; i++) {
+        projects.push({ code: "FA-2026-" + String(i + 1).padStart(3, "0"), name: "研究项目 " + pLabels[i], prio: "普通", selected: false });
+      }
+
+      // 患者层：14 个匹配任务（初始即演示 10 匹配中 + 4 排队）
+      patients = [];
+      const surnames = ["张","李","王","赵","陈","刘","杨","黄","周","吴","徐","孙","马","朱"];
+      for (let i = 0; i < 14; i++) {
+        patients.push({
+          pid: "PT-" + String(i + 1).padStart(4, "0"),
+          pname: surnames[i] + "**",
+          code: "FA-2026-" + String((i % 7) + 1).padStart(3, "0"),
+          time: fmtTime(9 * 60, i),
+          seq: seqCounter++,
+          urgent: false,
+          status: "queued",
+        });
+      }
+      computePatientStatus();
+    }
+
+    // 患者层容量 + FIFO：非加急按到达顺序填满容量；加急在阈值之上额外执行（不打断在跑匹配）
+    function computePatientStatus() {
+      const active = configEnabled && isScheduleActive();
+      if (!active) {
+        patients.forEach((p) => (p.status = "queued"));
+        return;
+      }
+      const urgent = patients.filter((p) => p.urgent);
+      const rest = patients.filter((p) => !p.urgent).sort((a, b) => a.seq - b.seq);
+      urgent.forEach((p) => (p.status = "running"));
+      rest.forEach((p, i) => (p.status = i < capacity ? "running" : "queued"));
+    }
+
+    function runningPatients() { return patients.filter((p) => p.status === "running"); }
+    function queuedPatients() { return patients.filter((p) => p.status === "queued"); }
+
+    function render() {
+      const running = runningPatients();
+      const queued = queuedPatients();
+
+      document.getElementById("kpi-running").textContent = running.length;
+      document.getElementById("kpi-capacity").textContent = capacity;
+      document.getElementById("kpi-queue").textContent = queued.length;
+      document.getElementById("capacity-input").value = capacity;
+
+      // 启动/关闭配置状态
+      const cs = document.getElementById("config-status");
+      if (cs) {
+        cs.textContent = configEnabled ? "运行中" : "已关闭";
+        cs.className = "text-xs font-semibold " + (configEnabled ? "text-[#00B42A]" : "text-[#F53F3F]");
+      }
+
+      // 调度时段生效状态
+      syncControlsEnabled();
+      const active = configEnabled && isScheduleActive();
+      const ss = document.getElementById("schedule-status");
+      if (ss) {
+        if (!configEnabled) {
+          ss.textContent = "○ 配置已关闭";
+          ss.className = "text-xs font-semibold text-gray-400";
+        } else {
+          ss.textContent = active ? "" : "";
+          ss.className = "text-xs font-semibold " + (active ? "text-[#00B42A]" : "text-[#F53F3F]");
+        }
+      }
+
+      // 项目层表格（仅优先级设置）
+      const keys = projects.filter((p) => p.prio === "重点");
+      const keyCount = document.getElementById("key-count");
+      if (keyCount) {
+        keyCount.textContent = keys.length
+          ? keys.map((k) => k.code).join("、") : "无（可不设置）";
+      }
+      const ptbody = document.getElementById("project-tbody");
+      ptbody.innerHTML = "";
+      const projRows = projects
+        .map((p, idx) => ({ p, idx }))
+        .filter(({ p }) => !filterPcode || p.code.toLowerCase().includes(filterPcode.toLowerCase()));
+      document.getElementById("project-filter-count").textContent =
+        filterPcode ? `共 ${projRows.length} 条` : "";
+      const projTotal = projRows.length;
+      const projTP = Math.max(1, Math.ceil(projTotal / projectPageSize));
+      if (projectPage > projTP) projectPage = projTP;
+      const projStart = (projectPage - 1) * projectPageSize;
+      projRows.slice(projStart, projStart + projectPageSize).forEach(({ p, idx }) => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b last:border-0";
+        tr.innerHTML = `
+          <td class="py-2 pr-1"><input type="checkbox" class="row-check accent-[#5d58dc]" data-index="${idx}" ${p.selected ? "checked" : ""} onchange="onRowCheck(this)"></td>
+          <td class="py-2 pr-2 font-mono text-[#5d58dc]">${p.code}</td>
+          <td class="py-2 pr-2 text-gray-700">${p.name}</td>
+          <td class="py-2 pr-2">
+            <select onchange="setPrio(${idx}, this.value)" class="border rounded px-1 py-0.5 text-xs prio-${p.prio}">
+              <option value="重点" ${p.prio === "重点" ? "selected" : ""}>重点</option>
+              <option value="优先" ${p.prio === "优先" ? "selected" : ""}>优先</option>
+              <option value="普通" ${p.prio === "普通" ? "selected" : ""}>普通</option>
+            </select>
+          </td>`;
+        ptbody.appendChild(tr);
+      });
+      document.getElementById("project-pager").innerHTML = buildPager(projectPage, projectPageSize, projTotal, "project").html;
+
+      // 患者层表格（排队中 / 立即匹配）
+      const tbody = document.getElementById("patient-tbody");
+      tbody.innerHTML = "";
+      const ordered = patients
+        .filter((p) => {
+          if (filterPname && !p.pname.toLowerCase().includes(filterPname)) return false;
+          if (filterCode && !p.code.toLowerCase().includes(filterCode)) return false;
+          if (p.status === "running") return false;
+          return true;
+        })
+        .sort((a, b) => a.seq - b.seq);
+      document.getElementById("filter-count").textContent =
+        filterPname || filterCode ? `共 ${ordered.length} 条` : "";
+      const pTotal = ordered.length;
+      const pTP = Math.max(1, Math.ceil(pTotal / patientPageSize));
+      if (patientPage > pTP) patientPage = pTP;
+      const pStart = (patientPage - 1) * patientPageSize;
+      ordered.slice(pStart, pStart + patientPageSize).forEach((p) => {
+        const isRun = p.status === "running";
+        const tr = document.createElement("tr");
+        tr.className = "border-b last:border-0";
+        const statusHtml = isRun
+          ? `<span class="px-2 py-0.5 rounded text-xs status-匹配中">匹配中</span>${p.urgent ? ' <span class="px-1.5 py-0.5 rounded text-[10px] tag-加急">加急</span>' : ""}`
+          : `<span class="px-2 py-0.5 rounded text-xs status-排队中">排队中</span>`;
+        const action = isRun
+          ? `<button onclick="completePatient('${p.pid}')" class="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-xs text-gray-600">完成</button>`
+          : `<button onclick="immediatePatient('${p.pid}')" class="px-2 py-1 rounded bg-[#FF7D00] text-white text-xs hover:bg-[#e06f00]"><i class="fa-solid fa-bolt"></i> 立即匹配</button>`;
+        tr.innerHTML = `
+          <td class="py-2 pr-2 font-mono text-[#5d58dc]">${p.pid}</td>
+          <td class="py-2 pr-2 text-gray-700">${p.pname}</td>
+          <td class="py-2 pr-2 font-mono text-gray-500 text-xs">${p.code}</td>
+          <td class="py-2 pr-2 text-gray-500 text-xs">${p.time}</td>
+          <td class="py-2 pr-2">${statusHtml}</td>
+          <td class="py-2 pr-2">${action}</td>`;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("patient-pager").innerHTML = buildPager(patientPage, patientPageSize, pTotal, "patient").html;
+      drawConnections();
+    }
+
+    /* ---------- 项目层：优先级设置 ---------- */
+    function setCapacity(v) {
+      let n = parseInt(v, 10);
+      if (isNaN(n)) n = 1;
+      n = Math.max(1, Math.min(200, n));
+      capacity = n;
+      computePatientStatus();
+      render();
+    }
+    function stepCapacity(d) { setCapacity(capacity + d); }
+
+    /* ---------- 启动/关闭配置 ---------- */
+    function toggleConfig() {
+      configEnabled = document.getElementById("config-switch").checked;
+      computePatientStatus();
+      render();
+    }
+    function syncControlsEnabled() {
+      const dis = !configEnabled;
+      ["schedule-day", "capacity-input", "capacity-minus", "capacity-plus",
+       "chk-win-morning", "chk-win-afternoon", "chk-win-night"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = dis;
+      });
+      document.querySelectorAll(".win-label").forEach((el) => {
+        el.classList.toggle("opacity-50", dis);
+        el.classList.toggle("cursor-not-allowed", dis);
+      });
+    }
+
+    /* ---------- 调度时段 ---------- */
+    function setSchedule() {
+      scheduleDay = document.getElementById("schedule-day").value;
+      scheduleWindows = [];
+      if (document.getElementById("chk-win-morning").checked) scheduleWindows.push("morning");
+      if (document.getElementById("chk-win-afternoon").checked) scheduleWindows.push("afternoon");
+      if (document.getElementById("chk-win-night").checked) scheduleWindows.push("night");
+      computePatientStatus();
+      render();
+    }
+    function isScheduleActive() {
+      const now = new Date();
+      const dow = now.getDay(); // 0=周日, 6=周六
+      const h = now.getHours();
+      let dayOk = true;
+      if (scheduleDay === "weekday") dayOk = dow >= 1 && dow <= 5;
+      else if (scheduleDay === "weekend") dayOk = dow === 0 || dow === 6;
+      let timeOk = false;
+      if (h >= 9 && h < 12 && scheduleWindows.indexOf("morning") >= 0) timeOk = true;
+      if (h >= 14 && h < 17 && scheduleWindows.indexOf("afternoon") >= 0) timeOk = true;
+      if ((h >= 18 || h < 9) && scheduleWindows.indexOf("night") >= 0) timeOk = true;
+      return dayOk && timeOk;
+    }
+
+    function setPrio(i, v) { projects[i].prio = v; render(); }
+    function onRowCheck(cb) { projects[+cb.dataset.index].selected = cb.checked; syncSelectAll(); }
+    function toggleSelectAll(cb) { projects.forEach((p) => (p.selected = cb.checked)); render(); }
+    function syncSelectAll() {
+      const all = document.getElementById("select-all");
+      if (all) all.checked = projects.length > 0 && projects.every((p) => p.selected);
+    }
+    /* ---------- 自定义弹窗 ---------- */
+    let modalCb = null;
+    function openModal(msg, title, showCancel, cb) {
+      document.getElementById("modal-title").textContent = title;
+      document.getElementById("modal-msg").textContent = msg;
+      document.getElementById("modal-cancel").style.display = showCancel ? "" : "none";
+      modalCb = cb || null;
+      const ov = document.getElementById("modal-overlay");
+      ov.classList.remove("hidden");
+      ov.classList.add("flex");
+    }
+    function closeModal() {
+      document.getElementById("modal-overlay").classList.add("hidden");
+      document.getElementById("modal-overlay").classList.remove("flex");
+      modalCb = null;
+    }
+    function bindModal() {
+      document.getElementById("modal-ok").onclick = () => { const cb = modalCb; closeModal(); if (cb) cb(); };
+      document.getElementById("modal-cancel").onclick = closeModal;
+      document.getElementById("modal-overlay").addEventListener("click", (e) => {
+        if (e.target.id === "modal-overlay") closeModal();
+      });
+    }
+    bindModal();
+    function showConfirm(msg, cb, title) { openModal(msg, title || "确认操作", true, cb); }
+    function showAlert(msg, title) { openModal(msg, title || "提示", false, null); }
+
+    function batchSet(v) {
+      const sel = projects.filter((p) => p.selected);
+      if (sel.length === 0) { showAlert("请先勾选要设置的项目"); return; }
+      showConfirm(`确认为选中的 ${sel.length} 个项目设置「${v}」标签吗？`, () => {
+        projects.forEach((p) => { if (p.selected) p.prio = v; });
+        render();
+      });
+    }
+
+    /* ---------- 患者层：匹配 / 队列 / 加急 ---------- */
+    function immediatePatient(pid) {
+      const p = patients.find((x) => x.pid === pid);
+      if (p) { p.urgent = true; computePatientStatus(); render(); }
+    }
+    function completePatient(pid) {
+      const idx = patients.findIndex((x) => x.pid === pid);
+      if (idx >= 0) { patients.splice(idx, 1); computePatientStatus(); render(); }
+    }
+
+    /* ---------- 查询条件 ---------- */
+    function applyFilter() {
+      filterPname = document.getElementById("filter-pname").value.trim().toLowerCase();
+      filterCode = document.getElementById("filter-code").value.trim().toLowerCase();
+      render();
+    }
+    function clearFilter() {
+      filterPname = "";
+      filterCode = "";
+      patientPage = 1;
+      document.getElementById("filter-pname").value = "";
+      document.getElementById("filter-code").value = "";
+      render();
+    }
+
+    /* ---------- 项目层：方案编号查询 ---------- */
+    function applyProjectFilter() {
+      filterPcode = document.getElementById("filter-pcode").value.trim().toLowerCase();
+      projectPage = 1;
+      render();
+    }
+    function clearProjectFilter() {
+      filterPcode = "";
+      projectPage = 1;
+      document.getElementById("filter-pcode").value = "";
+      render();
+    }
+
+    /* ---------- 分页 ---------- */
+    function pagerNumbers(page, tp) {
+      if (tp <= 8) return Array.from({ length: tp }, (_, i) => i + 1);
+      if (page <= 4) return [1, 2, 3, 4, 5, 6, "...", tp];
+      if (page >= tp - 3) return [1, "...", tp - 5, tp - 4, tp - 3, tp - 2, tp - 1, tp];
+      return [1, "...", page - 1, page, page + 1, "...", tp];
+    }
+    function buildPager(page, pageSize, total, prefix) {
+      const tp = Math.max(1, Math.ceil(total / pageSize));
+      if (page > tp) page = tp;
+      const sizeOpts = [5, 10, 20, 50];
+      let h = `<div class="flex items-center gap-2 flex-wrap text-xs text-gray-500">`;
+      h += `<span>共 ${total} 条</span>`;
+      h += `<select onchange="${prefix}SetPageSize(this.value)" class="border border-gray-300 rounded px-1.5 py-1 outline-none focus:border-[#5d58dc]">` +
+        sizeOpts.map((s) => `<option value="${s}" ${pageSize === s ? "selected" : ""}>${s}条/页</option>`).join("") +
+        `</select>`;
+      const navBtn = (dir, target, disabled) =>
+        `<button onclick="${prefix}GotoPage(${target})" ${disabled ? "disabled" : ""} class="w-7 h-7 flex items-center justify-center rounded border ${disabled ? "border-gray-200 text-gray-300 cursor-not-allowed" : "border-gray-300 text-gray-600 hover:bg-gray-50"}"><i class="fa-solid fa-chevron-${dir} text-[10px]"></i></button>`;
+      h += navBtn("left", page - 1, page <= 1);
+      pagerNumbers(page, tp).forEach((n) => {
+        if (n === "...") {
+          h += `<span class="px-1 text-gray-400 select-none">···</span>`;
+        } else {
+          h += `<button onclick="${prefix}GotoPage(${n})" class="w-7 h-7 rounded ${n === page ? "bg-[#5d58dc] text-white" : "text-gray-600 hover:bg-gray-100"}">${n}</button>`;
+        }
+      });
+      h += navBtn("right", page + 1, page >= tp);
+      h += `<span class="ml-1">前往</span><input type="number" min="1" max="${tp}" value="${page}" onchange="${prefix}JumpPage(this.value, ${tp})" class="w-14 border border-gray-300 rounded px-1 py-1 text-center outline-none focus:border-[#5d58dc]" /><span>页</span>`;
+      h += `</div>`;
+      return { html: h, tp };
+    }
+    function patientGotoPage(n) { patientPage = n; render(); }
+    function patientSetPageSize(v) { patientPageSize = parseInt(v, 10); patientPage = 1; render(); }
+    function patientJumpPage(v, tp) {
+      let n = parseInt(v, 10); if (isNaN(n)) n = 1;
+      patientPage = Math.max(1, Math.min(tp, n)); render();
+    }
+    function projectGotoPage(n) { projectPage = n; render(); }
+    function projectSetPageSize(v) { projectPageSize = parseInt(v, 10); projectPage = 1; render(); }
+    function projectJumpPage(v, tp) {
+      let n = parseInt(v, 10); if (isNaN(n)) n = 1;
+      projectPage = Math.max(1, Math.min(tp, n)); render();
+    }
+
+    /* ---------- SVG 连线 ---------- */
+    const pairs = [
+      { n: 1, s: "el-priority", t: "doc-1", tab: "project" },
+      { n: 2, s: "el-threshold", t: "doc-2", tab: "project" },
+      { n: 3, s: "el-kpi", t: "doc-3", tab: "queue" },
+      { n: 4, s: "el-queue", t: "doc-4", tab: "queue" },
+      { n: 5, s: "el-schedule", t: "doc-5", tab: "project" },
+    ];
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const isQueue = tab === "queue";
+      document.getElementById("panel-queue").style.display = isQueue ? "block" : "none";
+      document.getElementById("panel-project").style.display = isQueue ? "none" : "block";
+      document.getElementById("tab-queue").className =
+        "px-4 py-2 rounded-md text-sm font-semibold flex items-center justify-center gap-2 " +
+        (isQueue ? "bg-white text-[#5d58dc] shadow-sm" : "text-gray-500 hover:text-[#5d58dc]");
+      document.getElementById("tab-project").className =
+        "px-4 py-2 rounded-md text-sm font-semibold flex items-center justify-center gap-2 " +
+        (isQueue ? "text-gray-500 hover:text-[#5d58dc]" : "bg-white text-[#5d58dc] shadow-sm");
+      document.querySelectorAll(".right-doc").forEach((d) => {
+        d.style.display = d.dataset.tab === tab ? "block" : "none";
+      });
+      requestAnimationFrame(drawConnections);
+    }
+    function drawConnections() {
+      const split = document.getElementById("split");
+      const svg = document.getElementById("connector");
+      if (window.innerWidth <= 768) { svg.style.display = "none"; return; }
+      svg.style.display = "block";
+      const cr = split.getBoundingClientRect();
+      svg.setAttribute("viewBox", `0 0 ${cr.width} ${cr.height}`);
+      svg.setAttribute("width", cr.width);
+      svg.setAttribute("height", cr.height);
+      svg.innerHTML = "";
+      pairs.filter((p) => p.tab === currentTab).forEach((p) => {
+        const s = document.getElementById(p.s);
+        const t = document.getElementById(p.t);
+        if (!s || !t) return;
+        const sr = s.getBoundingClientRect();
+        const tr = t.getBoundingClientRect();
+        const sx = sr.right - cr.left;
+        const sy = sr.top - cr.top + sr.height / 2;
+        const tx = tr.left - cr.left;
+        const ty = tr.top - cr.top + tr.height / 2;
+        const dx = Math.max(40, (tx - sx) / 2);
+        const d = `M ${sx} ${sy} C ${sx + dx} ${sy}, ${tx - dx} ${ty}, ${tx} ${ty}`;
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", d);
+        path.setAttribute("class", "conn-line");
+        path.setAttribute("data-pair", p.n);
+        svg.appendChild(path);
+        const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+        const g = document.createElementNS(SVG_NS, "g");
+        g.setAttribute("class", "conn-badge");
+        g.setAttribute("data-pair", p.n);
+        const c = document.createElementNS(SVG_NS, "circle");
+        c.setAttribute("cx", mx); c.setAttribute("cy", my); c.setAttribute("r", 11);
+        const txt = document.createElementNS(SVG_NS, "text");
+        txt.setAttribute("x", mx); txt.setAttribute("y", my + 4);
+        txt.setAttribute("text-anchor", "middle");
+        txt.textContent = p.n;
+        g.appendChild(c); g.appendChild(txt);
+        svg.appendChild(g);
+      });
+    }
+    function setActive(n, on) {
+      document.querySelectorAll(`[data-pair="${n}"]`).forEach((el) => el.classList.toggle("active", on));
+      const p = pairs.find((x) => x.n === n);
+      document.getElementById(p.s).classList.toggle("hl", on);
+      document.getElementById(p.t).classList.toggle("hl", on);
+    }
+    function bindHover() {
+      pairs.forEach((p) => {
+        const s = document.getElementById(p.s);
+        const t = document.getElementById(p.t);
+        const on = () => setActive(p.n, true);
+        const off = () => setActive(p.n, false);
+        s.addEventListener("mouseenter", on); s.addEventListener("mouseleave", off);
+        t.addEventListener("mouseenter", on); t.addEventListener("mouseleave", off);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initSample();
+      render();
+      bindHover();
+      document.querySelectorAll(".right-doc").forEach((d) => {
+        d.style.display = d.dataset.tab === currentTab ? "block" : "none";
+      });
+      drawConnections();
+    });
+    window.addEventListener("resize", drawConnections);
+  </script>
+</body>
+</html>
