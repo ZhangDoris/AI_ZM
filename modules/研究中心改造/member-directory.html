@@ -738,6 +738,7 @@
               <th class="member-table-th whitespace-nowrap">手机号</th>
               <th class="member-table-th whitespace-nowrap">操作时间</th>
               <th class="member-table-th whitespace-nowrap">操作类型</th>
+              <th class="member-table-th whitespace-nowrap">启用/停用原因</th>
               <th class="member-table-th whitespace-nowrap">操作人</th>
               <th class="member-table-th whitespace-nowrap">操作</th>
             </tr></thead>
@@ -860,6 +861,7 @@
           <div><span class="text-gray-500">操作人：</span><span id="mdlUser" class="text-gray-800 font-medium"></span></div>
           <div><span class="text-gray-500">操作时间：</span><span id="mdlTime" class="text-gray-800 font-medium"></span></div>
           <div><span class="text-gray-500">操作类型：</span><span id="mdlType" class="text-gray-800 font-medium"></span></div>
+          <div><span class="text-gray-500">启用/停用原因：</span><span id="mdlReason" class="text-gray-800 font-medium"></span></div>
           <div class="col-span-2"><span class="text-gray-500">操作动作：</span><span id="mdlDetail" class="text-gray-800 font-medium"></span></div>
         </div>
         <div>
@@ -2684,8 +2686,8 @@
     var opLogData = [
       { time: '2026-08-20 10:15', type: '新增', user: '系统管理员', target: '王慧柳', detail: '创建成员账号，分配 29 个负责中心', before: null, after: { name: '王慧柳', role: '医学经理', phone: '138****8001', centers: ['CN001','CN002'], status: '启用' } },
       { time: '2026-08-18 16:42', type: '编辑', user: '李运营', target: '刘梅', detail: '更新手机号与负责中心范围', before: { name: '刘梅', role: 'SMO-PM', phone: '139****9001', centers: ['CN003'], status: '启用' }, after: { name: '刘梅', role: 'SMO-PM', phone: '139****9002', centers: ['CN003','CN004'], status: '启用' } },
-      { time: '2026-08-15 09:30', type: '停用', user: '系统管理员', target: '周CRC', detail: '因岗位调动停用账号，触发患者交接', before: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '启用' }, after: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '停用' } },
-      { time: '2026-08-12 14:05', type: '启用', user: '李运营', target: '陈CRA', detail: '重新启用账号', before: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '停用' }, after: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '启用' } },
+      { time: '2026-08-15 09:30', type: '停用', user: '系统管理员', target: '周CRC', reason: '岗位调动', detail: '因岗位调动停用账号，触发患者交接', before: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '启用' }, after: { name: '周CRC', role: 'CRC', phone: '137****7001', centers: ['CN005'], status: '停用' } },
+      { time: '2026-08-12 14:05', type: '启用', user: '李运营', target: '陈CRA', reason: '重新入职复岗', detail: '重新启用账号', before: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '停用' }, after: { name: '陈CRA', role: 'CRA专员', phone: '136****6001', centers: ['CN006'], status: '启用' } },
       { time: '2026-08-10 11:20', type: '删除', user: '系统管理员', target: '张测试', detail: '删除测试账号', before: { name: '张测试', role: '临床协调员', phone: '135****5001', centers: ['CN007'], status: '启用' }, after: null },
     ];
 
@@ -2851,7 +2853,7 @@
       document.getElementById('hlOpTotal').textContent = '共 ' + opLogTotal + ' 条';
       document.getElementById('hlOpJump').value = opLogPage;
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="px-3 py-12 text-center text-gray-400 text-[13px]">暂无操作日志</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="px-3 py-12 text-center text-gray-400 text-[13px]">暂无操作日志</td></tr>';
         renderOpPager(totalPages);
         return;
       }
@@ -2868,6 +2870,7 @@
           '<td class="member-table-td text-gray-600">' + (afterInfo.phone || '-') + '</td>' +
           '<td class="member-table-td text-gray-500 whitespace-nowrap">' + (r.time || '-') + '</td>' +
           '<td class="member-table-td font-medium whitespace-nowrap" style="color:' + c + '">' + (r.type || '-') + '</td>' +
+          '<td class="member-table-td text-gray-600 whitespace-nowrap">' + (r.reason || '-') + '</td>' +
           '<td class="member-table-td text-gray-800">' + (r.user || '-') + '</td>' +
           '<td class="member-table-td text-center"><a class="text-[#5d58dc] text-[13px] cursor-pointer hover:underline" onclick="viewModifyLog(' + origIdx + ')">查看</a></td>';
         tbody.appendChild(tr);
@@ -2914,6 +2917,7 @@
       document.getElementById('mdlUser').textContent = r.user || '-';
       document.getElementById('mdlTime').textContent = r.time || '-';
       document.getElementById('mdlType').textContent = r.type || '-';
+      document.getElementById('mdlReason').textContent = r.reason || '-';
       document.getElementById('mdlTarget').textContent = r.target || '-';
       var mdlDetail = document.getElementById('mdlDetail');
       if (mdlDetail) mdlDetail.textContent = r.detail || '-';

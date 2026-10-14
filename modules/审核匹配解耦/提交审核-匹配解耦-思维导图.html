@@ -1,0 +1,417 @@
+<!--
+  「提交审核-匹配解耦」需求思维导图
+  说明：1:1 还原需求脑图结构 —— 左侧蓝色根节点「提交审核-匹配解耦」，
+       向右发散 4 个一级分支（项目层面 / 患者建档 / 匹配详情页面修改 / 审核列表-查看页面），
+       各分支继续向右展开子节点，节点之间用蓝色平滑贝塞尔曲线连接。
+  交互：· 悬停节点 → 高亮该节点及其关联连线
+       · 点击带子节点的节点 → 折叠/展开该分支（右上角出现子节点数量徽标）
+       · 右上角工具栏 → 缩小 / 放大 / 适应窗口
+  技术：纯 HTML + CSS + 原生 JS，无任何外部依赖（连线用 SVG 动态计算坐标绘制）。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>提交审核-匹配解耦 · 思维导图</title>
+<style>
+  :root {
+    --blue: #2b5cff;
+    --blue-deep: #1e40ff;
+    --ink: #111827;
+    --bg: #f5f6f8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: #1f2937; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", Roboto, Arial, sans-serif;
+    display: flex; flex-direction: column;
+  }
+
+  /* ===== 顶栏 ===== */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 11px 22px; background: #fff; border-bottom: 1px solid #e5e7eb; z-index: 5; flex-shrink: 0;
+  }
+  .topbar h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 15px; font-weight: 600; color: #1f2937; }
+  .topbar .mark { width: 10px; height: 10px; border-radius: 3px; background: linear-gradient(135deg, #3b6bff, #1e40ff); }
+  .topbar .sub { font-size: 12px; color: #9ca3af; font-weight: 400; }
+  .tools { display: flex; align-items: center; gap: 8px; }
+  .tools button {
+    height: 30px; min-width: 30px; padding: 0 8px; border: 1px solid #e5e7eb; background: #fff;
+    border-radius: 6px; cursor: pointer; color: #4b5563; font-size: 13px; line-height: 1; transition: .15s;
+  }
+  .tools button:hover { border-color: var(--blue); color: var(--blue); }
+  .tools .fit { padding: 0 12px; font-size: 12px; }
+  .scale-label { font-size: 12px; color: #6b7280; min-width: 46px; text-align: center; font-variant-numeric: tabular-nums; }
+
+  /* ===== 画布 ===== */
+  .canvas { flex: 1; overflow: auto; padding: 36px 48px; -webkit-overflow-scrolling: touch; }
+  .scroll-inner { position: relative; width: max-content; min-width: 100%; min-height: 100%; }
+  .spacer { display: block; width: 1px; height: 1px; }
+  .stage { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+
+  /* ===== 树结构 ===== */
+  .tree { position: relative; display: flex; align-items: center; }
+  .branch-node { display: flex; align-items: center; position: relative; }
+  .node-wrap { display: flex; flex-direction: column; align-items: center; }
+  .subtree { display: flex; flex-direction: column; justify-content: center; gap: 16px; margin-left: 54px; }
+  .subtree.hidden-sub { display: none; }
+
+  #connectors { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  .link { fill: none; stroke: var(--blue); stroke-width: 1.6; opacity: .72; transition: stroke-width .15s ease, opacity .15s ease; }
+  .link.active { stroke-width: 2.8; opacity: 1; }
+
+  /* ===== 节点 ===== */
+  .node { position: relative; z-index: 2; white-space: nowrap; transition: box-shadow .18s ease; }
+  .node.can-toggle { cursor: pointer; }
+  .node.can-toggle:hover { box-shadow: 0 0 0 2px rgba(43,92,255,.3); }
+  .node.hl { box-shadow: 0 0 0 2px var(--blue), 0 8px 20px rgba(43,92,255,.25); }
+
+  .node.root {
+    background: linear-gradient(135deg, #3b6bff, #1e40ff); color: #fff;
+    font-size: 18px; font-weight: 700; padding: 16px 28px; border-radius: 9px;
+    box-shadow: 0 8px 22px rgba(43,92,255,.3);
+  }
+  .node.l1 { background: #141414; color: #fff; font-size: 15px; font-weight: 600; padding: 10px 18px; border-radius: 6px; }
+  .node.l2 { background: #fff; color: var(--ink); font-size: 14px; font-weight: 500; padding: 9px 16px; border-radius: 6px; border: 1.5px solid #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .node.l3 { background: #fff; color: #1f2937; font-size: 13.5px; padding: 8px 15px; border-radius: 6px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .node.l4 { background: #fff; color: #1f2937; font-size: 13.5px; font-weight: 600; padding: 7px 14px; border-radius: 6px; border: 1px solid #cbd5e1; }
+  .node.faded { background: #fff; color: #9ca3af; font-size: 13px; padding: 8px 15px; border-radius: 6px; border: 1px dashed #d8dde5; }
+  .node.wrap { white-space: normal; line-height: 1.5; text-align: left; }
+  .w-160 { max-width: 160px; }
+  .w-190 { max-width: 190px; }
+  .w-210 { max-width: 210px; }
+  .w-240 { max-width: 240px; }
+
+  .annotation { font-size: 12px; color: #9ca3af; margin-top: 6px; text-align: center; }
+
+  /* 并列模块并行标记 + 节点说明标签 */
+  .parallel-mark {
+    align-self: flex-start; margin: 0 0 2px 8px; padding: 4px 11px;
+    font-size: 12px; color: #7a4a00; background: #fff7e6; border: 1px dashed #ffb547;
+    border-radius: 6px; white-space: nowrap; box-shadow: 0 1px 2px rgba(250,140,22,.12);
+  }
+  .tag {
+    display: inline-block; margin-top: 6px; font-size: 11.5px; color: #1e40ff;
+    background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 5px;
+    padding: 2px 9px; white-space: nowrap;
+  }
+  .badge {
+    position: absolute; right: -9px; top: -9px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 9px; background: var(--blue); color: #fff; font-size: 11px; line-height: 18px;
+    text-align: center; font-weight: 600; box-shadow: 0 2px 6px rgba(43,92,255,.35);
+  }
+
+  /* ===== 移动端 ===== */
+  @media (max-width: 768px) {
+    .canvas { padding: 20px 20px; }
+    .subtree { margin-left: 30px; gap: 12px; }
+    .topbar { padding: 9px 14px; flex-wrap: wrap; }
+    .topbar h1 { font-size: 13px; }
+    .topbar .sub { display: none; }
+    .node.root { font-size: 15px; padding: 12px 18px; }
+    .node.l1 { font-size: 13.5px; padding: 8px 13px; }
+    .node.l2, .node.l3, .node.l4, .node.faded { font-size: 12.5px; padding: 7px 11px; }
+    .w-160, .w-190, .w-210, .w-240 { max-width: 150px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 顶栏 -->
+  <header class="topbar">
+    <h1>
+      <span class="mark"></span>
+      提交审核-匹配解耦 · 需求思维导图
+      <span class="sub">点击节点可折叠 / 展开分支</span>
+    </h1>
+    <div class="tools">
+      <button onclick="zoomBy(-0.1)" title="缩小">&minus;</button>
+      <span class="scale-label" id="scaleLabel">100%</span>
+      <button onclick="zoomBy(0.1)" title="放大">+</button>
+      <button class="fit" onclick="fitScreen()" title="适应窗口">适应窗口</button>
+    </div>
+  </header>
+
+  <!-- 画布 -->
+  <div class="canvas" id="canvas">
+    <div class="scroll-inner">
+      <div class="spacer" id="spacer"></div>
+      <div class="stage" id="stage">
+        <div class="tree" id="tree">
+          <svg id="connectors" xmlns="http://www.w3.org/2000/svg"></svg>
+
+          <div class="branch-node">
+            <!-- 根节点 -->
+            <div class="node root">提交审核-匹配解耦</div>
+
+            <div class="subtree">
+
+              <!-- ========== ① 项目层面 ========== -->
+              <div class="branch-node">
+                <div class="node l1">项目层面</div>
+                <div class="subtree">
+                  <div class="branch-node">
+                    <div class="node l2">是否必须AI匹配</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========== ② 患者建档 ========== -->
+              <div class="branch-node">
+                <div class="node l1">患者建档</div>
+                <div class="subtree">
+                  <div class="branch-node">
+                    <div class="node l2">上传病史与资料</div>
+                    <div class="subtree">
+
+                      <!-- 必须匹配 -->
+                      <div class="branch-node">
+                        <div class="node l3">必须匹配</div>
+                        <div class="subtree">
+                          <div class="branch-node">
+                            <div class="node l3">项目匹配及提交</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 非必须匹配 -->
+                      <div class="branch-node">
+                        <div class="node-wrap">
+                          <div class="node l3">非必须匹配</div>
+                        </div>
+                        <div class="subtree">
+                          <div class="branch-node">
+                            <div class="node l3">直接点击提交审核</div>
+                            <div class="subtree">
+                              <div class="branch-node">
+                                <div class="node l3">是否参与匹配</div>
+                                <div class="subtree">
+                                  <!-- 是：参与匹配 → 「项目匹配」「提交审核」两个并列动作 -->
+                                  <div class="branch-node">
+                                    <div class="node l4">是</div>
+                                    <div class="subtree">
+                                      <div class="parallel-mark">并行：匹配时同步提交审核（不等待）；CRA审核时可等待结果</div>
+                                      <div class="branch-node">
+                                        <div class="node-wrap">
+                                          <div class="node l3">项目匹配</div>
+                                        </div>
+                                      </div>
+                                      <div class="branch-node">
+                                        <div class="node-wrap">
+                                          <div class="node l3">提交审核</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <!-- 否：不参与匹配 → 直接提交审核 -->
+                                  <div class="branch-node">
+                                    <div class="node l4">否</div>
+                                    <div class="subtree">
+                                      <div class="branch-node">
+                                        <div class="node l3">直接提交审核</div>
+                                        <div class="subtree">
+                                          <div class="branch-node">
+                                            <div class="node faded">筛选表配置必填项，如果有未填的，需要在引用的时候填写</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========== ③ 匹配详情页面修改 ========== -->
+              <div class="branch-node">
+                <div class="node l1">匹配详情页面修改</div>
+                <div class="subtree">
+                  <div class="branch-node">
+                    <div class="node l2 wrap w-190">没有参与匹配，匹配详情按钮隐藏，只看病史与资料即可</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ========== ④ 审核列表-查看页面 ========== -->
+              <div class="branch-node">
+                <div class="node l1">审核列表-查看页面</div>
+                <div class="subtree">
+
+                  <!-- 参与匹配 -->
+                  <div class="branch-node">
+                    <div class="node l2">参与匹配</div>
+                    <div class="subtree">
+                      <div class="branch-node">
+                        <div class="node l3">不同阶段的页面内展示</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 没有参与匹配 -->
+                  <div class="branch-node">
+                    <div class="node l2 wrap w-190">没有参与匹配，点击查看页面，就只有病史与资料</div>
+                    <div class="subtree">
+                      <div class="branch-node">
+                        <div class="node l3 wrap w-240">审核人可以自己进行匹配，匹配结果更新，项目中相关人员都可以看到匹配结果</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  var NS = 'http://www.w3.org/2000/svg';
+  var state = { scale: 1 };
+  var lines = [];
+
+  var treeEl = document.getElementById('tree');
+  var svgEl = document.getElementById('connectors');
+  var stageEl = document.getElementById('stage');
+  var spacerEl = document.getElementById('spacer');
+  var canvasEl = document.getElementById('canvas');
+
+  /* 取当前 branch-node 自身挂载的节点（兼容 node-wrap 包装） */
+  function ownNode(scope) {
+    return scope.querySelector(':scope > .node, :scope > .node-wrap > .node');
+  }
+
+  /* ===== 绘制连线：父节点右侧边缘中点 → 子节点左侧边缘中点（贝塞尔曲线） ===== */
+  function draw() {
+    var s = state.scale;
+    svgEl.setAttribute('viewBox', '0 0 ' + treeEl.offsetWidth + ' ' + treeEl.offsetHeight);
+    svgEl.innerHTML = '';
+    lines = [];
+
+    var svgRect = svgEl.getBoundingClientRect();
+
+    document.querySelectorAll('.subtree').forEach(function (sub) {
+      if (sub.classList.contains('hidden-sub')) return;
+      var branch = sub.closest('.branch-node');
+      if (!branch) return;
+
+      var parentNode = ownNode(branch);
+      if (!parentNode) return;
+
+      var pr = parentNode.getBoundingClientRect();
+      var x1 = (pr.right - svgRect.left) / s;
+      var y1 = (pr.top + pr.height / 2 - svgRect.top) / s;
+
+      var kids = sub.querySelectorAll(':scope > .branch-node > .node, :scope > .branch-node > .node-wrap > .node');
+      kids.forEach(function (kid) {
+        var kr = kid.getBoundingClientRect();
+        var x2 = (kr.left - svgRect.left) / s;
+        var y2 = (kr.top + kr.height / 2 - svgRect.top) / s;
+
+        var dx = Math.max((x2 - x1) * 0.5, 14);
+        var path = document.createElementNS(NS, 'path');
+        path.setAttribute('d',
+          'M ' + x1 + ' ' + y1 +
+          ' C ' + (x1 + dx) + ' ' + y1 + ', ' + (x2 - dx) + ' ' + y2 + ', ' + x2 + ' ' + y2);
+        path.setAttribute('class', 'link');
+        svgEl.appendChild(path);
+
+        lines.push({ path: path, parent: parentNode, child: kid });
+      });
+    });
+  }
+
+  /* ===== 高亮 ===== */
+  function setHighlight(node, on) {
+    node.classList.toggle('hl', on);
+    lines.forEach(function (l) {
+      if (l.parent === node || l.child === node) l.path.classList.toggle('active', on);
+    });
+  }
+
+  /* ===== 折叠 / 展开 ===== */
+  function toggleSub(node, sub) {
+    sub.classList.toggle('hidden-sub');
+    var collapsed = sub.classList.contains('hidden-sub');
+    var badge = node.querySelector('.badge');
+
+    if (collapsed) {
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'badge';
+        node.appendChild(badge);
+      }
+      badge.textContent = sub.querySelectorAll(':scope > .branch-node').length;
+    } else if (badge) {
+      badge.parentNode.removeChild(badge);
+    }
+    requestAnimationFrame(function () { resizeSpacer(); draw(); });
+  }
+
+  /* ===== 缩放与适配 ===== */
+  function resizeSpacer() {
+    spacerEl.style.width = (treeEl.offsetWidth * state.scale) + 'px';
+    spacerEl.style.height = (treeEl.offsetHeight * state.scale) + 'px';
+  }
+
+  function setScale(s) {
+    state.scale = Math.max(0.3, Math.min(1.8, s));
+    stageEl.style.transform = 'scale(' + state.scale + ')';
+    document.getElementById('scaleLabel').textContent = Math.round(state.scale * 100) + '%';
+    resizeSpacer();
+    requestAnimationFrame(draw);
+  }
+
+  function zoomBy(delta) { setScale(state.scale + delta); }
+
+  function fitScreen() {
+    var cs = getComputedStyle(canvasEl);
+    var availW = canvasEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var availH = canvasEl.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var s = Math.min(availW / treeEl.offsetWidth, availH / treeEl.offsetHeight, 1);
+    canvasEl.scrollTop = 0;
+    canvasEl.scrollLeft = 0;
+    setScale(s);
+  }
+
+  /* ===== 初始化 ===== */
+  function init() {
+    document.querySelectorAll('.node').forEach(function (node) {
+      node.addEventListener('mouseenter', function () { setHighlight(node, true); });
+      node.addEventListener('mouseleave', function () { setHighlight(node, false); });
+
+      var branch = node.closest('.branch-node');
+      var sub = branch ? branch.querySelector(':scope > .subtree') : null;
+      if (sub) {
+        node.classList.add('can-toggle');
+        node.addEventListener('click', function () { toggleSub(node, sub); });
+      }
+    });
+
+    resizeSpacer();
+    draw();
+    fitScreen();
+  }
+
+  if (document.readyState === 'complete') {
+    init();
+  } else {
+    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', function () { resizeSpacer(); draw(); });
+  }
+</script>
+</body>
+</html>
