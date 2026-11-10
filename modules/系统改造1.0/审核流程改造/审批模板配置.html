@@ -1,0 +1,1524 @@
+<!--
+  审批模板配置 · 原型（按截图还原）
+  结构：标题栏（左侧标题 + 右侧「引用模板」紫色分裂按钮）
+        主表格（浅紫表头）→ 可展开行 → 嵌套子表（流程列表）
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>审批模板配置</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    color: #1D2129;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { padding: 20px 28px 48px; }
+
+  /* ===== 标题栏 ===== */
+  .page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .page-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1D2129;
+  }
+
+  /* 引用模板按钮 */
+  .btn-split { display: inline-flex; }
+  .btn-split .btn-main {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    background: #5B4DF5;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background .2s;
+  }
+  .btn-split .btn-main:hover { background: #6C5FF8; }
+
+  /* ===== 主表格 ===== */
+  .main-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .main-table thead th {
+    background: #EDF0FF;
+    color: #1D2129;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 12px 8px;
+    white-space: nowrap;
+  }
+  .main-table thead th:first-child { border-radius: 4px 0 0 0; }
+  .main-table thead th:last-child { border-radius: 0 4px 0 0; }
+
+  .main-table tbody td {
+    padding: 13px 8px;
+    text-align: center;
+    color: #1D2129;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  .main-table .main-row td { border-bottom: 1px solid #F2F3F5; }
+  .main-table .main-row:hover td { background: #FAFBFF; }
+
+  .col-toggle { width: 4%; }
+  .col-tplname { width: 20%; }
+  .col-approval { width: 18%; }
+  .col-effective { width: 9%; }
+  .col-start { width: 16%; }
+  .col-end { width: 16%; }
+  .col-op { width: 17%; }
+
+  .toggle-btn {
+    border: none;
+    background: transparent;
+    color: #86909C;
+    cursor: pointer;
+    font-size: 11px;
+    padding: 4px 6px;
+    border-radius: 3px;
+    line-height: 1;
+  }
+  .toggle-btn:hover { background: #F2F3F5; color: #4E5969; }
+  .toggle-btn i { display: inline-block; transition: transform .2s; }
+  .main-row.collapsed .toggle-btn i { transform: rotate(-90deg); }
+
+  /* 标签 */
+  .tag-blue {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #1677FF;
+    border: 1px solid #91CAFF;
+    border-radius: 3px;
+    background: #fff;
+    margin: 0 3px;
+  }
+  .tag-mainflow {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #F53F3F;
+    border: 1px solid #FDCDC5;
+    border-radius: 3px;
+    background: #FFF3F3;
+    margin-left: 6px;
+  }
+  /* 主流程模板标签：仅当前主流程行展示 */
+  .tag-mainflow.mainflow-tag { display: none; }
+  .main-row.is-main .tag-mainflow.mainflow-tag { display: inline-block; }
+  .op-parent .btn-set-main.disabled { color: #C0C4CC; cursor: not-allowed; }
+  .op-parent .btn-set-main.disabled:hover { text-decoration: none; }
+  .action-disabled { color: #C0C4CC; cursor: not-allowed; }
+
+  /* 模板名称（操作列按钮触发行内编辑） */
+  .tpl-name-input {
+    font-family: inherit;
+    font-size: 13px;
+    color: #1D2129;
+    border: 1px solid #1677FF;
+    border-radius: 3px;
+    padding: 1px 3px;
+    width: 96px;
+    outline: none;
+  }
+
+  /* 是否生效：状态展示（操作列按钮切换） */
+  .status-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 9px;
+    font-size: 12px;
+    border-radius: 3px;
+    user-select: none;
+  }
+  .status-text::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .status-text.active { color: #00B42A; background: #E8FFEA; border: 1px solid #9BE6A6; }
+  .status-text.inactive { color: #86909C; background: #F2F3F5; border: 1px solid #E5E6EB; }
+
+  /* 父节点操作列 */
+  .op-parent .link + .link { margin-left: 14px; }
+  .op-parent .action-disabled { margin-left: 14px; }
+
+  /* ===== 展开区 / 子表 ===== */
+  .expand-row > td { padding: 0; border: none; }
+  .expand-row.hide { display: none; }
+
+  .sub-wrap { padding: 6px 28px 16px 28px; }
+  .sub-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .sub-table thead th {
+    background: transparent;
+    color: #1D2129;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 11px 8px;
+    border-bottom: 1px solid #F0F0F0;
+    white-space: nowrap;
+  }
+  .sub-table tbody td {
+    padding: 11px 8px;
+    text-align: center;
+    font-size: 13px;
+    color: #1D2129;
+    border-bottom: 1px solid #F2F3F5;
+  }
+  .sub-table tbody tr.alt td { background: #F7F8FE; }
+  .sub-table tbody tr:hover td { background: #F3F5FF; }
+  .sub-table tbody tr:last-child td { border-bottom: none; }
+
+  .sc-version { width: 16%; }
+  .sc-flow { width: 16%; }
+  .sc-approval { width: 14%; }
+  .sc-effective { width: 10%; }
+  .sc-time { width: 14%; }
+  .sc-op { width: 30%; }
+  .flow-time { color: #86909C; font-size: 12px; }
+
+  /* 审批类型 + 对应审核节点 */
+  .type-box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .type-nodes {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #86909C;
+    white-space: nowrap;
+  }
+  .type-arrow { font-size: 9px; color: #C9CDD4; }
+
+  .op-cell { white-space: nowrap; }
+  .link {
+    color: #1677FF;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .link:hover { text-decoration: underline; }
+  .link + .link { margin-left: 14px; }
+  /* ===== 修改名称弹窗 ===== */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .modal {
+    width: 380px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; color: #1D2129; }
+  .modal-close {
+    border: none;
+    background: transparent;
+    color: #86909C;
+    font-size: 15px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal-close:hover { color: #1D2129; }
+  .modal-body { padding: 18px; }
+  .modal-label { display: block; font-size: 13px; color: #4E5969; margin-bottom: 8px; }
+  .modal-input {
+    width: 100%;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .modal-input:focus { border-color: #5B4DF5; box-shadow: 0 0 0 2px rgba(91, 77, 245, 0.12); }
+  .modal-text { font-size: 13px; color: #1D2129; line-height: 1.6; }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 18px;
+    border-top: 1px solid #F0F0F0;
+  }
+  .btn-cancel {
+    height: 32px;
+    padding: 0 16px;
+    border: 1px solid #E5E6EB;
+    background: #fff;
+    color: #4E5969;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn-cancel:hover { background: #F7F8FA; }
+  .btn-primary {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    background: #5B4DF5;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn-primary:hover { background: #6C5FF8; }
+
+  /* ===== 引用流程模板弹窗 ===== */
+  .ref-dialog {
+    width: 1000px;
+    max-width: calc(100vw - 48px);
+    height: 760px;
+    max-height: calc(100vh - 48px);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .ref-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .ref-title-wrap { display: flex; align-items: baseline; gap: 8px; }
+  .ref-title-icon { color: #5B4DF5; font-size: 15px; }
+  .ref-title { font-size: 16px; font-weight: 600; color: #1D2129; }
+  .ref-subtitle { font-size: 12px; color: #86909C; }
+  .ref-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+  }
+  .ref-field { display: flex; align-items: center; gap: 8px; }
+  .ref-field-label { font-size: 13px; color: #4E5969; }
+  .ref-input {
+    width: 200px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+  }
+  .ref-input:focus { border-color: #5B4DF5; box-shadow: 0 0 0 2px rgba(91, 77, 245, 0.12); }
+  .ref-actions { display: flex; align-items: center; gap: 10px; }
+  .ref-btn-search { display: inline-flex; align-items: center; gap: 6px; }
+
+  .ref-table-head {
+    display: flex;
+    align-items: center;
+    padding: 9px 20px;
+    background: #FAFAFA;
+    border-top: 1px solid #F2F3F5;
+    border-bottom: 1px solid #F2F3F5;
+    font-size: 12px;
+    color: #86909C;
+  }
+  .ref-body { flex: 1; overflow-y: auto; }
+
+  .ref-group-head,
+  .ref-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #F5F6F7;
+  }
+  .ref-group-head { cursor: pointer; }
+  .ref-group-head:hover,
+  .ref-item:hover { background: #FAFBFF; }
+  .ref-group.collapsed .ref-item { display: none; }
+
+  .rc-check { width: 34px; flex-shrink: 0; }
+  .rc-name { flex: 1; min-width: 0; }
+  .rc-version { width: 190px; flex-shrink: 0; color: #1D2129; }
+  .rc-type { width: 150px; flex-shrink: 0; text-align: center; }
+  .rc-view { width: 130px; flex-shrink: 0; }
+
+  .ref-check { width: 15px; height: 15px; margin: 0; accent-color: #5B4DF5; cursor: pointer; }
+  .ref-group-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1D2129;
+  }
+  .ref-caret { color: #86909C; font-size: 11px; transition: transform .2s; }
+  .ref-group.collapsed .ref-caret { transform: rotate(-90deg); }
+  .ref-folder { color: #5B4DF5; font-size: 15px; }
+  .ref-item-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 56px;
+    font-size: 13px;
+    color: #1D2129;
+  }
+  .ref-dot { width: 5px; height: 5px; border-radius: 50%; background: #C9CDD4; }
+  .ref-tag {
+    display: inline-block;
+    padding: 1px 10px;
+    font-size: 12px;
+    line-height: 18px;
+    color: #5B4DF5;
+    border: 1px solid #C9C2FB;
+    border-radius: 3px;
+    background: #F7F5FF;
+  }
+  .ref-view-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    padding: 0 12px;
+    border: 1px solid #C9C2FB;
+    border-radius: 13px;
+    background: #fff;
+    color: #5B4DF5;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .ref-view-btn:hover { background: #F7F5FF; }
+  .ref-empty { padding: 60px 0; text-align: center; color: #86909C; font-size: 13px; }
+
+  .ref-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid #F0F0F0;
+  }
+  .ref-foot-left { font-size: 13px; color: #86909C; }
+  .ref-foot-left b { color: #1D2129; font-weight: 600; }
+  .ref-foot-total { margin-left: 16px; }
+  .ref-foot-right { display: flex; align-items: center; gap: 10px; }
+
+  /* 轻提示 */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translate(-50%, -12px);
+    background: rgba(29, 33, 41, 0.85);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ===== 切换流程（流程列表）弹窗 ===== */
+  .pick-dialog {
+    width: 1180px;
+    max-width: calc(100vw - 48px);
+    height: 720px;
+    max-height: calc(100vh - 48px);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .pick-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid #F0F0F0;
+  }
+  .pick-title { font-size: 16px; font-weight: 600; color: #1D2129; }
+  .pick-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+  }
+  .pick-field { display: flex; align-items: center; gap: 8px; }
+  .pick-label { font-size: 13px; color: #4E5969; }
+  .pick-input,
+  .pick-select {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #1D2129;
+    background: #fff;
+    outline: none;
+  }
+  .pick-input { width: 220px; }
+  .pick-select { width: 140px; cursor: pointer; }
+  .pick-input:focus,
+  .pick-select:focus { border-color: #5B4DF5; box-shadow: 0 0 0 2px rgba(91, 77, 245, 0.12); }
+  .pick-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .pick-body { flex: 1; overflow: auto; }
+  .pick-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .pick-table th {
+    position: sticky;
+    top: 0;
+    background: #EAF1FB;
+    color: #4E5969;
+    font-weight: 500;
+    text-align: center;
+    padding: 10px 12px;
+    white-space: nowrap;
+    border-bottom: 1px solid #DCE6F5;
+  }
+  .pick-table td {
+    padding: 10px 12px;
+    text-align: center;
+    color: #1D2129;
+    border-bottom: 1px solid #F2F3F5;
+    white-space: nowrap;
+  }
+  .pk-check { width: 64px; }
+  .pick-radio {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: #5B4DF5;
+    cursor: pointer;
+  }
+  .pick-table tbody tr { cursor: pointer; }
+  .pick-table tbody tr:nth-child(odd) { background: #F7FAFF; }
+  .pick-table tbody tr:hover { background: #EFF4FF; }
+  .pick-table tbody tr.selected { background: #EDEAFF; }
+  .pick-status { font-size: 13px; }
+  .pick-status.pub { color: #1677FF; }
+  .pick-status.unpub { color: #86909C; }
+  .pick-empty { padding: 50px 0; color: #86909C; }
+
+  .pick-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid #F0F0F0;
+  }
+  .pick-foot-left { font-size: 13px; color: #86909C; }
+  .pick-foot-left b { color: #1D2129; font-weight: 600; }
+  .pick-foot-right { display: flex; align-items: center; gap: 10px; }
+  .pick-pager { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #86909C; }
+  .pick-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+  }
+  .pick-page.cur { background: #5B4DF5; color: #fff; }
+  .pick-total { margin-left: 4px; }
+
+</style>
+</head>
+<body>
+
+  <div class="page">
+
+    <!-- 标题栏 -->
+    <div class="page-head">
+      <h1 class="page-title">审批模板配置</h1>
+      <div class="btn-split">
+        <button class="btn-main">引用模板</button>
+      </div>
+    </div>
+
+    <!-- 主表格 -->
+    <table class="main-table">
+      <thead>
+        <tr>
+          <th class="col-toggle"></th>
+          <th class="col-tplname">模板名称</th>
+          <th class="col-approval">审批类型</th>
+          <th class="col-effective">是否生效</th>
+          <th class="col-start">生效开始时间</th>
+          <th class="col-end">生效结束时间</th>
+          <th class="col-op">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 主流程模板行（默认展开，当前唯一主流程） -->
+        <tr class="main-row is-main">
+          <td class="col-toggle">
+            <button class="toggle-btn" title="展开/收起"><i class="fa-solid fa-chevron-down"></i></button>
+          </td>
+          <td><span class="tpl-name" data-name="常规模板">常规模板</span><span class="tag-mainflow mainflow-tag">主流程模板</span></td>
+          <td>
+            <span class="tag-blue">预筛审批</span><span class="tag-blue">入组审批</span>
+          </td>
+          <td><span class="status-text active" data-on="1">生效</span></td>
+          <td>2026-10-23 16:49:13</td>
+          <td></td>
+          <td class="op-parent"><a class="link btn-edit-name">修改名称</a><a class="link btn-toggle-status" data-on="1">停用</a><a class="link btn-set-main disabled" data-main="1">主流程模板设置</a></td>
+        </tr>
+
+        <!-- 展开：流程子表 -->
+        <tr class="expand-row">
+          <td colspan="8">
+            <div class="sub-wrap">
+              <table class="sub-table">
+                <thead>
+                  <tr>
+                    <th class="sc-version">版本号</th>
+                    <th class="sc-flow">流程名称</th>
+                    <th class="sc-approval">审批类型</th>
+                    <th class="sc-effective">是否生效</th>
+                    <th class="sc-time">启用/停用时间</th>
+                    <th class="sc-op">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-type="预筛审批">
+                    <td>预筛审核V1.0</td>
+                    <td>预筛审核V1.0</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">预筛审批</span>
+                        <span class="type-nodes">CRA审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text active" data-on="1">生效</span></td>
+                    <td class="flow-time">2026-10-26 08:12:33</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="1">停用</a>
+                    </td>
+                  </tr>
+                  <tr class="alt" data-type="预筛审批">
+                    <td>预筛审核V2.0</td>
+                    <td>预筛审核V2.0</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">预筛审批</span>
+                        <span class="type-nodes">CRA审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                  <tr data-type="预筛审批">
+                    <td>预筛仅医学审核</td>
+                    <td>预筛仅医学审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">预筛审批</span>
+                        <span class="type-nodes">CRA审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                  <tr class="alt" data-type="入组审批">
+                    <td>入组审核</td>
+                    <td>入组审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text active" data-on="1">生效</span></td>
+                    <td class="flow-time">2026-10-26 08:12:33</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="1">停用</a>
+                    </td>
+                  </tr>
+                  <tr data-type="入组审批">
+                    <td>入组仅CRA审核</td>
+                    <td>入组仅CRA审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                  <tr class="alt" data-type="入组审批">
+                    <td>入组仅医学审核</td>
+                    <td>入组仅医学审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+
+        <!-- 第二条模板（默认收起） -->
+        <tr class="main-row collapsed">
+          <td class="col-toggle">
+            <button class="toggle-btn" title="展开/收起"><i class="fa-solid fa-chevron-down"></i></button>
+          </td>
+          <td><span class="tpl-name" data-name="入组审核模板">入组审核模板</span><span class="tag-mainflow mainflow-tag">主流程模板</span></td>
+          <td>
+            <span class="tag-blue">入组审批</span>
+          </td>
+          <td><span class="status-text inactive" data-on="0">停用</span></td>
+          <td>2026-10-24 10:20:00</td>
+          <td></td>
+          <td class="op-parent"><a class="link btn-edit-name">修改名称</a><a class="link btn-toggle-status" data-on="0">启用</a><a class="link btn-set-main" data-main="0">主流程模板设置</a></td>
+        </tr>
+
+        <!-- 展开：流程子表 -->
+        <tr class="expand-row hide">
+          <td colspan="8">
+            <div class="sub-wrap">
+              <table class="sub-table">
+                <thead>
+                  <tr>
+                    <th class="sc-version">版本号</th>
+                    <th class="sc-flow">流程名称</th>
+                    <th class="sc-approval">审批类型</th>
+                    <th class="sc-effective">是否生效</th>
+                    <th class="sc-time">启用/停用时间</th>
+                    <th class="sc-op">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr data-type="入组审批">
+                    <td>入组审核</td>
+                    <td>入组审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text active" data-on="1">生效</span></td>
+                    <td class="flow-time">2026-10-26 08:12:33</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="1">停用</a>
+                    </td>
+                  </tr>
+                  <tr class="alt" data-type="入组审批">
+                    <td>入组仅CRA审核</td>
+                    <td>入组仅CRA审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                  <tr data-type="入组审批">
+                    <td>入组仅医学审核</td>
+                    <td>入组仅医学审核</td>
+                    <td>
+                      <div class="type-box">
+                        <span class="tag-blue">入组审批</span>
+                        <span class="type-nodes">CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核</span>
+                      </div>
+                    </td>
+                    <td><span class="status-text inactive" data-on="0">停用</span></td>
+                    <td class="flow-time">2026-10-20 14:05:21</td>
+                    <td class="op-cell">
+                      <a class="link">查看审批流程</a>
+                      <a class="link">修改名称</a>
+                      <a class="link">提醒配置</a>
+                      <a class="link btn-flow-status" data-on="0">启用</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+  <!-- 修改名称弹窗 -->
+  <div class="modal-mask" id="nameModal" style="display:none;">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nameModalTitle">
+      <div class="modal-header">
+        <span class="modal-title" id="nameModalTitle">修改模板名称</span>
+        <button class="modal-close" id="nameModalClose" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label" for="nameInput">模板名称</label>
+        <input class="modal-input" id="nameInput" type="text" maxlength="50" placeholder="请输入模板名称">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="nameModalCancel">取消</button>
+        <button class="btn-primary" id="nameModalOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 启用/停用确认弹窗 -->
+  <div class="modal-mask" id="statusModal" style="display:none;">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="statusModalTitle">
+      <div class="modal-header">
+        <span class="modal-title" id="statusModalTitle">操作确认</span>
+        <button class="modal-close" id="statusModalClose" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-text" id="statusModalText"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="statusModalCancel">取消</button>
+        <button class="btn-primary" id="statusModalOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 引用流程模板弹窗 -->
+  <div class="modal-mask" id="refModal" style="display:none;">
+    <div class="ref-dialog" role="dialog" aria-modal="true" aria-labelledby="refTitle">
+      <div class="ref-head">
+        <div class="ref-title-wrap">
+          <i class="fa-solid fa-link ref-title-icon"></i>
+          <span class="ref-title" id="refTitle">引用流程模板</span>
+          <span class="ref-subtitle">从流程模板管理中选择</span>
+        </div>
+        <button class="modal-close" id="refClose" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="ref-toolbar">
+        <div class="ref-field">
+          <span class="ref-field-label">模板名称：</span>
+          <input class="ref-input" id="refKw" type="text" placeholder="请输入名称">
+        </div>
+        <div class="ref-actions">
+          <button class="btn-primary ref-btn-search" id="refSearch"><i class="fa-solid fa-magnifying-glass"></i>查询</button>
+          <button class="btn-cancel" id="refReset">重置</button>
+        </div>
+      </div>
+
+      <div class="ref-table-head">
+        <span class="rc-check"></span>
+        <span class="rc-name">流程名称</span>
+        <span class="rc-version">版本号</span>
+        <span class="rc-type">审批类型</span>
+        <span class="rc-view">查看流程</span>
+      </div>
+
+      <div class="ref-body" id="refBody"></div>
+
+      <div class="ref-foot">
+        <div class="ref-foot-left">已选择 <b id="refSelCount">0</b> 个模板<span class="ref-foot-total">共 25 个模板</span></div>
+        <div class="ref-foot-right">
+          <button class="btn-cancel" id="refCancel">取消</button>
+          <button class="btn-primary" id="refUse">引用</button>
+          <button class="btn-primary" id="refUseOn">引用并生效</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 切换流程弹窗 -->
+  <div class="modal-mask" id="flowPickModal" style="display:none;">
+    <div class="pick-dialog" role="dialog" aria-modal="true" aria-labelledby="pickTitle">
+      <div class="pick-head">
+        <span class="pick-title" id="pickTitle">切换流程</span>
+        <button class="modal-close" id="pickClose" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="pick-toolbar">
+        <div class="pick-field">
+          <span class="pick-label">版本号：</span>
+          <input class="pick-input" id="pickKw" type="text" placeholder="请输入版本号">
+        </div>
+        <div class="pick-field">
+          <span class="pick-label">审批类型：</span>
+          <select class="pick-select" id="pickType">
+            <option value="">全部</option>
+            <option value="预筛审批">预筛审批</option>
+            <option value="入组审批">入组审批</option>
+            <option value="主知情审批">主知情审批</option>
+            <option value="导入期审批">导入期审批</option>
+          </select>
+        </div>
+        <div class="pick-field">
+          <span class="pick-label">状态：</span>
+          <select class="pick-select" id="pickStatus">
+            <option value="">全部</option>
+            <option value="已发布">已发布</option>
+            <option value="未发布">未发布</option>
+          </select>
+        </div>
+        <div class="pick-actions">
+          <button class="btn-cancel" id="pickSearch">查询</button>
+          <button class="btn-cancel" id="pickReset">重置</button>
+        </div>
+      </div>
+
+      <div class="pick-body" id="pickBody"></div>
+
+      <div class="pick-foot">
+        <div class="pick-foot-left">已选择：<b id="pickSelName">未选择</b></div>
+        <div class="pick-foot-right">
+          <span class="pick-pager">
+            <i class="fa-solid fa-angle-left"></i>
+            <span class="pick-page cur">1</span>
+            <span class="pick-page">2</span>
+            <i class="fa-solid fa-angle-right"></i>
+            <span class="pick-total">共 17 条</span>
+          </span>
+          <button class="btn-cancel" id="pickCancel">取消</button>
+          <button class="btn-primary" id="pickOk">确定切换</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // 展开 / 收起主行下方的子表
+  document.querySelectorAll('.main-row').forEach(function (row) {
+    var btn = row.querySelector('.toggle-btn');
+    var expandRow = row.nextElementSibling;
+    btn.addEventListener('click', function () {
+      var collapsed = row.classList.toggle('collapsed');
+      if (expandRow && expandRow.classList.contains('expand-row')) {
+        expandRow.classList.toggle('hide', collapsed);
+      }
+    });
+  });
+
+  // 父节点：操作列「修改名称」→ 弹窗修改模板名称
+  var nameModal = document.getElementById('nameModal');
+  var nameInput = document.getElementById('nameInput');
+  var nameModalOk = document.getElementById('nameModalOk');
+  var nameModalCancel = document.getElementById('nameModalCancel');
+  var nameModalClose = document.getElementById('nameModalClose');
+  var editingNameEl = null;
+
+  function openNameModal(nameEl) {
+    if (!nameEl) return;
+    editingNameEl = nameEl;
+    nameInput.value = nameEl.getAttribute('data-name') || nameEl.textContent.trim();
+    nameModal.style.display = 'flex';
+    setTimeout(function () { nameInput.focus(); nameInput.select(); }, 30);
+  }
+  function closeNameModal() {
+    nameModal.style.display = 'none';
+    editingNameEl = null;
+  }
+  nameModalOk.addEventListener('click', function () {
+    if (!editingNameEl) return;
+    var v = nameInput.value.trim();
+    if (!v) { nameInput.focus(); return; }
+    editingNameEl.setAttribute('data-name', v);
+    editingNameEl.textContent = v;
+    closeNameModal();
+  });
+  nameModalCancel.addEventListener('click', closeNameModal);
+  nameModalClose.addEventListener('click', closeNameModal);
+  nameModal.addEventListener('click', function (e) {
+    if (e.target === nameModal) closeNameModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      if (nameModal.style.display === 'flex') { closeNameModal(); }
+      else if (statusModal.style.display === 'flex') { closeStatusModal(); }
+      else if (refModal.style.display === 'flex') { closeRef(); }
+      else if (flowPickModal.style.display === 'flex') { closePick(); }
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (nameModal.style.display === 'flex') { nameModalOk.click(); }
+      else if (statusModal.style.display === 'flex') { statusModalOk.click(); }
+    }
+  });
+
+  document.querySelectorAll('.btn-edit-name').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = btn.closest('.main-row');
+      openNameModal(row && row.querySelector('.tpl-name'));
+    });
+  });
+
+  // 父节点：操作列「停用 / 启用」→ 先弹出确认框，确认后再切换是否生效
+  var statusModal = document.getElementById('statusModal');
+  var statusModalText = document.getElementById('statusModalText');
+  var statusModalOk = document.getElementById('statusModalOk');
+  var statusModalCancel = document.getElementById('statusModalCancel');
+  var statusModalClose = document.getElementById('statusModalClose');
+  var pendingStatusBtn = null;
+  var pendingStatusFn = null;
+
+  function applyToggleStatus(btn) {
+    var on = btn.getAttribute('data-on') === '1';
+    on = !on;
+    btn.setAttribute('data-on', on ? '1' : '0');
+    btn.textContent = on ? '停用' : '启用';
+    var row = btn.closest('.main-row');
+    var st = row && row.querySelector('.status-text');
+    if (st) {
+      st.setAttribute('data-on', on ? '1' : '0');
+      st.textContent = on ? '生效' : '停用';
+      st.classList.toggle('active', on);
+      st.classList.toggle('inactive', !on);
+    }
+  }
+  function closeStatusModal() {
+    statusModal.style.display = 'none';
+    pendingStatusBtn = null;
+    pendingStatusFn = null;
+  }
+  document.querySelectorAll('.btn-toggle-status').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var nameEl = btn.closest('.main-row').querySelector('.tpl-name');
+      var name = nameEl ? nameEl.textContent.trim() : '该模板';
+      var willEnable = btn.getAttribute('data-on') !== '1';
+      pendingStatusBtn = btn;
+      pendingStatusFn = null;
+      statusModalText.textContent = '确定要' + (willEnable ? '启用' : '停用') + '「' + name + '」吗？';
+      statusModal.style.display = 'flex';
+    });
+  });
+  statusModalOk.addEventListener('click', function () {
+    if (pendingStatusBtn) applyToggleStatus(pendingStatusBtn);
+    else if (pendingStatusFn) pendingStatusFn();
+    closeStatusModal();
+  });
+  statusModalCancel.addEventListener('click', closeStatusModal);
+  statusModalClose.addEventListener('click', closeStatusModal);
+  statusModal.addEventListener('click', function (e) {
+    if (e.target === statusModal) closeStatusModal();
+  });
+
+  // 子表：每条流程可启用 / 停用（同一审批类型互斥，启用一条会自动停用其它）
+  function nowStr() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+      p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+  function setFlowStatus(btn, on) {
+    btn.setAttribute('data-on', on ? '1' : '0');
+    btn.textContent = on ? '停用' : '启用';
+    var row = btn.closest('tr');
+    var st = row ? row.querySelector('.status-text') : null;
+    if (st) {
+      st.setAttribute('data-on', on ? '1' : '0');
+      st.textContent = on ? '生效' : '停用';
+      st.classList.toggle('active', on);
+      st.classList.toggle('inactive', !on);
+    }
+    var tm = row ? row.querySelector('.flow-time') : null;
+    if (tm) tm.textContent = nowStr();
+  }
+  function applyFlowStatus(btn) {
+    var on = btn.getAttribute('data-on') !== '1';
+    setFlowStatus(btn, on);
+    if (on) {
+      var row = btn.closest('tr');
+      var type = row.getAttribute('data-type');
+      var sub = row.closest('.sub-table');
+      if (sub && type) {
+        sub.querySelectorAll('tr[data-type="' + type + '"]').forEach(function (r) {
+          if (r === row) return;
+          var b = r.querySelector('.btn-flow-status');
+          if (b && b.getAttribute('data-on') === '1') setFlowStatus(b, false);
+        });
+      }
+    }
+    refreshFlowRows(btn.closest('.sub-table'));
+  }
+  document.querySelectorAll('.btn-flow-status').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var row = btn.closest('tr');
+      var nameCell = row ? row.querySelector('td:nth-child(2)') : null;
+      var name = nameCell ? nameCell.textContent.trim() : '该流程';
+      var willEnable = btn.getAttribute('data-on') !== '1';
+      pendingStatusBtn = null;
+      pendingStatusFn = function () { applyFlowStatus(btn); };
+      statusModalText.textContent = '确定要' + (willEnable ? '启用' : '停用') + '『' + name + '』吗？';
+      statusModal.style.display = 'flex';
+    });
+  });
+
+  // 子表：切换流程按钮（停用行显示「切换流程」，生效行显示「当前流程」）
+  function refreshFlowRows(sub) {
+    if (!sub) return;
+    sub.querySelectorAll('tr[data-type]').forEach(function (row) {
+      var op = row.querySelector('.op-cell');
+      var statusBtn = row.querySelector('.btn-flow-status');
+      if (!op || !statusBtn) return;
+      var isOn = statusBtn.getAttribute('data-on') === '1';
+      var old = op.querySelector('.btn-switch-flow, .action-disabled');
+      if (old) old.parentNode.removeChild(old);
+      if (!isOn) return; // 仅生效行显示「切换流程」按钮
+      var el = document.createElement('a');
+      el.className = 'link btn-switch-flow';
+      el.style.marginLeft = '14px';
+      el.textContent = '切换流程';
+      statusBtn.insertAdjacentElement('afterend', el);
+    });
+  }
+  // 切换流程：点击后弹出流程列表，选择一个流程进行切换
+  document.addEventListener('click', function (e) {
+    var sw = e.target.closest('.btn-switch-flow');
+    if (!sw) return;
+    var row = sw.closest('tr');
+    if (!row) return;
+    openPick(row);
+  });
+  document.querySelectorAll('.sub-table').forEach(function (sub) { refreshFlowRows(sub); });
+
+  // 父节点：主流程模板设置 → 设为唯一主流程模板（排他，只能有一个）
+  document.querySelectorAll('.btn-set-main').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.classList.contains('disabled')) return;
+      var targetRow = btn.closest('.main-row');
+      document.querySelectorAll('.main-row').forEach(function (row) {
+        var isTarget = row === targetRow;
+        row.classList.toggle('is-main', isTarget);
+        var b = row.querySelector('.btn-set-main');
+        if (!b) return;
+        if (isTarget) {
+          b.classList.add('disabled');
+          b.setAttribute('data-main', '1');
+        } else {
+          b.classList.remove('disabled');
+          b.setAttribute('data-main', '0');
+        }
+      });
+    });
+  });
+
+  // ===== 引用流程模板弹窗 =====
+  var refModal = document.getElementById('refModal');
+  var refBody = document.getElementById('refBody');
+  var refKw = document.getElementById('refKw');
+  var refSelCount = document.getElementById('refSelCount');
+
+  var refGroups = [
+    {
+      name: '含导入审核模板（预筛和入组仅CRA审核）',
+      flows: [
+        { name: '预筛审批', version: '预筛审核V1.0', type: '预筛审批' },
+        { name: '导入期审批', version: '导入审核', type: '导入期审批' },
+        { name: '入组审批', version: '入组仅CRA审核', type: '入组审批' }
+      ]
+    },
+    {
+      name: '含基因审核模板（仅需医学审核）',
+      flows: [
+        { name: '预筛审批', version: '预筛仅医学审核', type: '预筛审批' },
+        { name: '主知情审批', version: '仅需医学审核', type: '主知情审批' },
+        { name: '入组审批', version: '入组仅医学审核', type: '入组审批' }
+      ]
+    },
+    {
+      name: '常规模板（都仅需医学审核）',
+      flows: [
+        { name: '预筛审批', version: '预筛仅医学审核', type: '预筛审批' },
+        { name: '主知情审批', version: '仅需医学审核', type: '主知情审批' },
+        { name: '入组审批', version: '入组仅医学审核', type: '入组审批' }
+      ]
+    },
+    {
+      name: '含主流程审核模板（CRA + 医学审核）',
+      flows: [
+        { name: '预筛审批', version: '预筛审核V2.0', type: '预筛审批' },
+        { name: '主流程审批', version: '主流程审核V1.0', type: '主流程审批' },
+        { name: '入组审批', version: '入组审核V1.0', type: '入组审批' }
+      ]
+    },
+    {
+      name: '双次导入审核模板（V1 / V2）',
+      flows: [
+        { name: '预筛审批', version: '预筛审核V1.0', type: '预筛审批' },
+        { name: 'V1审批', version: '第一次导入审核', type: 'V1审批' },
+        { name: 'V2审批', version: '第二次导入审核', type: 'V2审批' },
+        { name: '入组审批', version: '入组审核', type: '入组审批' }
+      ]
+    }
+  ];
+
+  function updateRefCount() {
+    var n = refBody.querySelectorAll('.ref-item-check:checked').length;
+    refSelCount.textContent = n;
+  }
+
+  function refNodeHtml(type) {
+    if (type === '预筛审批') return 'CRA审核';
+    if (type === '入组审批') return 'CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核';
+    if (type === '主知情审批') return '医学审核';
+    if (type === '导入期审批') return 'CRA审核';
+    if (type === '主流程审批') return 'CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核';
+    if (type === 'V1审批' || type === 'V2审批') return 'CRA审核';
+    return '';
+  }
+
+  function renderRefGroups() {
+    var kw = refKw.value.trim();
+    var html = '';
+    refGroups.forEach(function (g) {
+      var flows = g.flows.filter(function (f) {
+        return !kw || (g.name + f.name + f.version + f.type).indexOf(kw) > -1;
+      });
+      if (!flows.length) return;
+      html += '<div class="ref-group">';
+      html += '<div class="ref-group-head">' +
+                '<span class="rc-check"><input type="checkbox" class="ref-check ref-group-check"></span>' +
+                '<span class="rc-name"><span class="ref-group-title"><i class="fa-solid fa-caret-down ref-caret"></i><i class="fa-regular fa-folder-open ref-folder"></i>' + g.name + '</span></span>' +
+                '<span class="rc-version"></span><span class="rc-type"></span><span class="rc-view"></span>' +
+              '</div>';
+      flows.forEach(function (f) {
+        html += '<div class="ref-item">' +
+                  '<span class="rc-check"><input type="checkbox" class="ref-check ref-item-check"></span>' +
+                  '<span class="rc-name"><span class="ref-item-name"><span class="ref-dot"></span>' + f.name + '</span></span>' +
+                  '<span class="rc-version">' + f.version + '</span>' +
+                  '<span class="rc-type"><span class="type-box"><span class="ref-tag">' + f.type + '</span>' + (refNodeHtml(f.type) ? '<span class="type-nodes">' + refNodeHtml(f.type) + '</span>' : '') + '</span></span>' +
+                  '<span class="rc-view"><button class="ref-view-btn"><i class="fa-regular fa-eye"></i>查看流程</button></span>' +
+                '</div>';
+      });
+      html += '</div>';
+    });
+    refBody.innerHTML = html || '<div class="ref-empty">暂无匹配的模板</div>';
+    updateRefCount();
+  }
+
+  function openRef() {
+    refKw.value = '';
+    refModal.style.display = 'flex';
+    renderRefGroups();
+  }
+  function closeRef() { refModal.style.display = 'none'; }
+
+  document.querySelector('.btn-split .btn-main').addEventListener('click', openRef);
+  document.getElementById('refClose').addEventListener('click', closeRef);
+  document.getElementById('refCancel').addEventListener('click', closeRef);
+  refModal.addEventListener('click', function (e) { if (e.target === refModal) closeRef(); });
+
+  document.getElementById('refSearch').addEventListener('click', renderRefGroups);
+  refKw.addEventListener('keydown', function (e) { if (e.key === 'Enter') renderRefGroups(); });
+  document.getElementById('refReset').addEventListener('click', function () {
+    refKw.value = '';
+    renderRefGroups();
+  });
+
+  // 勾选：分组全选 / 单项联动
+  refBody.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el.classList.contains('ref-check')) return;
+    var group = el.closest('.ref-group');
+    if (!group) return;
+    if (el.classList.contains('ref-group-check')) {
+      group.querySelectorAll('.ref-item-check').forEach(function (c) { c.checked = el.checked; });
+    } else {
+      var items = group.querySelectorAll('.ref-item-check');
+      var all = true;
+      items.forEach(function (c) { if (!c.checked) all = false; });
+      var gc = group.querySelector('.ref-group-check');
+      if (gc) gc.checked = all;
+    }
+    updateRefCount();
+  });
+
+  // 查看流程 / 分组展开收起
+  refBody.addEventListener('click', function (e) {
+    if (e.target.closest('.ref-view-btn')) {
+      var item = e.target.closest('.ref-item');
+      var nm = item ? item.querySelector('.ref-item-name').textContent.trim() : '';
+      showToast('查看流程：' + nm);
+      return;
+    }
+    var head = e.target.closest('.ref-group-head');
+    if (!head) return;
+    if (e.target.closest('.rc-check')) return;
+    head.parentNode.classList.toggle('collapsed');
+  });
+
+  document.getElementById('refUse').addEventListener('click', function () {
+    var n = refBody.querySelectorAll('.ref-item-check:checked').length;
+    if (!n) { showToast('请先选择要引用的模板'); return; }
+    closeRef();
+    showToast('已引用 ' + n + ' 个模板');
+  });
+  document.getElementById('refUseOn').addEventListener('click', function () {
+    var n = refBody.querySelectorAll('.ref-item-check:checked').length;
+    if (!n) { showToast('请先选择要引用的模板'); return; }
+    closeRef();
+    showToast('已引用并生效 ' + n + ' 个模板');
+  });
+
+  // ===== 轻提示 =====
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  // ===== 切换流程：流程列表弹窗 =====
+  var flowPickModal = document.getElementById('flowPickModal');
+  var pickBody = document.getElementById('pickBody');
+  var pickKw = document.getElementById('pickKw');
+  var pickType = document.getElementById('pickType');
+  var pickStatus = document.getElementById('pickStatus');
+  var pickSelName = document.getElementById('pickSelName');
+  var switchTargetRow = null;
+  var pickSelected = null;
+
+  var pickFlows = [
+    { name: '入组仅CRA审核', type: '入组审批', status: '已发布', creator: '张琳', updater: '张琳', time: '2026-10-14 16:27:12', isDefault: false },
+    { name: '仅需医学审核', type: '主知情审批', status: '已发布', creator: '张琳', updater: '张琳', time: '2026-10-13 16:39:55', isDefault: false },
+    { name: '仅医学审核', type: '导入期审批', status: '未发布', creator: '张琳', updater: '张琳', time: '2026-08-17 13:43:00', isDefault: false },
+    { name: '导入期审核（仅CRA审核）', type: '导入期审批', status: '已发布', creator: '张琳', updater: '张琳', time: '2026-08-14 23:33:11', isDefault: false },
+    { name: '主知情审核V2.0', type: '主知情审批', status: '已发布', creator: '常余蓉', updater: '常余蓉', time: '2026-05-26 13:59:23', isDefault: false },
+    { name: '主知情审核V1.0', type: '主知情审批', status: '已发布', creator: '测试管理员', updater: '测试管理员', time: '2026-07-24 21:27:43', isDefault: false },
+    { name: '预筛审核V1.0', type: '预筛审批', status: '已发布', creator: '超级管理员188', updater: '超级管理员188', time: '2026-05-18 10:49:26', isDefault: true },
+    { name: '入组加签', type: '入组审批', status: '已发布', creator: '超级管理员188', updater: '超级管理员188', time: '2026-05-11 17:32:02', isDefault: false },
+    { name: '预筛加签', type: '预筛审批', status: '已发布', creator: '超级管理员188', updater: '超级管理员188', time: '2026-04-11 17:32:03', isDefault: false },
+    { name: '预筛面医学审核', type: '预筛审批', status: '已发布', creator: '超级管理员188', updater: '超级管理员188', time: '2026-07-27 10:48:44', isDefault: false }
+  ];
+
+  function renderPickFlows() {
+    var kw = pickKw.value.trim();
+    var t = pickType.value;
+    var s = pickStatus.value;
+    var rows = pickFlows.filter(function (f) {
+      if (kw && f.name.indexOf(kw) === -1) return false;
+      if (t && f.type !== t) return false;
+      if (s && f.status !== s) return false;
+      return true;
+    });
+    var html = '<table class="pick-table"><thead><tr>' +
+      '<th class="pk-check">选择</th>' +
+      '<th>版本号</th><th>审批类型</th><th>状态</th><th>创建人</th><th>更新人</th><th>更新时间</th>' +
+      '</tr></thead><tbody>';
+    if (!rows.length) {
+      html += '<tr><td colspan="7" class="pick-empty">暂无匹配的流程</td></tr>';
+    } else {
+      rows.forEach(function (f) {
+        var idx = pickFlows.indexOf(f);
+        var sel = pickSelected === idx;
+        var cls = sel ? ' class="selected"' : '';
+        html += '<tr data-idx="' + idx + '"' + cls + '>' +
+          '<td class="pk-check"><input type="radio" name="pickRadio" class="pick-radio"' + (sel ? ' checked' : '') + '></td>' +
+          '<td>' + f.name + '</td>' +
+          '<td><span class="type-box"><span class="tag-blue">' + f.type + '</span>' +
+          (refNodeHtml(f.type) ? '<span class="type-nodes">' + refNodeHtml(f.type) + '</span>' : '') +
+          '</span></td>' +
+          '<td><span class="pick-status ' + (f.status === '已发布' ? 'pub' : 'unpub') + '">' + f.status + '</span></td>' +
+          '<td>' + f.creator + '</td>' +
+          '<td>' + f.updater + '</td>' +
+          '<td>' + f.time + '</td>' +
+          '</tr>';
+      });
+    }
+    html += '</tbody></table>';
+    pickBody.innerHTML = html;
+  }
+
+  function openPick(row) {
+    switchTargetRow = row;
+    pickSelected = null;
+    pickKw.value = '';
+    pickStatus.value = '';
+    var tag = row.querySelector('.type-box .tag-blue');
+    pickType.value = tag ? tag.textContent.trim() : '';
+    pickSelName.textContent = '未选择';
+    flowPickModal.style.display = 'flex';
+    renderPickFlows();
+  }
+  function closePick() { flowPickModal.style.display = 'none'; }
+
+  // 点击行 / 单选框选中（点击操作列链接不触发行选中）
+  pickBody.addEventListener('click', function (e) {
+    var tr = e.target.closest('tr');
+    if (!tr || !tr.hasAttribute('data-idx')) return;
+    if (e.target.closest('a,button')) return;
+    var idx = parseInt(tr.getAttribute('data-idx'), 10);
+    pickSelected = idx;
+    pickBody.querySelectorAll('tbody tr').forEach(function (r) {
+      r.classList.remove('selected');
+      var rd = r.querySelector('.pick-radio');
+      if (rd) rd.checked = false;
+    });
+    tr.classList.add('selected');
+    var radio = tr.querySelector('.pick-radio');
+    if (radio) radio.checked = true;
+    pickSelName.textContent = pickFlows[idx].name;
+  });
+
+  document.getElementById('pickSearch').addEventListener('click', renderPickFlows);
+  pickKw.addEventListener('keydown', function (e) { if (e.key === 'Enter') renderPickFlows(); });
+  document.getElementById('pickReset').addEventListener('click', function () {
+    pickKw.value = '';
+    pickType.value = '';
+    pickStatus.value = '';
+    renderPickFlows();
+  });
+  document.getElementById('pickClose').addEventListener('click', closePick);
+  document.getElementById('pickCancel').addEventListener('click', closePick);
+  flowPickModal.addEventListener('click', function (e) { if (e.target === flowPickModal) closePick(); });
+
+  document.getElementById('pickOk').addEventListener('click', function () {
+    if (pickSelected === null || !pickFlows[pickSelected]) { showToast('请先选择一个流程'); return; }
+    var f = pickFlows[pickSelected];
+    var sub = switchTargetRow ? switchTargetRow.closest('.sub-table') : null;
+    var curType = switchTargetRow ? switchTargetRow.getAttribute('data-type') : '';
+    // 在子表中查找与所选流程同名的候选行
+    var targetRow = null;
+    if (sub) {
+      sub.querySelectorAll('tr[data-type="' + f.type + '"]').forEach(function (r) {
+        if (r === switchTargetRow) return;
+        var nm = r.querySelector('td:nth-child(2)');
+        if (nm && nm.textContent.trim() === f.name) targetRow = r;
+      });
+    }
+    if (targetRow) {
+      // 启用对应候选行，并停用同类型其他（含原生效行）
+      setFlowStatus(targetRow.querySelector('.btn-flow-status'), true);
+      if (sub && f.type) {
+        sub.querySelectorAll('tr[data-type="' + f.type + '"]').forEach(function (r) {
+          if (r === targetRow) return;
+          var b = r.querySelector('.btn-flow-status');
+          if (b && b.getAttribute('data-on') === '1') setFlowStatus(b, false);
+        });
+      }
+    } else if (switchTargetRow) {
+      // 子表无对应行：原地替换当前行内容并置为生效，停用同类型其它
+      var cells = switchTargetRow.querySelectorAll('td');
+      if (cells[0]) cells[0].textContent = f.name;
+      if (cells[1]) cells[1].textContent = f.name;
+      switchTargetRow.setAttribute('data-type', f.type);
+      var box = cells[2] ? cells[2].querySelector('.type-box') : null;
+      if (box) {
+        var tg = box.querySelector('.tag-blue');
+        if (tg) tg.textContent = f.type;
+        var nd = box.querySelector('.type-nodes');
+        if (nd) {
+          if (f.type === '预筛审批') nd.innerHTML = 'CRA审核';
+          else if (f.type === '入组审批') nd.innerHTML = 'CRA审核 <i class="fa-solid fa-arrow-right type-arrow"></i> 医学审核';
+          else nd.innerHTML = '';
+        }
+      }
+      setFlowStatus(switchTargetRow.querySelector('.btn-flow-status'), true);
+      if (sub && curType) {
+        sub.querySelectorAll('tr[data-type="' + curType + '"]').forEach(function (r) {
+          if (r === switchTargetRow) return;
+          var b = r.querySelector('.btn-flow-status');
+          if (b && b.getAttribute('data-on') === '1') setFlowStatus(b, false);
+        });
+      }
+    }
+    if (sub) refreshFlowRows(sub);
+    closePick();
+    showToast('已切换为「' + f.name + '」');
+  });
+</script>
+
+</body>
+</html>

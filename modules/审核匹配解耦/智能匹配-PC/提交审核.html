@@ -3,9 +3,9 @@
   功能：
     1. 按截图 1:1 还原「提交审核」弹窗表单。
     2. 参考「患者编辑」实现筛选号格式校验与重复冲突检测。
-    3. 右侧动作面板可切换：匹配并预提交、预提交、提交审核、筛败后提交审核、补充审核。
+    3. 右侧动作面板可切换：匹配并提交、预提交、提交审核、筛败后提交审核、补充审核。
     4. 不同动作触发不同组合的提示弹窗：
-       - 匹配并预提交：仅弹出筛选号重复提示。
+       - 匹配并提交：仅弹出筛选号重复提示。
        - 预提交 / 提交审核：在一个弹窗内依次展示「筛选号重复」和「入组匹配」提示。
        - 补充审核：筛败后点击提交审核，通过右侧面板切换动作。
   技术栈：HTML + Tailwind CSS v3 (CDN) + Font Awesome (CDN) + 原生 JS
@@ -212,6 +212,14 @@
     }
     .focus-link:hover { background: #E6F4FF; }
 
+    /* 重点关注引用内容（必填、不可删除） */
+    .focus-list { margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .focus-item-label { font-size: 13px; color: var(--label); margin-bottom: 4px; }
+    .focus-item-label .req { color: var(--required); margin-right: 2px; }
+    .focus-item .form-textarea { min-height: 64px; }
+    .focus-item .form-textarea.invalid { border-color: var(--required); }
+    .focus-item .form-textarea.invalid:focus { box-shadow: 0 0 0 2px rgba(255,77,79,0.12); }
+
     .modal-footer {
       display: flex;
       justify-content: flex-end;
@@ -396,6 +404,25 @@
       line-height: 1.9;
     }
     .match-choice-note b { color: #262626; }
+    /* 系统提示（整体背景框） */
+    .match-choice-syshint {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #F7F8FA;
+      border: 1px solid #F0F0F0;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #5b6b8c;
+      line-height: 1.9;
+    }
+    .match-choice-syshint .sys-label {
+      display: inline-block;
+      margin-bottom: 4px;
+      color: #2f54eb;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .match-choice-syshint b { color: #1f2d4d; }
 
     /* Toast */
     .proto-toast {
@@ -431,7 +458,7 @@
       <!-- 右侧动作切换面板 -->
       <div class="action-panel" id="actionPanel">
         <div class="action-panel-title">动作切换</div>
-        <div class="action-item active" data-action="matchPreSubmit">匹配并预提交</div>
+        <div class="action-item active" data-action="matchPreSubmit">匹配并提交</div>
         <div class="action-item" data-action="preSubmit">预提交</div>
         <div class="action-item" data-action="submitAudit">提交审核</div>
         <div class="action-item" data-action="failedSubmit">筛败后提交审核</div>
@@ -520,7 +547,10 @@
           </div>
           <div class="form-row">
             <label class="form-label">重点关注：</label>
-            <div class="form-field"><span class="focus-link">引用</span></div>
+            <div class="form-field">
+              <span class="focus-link" id="focusImport">引用</span>
+              <div id="focusList" class="focus-list"></div>
+            </div>
           </div>
           <div class="form-row">
             <label class="form-label">备注：</label>
@@ -554,24 +584,22 @@
   <div class="custom-modal-mask" id="matchChoiceModal">
     <div class="custom-modal">
       <div class="custom-modal-header">
-        <div class="custom-modal-title">提交审核</div>
+        <div class="custom-modal-title">确认提示</div>
         <div class="custom-modal-close" onclick="closeMatchChoice()"><i class="fa-solid fa-xmark"></i></div>
       </div>
       <div class="match-choice-body">
-        <div class="match-choice-tip">该审核阶段未参与项目匹配</div>
-        <div class="match-choice-q"><span class="match-choice-required">*</span>是否参与匹配</div>
-        <div class="match-choice-group" id="matchChoiceGroup">
-          <span class="match-tag" data-value="yes" onclick="selectMatchTag(this)">是</span>
-          <span class="match-tag" data-value="no" onclick="selectMatchTag(this)">否</span>
-        </div>
-        <div class="match-choice-note">
-          <div><b>是：</b>在提交审核时，同时参与 AI 匹配。</div>
-          <div><b>否：</b>不参与 AI 匹配，直接提交审核。</div>
+        <div style="font-size:14px;color:#333;line-height:1.6;">该审核阶段未参与项目匹配，是否要参与匹配？</div>
+        <div class="match-choice-syshint">
+          <span class="sys-label"><i class="fa-solid fa-circle-info"></i>系统提示</span>
+          <div><b>匹配并提交：</b>匹配和提交同步进行。</div>
+          <div><b>仅提交：</b>不参与匹配，只提交审核。</div>
+          <div><b>取消：</b>暂不执行任何操作。</div>
         </div>
       </div>
       <div class="custom-modal-footer" id="matchChoiceFooter">
         <button class="btn btn-default" onclick="closeMatchChoice()">取消</button>
-        <button class="btn btn-primary" onclick="confirmMatchChoice()">确定</button>
+        <button class="btn btn-primary" onclick="onClickMatchAndPreSubmit()">匹配并提交</button>
+        <button class="btn btn-default" onclick="onClickSubmitAuditNoMatch()">仅提交</button>
       </div>
     </div>
   </div>
@@ -787,14 +815,14 @@
       }
       const conflict = checkScreenNoConflict();
       if (!conflict) {
-        showToast('匹配并预提交成功（无重复）', 'success');
+        showToast('匹配并提交成功（无重复）', 'success');
         return;
       }
       openCustomModal({
         title: '提示',
         content: conflictHtml(),
         okText: '提交',
-        onOk: () => showToast('匹配并预提交成功', 'success')
+        onOk: () => showToast('匹配并提交成功', 'success')
       });
     }
 
@@ -926,45 +954,12 @@
       btnSubmit.textContent = actionLabels[action] || '提交';
     }
 
-    // ===== 是否参与匹配 弹窗（单选标签） =====
+    // ===== 是否参与匹配 提示框 =====
     function openMatchChoice() {
-      const modal = document.getElementById('matchChoiceModal');
-      // 不默认选中
-      modal.querySelectorAll('.match-tag').forEach(t => t.classList.remove('active'));
-      // 重置底部按钮为默认（确定）
-      document.getElementById('matchChoiceFooter').innerHTML =
-        '<button class="btn btn-default" onclick="closeMatchChoice()">取消</button>' +
-        '<button class="btn btn-primary" onclick="confirmMatchChoice()">确定</button>';
-      modal.classList.add('show');
+      document.getElementById('matchChoiceModal').classList.add('show');
     }
     function closeMatchChoice() {
       document.getElementById('matchChoiceModal').classList.remove('show');
-    }
-    function selectMatchTag(el) {
-      document.querySelectorAll('#matchChoiceGroup .match-tag').forEach(t => t.classList.remove('active'));
-      el.classList.add('active');
-
-      // 根据选择动态切换底部按钮
-      const footer = document.getElementById('matchChoiceFooter');
-      if (el.getAttribute('data-value') === 'yes') {
-        footer.innerHTML =
-          '<button class="btn btn-default" onclick="closeMatchChoice()">取消</button>' +
-          '<button class="btn btn-primary" onclick="onClickMatchAndPreSubmit()">匹配并预提交</button>';
-      } else {
-        footer.innerHTML =
-          '<button class="btn btn-default" onclick="closeMatchChoice()">取消</button>' +
-          '<button class="btn btn-primary" onclick="onClickSubmitAuditNoMatch()">提交审核</button>';
-      }
-    }
-    function confirmMatchChoice() {
-      const sel = document.querySelector('#matchChoiceGroup .match-tag.active');
-      if (!sel) { showToast('请选择是否参与匹配', 'info'); return; }
-      // 已选中时，确定等同于对应动作入口
-      if (sel.getAttribute('data-value') === 'yes') {
-        onClickMatchAndPreSubmit();
-      } else {
-        onClickSubmitAuditNoMatch();
-      }
     }
 
     // 是 → 仅项目匹配（只做匹配，不预提交）
@@ -973,7 +968,7 @@
       startProjectMatch();
       showToast('正在进行项目匹配…', 'info');
     }
-    // 是 → 匹配并预提交
+    // 是 → 匹配并提交
     function onClickMatchAndPreSubmit() {
       closeMatchChoice();
       doMatchPreSubmit();
@@ -984,7 +979,42 @@
       showToast('提交审核成功（未参与 AI 匹配）', 'success');
     }
 
+    // ===== 重点关注必填（引用生成、不可删除）=====
+    const FOCUS_TEMPLATES = [
+      { label: '疾病：', placeholder: '请输入疾病情况' },
+      { label: '影像异常情况：', placeholder: '请输入影像异常情况' }
+    ];
+    function importFocus() {
+      const list = document.getElementById('focusList');
+      if (list.children.length > 0) {
+        showToast('已引用，请直接编辑内容');
+        return;
+      }
+      FOCUS_TEMPLATES.forEach(t => list.appendChild(buildFocusRow(t)));
+      showToast('已引用重点关注内容', 'success');
+    }
+    function buildFocusRow(t) {
+      const item = document.createElement('div');
+      item.className = 'focus-item';
+      item.innerHTML =
+        '<div class="focus-item-label"><span class="req">*</span>' + t.label + '</div>' +
+        '<textarea class="form-textarea focus-textarea" placeholder="' + t.placeholder + '"></textarea>';
+      const ta = item.querySelector('.focus-textarea');
+      ta.addEventListener('input', () => ta.classList.remove('invalid'));
+      return item;
+    }
+    function validateFocus() {
+      let firstBad = null;
+      document.querySelectorAll('#focusList .focus-textarea').forEach(ta => {
+        const empty = !ta.value || !ta.value.trim();
+        ta.classList.toggle('invalid', empty);
+        if (empty && !firstBad) firstBad = ta;
+      });
+      return firstBad;
+    }
+
     // ===== 事件绑定 =====
+    document.getElementById('focusImport').addEventListener('click', importFocus);
     document.querySelectorAll('.action-item').forEach(item => {
       item.addEventListener('click', () => {
         setAction(item.getAttribute('data-action'));
@@ -999,6 +1029,13 @@
         }
       } else if (!validateScreenNo()) {
         document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      const badFocus = validateFocus();
+      if (badFocus) {
+        badFocus.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        badFocus.focus({ preventScroll: true });
+        showToast('有必填项未填写，请补充完整', 'error');
         return;
       }
       openMatchChoice();

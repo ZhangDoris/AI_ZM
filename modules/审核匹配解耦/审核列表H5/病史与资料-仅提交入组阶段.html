@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>测试222-病史与资料</title>
+  <title>预筛阶段-病史与资料</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -327,7 +327,7 @@
     .vconsole-btn {
       position: fixed;
       right: max(12px, calc(50vw - 215px + 12px));
-      bottom: 60px;
+      bottom: 110px;
       z-index: 50;
       background: #07c160;
       color: #fff;
@@ -595,6 +595,74 @@
       color: #fff;
     }
     .match-confirm-btn.primary:active { background: #0958d9; }
+
+    /* ===== 患者信息卡 ===== */
+    .patient-card {
+      margin: 10px 10px 0;
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .patient-card-top {
+      display: flex; align-items: center; gap: 8px;
+      position: relative; padding-right: 30px;
+    }
+    .patient-name { font-size: 19px; font-weight: 700; color: #1f1f1f; }
+    .patient-age { font-size: 14px; color: #666; }
+    .status-tag {
+      font-size: 12px; color: #fa8c16;
+      background: #fff7e6; border: 1px solid #ffd591;
+      border-radius: 4px; padding: 1px 8px; line-height: 1.6;
+    }
+    .edit-icon {
+      position: absolute; right: 0; top: 3px;
+      color: #409eff; font-size: 16px; cursor: pointer;
+    }
+    .edit-icon:active { opacity: .6; }
+    .patient-field { margin-top: 12px; font-size: 13px; }
+    .pf-label { color: #8c8c8c; margin-right: 10px; }
+    .pf-value { color: #1f1f1f; }
+
+    /* ===== 病史与资料入口卡 ===== */
+    .entry-card {
+      margin: 10px 10px 0;
+      background: #fff; border-radius: 8px; padding: 12px;
+      display: flex; align-items: center; gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      user-select: none;
+    }
+    .entry-card:active { background: #fafafa; }
+    .entry-icon {
+      width: 38px; height: 38px; border-radius: 9px;
+      background: #409eff; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .entry-main { flex: 1; min-width: 0; }
+    .entry-name { font-size: 14px; font-weight: 600; color: #1f1f1f; }
+    .entry-count { font-size: 12px; color: #999; margin-top: 3px; }
+    .entry-card .caret { color: #bbb; font-size: 12px; transition: transform .2s; }
+    .entry-card.open .caret { transform: rotate(180deg); }
+
+    /* ===== 底部操作栏 ===== */
+    .bottom-bar {
+      position: fixed; bottom: 34px;
+      left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      display: flex; gap: 12px;
+      padding: 10px 14px;
+      z-index: 30;
+    }
+    .bar-btn {
+      flex: 1; height: 40px;
+      border: none; border-radius: 8px;
+      background: #409eff; color: #fff;
+      font-size: 15px; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(64,158,255,0.35);
+    }
+    .bar-btn:active { background: #337ecc; transform: scale(0.98); }
   </style>
 </head>
 <body>
@@ -602,20 +670,50 @@
     <!-- 顶部导航 -->
     <div class="top-header">
       <div class="back" onclick="history.back()"><i class="fa fa-chevron-left"></i></div>
-      <div class="title">入组阶段</div>
+      <div class="title">预筛阶段</div>
     </div>
 
-
+    <!-- 版本切换 -->
+    <div class="version-bar">
+      <span class="version-label">版本</span>
+      <button class="version-btn active" onclick="switchVersion(this)">新版</button>
+      <button class="version-btn" onclick="switchVersion(this)">旧版</button>
+    </div>
 
     <!-- 内容 Tab -->
     <div class="content-tabs" id="contentTabs">
-      <div class="content-tab active" data-content="match" onclick="switchContentTab(this)">病史与资料</div>
+      <div class="content-tab active" data-content="match" onclick="switchContentTab(this)">匹配详情</div>
+      <div class="content-tab" data-content="screen" onclick="switchContentTab(this)">筛选表</div>
+      <div class="content-tab" data-content="think" onclick="switchContentTab(this)">思考链</div>
     </div>
 
    
 
     <!-- Tab 内容区 -->
     <div class="tab-panel active" id="panel-match">
+      <!-- 患者信息卡 -->
+      <div class="patient-card">
+        <div class="patient-card-top">
+          <div class="patient-name">测试原因2</div>
+          <div class="patient-age">68岁</div>
+          <span class="status-tag">审核中</span>
+          <i class="fa fa-pencil edit-icon" onclick="editPatient()"></i>
+        </div>
+        <div class="patient-field"><span class="pf-label">疾病领域</span><span class="pf-value">肺癌</span></div>
+      </div>
+
+      <!-- 病史与资料入口 -->
+      <div class="entry-card" id="historyEntry" onclick="toggleHistory()">
+        <div class="entry-icon"><i class="fa fa-file-text-o"></i></div>
+        <div class="entry-main">
+          <div class="entry-name">病史与资料</div>
+          <div class="entry-count">4</div>
+        </div>
+        <i class="fa fa-chevron-down caret"></i>
+      </div>
+
+      <!-- 病史与资料文件区（点击入口展开/收起） -->
+      <div id="historySection" style="display:none">
  <!-- 工具栏 -->
     <div class="toolbar">
       <label class="check-all">
@@ -624,10 +722,6 @@
       </label>
       <button class="btn btn-primary btn-sm" onclick="onDownload()">下载</button>
       <button class="btn btn-primary btn-sm" onclick="onRematch()">项目匹配</button>
-    </div>
-     <div class="stage-hint-banner">
-      <i class="fa fa-info-circle"></i>
-      <span><strong>入组阶段</strong> 未参与匹配，故没有匹配结果</span>
     </div>
     <!-- 文件夹：预筛阶段 -->
     <div class="folder" id="folderPrescreen">
@@ -746,8 +840,14 @@
       <div style="padding:40px 16px;text-align:center;color:#999;font-size:14px;">思考链内容</div>
     </div>
 
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+      <button class="bar-btn" onclick="onSubmitReview()">提交</button>
+      <button class="bar-btn" onclick="onAudit()">审核</button>
+    </div>
+
     <!-- 底部隐私提示 -->
-    <div class="privacy-tip">【重要提示】请严格遵守患者隐私保护规范，确保病历信息脱敏处理</div>
+    <div class="privacy-tip">内容由AI生成，仅供参考，请谨慎采纳</div>
   </div>
 
   <!-- vConsole 按钮 -->
@@ -905,6 +1005,17 @@
         onOk: function () { showToast('已提交审核'); }
       });
     }
+
+    // ========== 病史与资料入口展开/收起 ==========
+    function toggleHistory() {
+      var sec = document.getElementById('historySection');
+      var entry = document.getElementById('historyEntry');
+      var show = sec.style.display === 'none';
+      sec.style.display = show ? '' : 'none';
+      if (entry) entry.classList.toggle('open', show);
+    }
+    function editPatient() { showToast('编辑患者信息'); }
+    function onAudit() { showToast('打开审核'); }
 
     // ========== 通用模态 ==========
     var __h5ModalCallback = null;

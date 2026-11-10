@@ -1215,6 +1215,8 @@
         <div id="stAuditWarning" class="info-tip rounded-lg p-3 text-sm text-[#D46B08] hidden">
           <i class="fas fa-exclamation-circle mr-1"></i>该患者处于<strong>审核中</strong>状态，转移后审核人员将发生变动（默认目标中心所有 CRA + 医学），请确认。
         </div>
+        <!-- 人员配置校验提示 -->
+        <div id="stRoleWarning" class="info-tip rounded-lg p-3 text-sm text-[#D46B08] hidden"></div>
         <!-- 表单 -->
         <div>
           <label class="text-sm text-gray-700 font-medium">转移至目标中心 <span class="text-red-500">*</span></label>
@@ -1258,6 +1260,8 @@
           <p class="text-sm text-gray-700">将当前中心下<strong id="btPatientCount">0</strong>名患者转移</p>
           <p class="text-xs text-gray-500 mt-1" id="btAuditHint" style="display:none;">其中 <b class="text-[#D46B08]">0</b> 名审核中患者，转移后审核人员将发生变动（默认目标中心所有 CRA + 医学），请确认。</p>
         </div>
+        <!-- 人员配置校验提示 -->
+        <div id="btRoleWarning" class="info-tip rounded-lg p-3 text-sm text-[#D46B08] hidden"></div>
         <div>
           <label class="text-sm text-gray-700 font-medium">转移至目标中心 <span class="text-red-500">*</span></label>
           <select id="btTargetCenter"  class="w-full mt-1.5 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-[#5d58dc] outline-none">
@@ -1312,6 +1316,22 @@
         <button onclick="confirmStaffTransfer()" class="px-4 py-2 bg-[#5d58dc] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">
           <i class="fas fa-check mr-1"></i>确认转移
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 角色缺失提醒框 ===== -->
+  <div id="roleWarnModal" class="modal-overlay modal-hidden fixed inset-0 z-[95] flex items-center justify-center" onclick="if(event.target===this)closeRoleWarnModal()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div class="px-6 pt-6 pb-4 text-center">
+        <div class="mx-auto w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-3">
+          <i class="fas fa-exclamation-triangle text-amber-500 text-xl"></i>
+        </div>
+        <h3 class="text-base font-semibold text-gray-800 mb-2">无法转移患者</h3>
+        <p id="roleWarnMsg" class="text-sm text-gray-600 leading-relaxed"></p>
+      </div>
+      <div class="flex items-center justify-center px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <button onclick="closeRoleWarnModal()" class="px-6 py-2 bg-[#5d58dc] text-white text-sm rounded-lg hover:bg-blue-600 font-medium">确定</button>
       </div>
     </div>
   </div>
@@ -1624,6 +1644,13 @@
         { id: 'M002', userId: '100001', name: '刘三', role: 'CRC', phone: '138****0002', responsibleCenter: '山东省肿瘤医院', viewCenter: '' },
         { id: 'M003', userId: '100002', name: '张五', role: 'CRA', phone: '138****0003', responsibleCenter: '山东省肿瘤医院', viewCenter: '' },
         { id: 'M004', userId: '100418', name: '李六', role: '临床协调员', phone: '138****0418', responsibleCenter: '山东省肿瘤医院', viewCenter: '' }
+      ],
+      // 以下两家中心在示例中未配齐 CRA / 医学经理 / CRC，用于演示「转移前人员校验」提醒
+      '北京协和医院': [
+        { id: 'M001', userId: '100100', name: '周明', role: '医学经理', phone: '138****0100', responsibleCenter: '北京协和医院', viewCenter: '' }
+      ],
+      '中南大学湘雅二医院': [
+        { id: 'M001', userId: '100200', name: '陈芳', role: 'CRC', phone: '138****0200', responsibleCenter: '中南大学湘雅二医院', viewCenter: '' }
       ]
     };
 
@@ -2131,6 +2158,7 @@
       document.getElementById('stPatientInfo').textContent = pname + '（' + pid + '）';
       document.getElementById('stPatientStatus').innerHTML = '<span class="status-tag ' + (status === '未提交' ? 'status-unaudited' : status === '审核中' ? 'status-auditing' : 'status-passed') + '">' + status + '</span>';
       document.getElementById('stAuditWarning').classList.toggle('hidden', status !== '审核中');
+      document.getElementById('stRoleWarning').classList.add('hidden');
       document.getElementById('stTargetCenter').value = '';
       document.getElementById('stTransferReason').value = '';
       document.getElementById('stNote').value = '';
@@ -2182,6 +2210,7 @@
         }
       }
       document.getElementById('btTargetCenter').value = '';
+      document.getElementById('btRoleWarning').classList.add('hidden');
       document.getElementById('btTransferReason').value = '';
       document.getElementById('btNote').value = '';
       fillTargetDropdown('btTargetCenter', currentCenterName);
@@ -3376,11 +3405,55 @@
     }
 
     // ========== 图2：重写 confirmSingleTransfer / confirmBatchTransfer 写日志 ==========
+    // 校验源/目标中心是否均已配置 CRA、医学经理、CRC
+    var TRANSFER_REQUIRED_ROLES = ['CRA', '医学经理', 'CRC'];
+    function getMissingRoles(centerName) {
+      var list = memberData[centerName] || [];
+      var have = {};
+      for (var i = 0; i < list.length; i++) {
+        var r = list[i].role || '';
+        if (r.indexOf('CRA') !== -1) have['CRA'] = true;
+        if (r.indexOf('医学经理') !== -1) have['医学经理'] = true;
+        if (r.indexOf('CRC') !== -1) have['CRC'] = true;
+      }
+      var missing = [];
+      for (var j = 0; j < TRANSFER_REQUIRED_ROLES.length; j++) {
+        if (!have[TRANSFER_REQUIRED_ROLES[j]]) missing.push(TRANSFER_REQUIRED_ROLES[j]);
+      }
+      return missing;
+    }
+    // 返回转移校验提示（源中心或目标中心缺失必备人员时）；无缺失返回空串
+    function getTransferRoleWarn(sourceCenter, targetCenter) {
+      var parts = [];
+      var srcMiss = getMissingRoles(sourceCenter);
+      var tgtMiss = getMissingRoles(targetCenter);
+      if (srcMiss.length) parts.push('当前中心「' + sourceCenter + '」缺少 ' + srcMiss.join('、') + ' 角色');
+      if (tgtMiss.length) parts.push('目标中心「' + targetCenter + '」缺少 ' + tgtMiss.join('、') + ' 角色');
+      return parts.length ? parts.join('；') + '，建议添加角色后，才可以进行转移。' : '';
+    }
+
+    // 角色缺失提醒框
+    function openRoleWarnModal(msg) {
+      document.getElementById('roleWarnMsg').textContent = msg;
+      document.getElementById('roleWarnModal').classList.remove('modal-hidden');
+    }
+    function closeRoleWarnModal() {
+      document.getElementById('roleWarnModal').classList.add('modal-hidden');
+    }
+
     function confirmSingleTransfer() {
       var target = document.getElementById('stTargetCenter').value;
       var reason = document.getElementById('stTransferReason').value;
       if (!target) { alert('请选择目标中心'); return; }
       if (!reason) { alert('请选择转移原因'); return; }
+      var warn = getTransferRoleWarn(currentCenterName, target);
+      if (warn) {
+        var w = document.getElementById('stRoleWarning');
+        w.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>' + warn;
+        w.classList.remove('hidden');
+        openRoleWarnModal(warn);
+        return;
+      }
       transferredPatientIds[currentCenterName][currentTransferPatient.id] = true;
       logTransfer(currentTransferPatient.name + '（' + currentTransferPatient.id + '）', target);
       closeSingleTransfer();
@@ -3392,6 +3465,14 @@
       var reason = document.getElementById('btTransferReason').value;
       if (!target) { alert('请选择目标中心'); return; }
       if (!reason) { alert('请选择转移原因'); return; }
+      var warn = getTransferRoleWarn(currentCenterName, target);
+      if (warn) {
+        var w = document.getElementById('btRoleWarning');
+        w.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i>' + warn;
+        w.classList.remove('hidden');
+        openRoleWarnModal(warn);
+        return;
+      }
       var allPatients = patientData[currentCenterName] || [];
       var movedCount = 0;
       if (plBatchMode === 'selected') {
@@ -3405,9 +3486,11 @@
         plSelectedIds = [];
         updatePlBatchBtn();
       } else {
-        for (var pid2 in transferredPatientIds[currentCenterName]) {
-          if (transferredPatientIds[currentCenterName].hasOwnProperty(pid2)) {
-            transferredPatientIds[currentCenterName][pid2] = true;
+        var allP = patientData[currentCenterName] || [];
+        for (var ai = 0; ai < allP.length; ai++) {
+          var apid = allP[ai].id;
+          if (!transferredPatientIds[currentCenterName][apid]) {
+            transferredPatientIds[currentCenterName][apid] = true;
             movedCount++;
           }
         }

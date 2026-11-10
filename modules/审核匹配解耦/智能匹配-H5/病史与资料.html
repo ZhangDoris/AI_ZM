@@ -23,7 +23,7 @@
       min-height: 100vh;
       background: #f5f5f5;
       position: relative;
-      padding-bottom: 96px;
+      padding-bottom: 120px;
       box-shadow: 0 0 24px rgba(0,0,0,0.06);
     }
 
@@ -53,17 +53,28 @@
       margin-right: 32px; /* 居中补偿左侧返回按钮 */
     }
 
-    /* 工具栏：全选 + 按钮组 */
+    /* 工具栏：两行布局，避免按钮溢出 */
     .toolbar {
       position: sticky;
       top: 44px;
       z-index: 9;
       background: #fff;
       padding: 10px 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .toolbar-row {
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 1px solid #f0f0f0;
+    }
+    .toolbar-row.top {
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toolbar-row.bottom .btn {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
     }
     .check-all {
       display: flex; align-items: center; gap: 6px;
@@ -90,7 +101,41 @@
     .btn-primary:active { background: #337ecc; }
     .btn-success { background: #52c41a; color: #fff; }
     .btn-success:active { background: #389e0d; }
+    .btn-outline {
+      background: #fff;
+      color: #409eff;
+      border: 1px solid #91caff;
+    }
+    .btn-outline:active { background: #e6f4ff; }
     .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+    /* 底部悬浮操作栏 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      display: flex; gap: 10px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      z-index: 30;
+    }
+    .bar-btn {
+      flex: 1; min-width: 0; white-space: nowrap;
+      height: 40px;
+      border: none; border-radius: 8px;
+      font-size: 14px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      transition: opacity .15s, transform .08s;
+    }
+    .bar-btn:active { transform: scale(0.98); }
+    .bar-btn.primary { background: #409eff; color: #fff; }
+    .bar-btn.primary:active { background: #337ecc; }
+    .bar-btn.outline { background: #fff; color: #409eff; border: 1px solid #91caff; }
+    .bar-btn.outline:active { background: #e6f4ff; }
+    .bar-btn.success { background: #52c41a; color: #fff; }
+    .bar-btn.success:active { background: #389e0d; }
 
     /* 文件夹 */
     .folder {
@@ -218,7 +263,7 @@
     .vconsole-btn {
       position: fixed;
       right: max(12px, calc(50vw - 215px + 12px));
-      bottom: 60px;
+      bottom: 110px;
       z-index: 50;
       background: #07c160;
       color: #fff;
@@ -234,7 +279,7 @@
     /* 底部隐私提示 */
     .privacy-tip {
       position: absolute;
-      left: 0; right: 0; bottom: 0;
+      left: 0; right: 0; bottom: 70px;
       background: transparent;
       color: #ff4d4f;
       font-size: 12px;
@@ -345,14 +390,13 @@
 
     <!-- 工具栏 -->
     <div class="toolbar">
-      <label class="check-all">
-        <input type="checkbox" id="checkAll" onclick="toggleSelectAll(this)" />
-        <span>全选</span>
-      </label>
-      <button class="btn btn-primary btn-sm" onclick="onDownload()">下载</button>
-      <button class="btn btn-primary btn-sm" onclick="onRematch()">项目匹配</button>
-      <button class="btn btn-primary btn-sm" onclick="onSubmitReview()"><i class="fa fa-paper-plane"></i> 提交审核</button>
-      <button class="btn btn-success btn-sm" onclick="onMatchDetail()">匹配详情</button>
+      <div class="toolbar-row top">
+        <label class="check-all">
+          <input type="checkbox" id="checkAll" onclick="toggleSelectAll(this)" />
+          <span>全选</span>
+        </label>
+        <button class="btn btn-primary" onclick="onDownload()">下载</button>
+      </div>
     </div>
 
     <!-- 文件夹：预筛阶段 -->
@@ -465,6 +509,13 @@
 
     <!-- 底部隐私提示 -->
     <div class="privacy-tip">【重要提示】请严格遵守患者隐私保护规范，确保病历信息脱敏处理</div>
+  </div>
+
+  <!-- 底部悬浮操作栏 -->
+  <div class="bottom-bar">
+    <button class="bar-btn primary" onclick="onSubmitReview()"><i class="fa fa-paper-plane"></i> 提交审核</button>
+    <button class="bar-btn outline" onclick="onRematch()">项目匹配</button>
+    <button class="bar-btn success" onclick="onMatchDetail()">匹配详情</button>
   </div>
 
   <!-- vConsole 按钮 -->

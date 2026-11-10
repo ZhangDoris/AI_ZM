@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+  项目匹配确认弹窗 · 移动端（H5）交互原型
+  与 PC 版对应的手机端样式：按钮纵向堆叠、占满整行。
+  弹窗默认打开；关闭后可点击底部按钮重新打开；操作后顶部弹出 Toast 反馈。
+  建议在浏览器开发者工具中切换为手机视口（宽度 ≤ 480px）查看最佳效果。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>项目匹配确认弹窗 · H5</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  body { font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+  .modal-card { animation: modalIn .22s ease; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+  .toast { animation: toastIn .25s ease; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+</style>
+</head>
+<body class="bg-[#f0f2f5] min-h-screen">
+
+  <!-- 遮罩 + 弹窗 -->
+  <div id="modal-overlay" class="fixed inset-0 bg-black/45 z-40 flex items-center justify-center p-3">
+    <div class="modal-card bg-white rounded-xl shadow-2xl w-full max-w-[420px] max-h-[92vh] overflow-y-auto">
+
+      <!-- 头部 -->
+      <div class="sticky top-0 bg-white flex items-center gap-2.5 px-4 py-4 border-b border-gray-100 rounded-t-xl">
+        <i class="fa-solid fa-magnifying-glass text-[#1677ff] text-lg"></i>
+        <h3 class="text-lg font-bold text-[#333333]">项目匹配确认</h3>
+        <button onclick="closeModal()" title="关闭"
+          class="ml-auto w-8 h-8 rounded-full flex items-center justify-center text-gray-400 active:bg-gray-100 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- 内容 -->
+      <div class="px-4 pt-5 pb-2">
+        <p class="text-lg text-[#333333] mb-4">确定要执行项目匹配吗？</p>
+
+        <div class="bg-[#e8f3ff] border-l-4 border-[#1677ff] rounded-lg px-4 py-3.5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-5 h-5 rounded-full bg-[#1677ff] text-white flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-info text-[11px]"></i>
+            </span>
+            <span class="text-[#1677ff] font-bold text-[15px]">温馨提示</span>
+          </div>
+          <ul class="space-y-2.5">
+            <li class="flex items-start gap-2 text-sm leading-relaxed">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#1677ff] mt-[7px] shrink-0"></span>
+              <span><b class="text-[#1677ff]">取消：</b><span class="text-[#333333]">暂时不操作。</span></span>
+            </li>
+            <li class="flex items-start gap-2 text-sm leading-relaxed">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#1677ff] mt-[7px] shrink-0"></span>
+              <span><b class="text-[#1677ff]">匹配并预提交：</b><span class="text-[#333333]">提交审核和项目匹配同时进行。</span></span>
+            </li>
+            <li class="flex items-start gap-2 text-sm leading-relaxed">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#1677ff] mt-[7px] shrink-0"></span>
+              <span><b class="text-[#1677ff]">仅项目匹配：</b><span class="text-[#333333]">只让 AI 先算出结果，暂不提交审批，等您看完再决定。</span></span>
+            </li>
+            <li class="flex items-start gap-2 text-sm leading-relaxed">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#1677ff] mt-[7px] shrink-0"></span>
+              <span><b class="text-[#1677ff]">仅提交：</b><span class="text-[#333333]">不参与匹配，只提交审核。</span></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 底部按钮：纵向堆叠、整行宽度 -->
+      <div class="px-4 py-5 space-y-3">
+        <button onclick="closeModal('已取消，暂时不操作')"
+          class="w-full py-3 rounded-lg border border-gray-300 bg-white text-[#333333] text-base active:bg-gray-50 transition">取消</button>
+        <button onclick="confirmAction('only')"
+          class="w-full py-3 rounded-lg bg-[#1677ff] text-white text-base active:bg-[#0958d9] transition shadow-sm">仅项目匹配</button>
+        <button onclick="confirmAction('pre')"
+          class="w-full py-3 rounded-lg bg-[#1677ff] text-white text-base active:bg-[#0958d9] transition shadow-sm">匹配并预提交</button>
+        <button onclick="confirmAction('submit')"
+          class="w-full py-3 rounded-lg bg-white border border-[#1677ff] text-[#1677ff] text-base active:bg-[#e8f3ff] transition">仅提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 重新打开入口 -->
+  <button onclick="openModal()"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-5 py-3 rounded-full bg-[#1677ff] text-white text-sm shadow-lg active:bg-[#0958d9] transition">
+    <i class="fa-solid fa-rotate-right"></i> 重新打开弹窗
+  </button>
+
+  <!-- Toast -->
+  <div id="toast" class="toast hidden fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-white shadow-lg rounded-lg px-4 py-2.5 text-sm text-[#333333] border border-gray-100 max-w-[86%]">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-[#00B42A]"></i>
+    <span id="toast-msg"></span>
+  </div>
+
+<script>
+  const overlay = document.getElementById("modal-overlay");
+  let toastTimer = null;
+
+  function openModal() {
+    overlay.classList.remove("hidden");
+    overlay.classList.add("flex");
+  }
+  function closeModal(msg) {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+    if (msg) showToast(msg, "info");
+  }
+  function confirmAction(type) {
+    overlay.classList.add("hidden");
+    overlay.classList.remove("flex");
+    if (type === "only") {
+      showToast("已开始项目匹配（仅匹配，暂不提交审批）");
+    } else if (type === "submit") {
+      showToast("已提交审核（不参与匹配）");
+    } else {
+      showToast("已开始匹配，完成后系统将自动发起审批（预提交）");
+    }
+  }
+  function showToast(msg, type) {
+    const t = document.getElementById("toast");
+    const icon = document.getElementById("toast-icon");
+    document.getElementById("toast-msg").textContent = msg;
+    icon.className = type === "info"
+      ? "fa-solid fa-circle-info text-[#1677ff]"
+      : "fa-solid fa-circle-check text-[#00B42A]";
+    t.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.add("hidden"), 2600);
+  }
+
+  // 点击遮罩关闭
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+</script>
+</body>
+</html>

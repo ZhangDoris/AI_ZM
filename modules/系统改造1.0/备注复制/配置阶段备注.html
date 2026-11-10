@@ -1,0 +1,424 @@
+<!--
+  配置阶段备注 · 弹窗原型（按截图 1:1 还原）
+  结构：标题栏（居中标题 + 关闭） / 说明行 / 预筛阶段卡片 / 入组阶段卡片 / 底部「完成」
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>配置阶段备注</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    color: #1D2129;
+    background: #F2F3F5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ===== 背景页（示意，被遮罩覆盖） ===== */
+  .page-bg { padding: 16px 24px; }
+  .page-bg .bg-title { font-size: 16px; font-weight: 600; color: #4E5969; margin-bottom: 14px; }
+  .page-bg .bg-card {
+    background: #fff;
+    border-radius: 6px;
+    height: 420px;
+    border: 1px solid #EDEEF0;
+  }
+
+  /* ===== 遮罩 ===== */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 16px;
+  }
+  .modal-mask.hidden { display: none; }
+
+  /* ===== 弹窗 ===== */
+  .modal {
+    width: 520px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 8px; 
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+    animation: modalIn .18s ease-out;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(8px) scale(0.98); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* 标题栏 */
+  .modal-header {
+    position: relative;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 48px;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1D2129;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .modal-close {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: #86909C;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background .15s, color .15s;
+  }
+  .modal-close:hover { background: #F2F3F5; color: #4E5969; }
+
+  /* 内容区 */
+  .modal-body { padding: 0 20px 4px; }
+
+  .modal-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #86909C;
+    margin: 2px 0 16px;
+  }
+  .modal-hint i { font-size: 13px; color: #86909C; margin-top: 2px; }
+
+  /* 阶段卡片 */
+  .stage-card {
+    background: #F0F5FF;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .stage-card:last-of-type { margin-bottom: 0; }
+
+  .stage-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stage-no {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #1677FF;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .stage-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #52C41A;
+    flex-shrink: 0;
+  }
+  .stage-ico { color: #1677FF; font-size: 14px; }
+  .stage-name { font-size: 15px; font-weight: 600; color: #1D2129; }
+  /* 复制条 */
+  .copy-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    background: #F0F7FF;
+    border: 1px dashed #A8C8F0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1677FF;
+  }
+  .copy-bar:last-of-type { margin-bottom: 0; }
+  .copy-bar-icon { color: #1677FF; font-size: 14px; flex-shrink: 0; }
+  .copy-bar-text { color: #1677FF; }
+  .copy-bar-text b { font-weight: 600; }
+  .copy-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: #1D2129;
+    font-size: 13px;
+  }
+  .copy-target input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: #1677FF;
+    cursor: pointer;
+  }
+  .copy-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #52C41A;
+    flex-shrink: 0;
+  }
+  .copy-target-name { font-weight: 600; color: #1D2129; }
+  .copy-bar-btn {
+    margin-left: auto;
+    height: 28px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 4px;
+    background: #1677FF;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+    flex-shrink: 0;
+  }
+  .copy-bar-btn:hover:not(:disabled) { background: #4096FF; }
+  .copy-bar-btn:disabled {
+    background: #F2F3F5;
+    color: #C0C4CC;
+    cursor: not-allowed;
+  }
+
+  .stage-textarea {
+    display: block;
+    width: 100%;
+    min-height: 78px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1D2129;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .stage-textarea::placeholder { color: #C0C4CC; }
+  .stage-textarea:focus {
+    border-color: #1677FF;
+    box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.10);
+  }
+
+  /* 底部 */
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 14px 20px;
+    margin-top: 18px;
+    border-top: 1px solid #F0F0F0;
+  }
+  .btn-done {
+    height: 36px;
+    padding: 0 26px;
+    border: none;
+    border-radius: 6px;
+    background: #5B4DF5;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-done:hover { background: #6C5FF8; }
+  .btn-done:active { background: #4A3DE0; }
+
+  /* ===== Toast ===== */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s, transform .2s;
+    z-index: 300;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 560px) {
+    .modal { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 背景页（示意） -->
+  <div class="page-bg">
+    <div class="bg-title">备注列表</div>
+    <div class="bg-card"></div>
+  </div>
+
+  <!-- 遮罩 + 弹窗 -->
+  <div class="modal-mask" id="modalMask">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <!-- 标题栏 -->
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">配置阶段备注 &nbsp;·&nbsp; 入选标准 第1条</div>
+        <button class="modal-close" id="btnClose" aria-label="关闭"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- 内容区 -->
+      <div class="modal-body">
+        <div class="modal-hint">
+          <i class="fa-solid fa-circle-info"></i>
+          <span>为「入选标准 第1条」分别填写各阶段的备注说明</span>
+        </div>
+
+        <!-- 预筛阶段 -->
+        <div class="stage-card">
+          <div class="stage-head">
+            <span class="stage-no">1</span>
+            <span class="stage-dot"></span>
+            <i class="fa-solid fa-table-list stage-ico"></i>
+            <span class="stage-name">预筛阶段</span>
+          </div>
+          <textarea class="stage-textarea" id="notePrescreen" placeholder="请输入「预筛阶段」下的备注说明"></textarea>
+        </div>
+
+        <!-- 复制：预筛阶段 → 其它阶段 -->
+        <div class="copy-bar" data-source="prescreen">
+          <i class="fa-regular fa-clone copy-bar-icon"></i>
+          <span class="copy-bar-text">将「<b>预筛阶段</b>」的备注复制到</span>
+          <label class="copy-target">
+            <input type="checkbox" class="copy-check" data-target="enroll">
+            <span class="copy-dot"></span>
+            <span class="copy-target-name">入组阶段</span>
+          </label>
+          <button class="copy-bar-btn" disabled>复制</button>
+        </div>
+
+        <!-- 入组阶段 -->
+        <div class="stage-card">
+          <div class="stage-head">
+            <span class="stage-no">2</span>
+            <span class="stage-dot"></span>
+            <i class="fa-solid fa-table-list stage-ico"></i>
+            <span class="stage-name">入组阶段</span>
+          </div>
+          <textarea class="stage-textarea" id="noteEnroll" placeholder="请输入「入组阶段」下的备注说明"></textarea>
+        </div>
+      </div>
+
+      <!-- 底部 -->
+      <div class="modal-footer">
+        <button class="btn-done" id="btnDone">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  var mask = document.getElementById('modalMask');
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  function closeModal() {
+    mask.classList.add('hidden');
+  }
+
+  document.getElementById('btnClose').addEventListener('click', closeModal);
+
+  document.getElementById('btnDone').addEventListener('click', function () {
+    var pre = document.getElementById('notePrescreen').value.trim();
+    var enr = document.getElementById('noteEnroll').value.trim();
+    showToast('阶段备注已保存');
+    setTimeout(closeModal, 300);
+    // 原型：此处可将 pre / enr 回填到列表
+    console.log('预筛阶段备注：', pre);
+    console.log('入组阶段备注：', enr);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !mask.classList.contains('hidden')) closeModal();
+  });
+
+  // ===== 复制条：将某阶段备注复制到勾选的目标阶段 =====
+  var stageMeta = {
+    prescreen: { inputId: 'notePrescreen', name: '预筛阶段' },
+    enroll: { inputId: 'noteEnroll', name: '入组阶段' }
+  };
+
+  document.querySelectorAll('.copy-bar').forEach(function (bar) {
+    var sourceKey = bar.getAttribute('data-source');
+    var checks = bar.querySelectorAll('.copy-check');
+    var btn = bar.querySelector('.copy-bar-btn');
+
+    function refresh() {
+      var any = false;
+      checks.forEach(function (c) { if (c.checked) any = true; });
+      btn.disabled = !any;
+    }
+    checks.forEach(function (c) { c.addEventListener('change', refresh); });
+    refresh();
+
+    btn.addEventListener('click', function () {
+      var src = stageMeta[sourceKey];
+      var val = document.getElementById(src.inputId).value;
+      if (!val.trim()) {
+        showToast('请先填写「' + src.name + '」的备注');
+        return;
+      }
+      var targets = [];
+      checks.forEach(function (c) {
+        if (c.checked) targets.push(c.getAttribute('data-target'));
+      });
+      if (targets.length === 0) {
+        showToast('请先勾选要复制到的阶段');
+        return;
+      }
+      targets.forEach(function (t) {
+        document.getElementById(stageMeta[t].inputId).value = val;
+      });
+      var names = targets.map(function (t) { return stageMeta[t].name; }).join('、');
+      showToast('已复制到' + names);
+    });
+  });
+</script>
+
+</body>
+</html>

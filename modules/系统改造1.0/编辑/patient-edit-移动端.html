@@ -1,0 +1,465 @@
+<!--
+  患者编辑 - 移动端（H5）原型
+  功能：
+    1. 移动端单列表单，对应 PC 版「患者编辑」。
+    2. 参研中心为可搜索下拉：默认当前人负责的中心，输入关键字可外推检索其他中心（负责=蓝标签，外推=橙标签）。
+    3. 必填校验（姓名缩写 / 预筛号 / 疾病领域），保存时提示。
+    4. 知情时间调起原生日期选择。
+  技术栈：HTML + 原生 CSS + Font Awesome (CDN) + 原生 JS
+  说明：建议在浏览器开发者工具中切换为手机视口（宽度 ≤ 480px）查看最佳效果。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>患者编辑 - 移动端</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #1677FF;
+    --primary-hover: #4096FF;
+    --border: #e5e6eb;
+    --placeholder: #bfbfbf;
+    --required: #ff4d4f;
+    --bg: #f7f8fa;
+    --disabled-bg: #f5f7fa;
+  }
+
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: #262626;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 24px rgba(0,0,0,0.05);
+  }
+
+  /* 顶部导航 */
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    height: 50px;
+    padding: 0 6px;
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; color: #1a1a1a; }
+  .icon-btn {
+    width: 40px; height: 40px; border: none; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #262626; cursor: pointer; border-radius: 50%;
+  }
+  .icon-btn:active { background: #f5f5f5; }
+  .header-right { width: 40px; }
+
+  /* 表单 */
+  .form-body { flex: 1; padding: 18px 16px 24px; }
+  .field { margin-bottom: 20px; }
+  .field-label {
+    display: block; font-size: 14px; font-weight: 600; color: #262626;
+    margin-bottom: 8px; line-height: 20px;
+  }
+  .field-label .req { color: var(--required); margin-right: 4px; }
+
+  .input, .select {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    color: #262626;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input::placeholder { color: var(--placeholder); }
+  .input:focus, .select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(22,119,255,0.12);
+  }
+  .input[readonly], .input:disabled {
+    background: var(--disabled-bg);
+    color: #999;
+    cursor: not-allowed;
+  }
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23bfbfbf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+  }
+  .select.placeholder { color: var(--placeholder); }
+
+  .field-error {
+    display: none;
+    color: var(--required);
+    font-size: 12px;
+    margin-top: 6px;
+    line-height: 1.4;
+  }
+  .field.has-error .input,
+  .field.has-error .select { border-color: var(--required); }
+  .field.has-error .field-error { display: block; }
+
+  /* 日期字段 */
+  .date-field { position: relative; }
+  .date-field .fa-calendar {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--placeholder); font-size: 15px; pointer-events: none;
+  }
+  .date-field .input { padding-left: 38px; }
+  .hidden-date {
+    position: absolute; left: 0; bottom: 0;
+    width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0;
+  }
+
+  /* 参研中心：可搜索下拉框 */
+  .combobox { position: relative; }
+  .combobox .input { cursor: text; padding-right: 40px; }
+  .combobox-arrow {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--placeholder); font-size: 13px; pointer-events: none; transition: transform .2s;
+  }
+  .combobox.open .combobox-arrow { transform: translateY(-50%) rotate(180deg); }
+  .combobox-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #fff; border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    max-height: 240px; overflow-y: auto; z-index: 40; display: none;
+  }
+  .combobox.open .combobox-dropdown { display: block; }
+  .combobox-option {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; font-size: 15px; color: #262626; cursor: pointer; line-height: 1.4;
+  }
+  .combobox-option:active { background: #f5f7fa; }
+  .combobox-option.selected { background: #E6F4FF; color: var(--primary); }
+  .combobox-tag { font-size: 12px; margin-left: 8px; flex-shrink: 0; padding: 1px 7px; border-radius: 4px; }
+  .combobox-tag.mine { color: var(--primary); background: #E6F4FF; }
+  .combobox-tag.push { color: #FA8C16; background: #FFF7E6; }
+  .combobox-empty { padding: 12px 14px; font-size: 14px; color: var(--placeholder); }
+
+  /* 底部操作栏 */
+  .app-footer {
+    position: sticky; bottom: 0; z-index: 30;
+    display: flex; gap: 12px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: #fff;
+    border-top: 1px solid #f0f0f0;
+  }
+  .btn {
+    flex: 1; height: 46px; border-radius: 8px; border: 1px solid transparent;
+    font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit;
+    transition: all .2s;
+  }
+  .btn-default { background: #fff; border-color: var(--border); color: #262626; }
+  .btn-default:active { background: #f5f5f5; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:active { background: var(--primary-hover); }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: 96px;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(0,0,0,0.78); color: #fff;
+    font-size: 14px; padding: 10px 18px; border-radius: 8px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 100;
+    max-width: 80vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+  <div class="app">
+    <!-- 顶部导航 -->
+    <header class="app-header">
+      <button class="icon-btn" id="btnBack" aria-label="返回"><i class="fa-solid fa-chevron-left"></i></button>
+      <div class="header-title">编辑</div>
+      <div class="header-right"></div>
+    </header>
+
+    <!-- 表单 -->
+    <main class="form-body">
+      <!-- 姓名缩写 -->
+      <div class="field" id="field-nameInitials">
+        <label class="field-label" for="nameInitials"><span class="req">*</span>姓名缩写</label>
+        <input type="text" id="nameInitials" class="input" placeholder="请输入姓名缩写">
+        <div class="field-error">请输入姓名缩写</div>
+      </div>
+
+      <!-- 预筛号 -->
+      <div class="field" id="field-screenNo">
+        <label class="field-label" for="screenNo"><span class="req">*</span>预筛号</label>
+        <input type="text" id="screenNo" class="input" placeholder="请输入预筛号">
+        <div class="field-error">请输入预筛号</div>
+      </div>
+
+      <!-- 年龄 -->
+      <div class="field">
+        <label class="field-label" for="age">年龄</label>
+        <input type="number" id="age" class="input" value="41" placeholder="请输入年龄">
+      </div>
+
+      <!-- 性别 -->
+      <div class="field">
+        <label class="field-label" for="gender">性别</label>
+        <select id="gender" class="select">
+          <option value="" disabled>请选择性别</option>
+          <option value="male">男</option>
+          <option value="female" selected>女</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+
+      <!-- 疾病领域 -->
+      <div class="field" id="field-diseaseArea">
+        <label class="field-label" for="diseaseArea"><span class="req">*</span>疾病领域</label>
+        <select id="diseaseArea" class="select">
+          <option value="breast" selected>乳腺癌</option>
+          <option value="lung">肺癌</option>
+          <option value="gastric">胃癌</option>
+          <option value="colorectal">结直肠癌</option>
+        </select>
+        <div class="field-error">请选择疾病领域</div>
+      </div>
+
+      <!-- 方案编号 -->
+      <div class="field">
+        <label class="field-label" for="protocolCode">方案编号</label>
+        <input type="text" id="protocolCode" class="input" value="HRS-8080-303" readonly>
+      </div>
+
+      <!-- 参研中心 -->
+      <div class="field" id="field-center">
+        <label class="field-label" for="centerInput">参研中心</label>
+        <div class="combobox" id="centerCombobox">
+          <input type="text" id="centerInput" class="input" autocomplete="off" placeholder="输入搜索其他参研中心">
+          <i class="fa-solid fa-chevron-down combobox-arrow"></i>
+          <div class="combobox-dropdown" id="centerDropdown"></div>
+        </div>
+      </div>
+
+      <!-- 中心号 -->
+      <div class="field">
+        <label class="field-label" for="centerNo">中心号</label>
+        <input type="text" id="centerNo" class="input" placeholder="请输入">
+      </div>
+
+      <!-- 知情时间 -->
+      <div class="field">
+        <label class="field-label" for="awareDateText">知情时间</label>
+        <div class="date-field">
+          <i class="fa-regular fa-calendar"></i>
+          <input type="text" id="awareDateText" class="input" placeholder="请选择知情时间" readonly>
+          <input type="date" id="awareDatePicker" class="hidden-date">
+        </div>
+      </div>
+
+      <!-- 筛选号 -->
+      <div class="field">
+        <label class="field-label" for="screeningNo">筛选号</label>
+        <input type="text" id="screeningNo" class="input" placeholder="请输入筛选号">
+      </div>
+
+      <!-- 是否筛败 -->
+      <div class="field">
+        <label class="field-label" for="screeningFail">是否筛败</label>
+        <select id="screeningFail" class="select">
+          <option value="" disabled selected>请选择</option>
+          <option value="yes">是</option>
+          <option value="no">否</option>
+        </select>
+      </div>
+    </main>
+
+    <!-- 底部操作 -->
+    <footer class="app-footer">
+      <button class="btn btn-default" id="btnCancel">取消</button>
+      <button class="btn btn-primary" id="btnSave">保存</button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ===== Toast ===== */
+    var toastTimer = null;
+    function showToast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2000);
+    }
+
+    /* ===== 参研中心：默认当前人负责的中心，可输入搜索外推其他中心 ===== */
+    var centers = [
+      { value: 'center1', label: '北京协和医院' },
+      { value: 'center2', label: '上海瑞金医院' },
+      { value: 'center3', label: '广州中山医院' },
+      { value: 'center4', label: '四川华西医院' },
+      { value: 'center5', label: '武汉同济医院' },
+      { value: 'center6', label: '浙江大学附属第一医院' },
+      { value: 'center7', label: '湖南湘雅医院' }
+    ];
+    // 当前登录人负责的中心（原型演示取前两项）
+    var myCenterValues = ['center1', 'center4'];
+    var myCenters = centers.filter(function (c) { return myCenterValues.indexOf(c.value) > -1; });
+    // 默认选中的中心（负责列表中的第一项）
+    var currentCenter = myCenters[0];
+    var selectedCenter = currentCenter;
+
+    var centerCombobox = document.getElementById('centerCombobox');
+    var centerInput = document.getElementById('centerInput');
+    var centerDropdown = document.getElementById('centerDropdown');
+    centerInput.value = currentCenter.label;
+
+    function renderCenterDropdown(keyword) {
+      var kw = (keyword || '').trim().toLowerCase();
+      // 无搜索词时，只展示自己负责的中心；输入搜索词后，才外推检索全部中心
+      var pool = kw ? centers : myCenters;
+      var filtered = pool.filter(function (c) {
+        return c.label.toLowerCase().indexOf(kw) > -1;
+      });
+      centerDropdown.innerHTML = '';
+      if (filtered.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'combobox-empty';
+        empty.textContent = '无匹配中心';
+        centerDropdown.appendChild(empty);
+        return;
+      }
+      filtered.forEach(function (c) {
+        var isMine = myCenterValues.indexOf(c.value) > -1;
+        var opt = document.createElement('div');
+        opt.className = 'combobox-option' + (c.value === selectedCenter.value ? ' selected' : '');
+        var span = document.createElement('span');
+        span.textContent = c.label;
+        opt.appendChild(span);
+        var tag = document.createElement('span');
+        tag.className = 'combobox-tag ' + (isMine ? 'mine' : 'push');
+        tag.textContent = isMine ? '负责' : '外推';
+        opt.appendChild(tag);
+        opt.addEventListener('click', function () {
+          selectedCenter = c;
+          centerInput.value = c.label;
+          centerCombobox.classList.remove('open');
+        });
+        centerDropdown.appendChild(opt);
+      });
+    }
+
+    centerInput.addEventListener('focus', function () {
+      renderCenterDropdown('');
+      centerCombobox.classList.add('open');
+    });
+    centerInput.addEventListener('input', function () {
+      renderCenterDropdown(centerInput.value);
+      centerCombobox.classList.add('open');
+    });
+    document.addEventListener('click', function (e) {
+      if (!centerCombobox.contains(e.target)) {
+        centerCombobox.classList.remove('open');
+      }
+    });
+
+    /* ===== 知情时间：调起原生日期选择 ===== */
+    var awareText = document.getElementById('awareDateText');
+    var awarePicker = document.getElementById('awareDatePicker');
+    function openDatePicker() {
+      if (awarePicker.showPicker) {
+        try { awarePicker.showPicker(); } catch (err) { awarePicker.click(); }
+      } else {
+        awarePicker.click();
+      }
+    }
+    awareText.addEventListener('click', openDatePicker);
+    awarePicker.addEventListener('change', function () {
+      awareText.value = awarePicker.value;
+    });
+
+    /* ===== 必填校验 ===== */
+    function setFieldError(fieldId, hasErr) {
+      var el = document.getElementById(fieldId);
+      el.classList.toggle('has-error', !!hasErr);
+    }
+
+    function validate() {
+      var ok = true;
+      var firstBad = null;
+
+      if (!document.getElementById('nameInitials').value.trim()) {
+        setFieldError('field-nameInitials', true);
+        if (!firstBad) firstBad = 'field-nameInitials';
+        ok = false;
+      } else {
+        setFieldError('field-nameInitials', false);
+      }
+
+      if (!document.getElementById('screenNo').value.trim()) {
+        setFieldError('field-screenNo', true);
+        if (!firstBad) firstBad = 'field-screenNo';
+        ok = false;
+      } else {
+        setFieldError('field-screenNo', false);
+      }
+
+      if (!document.getElementById('diseaseArea').value) {
+        setFieldError('field-diseaseArea', true);
+        if (!firstBad) firstBad = 'field-diseaseArea';
+        ok = false;
+      } else {
+        setFieldError('field-diseaseArea', false);
+      }
+
+      if (firstBad) {
+        document.getElementById(firstBad).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return ok;
+    }
+
+    /* 输入时清除错误态 */
+    document.getElementById('nameInitials').addEventListener('input', function () {
+      if (this.value.trim()) setFieldError('field-nameInitials', false);
+    });
+    document.getElementById('screenNo').addEventListener('input', function () {
+      if (this.value.trim()) setFieldError('field-screenNo', false);
+    });
+    document.getElementById('diseaseArea').addEventListener('change', function () {
+      if (this.value) setFieldError('field-diseaseArea', false);
+    });
+
+    /* ===== 按钮 ===== */
+    document.getElementById('btnSave').addEventListener('click', function () {
+      if (validate()) showToast('保存成功');
+    });
+    document.getElementById('btnCancel').addEventListener('click', function () {
+      showToast('已取消');
+    });
+    document.getElementById('btnBack').addEventListener('click', function () {
+      showToast('返回上一页');
+    });
+  </script>
+
+</body>
+</html>

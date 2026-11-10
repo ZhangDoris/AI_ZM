@@ -1,0 +1,996 @@
+<!--
+  提交审核 - 移动端原型
+  功能：
+    1. 以手机外壳展示「提交审核」表单（移动端适配）。
+    2. 筛选号格式校验与重复冲突检测（保存时提示，不阻断填写）。
+    3. 顶部动作切换（匹配并提交 / 预提交 / 提交审核 / 筛败后提交审核 / 补充审核）。
+    4. 不同动作触发不同组合的提示弹窗：
+       - 匹配并提交：仅弹出筛选号重复提示。
+       - 预提交 / 提交审核：在一个弹窗内依次展示「筛选号重复」和「入组匹配」提示。
+       - 筛败后提交审核：显示更新筛选号字段并校验。
+       - 补充审核：筛败后点击提交审核，通过动作切换。
+  技术栈：HTML + 原生 CSS + Font Awesome (CDN) + 原生 JS
+  参考：modules/phase/提交审核-移动端.html 的桌面版逻辑，重构为移动端布局。
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>提交审核 - 移动端</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+      background: #e9edf2;
+      display: flex;
+      justify-content: center;
+      padding: 24px 12px;
+      min-height: 100vh;
+      color: #262626;
+    }
+
+    :root {
+      --primary: #1677FF;
+      --primary-hover: #4096FF;
+      --label: #595959;
+      --border: #D9D9D9;
+      --disabled-bg: #F5F5F5;
+      --disabled-text: #BFBFBF;
+      --required: #FF4D4F;
+      --placeholder: #BFBFBF;
+      --warning: #FAAD14;
+    }
+
+    .phone-frame {
+      position: relative;
+      width: 390px;
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 0 8px #1a1a1a, 0 0 0 10px #2c2c2c;
+      overflow: hidden;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 740px;
+      background: #f5f6f8;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 顶部导航 */
+    .phone-header {
+      background: #fff;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .phone-title { font-size: 17px; font-weight: 600; color: #1a1a1a; }
+    .avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: #1677ff;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* 动作切换（顶部水平滚动标签） */
+    .action-bar {
+      flex-shrink: 0;
+      background: #fff;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .action-bar::-webkit-scrollbar { display: none; }
+    .action-chip {
+      white-space: nowrap;
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      color: #595959;
+      background: #f5f5f5;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .action-chip.active {
+      background: #E6F4FF;
+      color: var(--primary);
+      border-color: #91CAFF;
+      font-weight: 500;
+    }
+
+    /* 表单 */
+    .pe-form { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .pe-field { margin-bottom: 14px; }
+    .pe-label { display: block; font-size: 13px; color: #333; margin-bottom: 6px; font-weight: 500; }
+    .pe-label .req { color: #ff4d4f; margin-right: 4px; }
+    .pe-input, .pe-select, .pe-textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 6px;
+      font-size: 14px; color: #333; background: #fff; outline: none;
+      transition: border-color .2s, background-color .2s; box-sizing: border-box;
+    }
+    .pe-input[readonly] { background: #f5f7fa; color: #999; }
+    .pe-input:disabled { background: #f5f7fa; color: #999; cursor: not-allowed; }
+    .pe-input:focus, .pe-select:focus, .pe-textarea:focus { border-color: #1677ff; background: #fff; }
+    .pe-input.invalid, .pe-select.invalid, .pe-textarea.invalid { border-color: #ff4d4f; background: #fff2f0; }
+    .pe-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+    .pe-textarea { min-height: 80px; resize: vertical; }
+    .pe-hint { font-size: 12px; margin-top: 4px; min-height: 16px; line-height: 1.4; color: #ff4d4f; }
+    .pe-hint.rule { color: #d48806; }
+
+    /* 参研中心：可搜索下拉框（默认负责中心，可输入外推其他中心） */
+    .pe-combobox { position: relative; width: 100%; }
+    .pe-combobox .pe-input { cursor: text; }
+    .pe-combobox-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px;
+      background: #fff; border: 1px solid var(--border); border-radius: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto;
+      z-index: 50; display: none;
+    }
+    .pe-combobox-dropdown.open { display: block; }
+    .pe-combobox-option {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; font-size: 14px; color: #333; cursor: pointer; line-height: 1.4;
+    }
+    .pe-combobox-option:active { background: #E6F4FF; }
+    .pe-combobox-option.selected { background: #E6F4FF; color: var(--primary); }
+    .pe-combobox-tag { font-size: 12px; margin-left: 8px; flex-shrink: 0; }
+    .pe-combobox-tag.mine { color: var(--primary); }
+    .pe-combobox-tag.push { color: #FA8C16; }
+    .pe-combobox-empty { padding: 10px 12px; font-size: 14px; color: var(--placeholder); }
+
+    /* 推荐审核流程提示卡 */
+    .audit-tip-card {
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: #E6F4FF;
+      border: 1px solid #BAE0FF;
+      border-radius: 6px;
+    }
+    .audit-tip-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 500; color: #0958D9;
+    }
+    .audit-tip-line {
+      margin-top: 8px; padding-top: 8px;
+      border-top: 1px dashed rgba(24,144,255,0.25);
+      font-size: 12px; color: #1677FF; line-height: 1.6;
+    }
+
+    /* 重点关注标签 */
+    .focus-link {
+      display: inline-flex; align-items: center;
+      height: 36px; padding: 0 12px;
+      background: #F5F5F5; border-radius: 6px;
+      font-size: 14px; color: #1677FF; cursor: pointer;
+    }
+    /* 重点关注引用行 */
+    .focus-row {
+      display: flex; align-items: flex-start; gap: 8px;
+      padding: 10px 0; border-bottom: 1px dashed #f0f0f0;
+    }
+    .focus-row:last-child { border-bottom: none; }
+    .focus-left { width: 78px; flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+    .focus-status {
+      font-size: 10px; line-height: 1; padding: 3px 5px;
+      color: #8c8c8c; background: #f5f5f5; border: 1px solid #e5e5e5; border-radius: 3px;
+    }
+    .focus-status.modified { color: #D46B08; background: #FFF7E6; border-color: #FFE7BA; }
+    .focus-row .pe-label { margin-bottom: 0; line-height: 1.5; }
+    .focus-row .pe-textarea { flex: 1; min-height: 88px; }
+
+    /* 底部提交栏 */
+    .pe-footer {
+      flex-shrink: 0; padding: 12px 16px 16px;
+      background: #fff; border-top: 1px solid #f0f0f0;
+      display: flex; gap: 10px;
+    }
+    .pe-btn {
+      flex: 1; padding: 12px; border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    .pe-btn.default { background: #fff; border: 1px solid #d9d9d9; color: #333; }
+    .pe-btn.primary { background: #1677ff; color: #fff; }
+    .pe-btn.primary:active { background: #0958d9; }
+
+    /* 通用弹窗遮罩 */
+    .custom-modal-mask {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none; align-items: center; justify-content: center;
+      z-index: 9999;
+    }
+    .custom-modal-mask.show { display: flex; }
+    .custom-modal {
+      width: 360px; max-width: 92vw;
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      animation: modalIn 0.2s ease; overflow: hidden;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+    .custom-modal-header {
+      position: relative; height: 50px;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .custom-modal-title { font-size: 16px; font-weight: 500; color: #262626; }
+    .custom-modal-close {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #999; font-size: 18px; border-radius: 4px;
+    }
+    .custom-modal-close:hover { color: #666; background: #f5f5f5; }
+    .custom-modal-body { padding: 18px 20px; }
+    .modal-alert-item {
+      display: flex; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .modal-alert-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .modal-alert-item:first-child { padding-top: 0; }
+    .modal-alert-icon { font-size: 20px; flex-shrink: 0; }
+    .modal-alert-icon.error { color: #F53F3F; }
+    .modal-alert-icon.warning { color: var(--warning); }
+    .modal-alert-text { font-size: 14px; line-height: 1.7; color: #262626; }
+    .custom-modal-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 20px 18px;
+      flex-wrap: nowrap;
+    }
+    .m-btn {
+      height: 34px; min-width: 68px; padding: 0 14px;
+      border-radius: 6px; font-size: 14px; cursor: pointer;
+      border: 1px solid transparent; outline: none; transition: all 0.2s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .m-btn.default { background: #fff; border-color: #d9d9d9; color: #333; }
+    .m-btn.default:hover { border-color: #1677ff; color: #1677ff; }
+    .m-btn.outline { background: #fff; border-color: #1677ff; color: #1677ff; }
+    .m-btn.outline:hover { background: #e6f4ff; }
+    .m-btn.primary { background: #1677ff; color: #fff; }
+    .m-btn.primary:hover { background: #0958d9; }
+
+    /* 是否参与匹配 - 单选标签 */
+    .match-choice-body { padding: 18px 20px 4px; }
+    .match-choice-tip {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 4px 10px;
+      background: #FFF7E6;
+      border: 1px solid #FFE7BA;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #D46B08;
+      line-height: 1.5;
+    }
+    .match-choice-q { font-size: 14px; color: #262626; margin-bottom: 18px; line-height: 1.6; }
+    .match-choice-required { color: var(--required); margin-right: 4px; }
+    .match-choice-group { display: flex; gap: 12px; }
+    .match-tag {
+      flex: 1;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--label);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+    }
+    .match-tag:hover { border-color: var(--primary); color: var(--primary); }
+    .match-tag.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #E6F4FF;
+      font-weight: 500;
+    }
+    .match-choice-note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: #FAFAFA;
+      border: 1px solid #F0F0F0;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #595959;
+      line-height: 1.9;
+    }
+    .match-choice-note b { color: #262626; }
+    /* 系统提示（整体背景框） */
+    .match-choice-syshint {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: #F7F8FA;
+      border: 1px solid #F0F0F0;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #5b6b8c;
+      line-height: 1.9;
+    }
+    .match-choice-syshint .sys-label {
+      display: inline-block;
+      margin-bottom: 4px;
+      color: #2f54eb;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .match-choice-syshint b { color: #1f2d4d; }
+
+    /* Toast */
+    .proto-toast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%) translateY(-16px);
+      display: flex; align-items: center; gap: 8px; max-width: 90vw;
+      padding: 10px 18px; border-radius: 6px; font-size: 14px; color: #fff;
+      background: rgba(0,0,0,0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      opacity: 0; pointer-events: none; transition: all 0.25s ease; z-index: 99999;
+    }
+    .proto-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .proto-toast.success { background: #52C41A; }
+    .proto-toast i { font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="phone-screen">
+      <!-- 顶部导航 -->
+      <div class="phone-header">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="showToast('返回上一页')">
+          <i class="fas fa-arrow-left" style="color:#1677ff;font-size:16px"></i>
+        </div>
+        <div class="phone-title" style="font-size:15px">提交审核</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="avatar">超</div>
+          <span style="font-size:13px;color:#333">超管</span>
+        </div>
+      </div>
+
+      <!-- 动作切换 -->
+      <div class="action-bar" id="actionBar">
+        <div class="action-chip active" data-action="matchPreSubmit">匹配并提交</div>
+        <div class="action-chip" data-action="preSubmit">预提交</div>
+        <div class="action-chip" data-action="submitAudit">提交审核</div>
+        <div class="action-chip" data-action="failedSubmit">筛败后提交审核</div>
+        <div class="action-chip" data-action="supplement">补充审核</div>
+      </div>
+
+      <!-- 表单 -->
+      <div class="pe-form">
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>方案编码</label>
+          <input type="text" class="pe-input" value="测试入组流程" readonly>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>参研中心</label>
+          <div class="pe-combobox" id="centerCombobox">
+            <input type="text" class="pe-input" id="centerInput" autocomplete="off" placeholder="输入搜索其他参研中心">
+            <div class="pe-combobox-dropdown" id="centerDropdown"></div>
+          </div>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>审核模板</label>
+          <select class="pe-select">
+            <option selected>非肿三级审核（新）（主流程）</option>
+            <option>肿瘤三级审核（新）</option>
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>审核流程</label>
+          <select class="pe-select" id="auditFlowSelect">
+            <option selected>预筛审核</option>
+            <option>导入审核</option>
+            <option>入组审核</option>
+          </select>
+          <div class="audit-tip-card">
+            <div class="audit-tip-title"><i class="fa-regular fa-lightbulb"></i> 推荐：预筛审核</div>
+            <div class="audit-tip-line">审核链路：预筛审核 → 导入审核新 → 入组审核新</div>
+          </div>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>知情时间</label>
+          <input type="text" class="pe-input" placeholder="请选择知情时间" id="fieldDate"
+                 onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>筛选号</label>
+          <input type="text" class="pe-input" id="fieldScreenNo" placeholder="请输入">
+          <div class="pe-hint rule" id="screenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
+        </div>
+        <div class="pe-field" id="rowUpdateScreenNo" style="display:none;">
+          <label class="pe-label"><span class="req">*</span>更新筛选号</label>
+          <input type="text" class="pe-input" id="fieldUpdateScreenNo" placeholder="请输入">
+          <div class="pe-hint rule" id="updateScreenNoHint">筛选号填写规则为「中心号+ 4位数字」</div>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>基因筛选号</label>
+          <input type="text" class="pe-input" id="fieldGeneNo" placeholder="请输入">
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>审核人</label>
+          <select class="pe-select" id="fieldAuditor">
+            <option value="" disabled selected>请选择</option>
+            <option>审核人A</option>
+            <option>审核人B</option>
+          </select>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label">重点关注</label>
+          <span class="focus-link" onclick="importFocus()">引用</span>
+          <div id="focusList" style="margin-top:8px;"></div>
+        </div>
+        <div class="pe-field">
+          <label class="pe-label"><span class="req">*</span>备注</label>
+          <textarea class="pe-textarea" id="fieldRemark" placeholder="请输入备注"></textarea>
+        </div>
+      </div>
+
+      <!-- 底部提交栏 -->
+      <div class="pe-footer">
+        <button class="pe-btn default" onclick="showToast('已取消')">取消</button>
+        <button class="pe-btn primary" id="btnSubmit">提交审核</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用弹窗 -->
+  <div class="custom-modal-mask" id="customModal">
+    <div class="custom-modal">
+      <div class="custom-modal-header"        >
+        <div class="custom-modal-title" id="customModalTitle">提示</div>
+        <div class="custom-modal-close" onclick="closeCustomModal()"><i class="fa-solid fa-xmark"></i></div>
+      </div>
+      <div class="custom-modal-body" id="customModalBody"></div>
+      <div class="custom-modal-footer" id="customModalFooter">
+        <button class="m-btn default" onclick="closeCustomModal()">取消</button>
+        <button class="m-btn primary" id="customModalOk">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 是否参与匹配 弹窗 -->
+  <div class="custom-modal-mask" id="matchChoiceModal">
+    <div class="custom-modal">
+      <div class="custom-modal-header">
+        <div class="custom-modal-title">确认提示</div>
+        <div class="custom-modal-close" onclick="closeMatchChoice()"><i class="fa-solid fa-xmark"></i></div>
+      </div>
+      <div class="match-choice-body">
+        <div style="font-size:14px;color:#333;line-height:1.6;">该审核阶段未参与项目匹配，是否要参与匹配？</div>
+        <div class="match-choice-syshint">
+          <span class="sys-label"><i class="fa-solid fa-circle-info"></i>系统提示</span>
+          <div><b>匹配并提交：</b>匹配和提交同步进行。</div>
+          <div><b>仅提交：</b>不参与匹配，只提交审核。</div>
+          <div><b>取消：</b>暂不执行任何操作。</div>
+        </div>
+      </div>
+      <div class="custom-modal-footer" id="matchChoiceFooter">
+        <button class="m-btn default" onclick="closeMatchChoice()">取消</button>
+        <button class="m-btn primary" onclick="onClickMatchAndPreSubmit()">匹配并提交</button>
+        <button class="m-btn default" onclick="onClickSubmitAuditNoMatch()">仅提交</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== 筛选号规则与校验 =====
+    const SCREENING_RULE = {
+      type: 'center4',
+      prefix: '001',
+      digits: 4
+    };
+
+    function buildExpectedPattern(rule) {
+      if (rule.type === 'manual') return null;
+      if (rule.type === 'center3' || rule.type === 'center4' || rule.type === 'center5') {
+        return new RegExp('^' + escapeReg(rule.prefix) + '\\d{' + rule.digits + '}$');
+      }
+      return null;
+    }
+
+    function escapeReg(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 已使用的筛选号列表（原型演示数据）
+    const USED_SCREENING_NOS = {
+      '0010001': { nameAbbr: 'ZSAN', patientNo: 'P-2023-001' },
+      '0010002': { nameAbbr: 'LIMI', patientNo: 'P-2023-002' },
+      '0010003': { nameAbbr: 'WANG', patientNo: 'P-2023-003' }
+    };
+
+    function checkScreenNoConflict() {
+      const raw = document.getElementById('fieldScreenNo').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    function checkUpdateScreenNoConflict() {
+      const raw = document.getElementById('fieldUpdateScreenNo').value.trim();
+      if (!raw) return null;
+      return USED_SCREENING_NOS[raw] || null;
+    }
+
+    function validateUpdateScreenNo() {
+      const input = document.getElementById('fieldUpdateScreenNo');
+      const hint = document.getElementById('updateScreenNoHint');
+      const raw = input.value.trim();
+
+      if (!raw) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+        return true;
+      }
+
+      if (SCREENING_RULE.type === 'manual') return true;
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (ok) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+      } else {
+        input.classList.add('invalid');
+        hint.className = 'pe-hint';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
+      }
+      return ok;
+    }
+
+    function validateScreenNo() {
+      const input = document.getElementById('fieldScreenNo');
+      const hint = document.getElementById('screenNoHint');
+      const raw = input.value.trim();
+
+      if (input.disabled) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint';
+        hint.textContent = '';
+        return true;
+      }
+
+      if (!raw) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+        return true;
+      }
+
+      if (SCREENING_RULE.type === 'manual') return true;
+
+      const pattern = buildExpectedPattern(SCREENING_RULE);
+      const ok = pattern ? pattern.test(raw) : true;
+
+      if (ok) {
+        input.classList.remove('invalid');
+        hint.className = 'pe-hint rule';
+        hint.textContent = '筛选号填写规则为「中心号+ 4位数字」';
+      } else {
+        input.classList.add('invalid');
+        hint.className = 'pe-hint';
+        hint.textContent = '筛选号填写不规范：应为「中心号+ 4位数字」';
+      }
+      return ok;
+    }
+
+    // ===== Toast =====
+    function showToast(msg, type) {
+      let box = document.getElementById('protoToast');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'protoToast';
+        box.className = 'proto-toast';
+        document.body.appendChild(box);
+      }
+      box.className = 'proto-toast show ' + (type || 'info');
+      box.innerHTML = '<i class="' + (type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-info') + '"></i><span>' + msg + '</span>';
+      clearTimeout(box._t);
+      box._t = setTimeout(() => { box.className = 'proto-toast ' + (type || 'info'); }, 2200);
+    }
+
+    // ===== 通用弹窗 =====
+    let currentModalOkCallback = null;
+
+    function openCustomModal(opts) {
+      const mask = document.getElementById('customModal');
+      const title = document.getElementById('customModalTitle');
+      const body = document.getElementById('customModalBody');
+      const footer = document.getElementById('customModalFooter');
+      const okBtn = document.getElementById('customModalOk');
+
+      title.textContent = opts.title || '提示';
+      body.innerHTML = opts.content || '';
+
+      if (opts.footerHtml) {
+        footer.innerHTML = opts.footerHtml;
+      } else {
+        const okText = opts.okText || '确定';
+        footer.innerHTML =
+          '<button class="m-btn default" onclick="closeCustomModal()">取消</button>' +
+          '<button class="m-btn primary" id="customModalOk">' + okText + '</button>';
+      }
+
+      const newOkBtn = footer.querySelector('#customModalOk');
+      if (newOkBtn) {
+        newOkBtn.onclick = () => {
+          closeCustomModal();
+          if (typeof opts.onOk === 'function') opts.onOk();
+        };
+      }
+
+      mask.classList.add('show');
+    }
+
+    function closeCustomModal() {
+      document.getElementById('customModal').classList.remove('show');
+    }
+
+    // ===== 是否参与匹配 提示框 =====
+    function openMatchChoice() {
+      document.getElementById('matchChoiceModal').classList.add('show');
+    }
+    function closeMatchChoice() {
+      document.getElementById('matchChoiceModal').classList.remove('show');
+    }
+    // 是 → 仅项目匹配（只做匹配，不预提交）
+    function onClickMatchOnly() {
+      closeMatchChoice();
+      showToast('正在进行项目匹配…', 'info');
+    }
+    // 是 → 匹配并提交
+    function onClickMatchAndPreSubmit() {
+      closeMatchChoice();
+      doMatchPreSubmit();
+    }
+    // 否 → 不参与 AI 匹配，直接提交审核
+    function onClickSubmitAuditNoMatch() {
+      closeMatchChoice();
+      showToast('提交审核成功（未参与 AI 匹配）', 'success');
+    }
+
+    // 弹窗内容构建
+    function conflictHtml() {
+      const conflict = checkScreenNoConflict();
+      if (!conflict) return '';
+      return '<div class="modal-alert-item">' +
+        '<div class="modal-alert-icon error"><i class="fa-solid fa-circle-exclamation"></i></div>' +
+        '<div class="modal-alert-text">该筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
+        '，患者编号：' + conflict.patientNo + '】使用。</div>' +
+      '</div>';
+    }
+
+    function matchHtml() {
+      return '<div class="modal-alert-item">' +
+        '<div class="modal-alert-icon warning"><i class="fa-solid fa-circle-exclamation"></i></div>' +
+        '<div class="modal-alert-text">检测到您已跨阶段，匹配成功后系统将自动为您提交。</div>' +
+      '</div>';
+    }
+
+    // ===== 动作处理 =====
+    function doMatchPreSubmit() {
+      if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      const conflict = checkScreenNoConflict();
+      if (!conflict) {
+        showToast('匹配并提交成功（无重复）', 'success');
+        return;
+      }
+      openCustomModal({
+        title: '提示',
+        content: conflictHtml(),
+        okText: '提交',
+        onOk: () => showToast('匹配并提交成功', 'success')
+      });
+    }
+
+    function doPreSubmit() {
+      if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      const conflict = checkScreenNoConflict();
+      const parts = (conflict ? conflictHtml() : '') + matchHtml();
+      openCustomModal({
+        title: '提示',
+        content: parts,
+        okText: '确定匹配',
+        onOk: () => showToast('预提交成功', 'success')
+      });
+    }
+
+    function doSubmitAudit() {
+      if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      openCustomModal({
+        title: '提示',
+        content:
+          '<div class="modal-alert-item" style="border-bottom:1px solid #f0f0f0;padding-top:0;padding-bottom:16px;margin-bottom:0;">' +
+            '<div class="modal-alert-icon warning"><i class="fa-solid fa-circle-exclamation"></i></div>' +
+            '<div class="modal-alert-text">检测到您已跨阶段，匹配成功后系统将自动为您提交。</div>' +
+          '</div>' +
+          '<div style="background:#f7f8fa;border-radius:6px;padding:14px 16px;margin-top:12px;">' +
+            '<div style="font-size:13px;font-weight:600;color:#262626;margin-bottom:8px;">功能说明</div>' +
+            '<div style="font-size:13px;line-height:1.8;color:#595959;">' +
+              '<div><span style="color:#1677ff;font-weight:500;">确定匹配：</span>匹配成功后，系统自动为您提交。</div>' +
+              '<div><span style="color:#1677ff;font-weight:500;">直接提交：</span>不参与匹配，直接提交审核。</div>' +
+            '</div>' +
+          '</div>',
+        footerHtml:
+          '<button class="m-btn default" onclick="closeCustomModal()">取消</button>' +
+          '<button class="m-btn outline" onclick="closeCustomModal(); showToast(\'已直接提交审核\', \'success\');">直接提交</button>' +
+          '<button class="m-btn primary" onclick="closeCustomModal(); showToast(\'已确定匹配\', \'success\');">确定匹配</button>'
+      });
+    }
+
+    function doFailedSubmit() {
+      if (!validateUpdateScreenNo()) {
+        document.getElementById('fieldUpdateScreenNo').focus();
+        return;
+      }
+      const conflict = checkUpdateScreenNoConflict();
+      if (!conflict) {
+        showToast('筛选号提交成功', 'success');
+        return;
+      }
+      openCustomModal({
+        title: '提示',
+        content: '<div class="modal-alert-item">' +
+          '<div class="modal-alert-icon error"><i class="fa-solid fa-circle-exclamation"></i></div>' +
+          '<div class="modal-alert-text">该筛选号已在受试者【姓名缩写：' + conflict.nameAbbr +
+          '，患者编号：' + conflict.patientNo + '】使用。</div>' +
+        '</div>',
+        okText: '提交',
+        onOk: () => showToast('筛选号提交成功', 'success')
+      });
+    }
+
+    function doSupplement() {
+      if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      const conflict = checkScreenNoConflict();
+      const parts = (conflict ? conflictHtml() : '') +
+        '<div class="modal-alert-item">' +
+          '<div class="modal-alert-icon warning"><i class="fa-solid fa-circle-info"></i></div>' +
+          '<div class="modal-alert-text">当前为补充审核，请确认补充材料及审核人后提交。</div>' +
+        '</div>';
+      openCustomModal({
+        title: '补充审核确认',
+        content: parts,
+        okText: '确认提交',
+        onOk: () => showToast('补充审核提交成功', 'success')
+      });
+    }
+
+    const ACTION_MAP = {
+      matchPreSubmit: doMatchPreSubmit,
+      preSubmit: doPreSubmit,
+      submitAudit: doSubmitAudit,
+      failedSubmit: doFailedSubmit,
+      supplement: doSupplement
+    };
+
+    let currentAction = 'matchPreSubmit';
+
+    function setAction(action) {
+      currentAction = action;
+      document.querySelectorAll('.action-chip').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-action') === action);
+      });
+
+      // 仅「筛败后提交审核」显示更新筛选号字段，且筛选号变为不可编辑、不校验提示
+      const rowUpdate = document.getElementById('rowUpdateScreenNo');
+      const showUpdate = (action === 'failedSubmit');
+      rowUpdate.style.display = showUpdate ? 'block' : 'none';
+
+      const screenInput = document.getElementById('fieldScreenNo');
+      const screenHint = document.getElementById('screenNoHint');
+      if (showUpdate) {
+        screenInput.disabled = true;
+        screenInput.classList.remove('invalid');
+        screenHint.className = 'pe-hint';
+        screenHint.textContent = '';
+      } else {
+        screenInput.disabled = false;
+        const upInput = document.getElementById('fieldUpdateScreenNo');
+        upInput.classList.remove('invalid');
+        upInput.value = '';
+        validateScreenNo();
+      }
+
+      const btnSubmit = document.getElementById('btnSubmit');
+      const actionLabels = {
+        matchPreSubmit: '提交审核',
+        preSubmit: '提交审核',
+        submitAudit: '提交审核',
+        failedSubmit: '提交审核',
+        supplement: '提交补充审核'
+      };
+      btnSubmit.textContent = actionLabels[action] || '提交';
+    }
+
+    // ===== 重点关注：引用 / 删除 / 修改状态 =====
+    const FOCUS_TEMPLATES = [
+      { label: '疾病：', placeholder: '请输入疾病' },
+      { label: '影像异常情况：', placeholder: '请输入影像异常情况' }
+    ];
+    function importFocus() {
+      const list = document.getElementById('focusList');
+      if (list.children.length > 0) {
+        showToast('已引用，请直接编辑内容');
+        return;
+      }
+      FOCUS_TEMPLATES.forEach(t => list.appendChild(buildFocusRow(t)));
+      showToast('已引用重点关注内容', 'success');
+    }
+    function buildFocusRow(t) {
+      const row = document.createElement('div');
+      row.className = 'focus-row';
+      row.innerHTML =
+        '<div class="focus-left">' +
+          '<span class="focus-status">未修改</span>' +
+          '<label class="pe-label"><span class="req">*</span>' + t.label + '</label>' +
+        '</div>' +
+        '<textarea class="pe-textarea focus-textarea" placeholder="' + t.placeholder + '"></textarea>';
+      const ta = row.querySelector('.focus-textarea');
+      ta.addEventListener('input', () => {
+        const st = row.querySelector('.focus-status');
+        const modified = ta.value.trim() !== '';
+        st.textContent = modified ? '已修改' : '未修改';
+        st.classList.toggle('modified', modified);
+        ta.classList.remove('invalid');
+      });
+      return row;
+    }
+
+    // ===== 必填校验（所有字段必填）=====
+    function validateRequired() {
+      let firstBad = null;
+      const check = (el) => {
+        if (!el || el.disabled) return;
+        const empty = !el.value || !el.value.trim();
+        el.classList.toggle('invalid', empty);
+        if (empty && !firstBad) firstBad = el;
+      };
+      check(document.getElementById('fieldDate'));
+      check(currentAction === 'failedSubmit'
+        ? document.getElementById('fieldUpdateScreenNo')
+        : document.getElementById('fieldScreenNo'));
+      check(document.getElementById('fieldGeneNo'));
+      check(document.getElementById('fieldAuditor'));
+      document.querySelectorAll('#focusList .focus-textarea').forEach(check);
+      check(document.getElementById('fieldRemark'));
+      if (firstBad) {
+        firstBad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstBad.focus({ preventScroll: true });
+        showToast('有必填项未填写，请补充完整', 'error');
+        return false;
+      }
+      return true;
+    }
+    ['fieldDate', 'fieldGeneNo', 'fieldAuditor', 'fieldRemark'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', () => el.classList.remove('invalid'));
+      el.addEventListener('change', () => el.classList.remove('invalid'));
+    });
+
+    // ===== 事件绑定 =====
+    document.querySelectorAll('.action-chip').forEach(item => {
+      item.addEventListener('click', () => {
+        setAction(item.getAttribute('data-action'));
+      });
+    });
+
+    document.getElementById('btnSubmit').addEventListener('click', () => {
+      if (!validateRequired()) return;
+      if (currentAction === 'failedSubmit') {
+        if (!validateUpdateScreenNo()) {
+          document.getElementById('fieldUpdateScreenNo').focus();
+          return;
+        }
+      } else if (!validateScreenNo()) {
+        document.getElementById('fieldScreenNo').focus();
+        return;
+      }
+      openMatchChoice();
+    });
+
+    const screenInput = document.getElementById('fieldScreenNo');
+    screenInput.addEventListener('input', validateScreenNo);
+    screenInput.addEventListener('blur', validateScreenNo);
+
+    const updateScreenInput = document.getElementById('fieldUpdateScreenNo');
+    updateScreenInput.addEventListener('input', validateUpdateScreenNo);
+    updateScreenInput.addEventListener('blur', validateUpdateScreenNo);
+
+    // ===== 参研中心：默认当前人负责的中心，可输入搜索外推其他中心 =====
+    (function initCenterCombobox() {
+      const centerOptions = [
+        { value: 'c1', label: '001 - 安顺市贵航集团302医院 - 张', mine: true },
+        { value: 'c2', label: '002 - 测试中心医院 - 李', mine: true },
+        { value: 'c3', label: '003 - 北京协和医院 - 王', mine: false },
+        { value: 'c4', label: '004 - 上海瑞金医院 - 赵', mine: false },
+        { value: 'c5', label: '005 - 广州中山医院 - 孙', mine: false },
+        { value: 'c6', label: '006 - 四川华西医院 - 周', mine: false },
+        { value: 'c7', label: '007 - 武汉同济医院 - 吴', mine: false }
+      ];
+      const myCenters = centerOptions.filter(c => c.mine);
+      let selectedCenter = myCenters[0];
+
+      const centerInput = document.getElementById('centerInput');
+      const centerDropdown = document.getElementById('centerDropdown');
+      centerInput.value = selectedCenter.label;
+
+      function render(keyword) {
+        const kw = (keyword || '').trim().toLowerCase();
+        // 无搜索词时只展示自己负责的中心；输入搜索词后，才外推检索全部中心
+        const pool = kw ? centerOptions : myCenters;
+        const filtered = pool.filter(c => c.label.toLowerCase().indexOf(kw) > -1);
+        centerDropdown.innerHTML = '';
+        if (filtered.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'pe-combobox-empty';
+          empty.textContent = '无匹配中心';
+          centerDropdown.appendChild(empty);
+          return;
+        }
+        filtered.forEach(c => {
+          const opt = document.createElement('div');
+          opt.className = 'pe-combobox-option' + (c.value === selectedCenter.value ? ' selected' : '');
+          const span = document.createElement('span');
+          span.textContent = c.label;
+          opt.appendChild(span);
+          const tag = document.createElement('span');
+          tag.className = 'pe-combobox-tag ' + (c.mine ? 'mine' : 'push');
+          tag.textContent = c.mine ? '负责' : '外推';
+          opt.appendChild(tag);
+          opt.addEventListener('click', () => {
+            selectedCenter = c;
+            centerInput.value = c.label;
+            centerDropdown.classList.remove('open');
+          });
+          centerDropdown.appendChild(opt);
+        });
+      }
+
+      centerInput.addEventListener('focus', () => {
+        render('');
+        centerDropdown.classList.add('open');
+      });
+      centerInput.addEventListener('input', () => {
+        render(centerInput.value);
+        centerDropdown.classList.add('open');
+      });
+      document.addEventListener('click', (e) => {
+        const cb = document.getElementById('centerCombobox');
+        if (!cb.contains(e.target)) centerDropdown.classList.remove('open');
+      });
+    })();
+
+    // 初始化
+    setAction('matchPreSubmit');
+  </script>
+</body>
+</html>

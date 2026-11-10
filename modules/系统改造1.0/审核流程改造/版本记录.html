@@ -1,0 +1,679 @@
+<!--
+  审核模板列表 · 原型（按截图还原）
+  结构：筛选栏（模版名称 / 状态 / 查询 / 重置）→「新增审核模板」按钮
+        → 模板列表表格（序号 / 模板名称 / 包含审核类型 / 状态 / 创建人 / 创建时间 / 操作）
+        → 分页
+  交互：查询筛选、重置、分页切换、启用/停用切换、删除、新增模板弹窗
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>版本记录</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px;
+    color: #1D2129;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { padding: 18px 24px 40px; }
+
+  /* ===== 筛选栏 ===== */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+  }
+  .field { display: flex; align-items: center; gap: 8px; }
+  .field-label {
+    font-size: 13px;
+    color: #4E5969;
+    white-space: nowrap;
+  }
+  .input,
+  .select {
+    height: 32px;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    color: #1D2129;
+    padding: 0 10px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input { width: 240px; }
+  .select { width: 210px; appearance: none; padding-right: 26px; cursor: pointer; }
+  .input::placeholder { color: #C0C4CC; }
+  .input:focus,
+  .select:focus { border-color: #5B4DF5; box-shadow: 0 0 0 2px rgba(91,77,245,.1); }
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid #86909C;
+    border-bottom: 1.5px solid #86909C;
+    position: absolute;
+    right: 11px;
+    top: calc(50% - 4px);
+    transform: rotate(45deg);
+    pointer-events: none;
+  }
+  .btn {
+    height: 32px;
+    padding: 0 18px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  .btn-primary { background: #5B4DF5; color: #fff; }
+  .btn-primary:hover { background: #6C5FF8; }
+  .btn-ghost { background: #fff; color: #4E5969; border-color: #E5E6EB; }
+  .btn-ghost:hover { color: #5B4DF5; border-color: #B9B3FB; }
+
+  /* ===== 新增按钮 ===== */
+  .toolbar { margin-bottom: 14px; }
+
+  /* ===== 表格 ===== */
+  .table-wrap { width: 100%; }
+  .list-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  .list-table thead th {
+    background: #EDF0FF;
+    color: #1D2129;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    padding: 11px 10px;
+    white-space: nowrap;
+  }
+  .list-table thead th:first-child { border-radius: 3px 0 0 3px; }
+  .list-table thead th:last-child { border-radius: 0 3px 3px 0; }
+
+  .list-table tbody td {
+    padding: 13px 10px;
+    font-size: 13px;
+    color: #1D2129;
+    vertical-align: middle;
+    border-bottom: 1px solid #F2F3F5;
+    text-align: center;
+  }
+  .list-table tbody tr:hover td { background: #F7F8FE; }
+
+  .col-idx { width: 54px; }
+  .col-name { width: 23%; }
+  .col-types { width: 35%; }
+  .col-status { width: 92px; }
+  .col-user { width: 72px; }
+  .col-time { width: 148px; }
+  .col-op { width: 190px; }
+
+  /* 模板名称 / 包含审核类型：表头与内容均左对齐 */
+  .list-table thead th.th-left,
+  .list-table tbody td.cell-name,
+  .list-table tbody td.cell-types { text-align: left; }
+  .list-table tbody td.cell-name { padding-right: 16px; }
+  .list-table tbody td.cell-time { color: #4E5969; }
+
+  /* 包含审核类型：类型名 + 审核节点链（轻量文本，无边框） */
+  .type-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px 14px;
+  }
+  .type-item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+    white-space: nowrap;
+  }
+  .type-name {
+    font-size: 12px;
+    color: #1D2129;
+  }
+  .type-node {
+    font-size: 11px;
+    color: #9AA0AA;
+    letter-spacing: .2px;
+  }
+  .type-node::before {
+    content: "：";
+    color: #C9CDD4;
+  }
+
+  /* 状态 */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 1px 9px;
+    font-size: 12px;
+    line-height: 18px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .status.on { color: #00B42A; background: #E8FFEA; border: 1px solid #A6EFB3; }
+  .status.off { color: #86909C; background: #F2F3F5; border: 1px solid #E5E6EB; }
+
+  /* 操作 */
+  .op-cell { white-space: nowrap; }
+  .link {
+    color: #1677FF;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .link:hover { text-decoration: underline; }
+  .link + .link { margin-left: 10px; }
+
+  .empty-row td {
+    padding: 56px 10px;
+    color: #86909C;
+    text-align: center;
+    border-bottom: none;
+  }
+
+  /* ===== 分页 ===== */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 2px 0;
+  }
+  .pager-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 7px;
+    border: 1px solid #E5E6EB;
+    border-radius: 4px;
+    background: #fff;
+    color: #4E5969;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .pager-btn:hover:not(:disabled):not(.active) { color: #5B4DF5; border-color: #B9B3FB; }
+  .pager-btn.active { background: #5B4DF5; border-color: #5B4DF5; color: #fff; }
+  .pager-btn:disabled { color: #C0C4CC; cursor: not-allowed; }
+  .pager-btn.arrow { font-size: 15px; line-height: 1; padding-bottom: 2px; }
+  .pager-total { font-size: 12px; color: #4E5969; margin-left: 4px; }
+  .pager .select { height: 28px; width: 92px; font-size: 12px; }
+
+  /* ===== 弹窗 ===== */
+  .mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(29, 33, 41, .45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .mask.show { display: flex; }
+  .dialog {
+    width: 460px;
+    max-width: calc(100vw - 32px);
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.16);
+    overflow: hidden;
+  }
+  .dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid #F2F3F5;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .dialog-close {
+    border: none;
+    background: transparent;
+    color: #86909C;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .dialog-body { padding: 18px; }
+  .form-row { display: flex; align-items: flex-start; margin-bottom: 16px; }
+  .form-row:last-child { margin-bottom: 0; }
+  .form-label {
+    width: 96px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 10px;
+    color: #4E5969;
+    line-height: 32px;
+  }
+  .form-label .req { color: #F53F3F; margin-right: 2px; }
+  .form-row .input { width: 100%; }
+  .check-list { display: flex; flex-wrap: wrap; gap: 8px 16px; padding-top: 7px; }
+  .check-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #1D2129;
+    cursor: pointer;
+  }
+  .check-item input { accent-color: #5B4DF5; }
+  .dialog-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 18px 16px;
+  }
+
+  /* 轻提示 */
+  .toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translate(-50%, -12px);
+    background: rgba(29,33,41,.85);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity .2s, transform .2s;
+    pointer-events: none;
+    z-index: 80;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 900px) {
+    .page { padding: 14px 12px 32px; }
+    .input, .select { width: 180px; }
+    .table-wrap { overflow-x: auto; }
+    .list-table { min-width: 980px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- 筛选栏 -->
+  <div class="filter-bar">
+    <div class="field">
+      <span class="field-label">模版名称：</span>
+      <input id="kwInput" class="input" type="text" placeholder="请输入名称" />
+    </div>
+    <div class="field">
+      <span class="field-label">状态：</span>
+      <div class="select-wrap">
+        <select id="statusSelect" class="select">
+          <option value="all">全部</option>
+          <option value="on">已启用</option>
+          <option value="off">已停用</option>
+        </select>
+      </div>
+    </div>
+    <button id="btnSearch" class="btn btn-primary">查询</button>
+    <button id="btnReset" class="btn btn-ghost">重置</button>
+  </div>
+
+  <!-- 新增 -->
+  <div class="toolbar">
+    <button id="btnAdd" class="btn btn-primary">新增审核模板</button>
+  </div>
+
+  <!-- 表格 -->
+  <div class="table-wrap">
+    <table class="list-table">
+      <colgroup>
+        <col class="col-idx" />
+        <col class="col-name" />
+        <col class="col-types" />
+        <col class="col-status" />
+        <col class="col-user" />
+        <col class="col-time" />
+        <col class="col-op" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th>序号</th>
+          <th class="th-left">模板名称</th>
+          <th class="th-left">包含审核类型</th>
+          <th>状态</th>
+          <th>创建人</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- 分页 -->
+  <div class="pager">
+    <button class="pager-btn arrow" id="prevBtn" aria-label="上一页">&lsaquo;</button>
+    <span id="pageNums" style="display:flex;gap:8px"></span>
+    <button class="pager-btn arrow" id="nextBtn" aria-label="下一页">&rsaquo;</button>
+    <span class="pager-total" id="totalText">共 20 条</span>
+    <div class="select-wrap">
+      <select class="select" id="pageSizeSelect">
+        <option value="10">10 条/页</option>
+        <option value="20">20 条/页</option>
+      </select>
+    </div>
+  </div>
+
+</div>
+
+<!-- 新增模板弹窗 -->
+<div class="mask" id="addMask">
+  <div class="dialog">
+    <div class="dialog-head">
+      <span>新增审核模板</span>
+      <button class="dialog-close" id="dialogClose" aria-label="关闭">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <div class="form-row">
+        <label class="form-label"><span class="req">*</span>模板名称</label>
+        <input class="input" id="newName" type="text" placeholder="请输入模板名称" />
+      </div>
+      <div class="form-row">
+        <label class="form-label"><span class="req">*</span>包含审核类型</label>
+        <div class="check-list" id="typeCheckList"></div>
+      </div>
+    </div>
+    <div class="dialog-foot">
+      <button class="btn btn-ghost" id="dialogCancel">取消</button>
+      <button class="btn btn-primary" id="dialogOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  var TYPE_OPTIONS = ['预筛审批', '导入审核', '入组审批', '主流程审批', 'V1审批', 'V2审批'];
+
+  // 各审核类型对应的审核节点（CRA / 医学，按审批顺序串联）
+  var TYPE_NODES = {
+    '预筛审批':   ['CRA审核'],
+    '导入审核':   ['CRA审核'],
+    '入组审批':   ['CRA审核', '医学审核'],
+    '主流程审批': ['CRA审核', '医学审核'],
+    'V1审批':     ['CRA审核', '医学审核'],
+    'V2审批':     ['CRA审核', '医学审核']
+  };
+
+  // 类型简称（标签内展示，避免换行）
+  var TYPE_SHORT = {
+    '预筛审批': '预筛',
+    '导入审核': '导入',
+    '入组审批': '入组',
+    '主流程审批': '主流程',
+    'V1审批': 'V1',
+    'V2审批': 'V2'
+  };
+
+  // 完整节点链（用于提示文案）：CRA审核-医学审核
+  function nodeText(type) {
+    return (TYPE_NODES[type] || [type]).join('-');
+  }
+  // 标签内精简展示：CRA-医学
+  function nodeShort(type) {
+    return (TYPE_NODES[type] || [type]).map(function (n) {
+      return n.replace('审核', '');
+    }).join('-');
+  }
+  function nodeHtml(type) {
+    return nodeShort(type);
+  }
+
+  // 全量数据（第一页与截图一致）
+  var allData = [
+    { name: '含导入审核模版（预筛和入组仅CFDA模版）', types: ['预筛审批', '导入审核', '入组审批'], status: 'on', user: '张渊', time: '2026-10-14 16:27:43' },
+    { name: '含留置病房审核（仅同意医学审核）',       types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-10-13 16:38:36' },
+    { name: '常规模版（默认同意医学审核）',           types: ['预筛审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-31 09:28:40' },
+    { name: '非肿（含2次导入）审核模版',              types: ['预筛审批', 'V1审批', 'V2审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-14 23:34:28' },
+    { name: '不需要审筛模版',                         types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-10 19:08:31' },
+    { name: '筛查探查筛总CLDN18.2审核模版',           types: ['主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-10 19:07:52' },
+    { name: '有CLDN18.2审核模版',                     types: ['主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-10 19:06:42' },
+    { name: '常规模版（筛查同意医学审核）',           types: ['预筛审批'], status: 'on', user: '张渊', time: '2026-08-10 09:42:10' },
+    { name: 'HER-2已知流程模版',                      types: ['主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-05 10:19:12' },
+    { name: 'HER-2未知流程模版',                      types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-08-05 10:18:27' },
+    { name: '含导入审核模版（仅预筛）',               types: ['预筛审批', '导入审核'], status: 'on', user: '张渊', time: '2026-07-28 14:02:15' },
+    { name: '实体瘤常规审核模版',                     types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-07-21 11:36:08' },
+    { name: '血液瘤专用审核模版',                     types: ['预筛审批', 'V1审批', '入组审批'], status: 'off', user: '张渊', time: '2026-07-15 09:12:44' },
+    { name: '双盲项目审核模版',                       types: ['主流程审批', 'V1审批', 'V2审批', '入组审批'], status: 'on', user: '张渊', time: '2026-07-08 17:45:20' },
+    { name: '开放标签项目审核模版',                   types: ['预筛审批', '入组审批'], status: 'off', user: '张渊', time: '2026-06-30 10:08:53' },
+    { name: 'EGFR突变审核模版',                       types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-06-22 15:27:36' },
+    { name: 'PD-L1表达审核模版',                      types: ['预筛审批', '入组审批'], status: 'on', user: '张渊', time: '2026-06-16 13:54:09' },
+    { name: '三阴性乳腺癌审核模版',                   types: ['主流程审批', 'V1审批', '入组审批'], status: 'on', user: '张渊', time: '2026-06-05 08:41:27' },
+    { name: '不需医学审核模版',                       types: ['预筛审批'], status: 'off', user: '张渊', time: '2026-05-29 16:19:02' },
+    { name: '默认审核模版',                           types: ['预筛审批', '主流程审批', '入组审批'], status: 'on', user: '张渊', time: '2026-05-20 09:03:48' }
+  ];
+
+  var state = {
+    keyword: '',
+    status: 'all',
+    page: 1,
+    pageSize: 10
+  };
+
+  var tbody = document.getElementById('tbody');
+  var pageNums = document.getElementById('pageNums');
+  var totalText = document.getElementById('totalText');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  function getFiltered() {
+    var kw = state.keyword.trim();
+    return allData.filter(function (row) {
+      var okKw = !kw || row.name.indexOf(kw) > -1;
+      var okStatus = state.status === 'all' || row.status === state.status;
+      return okKw && okStatus;
+    });
+  }
+
+  function render() {
+    var filtered = getFiltered();
+    var totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+
+    var start = (state.page - 1) * state.pageSize;
+    var rows = filtered.slice(start, start + state.pageSize);
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">暂无符合条件的数据</td></tr>';
+    } else {
+      tbody.innerHTML = rows.map(function (row, i) {
+        var idx = start + i + 1;
+        var isOn = row.status === 'on';
+        var tags = row.types.map(function (t) {
+          return '<span class="type-item" title="' + t + '（审核节点：' + nodeText(t) + '）">' +
+                   '<span class="type-name">' + (TYPE_SHORT[t] || t) + '</span>' +
+                   '<span class="type-node">' + nodeHtml(t) + '</span>' +
+                 '</span>';
+        }).join('');
+        return '' +
+          '<tr data-index="' + allData.indexOf(row) + '">' +
+            '<td>' + idx + '</td>' +
+            '<td class="cell-name">' + row.name + '</td>' +
+            '<td class="cell-types"><div class="type-list">' + tags + '</div></td>' +
+            '<td><span class="status ' + (isOn ? 'on' : 'off') + '">' + (isOn ? '已启用' : '已停用') + '</span></td>' +
+            '<td>' + row.user + '</td>' +
+            '<td class="cell-time">' + row.time + '</td>' +
+            '<td class="op-cell">' +
+              '<a class="link" data-act="detail">查看详情</a>' +
+              '<a class="link" data-act="edit">编辑</a>' +
+              '<a class="link" data-act="toggle">' + (isOn ? '停用' : '启用') + '</a>' +
+              '<a class="link" data-act="delete">删除</a>' +
+            '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    // 分页
+    pageNums.innerHTML = '';
+    for (var p = 1; p <= totalPages; p++) {
+      var btn = document.createElement('button');
+      btn.className = 'pager-btn' + (p === state.page ? ' active' : '');
+      btn.textContent = p;
+      btn.setAttribute('data-page', p);
+      pageNums.appendChild(btn);
+    }
+    prevBtn.disabled = state.page === 1;
+    nextBtn.disabled = state.page === totalPages;
+    totalText.textContent = '共 ' + filtered.length + ' 条';
+  }
+
+  // ===== 交互 =====
+  document.getElementById('btnSearch').addEventListener('click', function () {
+    state.keyword = document.getElementById('kwInput').value;
+    state.status = document.getElementById('statusSelect').value;
+    state.page = 1;
+    render();
+  });
+
+  document.getElementById('kwInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') document.getElementById('btnSearch').click();
+  });
+
+  document.getElementById('btnReset').addEventListener('click', function () {
+    document.getElementById('kwInput').value = '';
+    document.getElementById('statusSelect').value = 'all';
+    state.keyword = '';
+    state.status = 'all';
+    state.page = 1;
+    render();
+  });
+
+  pageNums.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-page]');
+    if (!btn) return;
+    state.page = Number(btn.getAttribute('data-page'));
+    render();
+  });
+
+  prevBtn.addEventListener('click', function () {
+    if (state.page > 1) { state.page--; render(); }
+  });
+  nextBtn.addEventListener('click', function () {
+    var totalPages = Math.max(1, Math.ceil(getFiltered().length / state.pageSize));
+    if (state.page < totalPages) { state.page++; render(); }
+  });
+
+  document.getElementById('pageSizeSelect').addEventListener('change', function () {
+    state.pageSize = Number(this.value);
+    state.page = 1;
+    render();
+  });
+
+  // 行操作
+  tbody.addEventListener('click', function (e) {
+    var link = e.target.closest('a[data-act]');
+    if (!link) return;
+    var tr = link.closest('tr');
+    var row = allData[Number(tr.getAttribute('data-index'))];
+    if (!row) return;
+    var act = link.getAttribute('data-act');
+
+    if (act === 'toggle') {
+      row.status = row.status === 'on' ? 'off' : 'on';
+      render();
+      showToast(row.status === 'on' ? '已启用：' + row.name : '已停用：' + row.name);
+    } else if (act === 'delete') {
+      if (!window.confirm('确定删除模板「' + row.name + '」？')) return;
+      allData.splice(allData.indexOf(row), 1);
+      render();
+      showToast('已删除：' + row.name);
+    } else if (act === 'detail') {
+      showToast('查看详情：' + row.name);
+    } else if (act === 'edit') {
+      showToast('编辑模板：' + row.name);
+    }
+  });
+
+  // ===== 新增弹窗 =====
+  var addMask = document.getElementById('addMask');
+  var typeCheckList = document.getElementById('typeCheckList');
+
+  typeCheckList.innerHTML = TYPE_OPTIONS.map(function (t, i) {
+    return '<label class="check-item"><input type="checkbox" value="' + t + '"' + (i < 1 ? ' checked' : '') + ' />' +
+           t + '<span class="t-node" style="margin-left:2px">' + '（' + TYPE_NODES[t].join('-') + '）</span></label>';
+  }).join('');
+
+  function openDialog() {
+    document.getElementById('newName').value = '';
+    addMask.classList.add('show');
+  }
+  function closeDialog() { addMask.classList.remove('show'); }
+
+  document.getElementById('btnAdd').addEventListener('click', openDialog);
+  document.getElementById('dialogClose').addEventListener('click', closeDialog);
+  document.getElementById('dialogCancel').addEventListener('click', closeDialog);
+  addMask.addEventListener('click', function (e) { if (e.target === addMask) closeDialog(); });
+
+  document.getElementById('dialogOk').addEventListener('click', function () {
+    var name = document.getElementById('newName').value.trim();
+    var types = Array.prototype.slice
+      .call(typeCheckList.querySelectorAll('input:checked'))
+      .map(function (el) { return el.value; });
+    if (!name) { showToast('请填写模板名称'); return; }
+    if (!types.length) { showToast('请至少选择一个审核类型'); return; }
+
+    var now = new Date();
+    var pad = function (n) { return n < 10 ? '0' + n : '' + n; };
+    allData.unshift({
+      name: name,
+      types: types,
+      status: 'on',
+      user: '张渊',
+      time: now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' ' +
+            pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds())
+    });
+    state.page = 1;
+    render();
+    closeDialog();
+    showToast('新增成功：' + name);
+  });
+
+  // ===== 轻提示 =====
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  render();
+</script>
+
+</body>
+</html>
